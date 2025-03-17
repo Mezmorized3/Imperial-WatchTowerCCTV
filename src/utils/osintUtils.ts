@@ -1,5 +1,5 @@
-
-import { CameraResult } from '@/types/scanner';
+import { CameraResult, ThreatIntelData } from '@/types/scanner';
+import { getComprehensiveThreatIntel, analyzeFirmware } from './threatIntelligence';
 
 // Note: In a real application, these functions would connect to actual WHOIS/DNS services
 // or use APIs. For this demo, we're returning mock data.
@@ -134,14 +134,16 @@ export const checkVulnerabilityDatabase = async (ip: string): Promise<Record<str
 };
 
 /**
- * NEW: Query ZoomEye API for CCTV camera information
- * Note: In a real application, we would use the actual ZoomEye API with proper authentication
+ * Enhanced: Query ZoomEye API for CCTV camera information with threat intelligence
  */
 export const queryZoomEyeApi = async (ip: string): Promise<Record<string, any>> => {
   console.log(`Querying ZoomEye for IP: ${ip}`);
   
   // Simulate API delay
   await new Promise(resolve => setTimeout(resolve, 1200));
+  
+  // Get threat intelligence data
+  const threatIntel = await getComprehensiveThreatIntel(ip);
   
   // Mock ZoomEye data for demonstration
   const randomRecentDate = () => {
@@ -174,6 +176,12 @@ export const queryZoomEyeApi = async (ip: string): Promise<Record<string, any>> 
     return `v${major}.${minor}.${patch}`;
   };
   
+  const firmwareVersion = generateFirmwareVersion();
+  
+  // Get firmware analysis
+  const firmwareAnalysis = Math.random() > 0.5 ? 
+    await analyzeFirmware(manufacturer.name, model, firmwareVersion.substring(1)) : null;
+  
   // Random open ports
   const openPorts = [];
   if (Math.random() > 0.3) openPorts.push(httpPort);
@@ -187,13 +195,15 @@ export const queryZoomEyeApi = async (ip: string): Promise<Record<string, any>> 
     'Last Scanned': randomRecentDate(),
     'Manufacturer': manufacturer.name,
     'Model': model,
-    'Firmware Version': generateFirmwareVersion(),
+    'Firmware Version': firmwareVersion,
+    'Firmware Analysis': firmwareAnalysis,
     'Open Ports': openPorts.join(', '),
     'HTTP Service': Math.random() > 0.3 ? `Port ${httpPort} - Web Management Interface` : 'Not detected',
     'RTSP Service': Math.random() > 0.3 ? `Port ${rtspPort} - Video Stream` : 'Not detected',
     'SSL/TLS': Math.random() > 0.5 ? 'Enabled' : 'Disabled',
     'Authentication': Math.random() > 0.4 ? 'Required' : 'Not required or bypassed',
-    'Geolocation': getRandomGeoLocation(ip)
+    'Geolocation': getRandomGeoLocation(ip),
+    'Threat Intelligence': threatIntel
   };
 };
 

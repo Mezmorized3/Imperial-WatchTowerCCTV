@@ -1,4 +1,3 @@
-
 export type ScanTarget = {
   type: 'ip' | 'range' | 'file' | 'shodan' | 'zoomeye' | 'censys';
   value: string;
@@ -14,9 +13,21 @@ export type ScanSettings = {
   timeout: number;
   enableRealTimeMonitoring?: boolean;
   alertThreshold?: 'low' | 'medium' | 'high' | 'critical';
+  checkThreatIntel?: boolean;
 };
 
 export type CameraStatus = 'online' | 'vulnerable' | 'authenticated' | 'offline' | 'unknown';
+
+export type ThreatIntelData = {
+  ipReputation: number;
+  lastReportedMalicious?: string;
+  associatedMalware?: string[];
+  reportedBy?: string[];
+  firstSeen?: string;
+  tags?: string[];
+  confidenceScore: number;
+  source: 'virustotal' | 'abuseipdb' | 'threatfox' | 'other';
+};
 
 export type CameraResult = {
   id: string;
@@ -46,6 +57,14 @@ export type CameraResult = {
   accessLevel: 'none' | 'view' | 'control' | 'admin';
   responseTime?: number;
   monitoringEnabled?: boolean;
+  threatIntel?: ThreatIntelData;
+  firmwareVersion?: string;
+  firmwareAnalysis?: {
+    knownVulnerabilities: string[];
+    outdated: boolean;
+    lastUpdate?: string;
+    recommendedVersion?: string;
+  };
 };
 
 export type ScanStatus = 'idle' | 'running' | 'completed' | 'failed';
