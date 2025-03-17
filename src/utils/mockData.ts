@@ -1,3 +1,4 @@
+
 import { CameraResult, ScanSettings } from '@/types/scanner';
 
 // This function will handle opening an RTSP stream
@@ -130,7 +131,7 @@ export const REGIONS = [
   { code: 'ge', name: 'Georgia' }
 ];
 
-// Mock IP ranges by country - adding back the missing countries
+// Mock IP ranges by country - adding back all the missing ranges
 export const COUNTRY_IP_RANGES: Record<string, Array<{label: string, value: string}>> = {
   us: [
     { label: 'US East Coast', value: '23.10.0.0/16' },
@@ -140,7 +141,10 @@ export const COUNTRY_IP_RANGES: Record<string, Array<{label: string, value: stri
   ru: [
     { label: 'Moscow Region', value: '95.174.0.0/16' },
     { label: 'St. Petersburg', value: '178.176.0.0/16' },
-    { label: 'Russian Federation ISPs', value: '5.18.0.0/16' }
+    { label: 'Russian Federation ISPs', value: '5.18.0.0/16' },
+    { label: 'Rostelecom', value: '213.87.0.0/16' },
+    { label: 'Moscow Government', value: '87.245.0.0/16' },
+    { label: 'Ural Region', value: '91.210.0.0/16' }
   ],
   cn: [
     { label: 'Beijing', value: '180.149.0.0/16' },
@@ -150,7 +154,11 @@ export const COUNTRY_IP_RANGES: Record<string, Array<{label: string, value: stri
     { label: 'Kiev', value: '176.38.0.0/16' },
     { label: 'Lviv', value: '77.121.0.0/16' },
     { label: 'Odessa', value: '195.138.0.0/16' },
-    { label: 'Kharkiv', value: '46.98.0.0/16' }
+    { label: 'Kharkiv', value: '46.98.0.0/16' },
+    { label: 'Kyiv ISPs', value: '91.207.0.0/16' },
+    { label: 'Ukrainian Government', value: '194.44.0.0/16' },
+    { label: 'Dnipro', value: '193.151.0.0/16' },
+    { label: 'Eastern Ukraine', value: '46.211.0.0/16' }
   ],
   pl: [
     { label: 'Warsaw', value: '5.184.0.0/16' },
@@ -160,7 +168,10 @@ export const COUNTRY_IP_RANGES: Record<string, Array<{label: string, value: stri
   ro: [
     { label: 'Bucharest', value: '79.112.0.0/16' },
     { label: 'Cluj', value: '188.26.0.0/16' },
-    { label: 'Timisoara', value: '109.163.0.0/16' }
+    { label: 'Timisoara', value: '109.163.0.0/16' },
+    { label: 'Government Infrastructure', value: '193.226.0.0/16' },
+    { label: 'Telecom Romania', value: '81.196.0.0/16' },
+    { label: 'Academic Networks', value: '141.85.0.0/16' }
   ],
   ge: [
     { label: 'Tbilisi', value: '31.146.0.0/16' },
