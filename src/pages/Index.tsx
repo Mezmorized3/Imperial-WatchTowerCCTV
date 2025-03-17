@@ -21,8 +21,9 @@ const Index = () => {
     camerasFound: 0
   });
   const [error, setError] = useState<string | null>(null);
+  const [cleanupFunction, setCleanupFunction] = useState<(() => void) | null>(null);
 
-  const handleStartScan = (target: ScanTarget, settings: ScanSettings) => {
+  const handleStartScan = async (target: ScanTarget, settings: ScanSettings) => {
     // Reset current results and errors
     setResults([]);
     setError(null);
@@ -64,7 +65,7 @@ const Index = () => {
     
     try {
       // Start real scan with all options
-      const stopScan = startScan(
+      const cleanup = await startScan(
         // Progress callback with more detailed information
         (progressPercentage, camerasFound, currentTarget, scanSpeed) => {
           setScanProgress(prevState => ({
@@ -125,14 +126,9 @@ const Index = () => {
         }
       );
       
-      // This would clean up the scan if needed (i.e. component unmounting)
-      return () => {
-        stopScan();
-        toast({
-          title: "Scan Terminated",
-          description: "The scan was terminated before completion.",
-        });
-      };
+      // Store the cleanup function
+      setCleanupFunction(() => cleanup);
+      
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Unknown error starting scan';
       setError(errorMessage);
@@ -150,6 +146,19 @@ const Index = () => {
       });
     }
   };
+  
+  // Clean up scan when component unmounts
+  useEffect(() => {
+    return () => {
+      if (cleanupFunction) {
+        cleanupFunction();
+        toast({
+          title: "Scan Terminated",
+          description: "The scan was terminated before completion.",
+        });
+      }
+    };
+  }, [cleanupFunction, toast]);
   
   const calculateElapsedTime = (startTime: Date) => {
     const elapsed = Math.floor((new Date().getTime() - startTime.getTime()) / 1000);

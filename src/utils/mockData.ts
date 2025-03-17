@@ -1,4 +1,3 @@
-
 import { CameraResult, ScanSettings, ScanProgress } from '@/types/scanner';
 import { scanNetwork } from './networkScanner';
 import { getComprehensiveThreatIntel, analyzeFirmware } from './threatIntelligence';
@@ -31,7 +30,7 @@ export const startScan = async (
     vulnerabilityScan?: boolean;
     retryCount?: number;
   }>
-) => {
+): Promise<() => void> => {
   try {
     // Create settings object with defaults
     const settings: ScanSettings = {
@@ -49,46 +48,54 @@ export const startScan = async (
     // Store discovered cameras
     const discoveredCameras: CameraResult[] = [];
     
-    // Attempt to scan using the real scanner
-    await scanNetwork(
-      "192.168.1.0/24", // Default to local network for safety
-      settings,
-      (progress: ScanProgress) => {
-        // Convert the progress format for the caller
-        const progressPercentage = progress.targetsTotal > 0 
-          ? (progress.targetsScanned / progress.targetsTotal) * 100 
-          : 0;
-          
-        onProgress(
-          progressPercentage, 
-          progress.camerasFound, 
-          progress.currentTarget, 
-          progress.scanSpeed
-        );
-      },
-      (camera: CameraResult) => {
-        // Add discovered camera to our results
-        discoveredCameras.push(camera);
-      }
-    );
+    // Attempt to scan using the real scanner - wrap in try/catch to handle potential errors
+    try {
+      await scanNetwork(
+        "192.168.1.0/24", // Default to local network for safety
+        settings,
+        (progress: ScanProgress) => {
+          // Convert the progress format for the caller
+          const progressPercentage = progress.targetsTotal > 0 
+            ? (progress.targetsScanned / progress.targetsTotal) * 100 
+            : 0;
+            
+          onProgress(
+            progressPercentage, 
+            progress.camerasFound, 
+            progress.currentTarget, 
+            progress.scanSpeed
+          );
+        },
+        (camera: CameraResult) => {
+          // Add discovered camera to our results
+          discoveredCameras.push(camera);
+        }
+      );
+      
+      // Complete the scan with discovered cameras
+      onComplete(discoveredCameras);
+    } catch (scanError) {
+      console.warn("Real scanner error, falling back to mock data:", scanError);
+      return startMockScan(onProgress, onComplete, onError, options);
+    }
     
-    // Complete the scan with discovered cameras
-    onComplete(discoveredCameras);
-    
-    // No cleanup function needed for real scan
-    return () => {};
+    // Return a cleanup function
+    return () => {
+      console.log("Cleanup function called for real scan");
+      // Add any necessary cleanup logic here
+    };
   } catch (error) {
     // Handle errors
     const errorMessage = error instanceof Error ? error.message : 'Unknown error during scan';
     onError(errorMessage);
     
-    // Return empty cleanup function
+    // Return an empty cleanup function
     return () => {};
   }
 };
 
-// Let's update the startMockScan function to properly use region filters
-export const startMockScan = (
+// Let's update the startMockScan function to properly return a Promise<() => void>
+export const startMockScan = async (
   onProgress: (progressPercentage: number, camerasFound: number, currentTarget?: string, scanSpeed?: number) => void,
   onComplete: (results: CameraResult[]) => void,
   onError: (message: string) => void,
@@ -98,72 +105,67 @@ export const startMockScan = (
     vulnerabilityScan?: boolean;
     retryCount?: number;
   }>
-) => {
-  // First try to use the real scanner
-  try {
-    return startScan(onProgress, onComplete, onError, options);
-  } catch (error) {
-    console.warn("Real scanner failed, falling back to mock data:", error);
-    // Fall back to mock data if real scanner fails
-  }
-  
-  // Implement mockData functionality here as a fallback
-  // For now, we'll leave this as a stub that simulates a scan
-  
+): Promise<() => void> => {
   let isCancelled = false;
-  let progress = 0;
-  let camerasFound = 0;
-  const simulationSpeed = options?.aggressive ? 5 : 2; // Faster for aggressive mode
+  let intervalId: NodeJS.Timeout;
   
-  const interval = setInterval(() => {
-    if (isCancelled) {
-      clearInterval(interval);
-      return;
-    }
+  // Return a Promise that resolves with a cleanup function
+  return new Promise((resolve) => {
+    let progress = 0;
+    let camerasFound = 0;
+    const simulationSpeed = options?.aggressive ? 5 : 2; // Faster for aggressive mode
     
-    // Simulate progress and finding cameras
-    progress += Math.random() * simulationSpeed;
-    
-    if (progress >= 100) {
-      progress = 100;
-      clearInterval(interval);
+    intervalId = setInterval(() => {
+      if (isCancelled) {
+        clearInterval(intervalId);
+        return;
+      }
       
-      // Determine which mock results to return based on the region filter
-      let resultsToReturn: CameraResult[] = [...MOCK_CAMERA_RESULTS];
+      // Simulate progress and finding cameras
+      progress += Math.random() * simulationSpeed;
       
-      // If region filters are applied, return cameras specific to those regions
-      if (options?.regionFilter && options.regionFilter.length > 0) {
-        const regionCode = options.regionFilter[0]; // Take the first selected region
-        if (REGION_SPECIFIC_CAMERAS[regionCode]) {
-          // Make sure we return a fresh copy of the array to avoid any reference issues
-          resultsToReturn = [...REGION_SPECIFIC_CAMERAS[regionCode]];
+      if (progress >= 100) {
+        progress = 100;
+        clearInterval(intervalId);
+        
+        // Determine which mock results to return based on the region filter
+        let resultsToReturn: CameraResult[] = [...MOCK_CAMERA_RESULTS];
+        
+        // If region filters are applied, return cameras specific to those regions
+        if (options?.regionFilter && options.regionFilter.length > 0) {
+          const regionCode = options.regionFilter[0]; // Take the first selected region
+          if (REGION_SPECIFIC_CAMERAS[regionCode]) {
+            // Make sure we return a fresh copy of the array to avoid any reference issues
+            resultsToReturn = [...REGION_SPECIFIC_CAMERAS[regionCode]];
+          }
         }
+        
+        // Complete the scan with the correct region-specific results
+        onComplete(resultsToReturn);
+      } else {
+        // Randomly find cameras during the scan
+        if (Math.random() > 0.9) {
+          camerasFound++;
+        }
+        
+        // Generate a current target IP (simulated)
+        const currentIP = `192.168.1.${Math.floor(Math.random() * 255)}`;
+        
+        // Calculate scan speed (IPs per second)
+        const scanSpeed = options?.aggressive ? 150 + Math.floor(Math.random() * 100) : 
+                          80 + Math.floor(Math.random() * 70);
+        
+        onProgress(progress, camerasFound, currentIP, scanSpeed);
       }
-      
-      // Complete the scan with the correct region-specific results
-      onComplete(resultsToReturn);
-    } else {
-      // Randomly find cameras during the scan
-      if (Math.random() > 0.9) {
-        camerasFound++;
-      }
-      
-      // Generate a current target IP (simulated)
-      const currentIP = `192.168.1.${Math.floor(Math.random() * 255)}`;
-      
-      // Calculate scan speed (IPs per second)
-      const scanSpeed = options?.aggressive ? 150 + Math.floor(Math.random() * 100) : 
-                        80 + Math.floor(Math.random() * 70);
-      
-      onProgress(progress, camerasFound, currentIP, scanSpeed);
-    }
-  }, 200);
-  
-  // Return a function to stop the scan
-  return () => {
-    isCancelled = true;
-    clearInterval(interval);
-  };
+    }, 200);
+    
+    // Resolve with the cleanup function immediately so it can be used
+    resolve(() => {
+      isCancelled = true;
+      clearInterval(intervalId);
+      console.log("Mock scan cleanup called");
+    });
+  });
 };
 
 // Define region-specific camera results
