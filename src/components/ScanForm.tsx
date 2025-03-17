@@ -9,10 +9,10 @@ import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Slider } from '@/components/ui/slider';
-import { ChevronDown, ChevronUp, Search, Globe, FileText, AlertTriangle, Zap } from 'lucide-react';
+import { ChevronDown, ChevronUp, Search, Globe, FileText, AlertTriangle, Zap, MapPin } from 'lucide-react';
 import { ScanSettings, ScanTarget } from '@/types/scanner';
 import { validateScanInput } from '@/utils/validation';
-import { REGIONS } from '@/utils/mockData';
+import { REGIONS, COUNTRY_IP_RANGES, COUNTRY_SHODAN_QUERIES } from '@/utils/mockData';
 
 interface ScanFormProps {
   onStartScan: (target: ScanTarget, settings: ScanSettings) => void;
@@ -24,6 +24,8 @@ const ScanForm: React.FC<ScanFormProps> = ({ onStartScan, isScanning }) => {
   const [scanType, setScanType] = useState<'ip' | 'range' | 'file' | 'shodan'>('ip');
   const [scanValue, setScanValue] = useState('');
   const [inputError, setInputError] = useState('');
+  const [selectedCountry, setSelectedCountry] = useState<string | null>(null);
+  const [showPresets, setShowPresets] = useState(false);
   
   const [settings, setSettings] = useState<ScanSettings>({
     aggressive: false,
@@ -67,11 +69,75 @@ const ScanForm: React.FC<ScanFormProps> = ({ onStartScan, isScanning }) => {
     setSettings(prev => ({ ...prev, [key]: value }));
   };
 
+  const handleRegionFilterChange = (regionCode: string) => {
+    setSelectedCountry(regionCode);
+    
+    if (regionCode && regionCode !== 'all') {
+      updateSettings('regionFilter', [regionCode]);
+      setShowPresets(true);
+    } else {
+      updateSettings('regionFilter', []);
+      setShowPresets(false);
+      setSelectedCountry(null);
+    }
+  };
+
+  const handlePresetSelection = (value: string) => {
+    setScanValue(value);
+    setInputError('');
+  };
+
   const scanPlaceholder = {
     ip: '192.168.1.100',
     range: '192.168.1.0/24',
     file: 'Select a file with IP addresses',
     shodan: 'country:ua port:80,8080 product:hikvision'
+  };
+
+  const getPresetOptions = () => {
+    if (!selectedCountry || (selectedCountry === 'all')) return null;
+    
+    if (scanType === 'range' && COUNTRY_IP_RANGES[selectedCountry as keyof typeof COUNTRY_IP_RANGES]) {
+      return (
+        <div className="mt-2">
+          <Label className="text-gray-300 mb-1 block">Predefined IP Ranges</Label>
+          <Select onValueChange={handlePresetSelection}>
+            <SelectTrigger className="bg-gray-800 border-gray-700">
+              <SelectValue placeholder="Select IP Range" />
+            </SelectTrigger>
+            <SelectContent className="bg-gray-800 border-gray-700">
+              {COUNTRY_IP_RANGES[selectedCountry as keyof typeof COUNTRY_IP_RANGES].map((range) => (
+                <SelectItem key={range.value} value={range.value}>
+                  {range.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      );
+    }
+    
+    if (scanType === 'shodan' && COUNTRY_SHODAN_QUERIES[selectedCountry as keyof typeof COUNTRY_SHODAN_QUERIES]) {
+      return (
+        <div className="mt-2">
+          <Label className="text-gray-300 mb-1 block">Predefined Shodan Queries</Label>
+          <Select onValueChange={handlePresetSelection}>
+            <SelectTrigger className="bg-gray-800 border-gray-700">
+              <SelectValue placeholder="Select Shodan Query" />
+            </SelectTrigger>
+            <SelectContent className="bg-gray-800 border-gray-700">
+              {COUNTRY_SHODAN_QUERIES[selectedCountry as keyof typeof COUNTRY_SHODAN_QUERIES].map((query) => (
+                <SelectItem key={query.value} value={query.value}>
+                  {query.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      );
+    }
+    
+    return null;
   };
 
   return (
@@ -96,7 +162,11 @@ const ScanForm: React.FC<ScanFormProps> = ({ onStartScan, isScanning }) => {
                 <RadioGroup 
                   defaultValue="ip" 
                   className="flex flex-wrap gap-4"
-                  onValueChange={(value) => setScanType(value as any)}
+                  onValueChange={(value) => {
+                    setScanType(value as any);
+                    setScanValue('');
+                    setInputError('');
+                  }}
                 >
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="ip" id="option-ip" />
@@ -156,8 +226,8 @@ const ScanForm: React.FC<ScanFormProps> = ({ onStartScan, isScanning }) => {
               </div>
               
               <div className="space-y-2">
-                <Label className="text-gray-300">Region Filter (Optional)</Label>
-                <Select>
+                <Label className="text-gray-300">Region Filter</Label>
+                <Select onValueChange={handleRegionFilterChange}>
                   <SelectTrigger className="bg-gray-800 border-gray-700">
                     <SelectValue placeholder="All Regions" />
                   </SelectTrigger>
@@ -170,6 +240,9 @@ const ScanForm: React.FC<ScanFormProps> = ({ onStartScan, isScanning }) => {
                     ))}
                   </SelectContent>
                 </Select>
+                
+                {/* Render country-specific presets if applicable */}
+                {showPresets && getPresetOptions()}
               </div>
               
               <div className="flex items-center justify-between pt-2">
