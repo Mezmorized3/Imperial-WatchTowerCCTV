@@ -133,6 +133,137 @@ export const checkVulnerabilityDatabase = async (ip: string): Promise<Record<str
   return shuffled.slice(0, numVulnerabilities);
 };
 
+/**
+ * NEW: Query ZoomEye API for CCTV camera information
+ * Note: In a real application, we would use the actual ZoomEye API with proper authentication
+ */
+export const queryZoomEyeApi = async (ip: string): Promise<Record<string, any>> => {
+  console.log(`Querying ZoomEye for IP: ${ip}`);
+  
+  // Simulate API delay
+  await new Promise(resolve => setTimeout(resolve, 1200));
+  
+  // Mock ZoomEye data for demonstration
+  const randomRecentDate = () => {
+    const date = new Date();
+    date.setDate(date.getDate() - Math.floor(Math.random() * 30));
+    return date.toISOString().split('T')[0];
+  };
+  
+  // Generate random port for different services
+  const httpPort = [80, 8080, 8000, 8081, 8888][Math.floor(Math.random() * 5)];
+  const rtspPort = [554, 8554, 10554][Math.floor(Math.random() * 3)];
+  
+  // Generate random camera manufacturer and model
+  const manufacturers = [
+    { name: 'Hikvision', models: ['DS-2CD2032-I', 'DS-2CD2142FWD-I', 'DS-2CD2042WD-I'] },
+    { name: 'Dahua', models: ['IPC-HDW4431C-A', 'IPC-HDBW4631R-S', 'DH-IPC-HFW4431E-SE'] },
+    { name: 'Axis', models: ['M3015', 'P1448-LE', 'P3225-LV Mk II'] },
+    { name: 'Samsung', models: ['SNH-V6410PN', 'SNH-P6410BN', 'SND-L6083R'] },
+    { name: 'Bosch', models: ['DINION IP 4000 HD', 'FLEXIDOME IP outdoor 4000 IR', 'TINYON IP 2000 WI'] }
+  ];
+  
+  const manufacturer = manufacturers[Math.floor(Math.random() * manufacturers.length)];
+  const model = manufacturer.models[Math.floor(Math.random() * manufacturer.models.length)];
+  
+  // Generate random firmware version
+  const generateFirmwareVersion = () => {
+    const major = Math.floor(Math.random() * 5) + 1;
+    const minor = Math.floor(Math.random() * 10);
+    const patch = Math.floor(Math.random() * 20);
+    return `v${major}.${minor}.${patch}`;
+  };
+  
+  // Random open ports
+  const openPorts = [];
+  if (Math.random() > 0.3) openPorts.push(httpPort);
+  if (Math.random() > 0.3) openPorts.push(rtspPort);
+  if (Math.random() > 0.6) openPorts.push(22); // SSH
+  if (Math.random() > 0.7) openPorts.push(23); // Telnet
+  if (Math.random() > 0.8) openPorts.push(9000); // API port
+  
+  return {
+    'IP Address': ip,
+    'Last Scanned': randomRecentDate(),
+    'Manufacturer': manufacturer.name,
+    'Model': model,
+    'Firmware Version': generateFirmwareVersion(),
+    'Open Ports': openPorts.join(', '),
+    'HTTP Service': Math.random() > 0.3 ? `Port ${httpPort} - Web Management Interface` : 'Not detected',
+    'RTSP Service': Math.random() > 0.3 ? `Port ${rtspPort} - Video Stream` : 'Not detected',
+    'SSL/TLS': Math.random() > 0.5 ? 'Enabled' : 'Disabled',
+    'Authentication': Math.random() > 0.4 ? 'Required' : 'Not required or bypassed',
+    'Geolocation': getRandomGeoLocation(ip)
+  };
+};
+
+/**
+ * Generate a random geolocation near the country associated with the IP
+ */
+export const getRandomGeoLocation = (ip: string): {lat: number; lng: number; accuracy: string} => {
+  // Use the mock country to determine a base location
+  const country = getMockCountry(ip);
+  
+  // Base coordinates for countries (approximate centers)
+  const countryCoords: Record<string, [number, number]> = {
+    'United States': [37.0902, -95.7129],
+    'Germany': [51.1657, 10.4515],
+    'France': [46.2276, 2.2137],
+    'Netherlands': [52.1326, 5.2913],
+    'United Kingdom': [55.3781, -3.4360],
+    'Japan': [36.2048, 138.2529],
+    'Singapore': [1.3521, 103.8198],
+    'Australia': [-25.2744, 133.7751],
+    'Brazil': [-14.2350, -51.9253],
+    'Canada': [56.1304, -106.3468],
+    'Italy': [41.8719, 12.5674],
+    'Spain': [40.4637, -3.7492]
+  };
+  
+  // Default to US if country not found
+  const baseCoords = countryCoords[country] || countryCoords['United States'];
+  
+  // Add some randomness to the coordinates (within ~50-100km)
+  const latVariation = (Math.random() - 0.5) * 0.9;
+  const lngVariation = (Math.random() - 0.5) * 0.9;
+  
+  return {
+    lat: baseCoords[0] + latVariation,
+    lng: baseCoords[1] + lngVariation,
+    accuracy: Math.random() > 0.7 ? 'High' : Math.random() > 0.4 ? 'Medium' : 'Low'
+  };
+};
+
+/**
+ * Get more comprehensive OSINT data from multiple sources
+ */
+export const getComprehensiveOsintData = async (ip: string): Promise<Record<string, any>> => {
+  console.log(`Getting comprehensive OSINT data for IP: ${ip}`);
+  
+  try {
+    // Query all sources in parallel
+    const [whoisData, dnsRecords, vulnerabilities, zoomeyeData] = await Promise.all([
+      fetchWhoisData(ip),
+      fetchDnsRecords(ip),
+      checkVulnerabilityDatabase(ip),
+      queryZoomEyeApi(ip)
+    ]);
+    
+    // Combine the data
+    return {
+      whois: whoisData,
+      dns: dnsRecords,
+      vulnerabilities,
+      zoomEye: zoomeyeData,
+      geolocation: zoomeyeData.Geolocation,
+      comprehensive: true
+    };
+  } catch (error) {
+    console.error("Error fetching comprehensive OSINT data:", error);
+    throw error;
+  }
+};
+
 // Helper functions for generating mock data
 
 function getMockOrganization(ip: string): string {
