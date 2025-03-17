@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -51,6 +52,8 @@ const ScanForm: React.FC<ScanFormProps> = ({ onStartScan, isScanning }) => {
         setInputError('Invalid IP address format');
       } else if (scanType === 'range') {
         setInputError('Invalid CIDR format (e.g., 192.168.1.0/24)');
+      } else if (['shodan', 'zoomeye', 'censys'].includes(scanType) && value.trim() === '') {
+        setInputError(`Please enter a valid ${scanType} query`);
       } else {
         setInputError('');
       }

@@ -29,6 +29,7 @@ export const validateScanInput = (input: string, type: 'ip' | 'range' | 'file' |
     case 'shodan':
     case 'zoomeye':
     case 'censys':
+      // For search engine queries, just check that there's some content
       return input.trim().length > 0;
     default:
       return false;

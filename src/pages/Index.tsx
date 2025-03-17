@@ -44,13 +44,13 @@ const Index = () => {
           if (targetsTotal > 1000000) targetsTotal = 1000000;
         }
       }
-    } else if (target.type === 'shodan') {
+    } else if (['shodan', 'zoomeye', 'censys'].includes(target.type)) {
+      // For search engine queries, set an estimated number
+      targetsTotal = 100;
       toast({
-        title: "Shodan Support",
-        description: "Shodan scanning requires API credentials, please configure in settings.",
-        variant: "destructive",
+        title: `${target.type.charAt(0).toUpperCase() + target.type.slice(1)} Query`,
+        description: `Scanning using ${target.type} query: ${target.value}`,
       });
-      return;
     }
     
     // Start progress tracking with enhanced metadata
