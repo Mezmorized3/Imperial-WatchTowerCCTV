@@ -60,9 +60,9 @@ const Index = () => {
       (results) => {
         setResults(results);
         setScanProgress(prevState => {
-          const updatedState = {
+          const updatedState: ScanProgress = {
             ...prevState,
-            status: 'completed',
+            status: 'completed', // Now explicitly using 'completed' which is a valid ScanStatus
             targetsScanned: targetsTotal,
             camerasFound: results.length,
             endTime: new Date()
