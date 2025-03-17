@@ -122,6 +122,44 @@ export const REGIONS = [
   { code: "SK", name: "Slovakia" }
 ];
 
+export const REGION_CITIES = {
+  UA: [
+    { code: "KYIV", name: "Kyiv" },
+    { code: "ZAP", name: "Zaporizhzhia" },
+    { code: "KHER", name: "Kherson" },
+    { code: "KHAR", name: "Kharkiv" },
+    { code: "DNI", name: "Dnipro" },
+    { code: "DON", name: "Donetsk" },
+    { code: "LUH", name: "Luhansk" },
+    { code: "ODE", name: "Odessa" },
+    { code: "MAR", name: "Mariupol" }
+  ],
+  RO: [
+    { code: "BUC", name: "Bucharest" },
+    { code: "CLJ", name: "Cluj-Napoca" },
+    { code: "TIM", name: "Timisoara" },
+    { code: "IAS", name: "Iasi" },
+    { code: "CON", name: "Constanta" },
+    { code: "BRA", name: "Brasov" }
+  ],
+  RU: [
+    { code: "MOS", name: "Moscow" },
+    { code: "SPB", name: "Saint Petersburg" },
+    { code: "KURSK", name: "Kursk" },
+    { code: "KURSKOBL", name: "Kursk Oblast" },
+    { code: "BEL", name: "Belgorod" },
+    { code: "ROS", name: "Rostov-on-Don" },
+    { code: "VOR", name: "Voronezh" }
+  ],
+  GE: [
+    { code: "TBI", name: "Tbilisi" },
+    { code: "BAT", name: "Batumi" },
+    { code: "KUT", name: "Kutaisi" },
+    { code: "RUS", name: "Rustavi" },
+    { code: "GOI", name: "Gori" }
+  ]
+};
+
 export const DEFAULT_CREDENTIALS = {
   hikvision: [
     { username: "admin", password: "12345" },
@@ -150,21 +188,30 @@ export const COUNTRY_IP_RANGES = {
     { label: "Romania - Cluj (UPC Romania)", value: "77.81.128.0/18" },
     { label: "Romania - Timisoara (Telekom)", value: "79.112.0.0/13" },
     { label: "Romania - Iasi (Orange)", value: "86.120.0.0/13" },
-    { label: "Romania - General", value: "109.99.0.0/16" }
+    { label: "Romania - General", value: "109.99.0.0/16" },
+    { label: "Romania - Bucharest (Telekom)", value: "79.114.0.0/16" },
+    { label: "Romania - Bucharest (Orange)", value: "86.122.0.0/16" }
   ],
   UA: [
     { label: "Ukraine - Kyiv (Ukrtelecom)", value: "31.43.0.0/16" },
     { label: "Ukraine - Odessa (Vega)", value: "46.211.0.0/17" },
     { label: "Ukraine - Lviv (UARNet)", value: "77.88.0.0/17" },
     { label: "Ukraine - Kharkiv (Triolan)", value: "176.36.0.0/15" },
-    { label: "Ukraine - General", value: "178.136.0.0/15" }
+    { label: "Ukraine - General", value: "178.136.0.0/15" },
+    { label: "Ukraine - Zaporizhzhia (Kyivstar)", value: "46.211.64.0/18" },
+    { label: "Ukraine - Kherson (Volia)", value: "178.213.0.0/16" },
+    { label: "Ukraine - Dnipro (Datagroup)", value: "93.183.192.0/18" },
+    { label: "Ukraine - Eastern Cities (Various)", value: "176.37.0.0/16" }
   ],
   RU: [
     { label: "Russia - Moscow (Rostelecom)", value: "37.144.0.0/14" },
     { label: "Russia - St. Petersburg (MTS)", value: "46.188.0.0/15" },
     { label: "Russia - Kazan (ER-Telecom)", value: "85.26.0.0/17" },
     { label: "Russia - Novosibirsk (SibNet)", value: "90.188.0.0/15" },
-    { label: "Russia - General", value: "188.168.0.0/14" }
+    { label: "Russia - General", value: "188.168.0.0/14" },
+    { label: "Russia - Kursk (Rostelecom)", value: "92.47.192.0/19" },
+    { label: "Russia - Kursk Oblast (MTS)", value: "46.188.96.0/20" },
+    { label: "Russia - Belgorod (ER-Telecom)", value: "89.189.128.0/18" }
   ]
 };
 
@@ -173,20 +220,60 @@ export const COUNTRY_SHODAN_QUERIES = {
     { label: "Romania - Hikvision Cameras", value: "country:RO product:Hikvision port:80,8080,443" },
     { label: "Romania - Dahua Cameras", value: "country:RO product:Dahua port:80,8080,37777" },
     { label: "Romania - IP Cameras (General)", value: "country:RO webcam has_screenshot:true" },
-    { label: "Romania - DVR/NVR Systems", value: "country:RO html:'DVR' has_screenshot:true" }
+    { label: "Romania - DVR/NVR Systems", value: "country:RO html:'DVR' has_screenshot:true" },
+    { label: "Romania - Bucharest Cameras", value: "country:RO city:Bucharest port:80,8080,554 has_screenshot:true" }
   ],
   UA: [
     { label: "Ukraine - Hikvision Cameras", value: "country:UA product:Hikvision port:80,8080,443" },
     { label: "Ukraine - Dahua Cameras", value: "country:UA product:Dahua port:80,8080,37777" },
     { label: "Ukraine - IP Cameras (General)", value: "country:UA webcam has_screenshot:true" },
-    { label: "Ukraine - DVR/NVR Systems", value: "country:UA html:'DVR' has_screenshot:true" }
+    { label: "Ukraine - DVR/NVR Systems", value: "country:UA html:'DVR' has_screenshot:true" },
+    { label: "Ukraine - Zaporizhzhia Cameras", value: "country:UA city:Zaporizhzhia port:80,8080,554" },
+    { label: "Ukraine - Kherson Cameras", value: "country:UA city:Kherson port:80,8080,554" },
+    { label: "Ukraine - Kharkiv Cameras", value: "country:UA city:Kharkiv port:80,8080,554" },
+    { label: "Ukraine - Dnipro Cameras", value: "country:UA city:Dnipro port:80,8080,554" },
+    { label: "Ukraine - Eastern Cities Cameras", value: "country:UA city:Donetsk,Luhansk,Mariupol port:80,8080,554" }
   ],
   RU: [
     { label: "Russia - Hikvision Cameras", value: "country:RU product:Hikvision port:80,8080,443" },
     { label: "Russia - Dahua Cameras", value: "country:RU product:Dahua port:80,8080,37777" },
     { label: "Russia - IP Cameras (General)", value: "country:RU webcam has_screenshot:true" },
-    { label: "Russia - DVR/NVR Systems", value: "country:RU html:'DVR' has_screenshot:true" }
+    { label: "Russia - DVR/NVR Systems", value: "country:RU html:'DVR' has_screenshot:true" },
+    { label: "Russia - Kursk Cameras", value: "country:RU city:Kursk port:80,8080,554" },
+    { label: "Russia - Border Regions", value: "country:RU city:Belgorod,Kursk,Rostov port:80,8080,554" }
+  ],
+  GE: [
+    { label: "Georgia - Hikvision Cameras", value: "country:GE product:Hikvision port:80,8080,443" },
+    { label: "Georgia - Dahua Cameras", value: "country:GE product:Dahua port:80,8080,37777" },
+    { label: "Georgia - IP Cameras (General)", value: "country:GE webcam has_screenshot:true" },
+    { label: "Georgia - Tbilisi Cameras", value: "country:GE city:Tbilisi port:80,8080,554" }
   ]
+};
+
+export const openRtspStream = (camera: CameraResult) => {
+  const rtspUrl = buildRtspUrl(camera);
+  const viewerUrl = `/viewer?url=${encodeURIComponent(rtspUrl)}&name=${encodeURIComponent(camera.brand || '')} ${encodeURIComponent(camera.model || '')}`;
+  window.open(viewerUrl, '_blank');
+  return rtspUrl;
+};
+
+export const buildRtspUrl = (camera: CameraResult): string => {
+  const { ip, port, brand } = camera;
+  const credentials = camera.credentials ? 
+    `${camera.credentials.username}:${camera.credentials.password}@` : '';
+  
+  switch(brand?.toLowerCase()) {
+    case 'hikvision':
+      return `rtsp://${credentials}${ip}:554/Streaming/Channels/101`;
+    case 'dahua':
+      return `rtsp://${credentials}${ip}:554/cam/realmonitor?channel=1&subtype=0`;
+    case 'axis':
+      return `rtsp://${credentials}${ip}:554/axis-media/media.amp`;
+    case 'ezviz':
+      return `rtsp://${credentials}${ip}:554/Streaming/Channels/1`;
+    default:
+      return `rtsp://${credentials}${ip}:554/stream1`;
+  }
 };
 
 export const startMockScan = (

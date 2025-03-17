@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
@@ -14,8 +13,10 @@ import {
   Lock, 
   MapPin, 
   MoreHorizontal, 
+  Play,
   Search, 
   Shield, 
+  Video,
   X 
 } from 'lucide-react';
 import { 
@@ -35,12 +36,15 @@ import { CameraResult } from '@/types/scanner';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
+import { openRtspStream } from '@/utils/mockData';
+import { useToast } from '@/components/ui/use-toast';
 
 interface ResultsTableProps {
   results: CameraResult[];
 }
 
 const ResultsTable: React.FC<ResultsTableProps> = ({ results }) => {
+  const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCamera, setSelectedCamera] = useState<CameraResult | null>(null);
   
@@ -79,6 +83,28 @@ const ResultsTable: React.FC<ResultsTableProps> = ({ results }) => {
       default:
         return <X className="h-4 w-4 text-gray-500" aria-label="No Access" />;
     }
+  };
+
+  const handleOpenStream = (camera: CameraResult, e?: React.MouseEvent) => {
+    if (e) {
+      e.stopPropagation();
+    }
+    
+    if (camera.status === 'offline') {
+      toast({
+        title: "Camera Offline",
+        description: "Cannot open stream for offline camera",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    const rtspUrl = openRtspStream(camera);
+    
+    toast({
+      title: "Opening Stream",
+      description: `Opening stream for ${camera.ip}${camera.port !== 80 ? `:${camera.port}` : ''}`,
+    });
   };
 
   return (
@@ -142,7 +168,8 @@ const ResultsTable: React.FC<ResultsTableProps> = ({ results }) => {
                   <TableHead className="text-gray-400">Brand / Model</TableHead>
                   <TableHead className="text-gray-400">Location</TableHead>
                   <TableHead className="text-gray-400">Access</TableHead>
-                  <TableHead className="text-gray-400 w-12"></TableHead>
+                  <TableHead className="text-gray-400 w-12">Stream</TableHead>
+                  <TableHead className="text-gray-400 w-12">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -191,6 +218,17 @@ const ResultsTable: React.FC<ResultsTableProps> = ({ results }) => {
                       </div>
                     </TableCell>
                     <TableCell>
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className={`h-8 w-8 ${camera.status === 'offline' ? 'opacity-50' : ''}`}
+                        onClick={(e) => handleOpenStream(camera, e)}
+                        disabled={camera.status === 'offline'}
+                      >
+                        <Play className="h-4 w-4 text-scanner-primary" />
+                      </Button>
+                    </TableCell>
+                    <TableCell>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <Button variant="ghost" size="icon" className="h-8 w-8">
@@ -199,7 +237,12 @@ const ResultsTable: React.FC<ResultsTableProps> = ({ results }) => {
                         </DropdownMenuTrigger>
                         <DropdownMenuContent className="bg-gray-800 border-gray-700">
                           <DropdownMenuItem>View Details</DropdownMenuItem>
-                          <DropdownMenuItem>Open Stream</DropdownMenuItem>
+                          <DropdownMenuItem onClick={(e) => {
+                            e.stopPropagation();
+                            handleOpenStream(camera);
+                          }}>
+                            Open Stream
+                          </DropdownMenuItem>
                           <DropdownMenuItem>Take Snapshot</DropdownMenuItem>
                           <DropdownMenuItem>Copy URL</DropdownMenuItem>
                         </DropdownMenuContent>
@@ -316,10 +359,16 @@ const ResultsTable: React.FC<ResultsTableProps> = ({ results }) => {
                   <div className="bg-black aspect-video rounded flex items-center justify-center">
                     {selectedCamera.status !== 'offline' ? (
                       <div className="text-center">
-                        <p className="text-gray-500">Camera snapshot preview</p>
+                        <p className="text-gray-500">Camera stream preview</p>
                         <div className="mt-2 flex justify-center">
-                          <Button variant="outline" size="sm" className="text-xs">
-                            Take Snapshot
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className="text-xs" 
+                            onClick={() => handleOpenStream(selectedCamera)}
+                          >
+                            <Play className="h-3 w-3 mr-1" />
+                            Play Stream
                           </Button>
                         </div>
                       </div>
@@ -346,14 +395,26 @@ const ResultsTable: React.FC<ResultsTableProps> = ({ results }) => {
                         <div className="font-mono text-gray-300 truncate">
                           rtsp://{selectedCamera.ip}/Streaming/Channels/1
                         </div>
-                        <Badge variant="outline" className="ml-2 shrink-0">RTSP</Badge>
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          className="h-6 w-6 ml-2 shrink-0"
+                          onClick={() => handleOpenStream(selectedCamera)}
+                          disabled={selectedCamera.status === 'offline'}
+                        >
+                          <Play className="h-3 w-3 text-scanner-primary" />
+                        </Button>
                       </div>
                     </div>
                   </div>
                   
                   <div className="flex flex-col gap-2">
-                    <Button className="bg-scanner-primary hover:bg-blue-600">
-                      <Eye className="mr-2 h-4 w-4" />
+                    <Button 
+                      className="bg-scanner-primary hover:bg-blue-600"
+                      onClick={() => handleOpenStream(selectedCamera)}
+                      disabled={selectedCamera.status === 'offline'}
+                    >
+                      <Video className="mr-2 h-4 w-4" />
                       Open Live Stream
                     </Button>
                     <div className="grid grid-cols-2 gap-2">
