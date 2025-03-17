@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,7 +11,13 @@ import { Slider } from '@/components/ui/slider';
 import { ChevronDown, ChevronUp, Search, Globe, FileText, AlertTriangle, Zap, MapPin, Database, Bell } from 'lucide-react';
 import { ScanSettings, ScanTarget } from '@/types/scanner';
 import { validateScanInput } from '@/utils/validation';
-import { REGIONS, COUNTRY_IP_RANGES, COUNTRY_SHODAN_QUERIES } from '@/utils/mockData';
+import { 
+  REGIONS, 
+  COUNTRY_IP_RANGES, 
+  COUNTRY_SHODAN_QUERIES,
+  COUNTRY_ZOOMEYE_QUERIES,
+  COUNTRY_CENSYS_QUERIES
+} from '@/utils/mockData';
 
 interface ScanFormProps {
   onStartScan: (target: ScanTarget, settings: ScanSettings) => void;
@@ -131,6 +136,46 @@ const ScanForm: React.FC<ScanFormProps> = ({ onStartScan, isScanning }) => {
             </SelectTrigger>
             <SelectContent className="bg-gray-800 border-gray-700">
               {COUNTRY_SHODAN_QUERIES[selectedCountry as keyof typeof COUNTRY_SHODAN_QUERIES].map((query) => (
+                <SelectItem key={query.value} value={query.value}>
+                  {query.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      );
+    }
+    
+    if (scanType === 'zoomeye' && COUNTRY_ZOOMEYE_QUERIES[selectedCountry as keyof typeof COUNTRY_ZOOMEYE_QUERIES]) {
+      return (
+        <div className="mt-2">
+          <Label className="text-gray-300 mb-1 block">Predefined ZoomEye Queries</Label>
+          <Select onValueChange={handlePresetSelection}>
+            <SelectTrigger className="bg-gray-800 border-gray-700">
+              <SelectValue placeholder="Select ZoomEye Query" />
+            </SelectTrigger>
+            <SelectContent className="bg-gray-800 border-gray-700">
+              {COUNTRY_ZOOMEYE_QUERIES[selectedCountry as keyof typeof COUNTRY_ZOOMEYE_QUERIES].map((query) => (
+                <SelectItem key={query.value} value={query.value}>
+                  {query.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      );
+    }
+    
+    if (scanType === 'censys' && COUNTRY_CENSYS_QUERIES[selectedCountry as keyof typeof COUNTRY_CENSYS_QUERIES]) {
+      return (
+        <div className="mt-2">
+          <Label className="text-gray-300 mb-1 block">Predefined Censys Queries</Label>
+          <Select onValueChange={handlePresetSelection}>
+            <SelectTrigger className="bg-gray-800 border-gray-700">
+              <SelectValue placeholder="Select Censys Query" />
+            </SelectTrigger>
+            <SelectContent className="bg-gray-800 border-gray-700">
+              {COUNTRY_CENSYS_QUERIES[selectedCountry as keyof typeof COUNTRY_CENSYS_QUERIES].map((query) => (
                 <SelectItem key={query.value} value={query.value}>
                   {query.label}
                 </SelectItem>
@@ -262,7 +307,6 @@ const ScanForm: React.FC<ScanFormProps> = ({ onStartScan, isScanning }) => {
                   </SelectContent>
                 </Select>
                 
-                {/* Render country-specific presets if applicable */}
                 {showPresets && getPresetOptions()}
               </div>
               

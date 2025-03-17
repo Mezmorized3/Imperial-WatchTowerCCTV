@@ -1,4 +1,3 @@
-
 import { CameraResult } from '@/types/scanner';
 
 // This function will handle opening an RTSP stream
@@ -114,5 +113,72 @@ export const COUNTRY_SHODAN_QUERIES: Record<string, Array<{label: string, value:
     { label: 'Georgia Public Cameras', value: 'country:GE has_screenshot:true webcam' },
     { label: 'Tbilisi Street Cams', value: 'city:Tbilisi country:GE product:hikvision' },
     { label: 'Georgia Border Surveillance', value: 'country:GE port:554 has_screenshot:true' }
+  ]
+};
+
+// Real ZoomEye queries by country
+export const COUNTRY_ZOOMEYE_QUERIES: Record<string, Array<{label: string, value: string}>> = {
+  us: [
+    { label: 'US IP Cameras', value: 'app:"IP Camera" country:US' },
+    { label: 'US Hikvision Cameras', value: 'app:"hikvision" country:US' },
+    { label: 'US Dahua Devices', value: 'app:"dahua" country:US' }
+  ],
+  ru: [
+    { label: 'Russian CCTV', value: 'app:"webcam" country:RU' },
+    { label: 'Moscow IP Cameras', value: 'app:"IP Camera" city:Moscow' },
+    { label: 'Russian Surveillance', value: 'app:"surveillance" country:RU' }
+  ],
+  cn: [
+    { label: 'China Surveillance', value: 'app:"hikvision" country:CN' },
+    { label: 'Beijing Cameras', value: 'app:"webcam" city:Beijing' }
+  ],
+  ua: [
+    { label: 'Ukraine Cameras', value: 'app:"webcam" country:UA' },
+    { label: 'Kiev IP Cameras', value: 'app:"IP Camera" city:Kiev' },
+    { label: 'Ukraine Hikvision', value: 'app:"hikvision" country:UA' }
+  ],
+  pl: [
+    { label: 'Poland Surveillance', value: 'app:"surveillance" country:PL' },
+    { label: 'Warsaw Cameras', value: 'app:"webcam" city:Warsaw' }
+  ],
+  ro: [
+    { label: 'Romania CCTV', value: 'app:"webcam" country:RO' },
+    { label: 'Bucharest Cameras', value: 'app:"IP Camera" city:Bucharest' }
+  ],
+  ge: [
+    { label: 'Georgia Surveillance', value: 'app:"surveillance" country:GE' },
+    { label: 'Tbilisi Cameras', value: 'app:"webcam" city:Tbilisi' }
+  ]
+};
+
+// Real Censys queries by country
+export const COUNTRY_CENSYS_QUERIES: Record<string, Array<{label: string, value: string}>> = {
+  us: [
+    { label: 'US RTSP Cameras', value: 'services.port=554 and location.country.name="United States"' },
+    { label: 'US Security DVRs', value: 'services.port=80 and services.http.response.html_title:"DVR" and location.country.name="United States"' }
+  ],
+  ru: [
+    { label: 'Russian RTSP Streams', value: 'services.port=554 and location.country.name="Russia"' },
+    { label: 'Moscow Webcams', value: 'services.port=80 and services.http.response.html_title:"webcam" and location.country.name="Russia" and location.city="Moscow"' }
+  ],
+  cn: [
+    { label: 'China IP Cameras', value: 'services.port=80 and services.http.response.html_title:"ipcamera" and location.country.name="China"' },
+    { label: 'China RTSP Streams', value: 'services.port=554 and location.country.name="China"' }
+  ],
+  ua: [
+    { label: 'Ukraine Cameras', value: 'services.port=554 and location.country.name="Ukraine"' },
+    { label: 'Kiev Surveillance', value: 'services.port=80 and services.http.response.html_title:"camera" and location.country.name="Ukraine" and location.city="Kiev"' }
+  ],
+  pl: [
+    { label: 'Poland Network Cameras', value: 'services.port=554 and location.country.name="Poland"' },
+    { label: 'Warsaw CCTV', value: 'services.port=80 and services.http.response.html_title:"CCTV" and location.country.name="Poland" and location.city="Warsaw"' }
+  ],
+  ro: [
+    { label: 'Romania Surveillance', value: 'services.port=554 and location.country.name="Romania"' },
+    { label: 'Bucharest IP Cameras', value: 'services.port=80 and services.http.response.html_title:"camera" and location.country.name="Romania" and location.city="Bucharest"' }
+  ],
+  ge: [
+    { label: 'Georgia RTSP Streams', value: 'services.port=554 and location.country.name="Georgia"' },
+    { label: 'Tbilisi Cameras', value: 'services.port=80 and services.http.response.html_title:"camera" and location.country.name="Georgia" and location.city="Tbilisi"' }
   ]
 };
