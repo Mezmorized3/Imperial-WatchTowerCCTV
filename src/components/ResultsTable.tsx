@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
@@ -6,10 +7,12 @@ import {
   AlertCircle, 
   Camera, 
   Check, 
+  Database,
   Download, 
   ExternalLink, 
   Eye, 
   Filter, 
+  Globe,
   Lock, 
   MapPin, 
   MoreHorizontal, 
@@ -17,12 +20,14 @@ import {
   Search, 
   Shield, 
   Video,
-  X 
+  X,
+  Info
 } from 'lucide-react';
 import { 
   DropdownMenu, 
   DropdownMenuContent, 
   DropdownMenuItem, 
+  DropdownMenuSeparator,
   DropdownMenuTrigger 
 } from '@/components/ui/dropdown-menu';
 import {
@@ -38,6 +43,7 @@ import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { openRtspStream } from '@/utils/mockData';
 import { useToast } from '@/components/ui/use-toast';
+import { useNavigate } from 'react-router-dom';
 
 interface ResultsTableProps {
   results: CameraResult[];
@@ -45,6 +51,7 @@ interface ResultsTableProps {
 
 const ResultsTable: React.FC<ResultsTableProps> = ({ results }) => {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCamera, setSelectedCamera] = useState<CameraResult | null>(null);
   
@@ -99,13 +106,41 @@ const ResultsTable: React.FC<ResultsTableProps> = ({ results }) => {
       return;
     }
     
-    const rtspUrl = openRtspStream(camera);
+    // Generate stream URL
+    const streamUrl = camera.url || `rtsp://${camera.ip}/Streaming/Channels/1`;
+    
+    // Navigate to the enhanced viewer with additional params
+    navigate(`/viewer?url=${encodeURIComponent(streamUrl)}&name=${encodeURIComponent(camera.brand || 'Unknown Camera')}&ip=${encodeURIComponent(camera.ip)}`);
     
     toast({
       title: "Opening Stream",
       description: `Opening stream for ${camera.ip}${camera.port !== 80 ? `:${camera.port}` : ''}`,
     });
   };
+
+  const handleOpenOsintView = (camera: CameraResult, e?: React.MouseEvent) => {
+    if (e) {
+      e.stopPropagation();
+    }
+    
+    // Navigate to viewer with OSINT tab active
+    const streamUrl = camera.url || `rtsp://${camera.ip}/Streaming/Channels/1`;
+    navigate(`/viewer?url=${encodeURIComponent(streamUrl)}&name=${encodeURIComponent(camera.brand || 'Unknown Camera')}&ip=${encodeURIComponent(camera.ip)}#osint`);
+    
+    toast({
+      title: "Loading OSINT Data",
+      description: `Gathering intelligence for ${camera.ip}`,
+    });
+  };
+
+  const filteredResults = searchTerm
+    ? results.filter(camera => 
+        camera.ip.includes(searchTerm) || 
+        camera.brand?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        camera.model?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        camera.location?.country.toLowerCase().includes(searchTerm.toLowerCase())
+      )
+    : results;
 
   return (
     <Card className="bg-scanner-card border-gray-800 shadow-lg">
@@ -168,6 +203,7 @@ const ResultsTable: React.FC<ResultsTableProps> = ({ results }) => {
                   <TableHead className="text-gray-400">Brand / Model</TableHead>
                   <TableHead className="text-gray-400">Location</TableHead>
                   <TableHead className="text-gray-400">Access</TableHead>
+                  <TableHead className="text-gray-400 w-12">OSINT</TableHead>
                   <TableHead className="text-gray-400 w-12">Stream</TableHead>
                   <TableHead className="text-gray-400 w-12">Actions</TableHead>
                 </TableRow>
@@ -221,6 +257,16 @@ const ResultsTable: React.FC<ResultsTableProps> = ({ results }) => {
                       <Button 
                         variant="ghost" 
                         size="icon" 
+                        className="h-8 w-8"
+                        onClick={(e) => handleOpenOsintView(camera, e)}
+                      >
+                        <Globe className="h-4 w-4 text-scanner-info" />
+                      </Button>
+                    </TableCell>
+                    <TableCell>
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
                         className={`h-8 w-8 ${camera.status === 'offline' ? 'opacity-50' : ''}`}
                         onClick={(e) => handleOpenStream(camera, e)}
                         disabled={camera.status === 'offline'}
@@ -243,6 +289,13 @@ const ResultsTable: React.FC<ResultsTableProps> = ({ results }) => {
                           }}>
                             Open Stream
                           </DropdownMenuItem>
+                          <DropdownMenuItem onClick={(e) => {
+                            e.stopPropagation();
+                            handleOpenOsintView(camera);
+                          }}>
+                            View OSINT Data
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
                           <DropdownMenuItem>Take Snapshot</DropdownMenuItem>
                           <DropdownMenuItem>Copy URL</DropdownMenuItem>
                         </DropdownMenuContent>
@@ -409,14 +462,25 @@ const ResultsTable: React.FC<ResultsTableProps> = ({ results }) => {
                   </div>
                   
                   <div className="flex flex-col gap-2">
-                    <Button 
-                      className="bg-scanner-primary hover:bg-blue-600"
-                      onClick={() => handleOpenStream(selectedCamera)}
-                      disabled={selectedCamera.status === 'offline'}
-                    >
-                      <Video className="mr-2 h-4 w-4" />
-                      Open Live Stream
-                    </Button>
+                    <div className="grid grid-cols-2 gap-2">
+                      <Button 
+                        className="bg-scanner-primary hover:bg-blue-600"
+                        onClick={() => handleOpenStream(selectedCamera)}
+                        disabled={selectedCamera.status === 'offline'}
+                      >
+                        <Video className="mr-2 h-4 w-4" />
+                        Open Live Stream
+                      </Button>
+                      
+                      <Button 
+                        className="bg-scanner-info hover:bg-teal-600"
+                        onClick={() => handleOpenOsintView(selectedCamera)}
+                      >
+                        <Database className="mr-2 h-4 w-4" />
+                        OSINT Analysis
+                      </Button>
+                    </div>
+                    
                     <div className="grid grid-cols-2 gap-2">
                       <Button variant="outline" className="text-gray-300 border-gray-700">
                         <Download className="mr-2 h-4 w-4" />
