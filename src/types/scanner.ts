@@ -55,4 +55,8 @@ export type ScanProgress = {
   startTime?: Date;
   endTime?: Date;
   error?: string;
+  scanTarget?: ScanTarget;
+  scanSettings?: ScanSettings;
+  currentTarget?: string;
+  scanSpeed?: number;
 };

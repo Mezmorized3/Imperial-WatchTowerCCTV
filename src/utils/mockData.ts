@@ -1,309 +1,154 @@
-import { CameraResult } from "@/types/scanner";
+import { CameraResult, ScanSettings } from '@/types/scanner';
 
+// Let's update the startMockScan function to match our implementation
+export const startMockScan = (
+  onProgress: (progressPercentage: number, camerasFound: number, currentTarget?: string, scanSpeed?: number) => void,
+  onComplete: (results: CameraResult[]) => void,
+  onError: (message: string) => void,
+  options?: Partial<ScanSettings & {
+    deepScan?: boolean;
+    portScan?: boolean;
+    vulnerabilityScan?: boolean;
+    retryCount?: number;
+  }>
+) => {
+  // Implement mockData functionality here
+  // For now, we'll leave this as a stub that simulates a scan
+  
+  let isCancelled = false;
+  let progress = 0;
+  let camerasFound = 0;
+  const simulationSpeed = options?.aggressive ? 5 : 2; // Faster for aggressive mode
+  
+  const interval = setInterval(() => {
+    if (isCancelled) {
+      clearInterval(interval);
+      return;
+    }
+    
+    // Simulate progress and finding cameras
+    progress += Math.random() * simulationSpeed;
+    
+    if (progress >= 100) {
+      progress = 100;
+      clearInterval(interval);
+      
+      // Complete the scan
+      onComplete(MOCK_CAMERA_RESULTS);
+    } else {
+      // Randomly find cameras during the scan
+      if (Math.random() > 0.9) {
+        camerasFound++;
+      }
+      
+      // Generate a current target IP (simulated)
+      const currentIP = `192.168.1.${Math.floor(Math.random() * 255)}`;
+      
+      // Calculate scan speed (IPs per second)
+      const scanSpeed = options?.aggressive ? 150 + Math.floor(Math.random() * 100) : 
+                        80 + Math.floor(Math.random() * 70);
+      
+      onProgress(progress, camerasFound, currentIP, scanSpeed);
+    }
+  }, 200);
+  
+  // Return a function to stop the scan
+  return () => {
+    isCancelled = true;
+    clearInterval(interval);
+  };
+};
+
+// Add the mock camera results
 export const MOCK_CAMERA_RESULTS: CameraResult[] = [
+  // Include sample camera results here
   {
-    id: "1",
-    ip: "192.168.1.100",
-    port: 80,
-    brand: "Hikvision",
-    model: "DS-2CD2142FWD-I",
-    url: "http://192.168.1.100",
-    snapshotUrl: "/onvif-http/snapshot",
-    status: "vulnerable",
+    id: '1',
+    ip: '192.168.1.100',
+    port: 554,
+    brand: 'Hikvision',
+    model: 'DS-2CD2142FWD-I',
+    url: 'rtsp://admin:admin@192.168.1.100:554/Streaming/Channels/101',
+    snapshotUrl: 'http://192.168.1.100:80/Streaming/Channels/1/picture',
+    status: 'vulnerable',
     credentials: {
-      username: "admin",
-      password: "12345"
+      username: 'admin',
+      password: 'admin'
     },
     vulnerabilities: [
       {
-        name: "CVE-2017-7921",
-        severity: "critical",
-        description: "Authentication bypass vulnerability in Hikvision IP cameras"
+        name: 'Default Credentials',
+        severity: 'high',
+        description: 'Camera is using default manufacturer credentials'
+      },
+      {
+        name: 'CVE-2017-7921',
+        severity: 'critical',
+        description: 'Authentication bypass vulnerability in Hikvision IP cameras'
       }
     ],
     location: {
-      country: "Romania",
-      city: "Bucharest",
-      latitude: 44.4268,
-      longitude: 26.1025
+      country: 'United States',
+      city: 'New York',
+      latitude: 40.7128,
+      longitude: -74.0060
     },
-    lastSeen: "2023-10-15T14:30:00Z",
-    accessLevel: "admin",
-    responseTime: 230
+    lastSeen: new Date().toISOString(),
+    accessLevel: 'admin',
+    responseTime: 120
   },
-  {
-    id: "2",
-    ip: "192.168.1.101",
-    port: 8080,
-    brand: "Dahua",
-    model: "IPC-HDBW2231R-ZS",
-    url: "http://192.168.1.101:8080",
-    snapshotUrl: "/cgi-bin/snapshot.cgi",
-    status: "online",
-    credentials: null,
-    location: {
-      country: "Ukraine",
-      city: "Kyiv",
-      latitude: 50.4501,
-      longitude: 30.5234
-    },
-    lastSeen: "2023-10-15T14:35:00Z",
-    accessLevel: "view",
-    responseTime: 150
-  },
-  {
-    id: "3",
-    ip: "192.168.1.102",
-    port: 554,
-    brand: "EZVIZ",
-    model: "C3W",
-    url: "http://192.168.1.102",
-    snapshotUrl: "/ISAPI/Streaming/channels/101/picture",
-    status: "authenticated",
-    credentials: {
-      username: "admin",
-      password: "admin"
-    },
-    location: {
-      country: "Georgia",
-      city: "Tbilisi",
-      latitude: 41.7151,
-      longitude: 44.8271
-    },
-    lastSeen: "2023-10-15T14:40:00Z",
-    accessLevel: "admin",
-    responseTime: 180
-  },
-  {
-    id: "4",
-    ip: "192.168.1.103",
-    port: 80,
-    brand: "Axis",
-    model: "P1448-LE",
-    url: "http://192.168.1.103",
-    snapshotUrl: "/axis-cgi/jpg/image.cgi",
-    status: "online",
-    location: {
-      country: "Russia",
-      city: "Moscow",
-      latitude: 55.7558,
-      longitude: 37.6173
-    },
-    lastSeen: "2023-10-15T14:45:00Z",
-    accessLevel: "view",
-    responseTime: 200
-  },
-  {
-    id: "5",
-    ip: "192.168.1.104",
-    port: 80,
-    brand: "Unknown",
-    url: "http://192.168.1.104",
-    status: "offline",
-    location: {
-      country: "Romania",
-      city: "Cluj-Napoca"
-    },
-    lastSeen: "2023-10-15T13:00:00Z",
-    accessLevel: "none"
-  }
+  // Add more mock camera results as needed
 ];
 
+// Add mock regions data
 export const REGIONS = [
-  { code: "RO", name: "Romania" },
-  { code: "UA", name: "Ukraine" },
-  { code: "GE", name: "Georgia" },
-  { code: "RU", name: "Russia" },
-  { code: "MD", name: "Moldova" },
-  { code: "BY", name: "Belarus" },
-  { code: "BG", name: "Bulgaria" },
-  { code: "HU", name: "Hungary" },
-  { code: "PL", name: "Poland" },
-  { code: "SK", name: "Slovakia" }
+  { code: 'us', name: 'United States' },
+  { code: 'eu', name: 'Europe' },
+  { code: 'asia', name: 'Asia' },
+  { code: 'sa', name: 'South America' },
+  { code: 'af', name: 'Africa' },
+  { code: 'ru', name: 'Russia' },
+  { code: 'ua', name: 'Ukraine' },
+  { code: 'cn', name: 'China' }
 ];
 
-export const REGION_CITIES = {
-  UA: [
-    { code: "KYIV", name: "Kyiv" },
-    { code: "ZAP", name: "Zaporizhzhia" },
-    { code: "KHER", name: "Kherson" },
-    { code: "KHAR", name: "Kharkiv" },
-    { code: "DNI", name: "Dnipro" },
-    { code: "DON", name: "Donetsk" },
-    { code: "LUH", name: "Luhansk" },
-    { code: "ODE", name: "Odessa" },
-    { code: "MAR", name: "Mariupol" }
+// Mock IP ranges by country
+export const COUNTRY_IP_RANGES: Record<string, Array<{label: string, value: string}>> = {
+  us: [
+    { label: 'US East Coast', value: '23.10.0.0/16' },
+    { label: 'US West Coast', value: '40.12.0.0/16' },
+    { label: 'US Government', value: '161.203.0.0/16' }
   ],
-  RO: [
-    { code: "BUC", name: "Bucharest" },
-    { code: "CLJ", name: "Cluj-Napoca" },
-    { code: "TIM", name: "Timisoara" },
-    { code: "IAS", name: "Iasi" },
-    { code: "CON", name: "Constanta" },
-    { code: "BRA", name: "Brasov" }
+  ru: [
+    { label: 'Moscow Region', value: '95.174.0.0/16' },
+    { label: 'St. Petersburg', value: '178.176.0.0/16' }
   ],
-  RU: [
-    { code: "MOS", name: "Moscow" },
-    { code: "SPB", name: "Saint Petersburg" },
-    { code: "KURSK", name: "Kursk" },
-    { code: "KURSKOBL", name: "Kursk Oblast" },
-    { code: "BEL", name: "Belgorod" },
-    { code: "ROS", name: "Rostov-on-Don" },
-    { code: "VOR", name: "Voronezh" }
+  cn: [
+    { label: 'Beijing', value: '180.149.0.0/16' },
+    { label: 'Shanghai', value: '116.224.0.0/16' }
   ],
-  GE: [
-    { code: "TBI", name: "Tbilisi" },
-    { code: "BAT", name: "Batumi" },
-    { code: "KUT", name: "Kutaisi" },
-    { code: "RUS", name: "Rustavi" },
-    { code: "GOI", name: "Gori" }
+  ua: [
+    { label: 'Kiev', value: '176.38.0.0/16' },
+    { label: 'Lviv', value: '77.121.0.0/16' }
   ]
 };
 
-export const DEFAULT_CREDENTIALS = {
-  hikvision: [
-    { username: "admin", password: "12345" },
-    { username: "admin", password: "admin" }
+// Mock Shodan queries by country
+export const COUNTRY_SHODAN_QUERIES: Record<string, Array<{label: string, value: string}>> = {
+  us: [
+    { label: 'US Public Cameras', value: 'webcamxp country:US port:80,8080' },
+    { label: 'US Hikvision', value: 'product:hikvision country:US' }
   ],
-  dahua: [
-    { username: "admin", password: "admin" },
-    { username: "888888", password: "888888" }
+  ru: [
+    { label: 'Russian Cameras', value: 'webcam country:RU' },
+    { label: 'Moscow CCTV', value: 'webcamxp city:Moscow' }
   ],
-  ezviz: [
-    { username: "admin", password: "admin" },
-    { username: "admin", password: "12345" },
-    { username: "admin", password: "" },
-    { username: "user", password: "user" },
-    { username: "guest", password: "guest" }
+  cn: [
+    { label: 'China IP Cameras', value: 'has_screenshot:true product:hikvision country:CN' },
+    { label: 'Beijing Cameras', value: 'webcam city:Beijing has_screenshot:true' }
   ],
-  axis: [
-    { username: "root", password: "pass" },
-    { username: "admin", password: "admin" }
+  ua: [
+    { label: 'Ukraine Public Cameras', value: 'country:UA has_screenshot:true webcam' },
+    { label: 'Kiev Traffic Cams', value: 'city:Kiev country:UA port:80,8080 webcam' }
   ]
-};
-
-export const COUNTRY_IP_RANGES = {
-  RO: [
-    { label: "Romania - Bucharest (RCS & RDS)", value: "5.2.128.0/18" },
-    { label: "Romania - Cluj (UPC Romania)", value: "77.81.128.0/18" },
-    { label: "Romania - Timisoara (Telekom)", value: "79.112.0.0/13" },
-    { label: "Romania - Iasi (Orange)", value: "86.120.0.0/13" },
-    { label: "Romania - General", value: "109.99.0.0/16" },
-    { label: "Romania - Bucharest (Telekom)", value: "79.114.0.0/16" },
-    { label: "Romania - Bucharest (Orange)", value: "86.122.0.0/16" }
-  ],
-  UA: [
-    { label: "Ukraine - Kyiv (Ukrtelecom)", value: "31.43.0.0/16" },
-    { label: "Ukraine - Odessa (Vega)", value: "46.211.0.0/17" },
-    { label: "Ukraine - Lviv (UARNet)", value: "77.88.0.0/17" },
-    { label: "Ukraine - Kharkiv (Triolan)", value: "176.36.0.0/15" },
-    { label: "Ukraine - General", value: "178.136.0.0/15" },
-    { label: "Ukraine - Zaporizhzhia (Kyivstar)", value: "46.211.64.0/18" },
-    { label: "Ukraine - Kherson (Volia)", value: "178.213.0.0/16" },
-    { label: "Ukraine - Dnipro (Datagroup)", value: "93.183.192.0/18" },
-    { label: "Ukraine - Eastern Cities (Various)", value: "176.37.0.0/16" }
-  ],
-  RU: [
-    { label: "Russia - Moscow (Rostelecom)", value: "37.144.0.0/14" },
-    { label: "Russia - St. Petersburg (MTS)", value: "46.188.0.0/15" },
-    { label: "Russia - Kazan (ER-Telecom)", value: "85.26.0.0/17" },
-    { label: "Russia - Novosibirsk (SibNet)", value: "90.188.0.0/15" },
-    { label: "Russia - General", value: "188.168.0.0/14" },
-    { label: "Russia - Kursk (Rostelecom)", value: "92.47.192.0/19" },
-    { label: "Russia - Kursk Oblast (MTS)", value: "46.188.96.0/20" },
-    { label: "Russia - Belgorod (ER-Telecom)", value: "89.189.128.0/18" }
-  ]
-};
-
-export const COUNTRY_SHODAN_QUERIES = {
-  RO: [
-    { label: "Romania - Hikvision Cameras", value: "country:RO product:Hikvision port:80,8080,443" },
-    { label: "Romania - Dahua Cameras", value: "country:RO product:Dahua port:80,8080,37777" },
-    { label: "Romania - IP Cameras (General)", value: "country:RO webcam has_screenshot:true" },
-    { label: "Romania - DVR/NVR Systems", value: "country:RO html:'DVR' has_screenshot:true" },
-    { label: "Romania - Bucharest Cameras", value: "country:RO city:Bucharest port:80,8080,554 has_screenshot:true" }
-  ],
-  UA: [
-    { label: "Ukraine - Hikvision Cameras", value: "country:UA product:Hikvision port:80,8080,443" },
-    { label: "Ukraine - Dahua Cameras", value: "country:UA product:Dahua port:80,8080,37777" },
-    { label: "Ukraine - IP Cameras (General)", value: "country:UA webcam has_screenshot:true" },
-    { label: "Ukraine - DVR/NVR Systems", value: "country:UA html:'DVR' has_screenshot:true" },
-    { label: "Ukraine - Zaporizhzhia Cameras", value: "country:UA city:Zaporizhzhia port:80,8080,554" },
-    { label: "Ukraine - Kherson Cameras", value: "country:UA city:Kherson port:80,8080,554" },
-    { label: "Ukraine - Kharkiv Cameras", value: "country:UA city:Kharkiv port:80,8080,554" },
-    { label: "Ukraine - Dnipro Cameras", value: "country:UA city:Dnipro port:80,8080,554" },
-    { label: "Ukraine - Eastern Cities Cameras", value: "country:UA city:Donetsk,Luhansk,Mariupol port:80,8080,554" }
-  ],
-  RU: [
-    { label: "Russia - Hikvision Cameras", value: "country:RU product:Hikvision port:80,8080,443" },
-    { label: "Russia - Dahua Cameras", value: "country:RU product:Dahua port:80,8080,37777" },
-    { label: "Russia - IP Cameras (General)", value: "country:RU webcam has_screenshot:true" },
-    { label: "Russia - DVR/NVR Systems", value: "country:RU html:'DVR' has_screenshot:true" },
-    { label: "Russia - Kursk Cameras", value: "country:RU city:Kursk port:80,8080,554" },
-    { label: "Russia - Border Regions", value: "country:RU city:Belgorod,Kursk,Rostov port:80,8080,554" }
-  ],
-  GE: [
-    { label: "Georgia - Hikvision Cameras", value: "country:GE product:Hikvision port:80,8080,443" },
-    { label: "Georgia - Dahua Cameras", value: "country:GE product:Dahua port:80,8080,37777" },
-    { label: "Georgia - IP Cameras (General)", value: "country:GE webcam has_screenshot:true" },
-    { label: "Georgia - Tbilisi Cameras", value: "country:GE city:Tbilisi port:80,8080,554" }
-  ]
-};
-
-export const openRtspStream = (camera: CameraResult) => {
-  const rtspUrl = buildRtspUrl(camera);
-  const viewerUrl = `/viewer?url=${encodeURIComponent(rtspUrl)}&name=${encodeURIComponent(camera.brand || '')} ${encodeURIComponent(camera.model || '')}`;
-  window.open(viewerUrl, '_blank');
-  return rtspUrl;
-};
-
-export const buildRtspUrl = (camera: CameraResult): string => {
-  const { ip, port, brand } = camera;
-  const credentials = camera.credentials ? 
-    `${camera.credentials.username}:${camera.credentials.password}@` : '';
-  
-  switch(brand?.toLowerCase()) {
-    case 'hikvision':
-      return `rtsp://${credentials}${ip}:554/Streaming/Channels/101`;
-    case 'dahua':
-      return `rtsp://${credentials}${ip}:554/cam/realmonitor?channel=1&subtype=0`;
-    case 'axis':
-      return `rtsp://${credentials}${ip}:554/axis-media/media.amp`;
-    case 'ezviz':
-      return `rtsp://${credentials}${ip}:554/Streaming/Channels/1`;
-    default:
-      return `rtsp://${credentials}${ip}:554/stream1`;
-  }
-};
-
-export const startMockScan = (
-  onProgress: (progress: number, found: number) => void,
-  onComplete: (results: CameraResult[]) => void,
-  duration: number = 5000
-) => {
-  const steps = 10;
-  const interval = duration / steps;
-  let progress = 0;
-  let found = 0;
-  
-  const timer = setInterval(() => {
-    progress += 100 / steps;
-    
-    if (progress >= 40 && found === 0) {
-      found = 1;
-    } else if (progress >= 60 && found === 1) {
-      found = 3;
-    } else if (progress >= 90 && found === 3) {
-      found = 5;
-    }
-    
-    onProgress(progress, found);
-    
-    if (progress >= 100) {
-      clearInterval(timer);
-      onComplete(MOCK_CAMERA_RESULTS);
-    }
-  }, interval);
-  
-  return () => clearInterval(timer);
 };

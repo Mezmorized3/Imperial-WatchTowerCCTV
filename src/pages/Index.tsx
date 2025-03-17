@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import DashboardHeader from '@/components/DashboardHeader';
 import ScanForm from '@/components/ScanForm';
@@ -119,9 +118,8 @@ const Index = () => {
             variant: "destructive",
           });
         },
-        // Enhanced scan options
-        {
-          ...settings,
+        // Enhanced scan options - this is causing the error
+        { 
           deepScan: true,
           portScan: true,
           vulnerabilityScan: settings.checkVulnerabilities,
