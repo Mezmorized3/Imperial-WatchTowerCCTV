@@ -18,7 +18,7 @@ export const isValidIPRange = (range: string): boolean => {
   return isValidIPv4(range) || isValidCIDR(range);
 };
 
-export const validateScanInput = (input: string, type: 'ip' | 'range' | 'file' | 'shodan'): boolean => {
+export const validateScanInput = (input: string, type: 'ip' | 'range' | 'file' | 'shodan' | 'zoomeye' | 'censys'): boolean => {
   switch (type) {
     case 'ip':
       return isValidIPv4(input);
@@ -27,6 +27,8 @@ export const validateScanInput = (input: string, type: 'ip' | 'range' | 'file' |
     case 'file':
       return input.trim().length > 0; // Basic check, in real app would verify file exists
     case 'shodan':
+    case 'zoomeye':
+    case 'censys':
       return input.trim().length > 0;
     default:
       return false;

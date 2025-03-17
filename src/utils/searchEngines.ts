@@ -1,5 +1,5 @@
 
-import { CameraResult } from '@/types/scanner';
+import { CameraResult, CameraStatus } from '@/types/scanner';
 
 // Mock function for ZoomEye API
 export const searchZoomEye = async (query: string): Promise<CameraResult[]> => {
