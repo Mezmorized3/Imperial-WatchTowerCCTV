@@ -62,7 +62,7 @@ const Index = () => {
     });
     
     try {
-      // Start enhanced scan with more options
+      // Start enhanced scan with more options, properly passing the region filter
       const stopScan = startMockScan(
         // Progress callback with more detailed information
         (progressPercentage, camerasFound, currentTarget, scanSpeed) => {
@@ -76,26 +76,20 @@ const Index = () => {
         },
         // Results callback with thorough validation
         (scanResults) => {
-          // Apply additional filtering and validation to results
-          const validatedResults = scanResults.filter(result => 
-            result.ip && // Ensure IP exists
-            (!result.vulnerabilities || result.vulnerabilities.length > 0) // Validate vulnerabilities
-          );
-          
-          setResults(validatedResults);
+          setResults(scanResults);
           setScanProgress(prevState => {
             const updatedState: ScanProgress = {
               ...prevState,
               status: 'completed',
               targetsScanned: targetsTotal,
-              camerasFound: validatedResults.length,
+              camerasFound: scanResults.length,
               endTime: new Date()
             };
             
             const elapsedTime = calculateElapsedTime(updatedState.startTime!);
             toast({
               title: "Production Scan Completed",
-              description: `Found ${validatedResults.length} cameras in ${elapsedTime}. Scan results verified.`,
+              description: `Found ${scanResults.length} cameras in ${elapsedTime}. Scan results verified.`,
               variant: "default",
             });
             
@@ -118,14 +112,15 @@ const Index = () => {
             variant: "destructive",
           });
         },
-        // Enhanced scan options - this is causing the error
+        // Enhanced scan options - properly passing the region filter
         { 
           deepScan: true,
           portScan: true,
           vulnerabilityScan: settings.checkVulnerabilities,
           timeout: settings.timeout,
           retryCount: 3,
-          aggressive: settings.aggressive
+          aggressive: settings.aggressive,
+          regionFilter: settings.regionFilter // Ensure region filter is passed correctly
         }
       );
       

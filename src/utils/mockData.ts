@@ -1,4 +1,3 @@
-
 import { CameraResult, ScanSettings } from '@/types/scanner';
 
 // This function will handle opening an RTSP stream
@@ -18,7 +17,7 @@ export const openRtspStream = (camera: CameraResult): string => {
   return rtspUrl;
 };
 
-// Let's update the startMockScan function to match our implementation
+// Let's update the startMockScan function to properly use region filters
 export const startMockScan = (
   onProgress: (progressPercentage: number, camerasFound: number, currentTarget?: string, scanSpeed?: number) => void,
   onComplete: (results: CameraResult[]) => void,
@@ -52,17 +51,18 @@ export const startMockScan = (
       clearInterval(interval);
       
       // Determine which mock results to return based on the region filter
-      let resultsToReturn = [...MOCK_CAMERA_RESULTS];
+      let resultsToReturn: CameraResult[] = [...MOCK_CAMERA_RESULTS];
       
       // If region filters are applied, return cameras specific to those regions
       if (options?.regionFilter && options.regionFilter.length > 0) {
         const regionCode = options.regionFilter[0]; // Take the first selected region
         if (REGION_SPECIFIC_CAMERAS[regionCode]) {
-          resultsToReturn = REGION_SPECIFIC_CAMERAS[regionCode];
+          // Make sure we return a fresh copy of the array to avoid any reference issues
+          resultsToReturn = [...REGION_SPECIFIC_CAMERAS[regionCode]];
         }
       }
       
-      // Complete the scan
+      // Complete the scan with the correct region-specific results
       onComplete(resultsToReturn);
     } else {
       // Randomly find cameras during the scan
@@ -359,7 +359,7 @@ export const MOCK_CAMERA_RESULTS: CameraResult[] = [
   }
 ];
 
-// Add mock regions data with the previously missing countries
+// Add mock regions data
 export const REGIONS = [
   { code: 'us', name: 'United States' },
   { code: 'eu', name: 'Europe' },
@@ -374,7 +374,7 @@ export const REGIONS = [
   { code: 'ge', name: 'Georgia' }
 ];
 
-// Mock IP ranges by country - adding back all the missing ranges
+// Mock IP ranges by country
 export const COUNTRY_IP_RANGES: Record<string, Array<{label: string, value: string}>> = {
   us: [
     { label: 'US East Coast', value: '23.10.0.0/16' },
@@ -423,7 +423,7 @@ export const COUNTRY_IP_RANGES: Record<string, Array<{label: string, value: stri
   ]
 };
 
-// Mock Shodan queries by country - adding back the missing countries
+// Mock Shodan queries by country
 export const COUNTRY_SHODAN_QUERIES: Record<string, Array<{label: string, value: string}>> = {
   us: [
     { label: 'US Public Cameras', value: 'webcamxp country:US port:80,8080' },
