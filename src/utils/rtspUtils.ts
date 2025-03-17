@@ -43,43 +43,28 @@ export const getProperStreamUrl = (
  * Converts RTSP URL to a properly formatted proxy URL that the browser can display
  */
 export const convertRtspToHls = (rtspUrl: string): string => {
-  // In a real implementation, you would:
-  // 1. Use a proxy server like RTSP-to-HLS converter (ffmpeg-based solution)
-  // 2. Or use a WebRTC-based approach like WebRTC-to-RTSP gateway
+  // Due to browser limitations, we need to proxy the RTSP stream through an HLS server
+  const proxyServerUrl = process.env.RTSP_PROXY_SERVER || 'http://localhost:8083';
   
-  // For a real deployment, you would need:
-  // - A server running something like rtsp-simple-server, MediaMTX, or NGINX with RTMP module
-  // - A proxy endpoint that takes the RTSP URL and returns an HLS stream
-  
-  // Example of a real proxy URL (if you had one):
-  // return `https://your-rtsp-proxy-server.com/stream?url=${encodeURIComponent(rtspUrl)}`;
-  
-  // For demonstration purposes, if the RTSP URL is from your local network,
-  // we'll return a reliable public HLS demo stream
-  if (rtspUrl.includes('192.168.') || rtspUrl.includes('10.0.') || rtspUrl.includes('172.16.')) {
-    return 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8';
-  }
-  
-  // If it's an external IP, we'll also use a demo stream for safety and reliability
-  // In a real implementation, you would proxy this through your server
-  return 'https://cdn.bitmovin.com/content/assets/art-of-motion-dash-hls-progressive/m3u8s/f08e80da-bf1d-4e3d-8899-f0f6155f6efa.m3u8';
+  // Format: http://rtsp-proxy-server/stream?url=rtsp://camera-ip
+  return `${proxyServerUrl}/stream?url=${encodeURIComponent(rtspUrl)}`;
 };
 
 /**
  * Test if an RTSP URL is accessible
+ * This will try to connect to the RTSP stream through our proxy to verify it's working
  */
 export const testRtspConnection = async (rtspUrl: string): Promise<boolean> => {
-  // In a browser environment, we cannot directly test RTSP connections
-  // This would need to be done via a server-side proxy
-  // For demonstration, we'll simulate a test
-  
   try {
-    // Simulate a network request to test the connection
-    // In a real implementation, this would be a call to your backend
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    const proxyUrl = convertRtspToHls(rtspUrl);
     
-    // 80% success rate for demo
-    return Math.random() > 0.2;
+    // Attempt to connect to the proxy URL
+    const response = await fetch(proxyUrl, { 
+      method: 'HEAD',
+      timeout: 5000
+    } as RequestInit);
+    
+    return response.ok;
   } catch (error) {
     console.error('Error testing RTSP connection:', error);
     return false;

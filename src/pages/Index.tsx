@@ -5,7 +5,7 @@ import ScanForm from '@/components/ScanForm';
 import StatusBar from '@/components/StatusBar';
 import ResultsTable from '@/components/ResultsTable';
 import { ScanTarget, ScanSettings, ScanProgress, CameraResult } from '@/types/scanner';
-import { startScan } from '@/utils/mockData';
+import { scanNetwork } from '@/utils/networkScanner';
 import { Toaster } from '@/components/ui/toaster';
 import { useToast } from '@/components/ui/use-toast';
 import { AlertCircle } from 'lucide-react';
@@ -28,6 +28,8 @@ const Index = () => {
     setResults([]);
     setError(null);
     
+    let ipRange = target.value;
+    
     // Calculate total targets (this would be more complex in a real app)
     let targetsTotal = 1;
     if (target.type === 'range') {
@@ -43,8 +45,12 @@ const Index = () => {
         }
       }
     } else if (target.type === 'shodan') {
-      // Estimate Shodan results
-      targetsTotal = 100;
+      toast({
+        title: "Shodan Support",
+        description: "Shodan scanning requires API credentials, please configure in settings.",
+        variant: "destructive",
+      });
+      return;
     }
     
     // Start progress tracking with enhanced metadata
@@ -59,78 +65,56 @@ const Index = () => {
     });
     
     toast({
-      title: "Production Scan Started",
-      description: `Starting thorough scan of ${target.value} with ${settings.aggressive ? 'aggressive' : 'standard'} settings`,
+      title: "Real Network Scan Started",
+      description: `Starting scan of ${target.value} with ${settings.aggressive ? 'aggressive' : 'standard'} settings`,
     });
     
     try {
-      // Start real scan with all options
-      const cleanup = await startScan(
-        // Progress callback with more detailed information
-        (progressPercentage, camerasFound, currentTarget, scanSpeed) => {
+      // Start real network scan
+      await scanNetwork(
+        ipRange,
+        settings,
+        (progress) => {
           setScanProgress(prevState => ({
             ...prevState,
-            targetsScanned: Math.floor((progressPercentage / 100) * targetsTotal),
-            camerasFound,
-            currentTarget,
-            scanSpeed
+            ...progress
           }));
         },
-        // Results callback
-        (scanResults) => {
-          setResults(scanResults);
-          setScanProgress(prevState => {
-            const updatedState: ScanProgress = {
-              ...prevState,
-              status: 'completed',
-              targetsScanned: targetsTotal,
-              camerasFound: scanResults.length,
-              endTime: new Date()
-            };
-            
-            const elapsedTime = calculateElapsedTime(updatedState.startTime!);
-            toast({
-              title: "Production Scan Completed",
-              description: `Found ${scanResults.length} cameras in ${elapsedTime}.`,
-              variant: "default",
-            });
-            
-            return updatedState;
-          });
-        },
-        // Error callback
-        (errorMessage) => {
-          setError(errorMessage);
-          setScanProgress(prevState => ({
-            ...prevState,
-            status: 'failed',
-            error: errorMessage,
-            endTime: new Date()
+        (camera) => {
+          setResults(prev => [...prev, camera]);
+          setScanProgress(prev => ({
+            ...prev,
+            camerasFound: prev.camerasFound + 1
           }));
-          
-          toast({
-            title: "Scan Failed",
-            description: errorMessage,
-            variant: "destructive",
-          });
-        },
-        // Enhanced scan options
-        { 
-          deepScan: true,
-          portScan: true,
-          vulnerabilityScan: settings.checkVulnerabilities,
-          timeout: settings.timeout,
-          retryCount: 3,
-          aggressive: settings.aggressive,
-          regionFilter: settings.regionFilter
         }
       );
       
-      // Store the cleanup function
-      setCleanupFunction(() => cleanup);
+      // Scan completed successfully
+      setScanProgress(prevState => {
+        const updatedState: ScanProgress = {
+          ...prevState,
+          status: 'completed',
+          targetsScanned: targetsTotal,
+          endTime: new Date()
+        };
+        
+        const elapsedTime = calculateElapsedTime(updatedState.startTime!);
+        toast({
+          title: "Scan Completed",
+          description: `Found ${results.length} cameras in ${elapsedTime}.`,
+          variant: "default",
+        });
+        
+        return updatedState;
+      });
+      
+      // Provide cleanup function
+      setCleanupFunction(() => () => {
+        console.log("Scan cleanup called");
+      });
       
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Unknown error starting scan';
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error during scan';
       setError(errorMessage);
       setScanProgress(prevState => ({
         ...prevState,

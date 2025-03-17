@@ -3,116 +3,112 @@ import { ThreatIntelData } from '@/types/scanner';
 
 /**
  * Fetches threat intelligence data for an IP address from VirusTotal
- * Note: In a real implementation, this would use the actual VirusTotal API
+ * Requires a valid VirusTotal API key
  */
 export const checkVirusTotal = async (ip: string): Promise<ThreatIntelData | null> => {
   console.log(`Checking VirusTotal for IP: ${ip}`);
   
-  // Simulate API delay
-  await new Promise(resolve => setTimeout(resolve, 800));
-  
-  // Randomly determine if this IP has any threat intelligence
-  const hasIntel = Math.random() > 0.7;
-  
-  if (!hasIntel) {
+  const apiKey = process.env.VIRUSTOTAL_API_KEY;
+  if (!apiKey) {
+    console.error('No VirusTotal API key provided');
     return null;
   }
   
-  const reputationScore = Math.floor(Math.random() * 100);
-  const isMalicious = reputationScore < 40;
-  
-  if (!isMalicious) {
+  try {
+    const response = await fetch(`https://www.virustotal.com/api/v3/ip_addresses/${ip}`, {
+      headers: {
+        'x-apikey': apiKey
+      }
+    });
+    
+    if (!response.ok) {
+      console.error(`VirusTotal API error: ${response.status} ${response.statusText}`);
+      return null;
+    }
+    
+    const data = await response.json();
+    const attributes = data?.data?.attributes;
+    
+    if (!attributes) {
+      return null;
+    }
+    
+    // Extract relevant data from the VirusTotal response
     return {
-      ipReputation: reputationScore,
-      confidenceScore: Math.floor(Math.random() * 30) + 70,
+      ipReputation: attributes.last_analysis_stats?.malicious ? 
+        100 - Math.round((attributes.last_analysis_stats.malicious / attributes.last_analysis_stats.total) * 100) : 100,
+      lastReportedMalicious: attributes.last_analysis_date ? 
+        new Date(attributes.last_analysis_date * 1000).toISOString() : undefined,
+      associatedMalware: attributes.last_analysis_results ? 
+        Object.values(attributes.last_analysis_results)
+          .filter((result: any) => result.category === 'malicious')
+          .map((result: any) => result.result) : undefined,
+      reportedBy: attributes.last_analysis_results ? 
+        Object.keys(attributes.last_analysis_results)
+          .filter((vendor: string) => attributes.last_analysis_results[vendor].category === 'malicious') : undefined,
+      firstSeen: attributes.first_submission_date ? 
+        new Date(attributes.first_submission_date * 1000).toISOString() : undefined,
+      tags: attributes.tags,
+      confidenceScore: 90, // High confidence in VirusTotal results
       source: 'virustotal'
     };
+  } catch (error) {
+    console.error(`Error checking VirusTotal: ${error}`);
+    return null;
   }
-  
-  // Generate sample malware names
-  const malwareNames = [
-    'Mirai', 'Bashlite', 'Gafgyt', 'Tsunami', 'Kaiten', 'XorDDOS',
-    'IoT_Reaper', 'VPNFilter', 'Momentum', 'Echobot', 'Dark_Nexus'
-  ];
-  
-  // Generate sample tags
-  const potentialTags = [
-    'botnet', 'scanner', 'proxy', 'tor_exit_node', 'malware_host',
-    'command_control', 'brute_force', 'ddos_source', 'spam_source'
-  ];
-  
-  // Generate a past date (1-90 days ago)
-  const getRandomPastDate = () => {
-    const date = new Date();
-    date.setDate(date.getDate() - Math.floor(Math.random() * 90) + 1);
-    return date.toISOString();
-  };
-  
-  return {
-    ipReputation: reputationScore,
-    lastReportedMalicious: getRandomPastDate(),
-    associatedMalware: Array.from({ length: Math.floor(Math.random() * 3) + 1 }, 
-      () => malwareNames[Math.floor(Math.random() * malwareNames.length)]),
-    reportedBy: ['Virustotal Community', 'Security Researcher', 'Automated System'],
-    firstSeen: getRandomPastDate(),
-    tags: Array.from({ length: Math.floor(Math.random() * 3) + 1 }, 
-      () => potentialTags[Math.floor(Math.random() * potentialTags.length)]),
-    confidenceScore: Math.floor(Math.random() * 30) + 70,
-    source: 'virustotal'
-  };
 };
 
 /**
  * Fetches threat intelligence data for an IP address from AbuseIPDB
- * Note: In a real implementation, this would use the actual AbuseIPDB API
+ * Requires a valid AbuseIPDB API key
  */
 export const checkAbuseIPDB = async (ip: string): Promise<ThreatIntelData | null> => {
   console.log(`Checking AbuseIPDB for IP: ${ip}`);
   
-  // Simulate API delay
-  await new Promise(resolve => setTimeout(resolve, 1000));
-  
-  // Randomly determine if this IP has any threat intelligence
-  const hasIntel = Math.random() > 0.7;
-  
-  if (!hasIntel) {
+  const apiKey = process.env.ABUSEIPDB_API_KEY;
+  if (!apiKey) {
+    console.error('No AbuseIPDB API key provided');
     return null;
   }
   
-  const reputationScore = Math.floor(Math.random() * 100);
-  const isMalicious = reputationScore < 40;
-  
-  if (!isMalicious) {
+  try {
+    const response = await fetch(`https://api.abuseipdb.com/api/v2/check?ipAddress=${ip}&maxAgeInDays=90&verbose=true`, {
+      headers: {
+        'Key': apiKey,
+        'Accept': 'application/json'
+      }
+    });
+    
+    if (!response.ok) {
+      console.error(`AbuseIPDB API error: ${response.status} ${response.statusText}`);
+      return null;
+    }
+    
+    const data = await response.json();
+    const attributes = data?.data;
+    
+    if (!attributes) {
+      return null;
+    }
+    
+    // Calculate reputation score (0-100, higher is better)
+    const abuseScore = attributes.abuseConfidenceScore || 0;
+    const reputationScore = 100 - abuseScore;
+    
+    // Extract relevant data from the AbuseIPDB response
     return {
       ipReputation: reputationScore,
-      confidenceScore: Math.floor(Math.random() * 30) + 70,
+      lastReportedMalicious: attributes.lastReportedAt,
+      reportedBy: ['AbuseIPDB Community'],
+      firstSeen: attributes.lastReportedAt, // First seen in AbuseIPDB
+      tags: attributes.usageType ? [attributes.usageType] : undefined,
+      confidenceScore: attributes.abuseConfidenceScore,
       source: 'abuseipdb'
     };
+  } catch (error) {
+    console.error(`Error checking AbuseIPDB: ${error}`);
+    return null;
   }
-  
-  // Generate a past date (1-90 days ago)
-  const getRandomPastDate = () => {
-    const date = new Date();
-    date.setDate(date.getDate() - Math.floor(Math.random() * 90) + 1);
-    return date.toISOString();
-  };
-  
-  // Generate sample tags
-  const potentialTags = [
-    'ssh_bruteforce', 'web_scanning', 'port_scan', 'vpn_service',
-    'tor_node', 'malware_distribution', 'phishing_host'
-  ];
-  
-  return {
-    ipReputation: reputationScore,
-    lastReportedMalicious: getRandomPastDate(),
-    reportedBy: ['AbuseIPDB Community', 'Threat Intelligence Platform'],
-    firstSeen: getRandomPastDate(),
-    tags: Array.from({ length: Math.floor(Math.random() * 3) + 1 }, 
-      () => potentialTags[Math.floor(Math.random() * potentialTags.length)]),
-    confidenceScore: Math.floor(Math.random() * 30) + 70,
-    source: 'abuseipdb'
-  };
 };
 
 /**
@@ -120,9 +116,19 @@ export const checkAbuseIPDB = async (ip: string): Promise<ThreatIntelData | null
  */
 export const getComprehensiveThreatIntel = async (ip: string): Promise<ThreatIntelData | null> => {
   try {
+    // Only try to fetch threat intel if API keys are available
+    const virusTotalKey = process.env.VIRUSTOTAL_API_KEY;
+    const abuseIPDBKey = process.env.ABUSEIPDB_API_KEY;
+    
+    if (!virusTotalKey && !abuseIPDBKey) {
+      console.warn('No threat intelligence API keys configured. Set VIRUSTOTAL_API_KEY and ABUSEIPDB_API_KEY environment variables.');
+      return null;
+    }
+    
+    // Call the APIs in parallel if we have keys
     const [virusTotalData, abuseIPDBData] = await Promise.all([
-      checkVirusTotal(ip),
-      checkAbuseIPDB(ip)
+      virusTotalKey ? checkVirusTotal(ip) : Promise.resolve(null),
+      abuseIPDBKey ? checkAbuseIPDB(ip) : Promise.resolve(null)
     ]);
     
     // If no data from any source, return null
@@ -159,46 +165,62 @@ export const getComprehensiveThreatIntel = async (ip: string): Promise<ThreatInt
 
 /**
  * Analyzes firmware for known vulnerabilities and potential exploits
- * Note: In a real implementation, this would connect to actual firmware analysis services
  */
 export const analyzeFirmware = async (brand: string, model: string, version: string) => {
   console.log(`Analyzing firmware for ${brand} ${model} version ${version}`);
   
-  // Simulate API delay
-  await new Promise(resolve => setTimeout(resolve, 1500));
-  
-  // Randomly determine if firmware has vulnerabilities
-  const hasVulnerabilities = Math.random() > 0.6;
-  
-  if (!hasVulnerabilities) {
+  // We need access to a vulnerability database or API
+  const nvdApiKey = process.env.NVD_API_KEY;
+  if (!nvdApiKey) {
+    console.warn('No NVD API key configured. Set NVD_API_KEY environment variable for firmware analysis.');
     return {
       knownVulnerabilities: [],
-      outdated: Math.random() > 0.5,
-      lastUpdate: new Date(Date.now() - Math.random() * 31536000000).toISOString(), // Random date within last year
-      recommendedVersion: `${parseInt(version) + 1}.0.0`
+      outdated: false,
+      lastUpdate: null,
+      recommendedVersion: null
     };
   }
   
-  // Sample CVE IDs related to camera firmware
-  const knownCVEs = [
-    'CVE-2021-36260', 'CVE-2021-33044', 'CVE-2021-22502', 
-    'CVE-2020-25078', 'CVE-2020-11738', 'CVE-2019-13567',
-    'CVE-2019-10999', 'CVE-2018-13782', 'CVE-2018-10088'
-  ];
-  
-  // Randomly select 1-3 CVEs
-  const selectedCVEs = [];
-  const cveCount = Math.floor(Math.random() * 3) + 1;
-  
-  for (let i = 0; i < cveCount; i++) {
-    const randomIndex = Math.floor(Math.random() * knownCVEs.length);
-    selectedCVEs.push(knownCVEs[randomIndex]);
+  try {
+    // Query the NVD API for vulnerabilities related to this firmware
+    const response = await fetch(
+      `https://services.nvd.nist.gov/rest/json/cves/2.0?cpeName=cpe:2.3:o:${brand.toLowerCase()}:${model.toLowerCase()}:${version}`,
+      {
+        headers: {
+          'apiKey': nvdApiKey
+        }
+      }
+    );
+    
+    if (!response.ok) {
+      console.error(`NVD API error: ${response.status} ${response.statusText}`);
+      return {
+        knownVulnerabilities: [],
+        outdated: false,
+        lastUpdate: null,
+        recommendedVersion: null
+      };
+    }
+    
+    const data = await response.json();
+    const vulnerabilities = data?.vulnerabilities || [];
+    
+    // Extract CVE IDs from the response
+    const cveIds = vulnerabilities.map((vuln: any) => vuln.cve?.id || '').filter(Boolean);
+    
+    return {
+      knownVulnerabilities: cveIds,
+      outdated: cveIds.length > 0, // Consider outdated if it has vulnerabilities
+      lastUpdate: null, // We don't have this information
+      recommendedVersion: null // We don't have this information
+    };
+  } catch (error) {
+    console.error(`Error analyzing firmware: ${error}`);
+    return {
+      knownVulnerabilities: [],
+      outdated: false,
+      lastUpdate: null,
+      recommendedVersion: null
+    };
   }
-  
-  return {
-    knownVulnerabilities: selectedCVEs,
-    outdated: true,
-    lastUpdate: new Date(Date.now() - Math.random() * 31536000000).toISOString(), // Random date within last year
-    recommendedVersion: `${parseInt(version) + 1}.0.0`
-  };
 };
