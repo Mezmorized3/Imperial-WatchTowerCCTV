@@ -1,35 +1,19 @@
 
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Camera, Maximize, Minimize, RefreshCw } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import RtspPlayer from '@/components/RtspPlayer';
 
 const Viewer = () => {
   const [isFullScreen, setIsFullScreen] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-  const [streamError, setStreamError] = useState<string | null>(null);
   const location = useLocation();
   
   // Parse query parameters
   const searchParams = new URLSearchParams(location.search);
   const streamUrl = searchParams.get('url');
   const cameraName = searchParams.get('name') || 'Camera Stream';
-  
-  useEffect(() => {
-    // Simulate stream loading
-    const timer = setTimeout(() => {
-      // For demo purposes, we'll simulate a successful stream 80% of the time
-      if (Math.random() > 0.2) {
-        setIsLoading(false);
-      } else {
-        setStreamError('Unable to connect to the stream. Check if the camera is online and the credentials are correct.');
-        setIsLoading(false);
-      }
-    }, 2000);
-    
-    return () => clearTimeout(timer);
-  }, [streamUrl]);
   
   const handleFullScreen = () => {
     const viewer = document.getElementById('stream-viewer');
@@ -45,21 +29,6 @@ const Viewer = () => {
     }
     
     setIsFullScreen(!isFullScreen);
-  };
-  
-  const handleRefresh = () => {
-    setIsLoading(true);
-    setStreamError(null);
-    
-    // Simulate refreshing the stream
-    setTimeout(() => {
-      if (Math.random() > 0.2) {
-        setIsLoading(false);
-      } else {
-        setStreamError('Unable to connect to the stream. Check if the camera is online and the credentials are correct.');
-        setIsLoading(false);
-      }
-    }, 1500);
   };
   
   return (
@@ -80,10 +49,6 @@ const Viewer = () => {
           </div>
           
           <div className="flex gap-2">
-            <Button variant="outline" size="sm" onClick={handleRefresh}>
-              <RefreshCw className="h-4 w-4 mr-1" />
-              Refresh
-            </Button>
             <Button variant="outline" size="sm" onClick={handleFullScreen}>
               {isFullScreen ? (
                 <>
@@ -103,41 +68,12 @@ const Viewer = () => {
       
       <main className="container mx-auto py-6 px-4">
         <div id="stream-viewer" className="bg-black rounded-lg shadow-lg overflow-hidden aspect-video relative">
-          {isLoading ? (
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="text-center">
-                <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-scanner-primary mb-4"></div>
-                <p className="text-gray-400">Connecting to stream...</p>
-                <p className="text-gray-500 text-sm mt-2 font-mono">{streamUrl}</p>
-              </div>
-            </div>
-          ) : streamError ? (
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="text-center max-w-md p-6">
-                <svg className="h-12 w-12 text-scanner-danger mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <p className="text-scanner-danger font-medium mb-2">Stream Error</p>
-                <p className="text-gray-400 text-sm">{streamError}</p>
-                <Button className="mt-4" variant="outline" size="sm" onClick={handleRefresh}>
-                  <RefreshCw className="h-4 w-4 mr-1" />
-                  Try Again
-                </Button>
-              </div>
-            </div>
+          {streamUrl ? (
+            <RtspPlayer rtspUrl={streamUrl} />
           ) : (
-            // This is a placeholder for the actual video stream
-            // In a real app, you'd use a video player library that supports RTSP
-            <div className="absolute inset-0 flex items-center justify-center bg-scanner-card-hover">
+            <div className="absolute inset-0 flex items-center justify-center">
               <div className="text-center">
-                <p className="text-gray-300">
-                  {/* In a real implementation, you would use a proper player here */}
-                  Stream preview (simulated)
-                </p>
-                <p className="text-gray-500 text-sm mt-2 font-mono">{streamUrl}</p>
-                <p className="text-gray-500 text-xs mt-4">
-                  Note: Actual RTSP streaming requires a specialized player or proxy service
-                </p>
+                <p className="text-gray-400">No stream URL provided</p>
               </div>
             </div>
           )}
@@ -149,25 +85,22 @@ const Viewer = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <p className="text-gray-500 text-sm">Stream URL</p>
-                <p className="font-mono bg-gray-800 p-2 rounded mt-1 text-sm">{streamUrl}</p>
+                <p className="font-mono bg-gray-800 p-2 rounded mt-1 text-sm break-all">
+                  {streamUrl || 'No URL provided'}
+                </p>
               </div>
               <div>
                 <p className="text-gray-500 text-sm">Stream Type</p>
-                <p className="mt-1">RTSP (Real Time Streaming Protocol)</p>
+                <p className="mt-1">RTSP converted to HLS (HTTP Live Streaming)</p>
               </div>
             </div>
             
             <div className="mt-4">
-              <p className="text-gray-500 text-sm">Connection Status</p>
-              <div className="mt-1">
-                {isLoading ? (
-                  <Badge className="bg-scanner-warning">Connecting</Badge>
-                ) : streamError ? (
-                  <Badge className="bg-scanner-danger">Failed</Badge>
-                ) : (
-                  <Badge className="bg-scanner-success">Connected</Badge>
-                )}
-              </div>
+              <p className="text-gray-500 text-sm">Player Information</p>
+              <p className="mt-1 text-sm">
+                Using HLS player technology to convert RTSP streams for browser playback.
+                For demonstration purposes, this player is using a sample stream.
+              </p>
             </div>
           </div>
         </div>
