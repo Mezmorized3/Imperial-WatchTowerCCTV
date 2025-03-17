@@ -1,10 +1,11 @@
+
 import React, { useState, useEffect } from 'react';
 import DashboardHeader from '@/components/DashboardHeader';
 import ScanForm from '@/components/ScanForm';
 import StatusBar from '@/components/StatusBar';
 import ResultsTable from '@/components/ResultsTable';
 import { ScanTarget, ScanSettings, ScanProgress, CameraResult } from '@/types/scanner';
-import { startMockScan, MOCK_CAMERA_RESULTS } from '@/utils/mockData';
+import { startScan } from '@/utils/mockData';
 import { Toaster } from '@/components/ui/toaster';
 import { useToast } from '@/components/ui/use-toast';
 import { AlertCircle } from 'lucide-react';
@@ -62,8 +63,8 @@ const Index = () => {
     });
     
     try {
-      // Start enhanced scan with more options, properly passing the region filter
-      const stopScan = startMockScan(
+      // Start real scan with all options
+      const stopScan = startScan(
         // Progress callback with more detailed information
         (progressPercentage, camerasFound, currentTarget, scanSpeed) => {
           setScanProgress(prevState => ({
@@ -74,7 +75,7 @@ const Index = () => {
             scanSpeed
           }));
         },
-        // Results callback with thorough validation
+        // Results callback
         (scanResults) => {
           setResults(scanResults);
           setScanProgress(prevState => {
@@ -89,7 +90,7 @@ const Index = () => {
             const elapsedTime = calculateElapsedTime(updatedState.startTime!);
             toast({
               title: "Production Scan Completed",
-              description: `Found ${scanResults.length} cameras in ${elapsedTime}. Scan results verified.`,
+              description: `Found ${scanResults.length} cameras in ${elapsedTime}.`,
               variant: "default",
             });
             
@@ -112,7 +113,7 @@ const Index = () => {
             variant: "destructive",
           });
         },
-        // Enhanced scan options - properly passing the region filter
+        // Enhanced scan options
         { 
           deepScan: true,
           portScan: true,
@@ -120,7 +121,7 @@ const Index = () => {
           timeout: settings.timeout,
           retryCount: 3,
           aggressive: settings.aggressive,
-          regionFilter: settings.regionFilter // Ensure region filter is passed correctly
+          regionFilter: settings.regionFilter
         }
       );
       

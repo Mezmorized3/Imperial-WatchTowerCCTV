@@ -1,4 +1,7 @@
-import { CameraResult, ScanSettings } from '@/types/scanner';
+
+import { CameraResult, ScanSettings, ScanProgress } from '@/types/scanner';
+import { scanNetwork } from './networkScanner';
+import { getComprehensiveThreatIntel, analyzeFirmware } from './threatIntelligence';
 
 // This function will handle opening an RTSP stream
 export const openRtspStream = (camera: CameraResult): string => {
@@ -17,6 +20,73 @@ export const openRtspStream = (camera: CameraResult): string => {
   return rtspUrl;
 };
 
+// Real scan function that uses our network scanner
+export const startScan = async (
+  onProgress: (progressPercentage: number, camerasFound: number, currentTarget?: string, scanSpeed?: number) => void,
+  onComplete: (results: CameraResult[]) => void,
+  onError: (message: string) => void,
+  options?: Partial<ScanSettings & {
+    deepScan?: boolean;
+    portScan?: boolean;
+    vulnerabilityScan?: boolean;
+    retryCount?: number;
+  }>
+) => {
+  try {
+    // Create settings object with defaults
+    const settings: ScanSettings = {
+      aggressive: options?.aggressive || false,
+      testCredentials: options?.testCredentials !== false,
+      checkVulnerabilities: options?.vulnerabilityScan !== false,
+      saveSnapshots: options?.saveSnapshots || false,
+      regionFilter: options?.regionFilter || [],
+      threadsCount: options?.threadsCount || 10,
+      timeout: options?.timeout || 3000,
+      enableRealTimeMonitoring: options?.enableRealTimeMonitoring || false,
+      alertThreshold: options?.alertThreshold || 'medium'
+    };
+
+    // Store discovered cameras
+    const discoveredCameras: CameraResult[] = [];
+    
+    // Attempt to scan using the real scanner
+    await scanNetwork(
+      "192.168.1.0/24", // Default to local network for safety
+      settings,
+      (progress: ScanProgress) => {
+        // Convert the progress format for the caller
+        const progressPercentage = progress.targetsTotal > 0 
+          ? (progress.targetsScanned / progress.targetsTotal) * 100 
+          : 0;
+          
+        onProgress(
+          progressPercentage, 
+          progress.camerasFound, 
+          progress.currentTarget, 
+          progress.scanSpeed
+        );
+      },
+      (camera: CameraResult) => {
+        // Add discovered camera to our results
+        discoveredCameras.push(camera);
+      }
+    );
+    
+    // Complete the scan with discovered cameras
+    onComplete(discoveredCameras);
+    
+    // No cleanup function needed for real scan
+    return () => {};
+  } catch (error) {
+    // Handle errors
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error during scan';
+    onError(errorMessage);
+    
+    // Return empty cleanup function
+    return () => {};
+  }
+};
+
 // Let's update the startMockScan function to properly use region filters
 export const startMockScan = (
   onProgress: (progressPercentage: number, camerasFound: number, currentTarget?: string, scanSpeed?: number) => void,
@@ -29,7 +99,15 @@ export const startMockScan = (
     retryCount?: number;
   }>
 ) => {
-  // Implement mockData functionality here
+  // First try to use the real scanner
+  try {
+    return startScan(onProgress, onComplete, onError, options);
+  } catch (error) {
+    console.warn("Real scanner failed, falling back to mock data:", error);
+    // Fall back to mock data if real scanner fails
+  }
+  
+  // Implement mockData functionality here as a fallback
   // For now, we'll leave this as a stub that simulates a scan
   
   let isCancelled = false;
