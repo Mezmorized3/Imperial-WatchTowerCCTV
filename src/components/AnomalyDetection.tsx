@@ -186,7 +186,7 @@ const AnomalyDetection: React.FC<AnomalyDetectionProps> = ({ camera }) => {
                       <CardHeader className="p-3 pb-0">
                         <div className="flex items-center justify-between">
                           <Badge 
-                            variant={anomaly.score > 70 ? "destructive" : "warning"}
+                            variant={anomaly.score > 70 ? "destructive" : "secondary"} // Changed from 'warning' to 'secondary'
                             className="px-2 py-0"
                           >
                             Score: {anomaly.score}/100

@@ -31,7 +31,7 @@ const ThreatIntelligence: React.FC<ThreatIntelligenceProps> = ({ camera }) => {
   const getReputationBadgeVariant = (score?: number) => {
     if (score === undefined) return 'outline';
     if (score < 30) return 'destructive';
-    if (score < 60) return 'warning';
+    if (score < 60) return 'secondary'; // Changed from 'warning' to 'secondary'
     return 'secondary';
   };
 
