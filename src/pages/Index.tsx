@@ -51,26 +51,30 @@ const Index = () => {
     // Start mock scan
     const stopScan = startMockScan(
       (progressPercentage, camerasFound) => {
-        setScanProgress(prevProgress => ({
-          ...prevProgress,
+        setScanProgress(prevState => ({
+          ...prevState,
           targetsScanned: Math.floor((progressPercentage / 100) * targetsTotal),
           camerasFound
         }));
       },
       (results) => {
         setResults(results);
-        setScanProgress(prevProgress => ({
-          ...prevProgress,
-          status: 'completed',
-          targetsScanned: targetsTotal,
-          camerasFound: results.length,
-          endTime: new Date()
-        }));
-        
-        toast({
-          title: "Scan Completed",
-          description: `Found ${results.length} cameras in ${calculateElapsedTime(prevProgress.startTime!)}`,
-          variant: "default",
+        setScanProgress(prevState => {
+          const updatedState = {
+            ...prevState,
+            status: 'completed',
+            targetsScanned: targetsTotal,
+            camerasFound: results.length,
+            endTime: new Date()
+          };
+          
+          toast({
+            title: "Scan Completed",
+            description: `Found ${results.length} cameras in ${calculateElapsedTime(updatedState.startTime!)}`,
+            variant: "default",
+          });
+          
+          return updatedState;
         });
       }
     );
