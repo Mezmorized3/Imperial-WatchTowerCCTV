@@ -2,8 +2,9 @@
 import React, { useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Camera, Maximize, Minimize, RefreshCw } from 'lucide-react';
+import { ArrowLeft, Camera, Maximize, Minimize, RefreshCw, Info } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import RtspPlayer from '@/components/RtspPlayer';
 
 const Viewer = () => {
@@ -67,6 +68,13 @@ const Viewer = () => {
       </header>
       
       <main className="container mx-auto py-6 px-4">
+        <Alert className="mb-4 bg-scanner-primary/10 border-scanner-primary/30 text-white">
+          <Info className="h-4 w-4 text-scanner-primary" />
+          <AlertDescription>
+            This is a demo stream. In a real application, actual RTSP streams would be converted to HLS format by a backend service.
+          </AlertDescription>
+        </Alert>
+        
         <div id="stream-viewer" className="bg-black rounded-lg shadow-lg overflow-hidden aspect-video relative">
           {streamUrl ? (
             <RtspPlayer rtspUrl={streamUrl} />
@@ -99,7 +107,7 @@ const Viewer = () => {
               <p className="text-gray-500 text-sm">Player Information</p>
               <p className="mt-1 text-sm">
                 Using HLS player technology to convert RTSP streams for browser playback.
-                For demonstration purposes, this player is using a sample stream.
+                For demonstration purposes, this player is showing sample streams. You can switch between different demo streams using the buttons below the player.
               </p>
             </div>
           </div>
