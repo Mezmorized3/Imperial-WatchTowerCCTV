@@ -10,6 +10,19 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import RtspPlayer from '@/components/RtspPlayer';
 import { fetchWhoisData, fetchDnsRecords, checkVulnerabilityDatabase } from '@/utils/osintUtils';
 
+// Helper function to extract IP from URL
+const extractIPFromUrl = (url: string): string => {
+  try {
+    if (!url) return '';
+    const urlObj = new URL(url);
+    return urlObj.hostname;
+  } catch (e) {
+    // Try to extract using regex if URL parsing fails
+    const ipMatch = url.match(/(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})/);
+    return ipMatch ? ipMatch[1] : '';
+  }
+};
+
 const Viewer = () => {
   const [isFullScreen, setIsFullScreen] = useState(false);
   const [streamError, setStreamError] = useState<string | null>(null);
@@ -34,18 +47,6 @@ const Viewer = () => {
   const streamUrl = searchParams.get('url');
   const cameraName = searchParams.get('name') || 'Camera Stream';
   const ipAddress = searchParams.get('ip') || extractIPFromUrl(streamUrl || '');
-  
-  const extractIPFromUrl = (url: string): string => {
-    try {
-      if (!url) return '';
-      const urlObj = new URL(url);
-      return urlObj.hostname;
-    } catch (e) {
-      // Try to extract using regex if URL parsing fails
-      const ipMatch = url.match(/(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})/);
-      return ipMatch ? ipMatch[1] : '';
-    }
-  };
   
   useEffect(() => {
     // Load OSINT data when IP address is available and the OSINT tab is selected
