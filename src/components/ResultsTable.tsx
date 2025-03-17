@@ -4,7 +4,6 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { 
-  Alert, 
   AlertCircle, 
   Camera, 
   Check, 
@@ -72,13 +71,13 @@ const ResultsTable: React.FC<ResultsTableProps> = ({ results }) => {
   const getAccessLevelIcon = (level: string) => {
     switch (level) {
       case 'admin':
-        return <Shield className="h-4 w-4 text-scanner-success" title="Admin Access" />;
+        return <Shield className="h-4 w-4 text-scanner-success" aria-label="Admin Access" />;
       case 'control':
-        return <Lock className="h-4 w-4 text-scanner-primary" title="Control Access" />;
+        return <Lock className="h-4 w-4 text-scanner-primary" aria-label="Control Access" />;
       case 'view':
-        return <Eye className="h-4 w-4 text-scanner-info" title="View Only" />;
+        return <Eye className="h-4 w-4 text-scanner-info" aria-label="View Only" />;
       default:
-        return <X className="h-4 w-4 text-gray-500" title="No Access" />;
+        return <X className="h-4 w-4 text-gray-500" aria-label="No Access" />;
     }
   };
 
@@ -296,7 +295,7 @@ const ResultsTable: React.FC<ResultsTableProps> = ({ results }) => {
                       {selectedCamera.vulnerabilities.map((vuln, idx) => (
                         <div key={idx} className="bg-scanner-danger/10 border border-scanner-danger/20 rounded p-2 mb-2">
                           <div className="flex items-center gap-2">
-                            <Alert className="h-4 w-4 text-scanner-danger" />
+                            <AlertCircle className="h-4 w-4 text-scanner-danger" />
                             <span className="font-medium">{vuln.name}</span>
                             <Badge className={
                               vuln.severity === 'critical' ? 'bg-scanner-danger' :

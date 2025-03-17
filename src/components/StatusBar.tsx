@@ -4,6 +4,7 @@ import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { ScanProgress } from '@/types/scanner';
 import { Clock, Search, Camera } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface StatusBarProps {
   progress: ScanProgress;
@@ -84,7 +85,10 @@ const StatusBar: React.FC<StatusBarProps> = ({ progress }) => {
         )}
       </div>
       
-      <Progress value={percentComplete} className="h-2 bg-gray-800" indicatorClassName="bg-scanner-primary" />
+      <Progress 
+        value={percentComplete} 
+        className={cn("h-2 bg-gray-800", "before:bg-scanner-primary")} 
+      />
     </div>
   );
 };
