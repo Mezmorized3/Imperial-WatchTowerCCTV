@@ -1,10 +1,9 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Camera, Maximize, Minimize, RefreshCw, Info } from 'lucide-react';
+import { ArrowLeft, Camera, Maximize, Minimize } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { Alert, AlertDescription } from '@/components/ui/alert';
 import RtspPlayer from '@/components/RtspPlayer';
 
 const Viewer = () => {
@@ -31,6 +30,18 @@ const Viewer = () => {
     
     setIsFullScreen(!isFullScreen);
   };
+  
+  // Handle fullscreen change events from browser API
+  useEffect(() => {
+    const handleFullScreenChange = () => {
+      setIsFullScreen(!!document.fullscreenElement);
+    };
+    
+    document.addEventListener('fullscreenchange', handleFullScreenChange);
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullScreenChange);
+    };
+  }, []);
   
   return (
     <div className="min-h-screen bg-scanner-dark text-white">
@@ -68,13 +79,6 @@ const Viewer = () => {
       </header>
       
       <main className="container mx-auto py-6 px-4">
-        <Alert className="mb-4 bg-scanner-primary/10 border-scanner-primary/30 text-white">
-          <Info className="h-4 w-4 text-scanner-primary" />
-          <AlertDescription>
-            This is a demo stream. In a real application, actual RTSP streams would be converted to HLS format by a backend service.
-          </AlertDescription>
-        </Alert>
-        
         <div id="stream-viewer" className="bg-black rounded-lg shadow-lg overflow-hidden aspect-video relative">
           {streamUrl ? (
             <RtspPlayer rtspUrl={streamUrl} />
@@ -98,16 +102,15 @@ const Viewer = () => {
                 </p>
               </div>
               <div>
-                <p className="text-gray-500 text-sm">Stream Type</p>
-                <p className="mt-1">RTSP converted to HLS (HTTP Live Streaming)</p>
+                <p className="text-gray-500 text-sm">Connection Type</p>
+                <p className="mt-1">Direct RTSP Connection</p>
               </div>
             </div>
             
             <div className="mt-4">
-              <p className="text-gray-500 text-sm">Player Information</p>
+              <p className="text-gray-500 text-sm">Technical Information</p>
               <p className="mt-1 text-sm">
-                Using HLS player technology to convert RTSP streams for browser playback.
-                For demonstration purposes, this player is showing sample streams. You can switch between different demo streams using the buttons below the player.
+                This viewer attempts to connect directly to real RTSP camera streams. Some streams may require specific network access or credentials to function properly.
               </p>
             </div>
           </div>
