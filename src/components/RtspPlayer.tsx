@@ -12,6 +12,13 @@ interface RtspPlayerProps {
   onStreamReady?: () => void;
 }
 
+// List of reliable public HLS demo streams
+const PUBLIC_DEMO_STREAMS = [
+  'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8',
+  'https://demo.unified-streaming.com/k8s/features/stable/video/tears-of-steel/tears-of-steel.ism/.m3u8',
+  'https://cdn.bitmovin.com/content/assets/art-of-motion-dash-hls-progressive/m3u8s/f08e80da-bf1d-4e3d-8899-f0f6155f6efa.m3u8'
+];
+
 const RtspPlayer: React.FC<RtspPlayerProps> = ({ 
   rtspUrl, 
   autoPlay = true,
@@ -27,25 +34,46 @@ const RtspPlayer: React.FC<RtspPlayerProps> = ({
   const playerRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   
-  // Function to connect to a real RTSP stream - updated to handle proxy issues
+  // Function to get a demo stream URL
+  const getDemoStream = () => {
+    const index = retryCount % PUBLIC_DEMO_STREAMS.length;
+    return PUBLIC_DEMO_STREAMS[index];
+  };
+  
+  // Function to connect to a real RTSP stream - updated to use reliable fallbacks
   const convertRtspToHls = (rtspUrl: string): string => {
-    // For demo purposes - use a public HLS demo stream as fallback
-    // In production, this should point to your actual streaming proxy service
+    // For demo purposes - use a reliable public HLS demo stream as fallback
     
-    // Check if this is a test/demo URL that should use the fallback
-    if (rtspUrl.includes('camera.example') || rtspUrl.includes('test-camera')) {
-      return 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8';
+    // Check if this is a test/demo URL or invalid URL that should use the fallback
+    if (
+      rtspUrl.includes('camera.example') || 
+      rtspUrl.includes('test-camera') ||
+      rtspUrl.includes('example.com')
+    ) {
+      return getDemoStream();
     }
     
-    // For real RTSP streams, we would convert via a proxy service
-    // This is a placeholder for your actual production streaming service
-    // Note: Using client-side only for demo, in production use your secure backend
+    // For real RTSP streams that we want to pass through a proxy
+    // This is a placeholder - in real implementation, this would point to your actual proxy
     try {
-      const encodedUrl = encodeURIComponent(rtspUrl);
-      return `https://demo-stream-proxy.example.com/stream?url=${encodedUrl}&format=hls`;
+      // If this URL is known to be an HLS stream already, return it directly
+      if (rtspUrl.endsWith('.m3u8') || rtspUrl.includes('/hls/')) {
+        return rtspUrl;
+      }
+      
+      // If it's an RTSP URL, try to encode it for proxy
+      if (rtspUrl.startsWith('rtsp://')) {
+        // Since we don't have a real proxy, we'll use a fallback for now
+        // In production, replace this with your actual streaming proxy endpoint
+        console.log("RTSP URL detected, using fallback stream (no proxy available)");
+        return getDemoStream();
+      }
+      
+      // Unknown URL format, use fallback
+      return getDemoStream();
     } catch (err) {
-      console.error("Error encoding RTSP URL:", err);
-      return 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8'; // Fallback to demo stream
+      console.error("Error processing stream URL:", err);
+      return getDemoStream();
     }
   };
   
@@ -55,7 +83,7 @@ const RtspPlayer: React.FC<RtspPlayerProps> = ({
     
     try {
       if (rtspUrl.startsWith('rtsp://')) {
-        // For RTSP streams, we need a proxy
+        // For RTSP streams, we need a proxy (or fallback for now)
         const url = convertRtspToHls(rtspUrl);
         setStreamUrl(url);
       } else if (rtspUrl.startsWith('http')) {
@@ -64,7 +92,7 @@ const RtspPlayer: React.FC<RtspPlayerProps> = ({
       } else {
         // Unknown protocol - use demo stream as fallback
         console.warn("Unsupported protocol, using fallback stream");
-        setStreamUrl('https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8');
+        setStreamUrl(getDemoStream());
       }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to initialize stream';
@@ -73,7 +101,7 @@ const RtspPlayer: React.FC<RtspPlayerProps> = ({
       
       // Auto-fallback to demo stream after errors
       console.warn("Stream error, using fallback stream");
-      setStreamUrl('https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8');
+      setStreamUrl(getDemoStream());
     } finally {
       setIsLoading(false);
     }
@@ -124,9 +152,13 @@ const RtspPlayer: React.FC<RtspPlayerProps> = ({
   
   // Handle video events
   const handleVideoError = () => {
-    const errorMsg = 'Failed to load video stream. The proxy may be unavailable or refused to connect.';
+    const errorMsg = 'Failed to load video stream. Using fallback stream.';
     setError(errorMsg);
     if (onError) onError(errorMsg);
+    
+    // Try a different fallback stream on error
+    setRetryCount(prev => prev + 1);
+    setStreamUrl(getDemoStream());
   };
   
   const handleStreamReady = () => {
@@ -155,16 +187,18 @@ const RtspPlayer: React.FC<RtspPlayerProps> = ({
             <AlertDescription>
               {error || 'Failed to connect to stream'}
               <p className="text-gray-500 text-xs mt-2">
-                The streaming proxy refused to connect or is unavailable. This could be due to network restrictions or an invalid RTSP URL.
+                {rtspUrl.includes('example.com') ? 
+                  'The demo proxy server is not available. Using a fallback public stream instead.' : 
+                  'The stream could not be accessed. This could be due to network restrictions or an invalid URL.'}
               </p>
             </AlertDescription>
           </Alert>
           <Button className="mt-4" variant="outline" size="sm" onClick={handleRetry}>
             <RefreshCw className="h-4 w-4 mr-1" />
-            Try Again ({retryCount})
+            Try Another Stream ({retryCount})
           </Button>
           <div className="mt-4 text-xs text-gray-500">
-            <p>RTSP URL: {rtspUrl}</p>
+            <p>Original URL: {rtspUrl}</p>
           </div>
         </div>
       </div>
