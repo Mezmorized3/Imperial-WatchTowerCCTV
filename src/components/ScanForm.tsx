@@ -9,7 +9,7 @@ import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Slider } from '@/components/ui/slider';
-import { ChevronDown, ChevronUp, Search, Globe, FileText, AlertTriangle, Zap, MapPin } from 'lucide-react';
+import { ChevronDown, ChevronUp, Search, Globe, FileText, AlertTriangle, Zap, MapPin, Database, Bell } from 'lucide-react';
 import { ScanSettings, ScanTarget } from '@/types/scanner';
 import { validateScanInput } from '@/utils/validation';
 import { REGIONS, COUNTRY_IP_RANGES, COUNTRY_SHODAN_QUERIES } from '@/utils/mockData';
@@ -21,7 +21,7 @@ interface ScanFormProps {
 
 const ScanForm: React.FC<ScanFormProps> = ({ onStartScan, isScanning }) => {
   const [showAdvanced, setShowAdvanced] = useState(false);
-  const [scanType, setScanType] = useState<'ip' | 'range' | 'file' | 'shodan'>('ip');
+  const [scanType, setScanType] = useState<'ip' | 'range' | 'file' | 'shodan' | 'zoomeye' | 'censys'>('ip');
   const [scanValue, setScanValue] = useState('');
   const [inputError, setInputError] = useState('');
   const [selectedCountry, setSelectedCountry] = useState<string | null>(null);
@@ -34,7 +34,9 @@ const ScanForm: React.FC<ScanFormProps> = ({ onStartScan, isScanning }) => {
     saveSnapshots: false,
     regionFilter: [],
     threadsCount: 10,
-    timeout: 3000
+    timeout: 3000,
+    enableRealTimeMonitoring: false,
+    alertThreshold: 'medium'
   });
 
   const handleInputChange = (value: string) => {
@@ -91,7 +93,9 @@ const ScanForm: React.FC<ScanFormProps> = ({ onStartScan, isScanning }) => {
     ip: '192.168.1.100',
     range: '192.168.1.0/24',
     file: 'Select a file with IP addresses',
-    shodan: 'country:ua port:80,8080 product:hikvision'
+    shodan: 'country:ua port:80,8080 product:hikvision',
+    zoomeye: 'app:"hikvision cameras" country:jp',
+    censys: 'services.port=554 and services.service_name="rtsp" country=CA'
   };
 
   const getPresetOptions = () => {
@@ -200,6 +204,22 @@ const ScanForm: React.FC<ScanFormProps> = ({ onStartScan, isScanning }) => {
                       <span>Shodan Query</span>
                     </Label>
                   </div>
+                  
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="zoomeye" id="option-zoomeye" />
+                    <Label htmlFor="option-zoomeye" className="flex items-center space-x-1 cursor-pointer">
+                      <Database className="h-4 w-4" />
+                      <span>ZoomEye Query</span>
+                    </Label>
+                  </div>
+                  
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="censys" id="option-censys" />
+                    <Label htmlFor="option-censys" className="flex items-center space-x-1 cursor-pointer">
+                      <Globe className="h-4 w-4" />
+                      <span>Censys Query</span>
+                    </Label>
+                  </div>
                 </RadioGroup>
               </div>
               
@@ -207,7 +227,8 @@ const ScanForm: React.FC<ScanFormProps> = ({ onStartScan, isScanning }) => {
                 <Label className="text-gray-300">
                   {scanType === 'ip' ? 'IP Address' : 
                    scanType === 'range' ? 'CIDR Range' : 
-                   scanType === 'file' ? 'IP List File' : 'Shodan Query'}
+                   scanType === 'file' ? 'IP List File' : 
+                   `${scanType.charAt(0).toUpperCase() + scanType.slice(1)} Query`}
                 </Label>
                 <div className="flex gap-2">
                   <Input
@@ -326,8 +347,55 @@ const ScanForm: React.FC<ScanFormProps> = ({ onStartScan, isScanning }) => {
                     />
                     <Label htmlFor="save-snapshots">Save Camera Snapshots</Label>
                   </div>
+                  
+                  <div className="flex items-center space-x-2">
+                    <Switch 
+                      id="realtime-monitoring" 
+                      checked={settings.enableRealTimeMonitoring || false}
+                      onCheckedChange={value => updateSettings('enableRealTimeMonitoring', value)}
+                    />
+                    <Label htmlFor="realtime-monitoring" className="flex items-center gap-1">
+                      <Bell className="h-4 w-4 text-scanner-info" />
+                      <span>Enable Real-Time Monitoring</span>
+                    </Label>
+                  </div>
+                  
+                  <div className="flex items-center space-x-2">
+                    <Switch 
+                      id="map-visualization" 
+                      checked={true}
+                      disabled
+                    />
+                    <Label htmlFor="map-visualization" className="flex items-center gap-1">
+                      <MapPin className="h-4 w-4 text-scanner-primary" />
+                      <span>Map Visualization</span>
+                    </Label>
+                  </div>
                 </div>
               </div>
+              
+              {settings.enableRealTimeMonitoring && (
+                <div className="space-y-2 p-3 border border-gray-800 rounded-md">
+                  <Label className="text-gray-300">Alert Threshold</Label>
+                  <Select 
+                    value={settings.alertThreshold || 'medium'}
+                    onValueChange={(value) => updateSettings('alertThreshold', value)}
+                  >
+                    <SelectTrigger className="bg-gray-800 border-gray-700">
+                      <SelectValue placeholder="Select alert threshold" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-gray-800 border-gray-700">
+                      <SelectItem value="low">Low (All alerts)</SelectItem>
+                      <SelectItem value="medium">Medium</SelectItem>
+                      <SelectItem value="high">High</SelectItem>
+                      <SelectItem value="critical">Critical only</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-gray-400 mt-1">
+                    Only alerts at or above this severity level will trigger notifications.
+                  </p>
+                </div>
+              )}
             </div>
           </TabsContent>
         </Tabs>

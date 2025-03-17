@@ -1,6 +1,6 @@
 
 export type ScanTarget = {
-  type: 'ip' | 'range' | 'file' | 'shodan';
+  type: 'ip' | 'range' | 'file' | 'shodan' | 'zoomeye' | 'censys';
   value: string;
 };
 
@@ -12,6 +12,8 @@ export type ScanSettings = {
   regionFilter: string[];
   threadsCount: number;
   timeout: number;
+  enableRealTimeMonitoring?: boolean;
+  alertThreshold?: 'low' | 'medium' | 'high' | 'critical';
 };
 
 export type CameraStatus = 'online' | 'vulnerable' | 'authenticated' | 'offline' | 'unknown';
@@ -43,6 +45,7 @@ export type CameraResult = {
   lastSeen: string;
   accessLevel: 'none' | 'view' | 'control' | 'admin';
   responseTime?: number;
+  monitoringEnabled?: boolean;
 };
 
 export type ScanStatus = 'idle' | 'running' | 'completed' | 'failed';
@@ -59,4 +62,23 @@ export type ScanProgress = {
   scanSettings?: ScanSettings;
   currentTarget?: string;
   scanSpeed?: number;
+};
+
+export type AlertConfig = {
+  enabled: boolean;
+  type: 'status_change' | 'new_vulnerability' | 'connection_loss' | 'access_attempt';
+  severity: 'low' | 'medium' | 'high' | 'critical';
+  notificationMethod: 'in_app' | 'email' | 'webhook';
+};
+
+export type VulnerabilityAssessmentResult = {
+  cameraId: string;
+  overallRisk: 'low' | 'medium' | 'high' | 'critical';
+  lastChecked: Date;
+  findings: {
+    category: string;
+    details: string;
+    severity: 'low' | 'medium' | 'high' | 'critical';
+    recommendation: string;
+  }[];
 };
