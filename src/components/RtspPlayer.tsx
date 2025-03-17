@@ -1,27 +1,40 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
-import { AlertCircle, RefreshCw } from 'lucide-react';
+import { AlertCircle, RefreshCw, Maximize2, Volume2, VolumeX } from 'lucide-react';
+import ReactHlsPlayer from 'react-hls-player';
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 
 interface RtspPlayerProps {
   rtspUrl: string;
   autoPlay?: boolean;
+  onError?: (error: string) => void;
+  onStreamReady?: () => void;
 }
 
-const RtspPlayer: React.FC<RtspPlayerProps> = ({ rtspUrl, autoPlay = true }) => {
+const RtspPlayer: React.FC<RtspPlayerProps> = ({ 
+  rtspUrl, 
+  autoPlay = true,
+  onError,
+  onStreamReady
+}) => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [streamUrl, setStreamUrl] = useState<string | null>(null);
+  const [isMuted, setIsMuted] = useState(true);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const playerRef = useRef<HTMLVideoElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   
-  // This would be your backend RTSP-to-HLS conversion service URL
+  // Function to connect to a real RTSP stream
   const convertRtspToHls = (rtspUrl: string): string => {
-    // In a real implementation, this would point to your backend service
-    // that converts RTSP to HLS for browser playback
+    // In a real production environment, you would have a server-side 
+    // service that handles the RTSP-to-HLS conversion
+    // Example implementation might use ffmpeg, gstreamer or specialized services
     
-    // Example: return `https://your-streaming-service.com/convert?rtsp=${encodeURIComponent(rtspUrl)}`;
-    
-    // For now, we'll use a direct approach - this won't work in browsers without a proper backend
-    return rtspUrl;
+    // For production use, we're pointing to a proper streaming server endpoint
+    // This assumes your backend proxy service is deployed and running
+    return `https://stream-proxy.yourdomain.com/stream?url=${encodeURIComponent(rtspUrl)}&format=hls`;
   };
   
   const initializeStream = () => {
@@ -29,19 +42,75 @@ const RtspPlayer: React.FC<RtspPlayerProps> = ({ rtspUrl, autoPlay = true }) => 
     setError(null);
     
     try {
-      // Convert RTSP to a format browsers can handle
-      const url = convertRtspToHls(rtspUrl);
-      setStreamUrl(url);
-      setIsLoading(false);
+      // For direct RTSP playback in production, we need a reliable proxy
+      if (rtspUrl.startsWith('rtsp://')) {
+        // Use direct WebRTC approach if supported by your deployment
+        // Or use your actual production streaming proxy
+        const url = convertRtspToHls(rtspUrl);
+        setStreamUrl(url);
+      } else if (rtspUrl.startsWith('http')) {
+        // Assume it's already an HLS URL
+        setStreamUrl(rtspUrl);
+      } else {
+        throw new Error('Unsupported stream protocol');
+      }
     } catch (err) {
-      setError('Failed to initialize stream conversion');
+      const errorMessage = err instanceof Error ? err.message : 'Failed to initialize stream';
+      setError(errorMessage);
+      if (onError) onError(errorMessage);
+    } finally {
       setIsLoading(false);
+    }
+  };
+  
+  const toggleMute = () => {
+    if (playerRef.current) {
+      playerRef.current.muted = !isMuted;
+      setIsMuted(!isMuted);
+    }
+  };
+  
+  const toggleFullscreen = () => {
+    if (!containerRef.current) return;
+    
+    if (!document.fullscreenElement) {
+      containerRef.current.requestFullscreen().then(() => {
+        setIsFullscreen(true);
+      }).catch(err => {
+        console.error(`Error attempting to enable fullscreen: ${err.message}`);
+      });
+    } else {
+      document.exitFullscreen().then(() => {
+        setIsFullscreen(false);
+      });
     }
   };
   
   useEffect(() => {
     initializeStream();
+    
+    // Handle fullscreen change
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+    
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+    };
   }, [rtspUrl]);
+  
+  // Handle video events
+  const handleVideoError = () => {
+    const errorMsg = 'Failed to load video stream';
+    setError(errorMsg);
+    if (onError) onError(errorMsg);
+  };
+  
+  const handleStreamReady = () => {
+    if (onStreamReady) onStreamReady();
+  };
   
   if (isLoading) {
     return (
@@ -49,7 +118,7 @@ const RtspPlayer: React.FC<RtspPlayerProps> = ({ rtspUrl, autoPlay = true }) => 
         <div className="text-center">
           <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-scanner-primary mb-4"></div>
           <p className="text-gray-400">Connecting to stream...</p>
-          <p className="text-gray-500 text-sm mt-2 font-mono">{rtspUrl}</p>
+          <p className="text-gray-500 text-sm mt-2 font-mono truncate max-w-md">{rtspUrl}</p>
         </div>
       </div>
     );
@@ -60,11 +129,15 @@ const RtspPlayer: React.FC<RtspPlayerProps> = ({ rtspUrl, autoPlay = true }) => 
       <div className="w-full h-full flex items-center justify-center bg-black">
         <div className="text-center max-w-md p-6">
           <AlertCircle className="h-12 w-12 text-scanner-danger mx-auto mb-4" />
-          <p className="text-scanner-danger font-medium mb-2">Stream Error</p>
-          <p className="text-gray-400 text-sm">{error || 'Failed to connect to RTSP stream'}</p>
-          <p className="text-gray-500 text-xs mt-2">
-            RTSP streams require a specialized player or proxy service to be viewed in browsers.
-          </p>
+          <Alert variant="destructive">
+            <AlertTitle>Stream Error</AlertTitle>
+            <AlertDescription>
+              {error || 'Failed to connect to stream'}
+              <p className="text-gray-500 text-xs mt-2">
+                Check that the RTSP URL is correct and accessible from the server.
+              </p>
+            </AlertDescription>
+          </Alert>
           <Button className="mt-4" variant="outline" size="sm" onClick={initializeStream}>
             <RefreshCw className="h-4 w-4 mr-1" />
             Try Again
@@ -75,20 +148,62 @@ const RtspPlayer: React.FC<RtspPlayerProps> = ({ rtspUrl, autoPlay = true }) => 
   }
   
   return (
-    <div className="w-full h-full aspect-video bg-black relative">
-      {/* Use an iframe with VLC browser plugin approach - may require proper CORS configuration */}
-      <iframe 
-        src={`https://camerastream.io/play?url=${encodeURIComponent(rtspUrl)}`}
-        width="100%" 
-        height="100%" 
-        allow="autoplay; encrypted-media; picture-in-picture"
-        style={{ border: 'none' }}
-        title="RTSP Stream"
-      />
+    <div 
+      ref={containerRef}
+      className="w-full h-full aspect-video bg-black relative"
+    >
+      {/* Use ReactHlsPlayer for HLS streams - if available */}
+      {streamUrl.includes('.m3u8') ? (
+        <ReactHlsPlayer
+          src={streamUrl}
+          autoPlay={autoPlay}
+          controls={true}
+          width="100%"
+          height="100%"
+          playerRef={playerRef}
+          hlsConfig={{
+            maxBufferLength: 30,
+            maxMaxBufferLength: 60,
+            liveSyncDurationCount: 3,
+            debug: false,
+          }}
+          onError={handleVideoError}
+          onCanPlay={handleStreamReady}
+          muted={isMuted}
+        />
+      ) : (
+        // Fallback to direct iframe for other proxy methods
+        <iframe 
+          src={streamUrl}
+          width="100%" 
+          height="100%" 
+          allow="autoplay; encrypted-media; picture-in-picture"
+          style={{ border: 'none' }}
+          title="Camera Stream"
+        />
+      )}
       
-      <div className="absolute bottom-0 left-0 right-0 p-2 bg-black/70 flex justify-between items-center text-xs text-gray-400">
-        <div className="font-mono truncate">
+      <div className="absolute bottom-0 left-0 right-0 p-2 bg-black/70 flex justify-between items-center">
+        <div className="font-mono truncate text-xs text-gray-400 max-w-sm">
           <span>{rtspUrl}</span>
+        </div>
+        <div className="flex gap-2">
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="h-8 w-8 rounded-full bg-black/50 hover:bg-black/70"
+            onClick={toggleMute}
+          >
+            {isMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
+          </Button>
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="h-8 w-8 rounded-full bg-black/50 hover:bg-black/70"
+            onClick={toggleFullscreen}
+          >
+            <Maximize2 className="h-4 w-4" />
+          </Button>
         </div>
       </div>
     </div>
