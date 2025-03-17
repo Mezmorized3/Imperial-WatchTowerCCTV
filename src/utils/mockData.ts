@@ -1,5 +1,22 @@
 import { CameraResult, ScanSettings } from '@/types/scanner';
 
+// This function will handle opening an RTSP stream
+export const openRtspStream = (camera: CameraResult): string => {
+  // In a real application, this might connect to a streaming server
+  // or return a URL to a streaming proxy service
+  
+  // For now, let's return a properly formatted URL for our viewer
+  const rtspUrl = camera.url || `rtsp://${camera.ip}:${camera.port || 554}/Streaming/Channels/101`;
+  
+  // Construct a URL to our viewer page with the camera info
+  const viewerUrl = `/viewer?url=${encodeURIComponent(rtspUrl)}&name=${encodeURIComponent(camera.brand || '')} ${encodeURIComponent(camera.model || '')}`;
+  
+  // In a real implementation, this might open a new window or tab
+  window.open(viewerUrl, '_blank');
+  
+  return rtspUrl;
+};
+
 // Let's update the startMockScan function to match our implementation
 export const startMockScan = (
   onProgress: (progressPercentage: number, camerasFound: number, currentTarget?: string, scanSpeed?: number) => void,
