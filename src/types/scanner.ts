@@ -1,6 +1,6 @@
 
 export type ScanTarget = {
-  type: 'ip' | 'range' | 'file' | 'shodan';
+  type: 'ip' | 'range' | 'file' | 'shodan' | 'zoomeye';
   value: string;
 };
 

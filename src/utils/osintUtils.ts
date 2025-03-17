@@ -1,5 +1,5 @@
-
 import { CameraResult } from '@/types/scanner';
+import { getCameraDetailsByIp } from './zoomEyeUtils';
 
 // Note: In a real application, these functions would connect to actual WHOIS/DNS services
 // or use APIs. For this demo, we're returning mock data.
@@ -134,16 +134,61 @@ export const checkVulnerabilityDatabase = async (ip: string): Promise<Record<str
 };
 
 /**
- * NEW: Query ZoomEye API for CCTV camera information
+ * Query ZoomEye API for CCTV camera information
  * Note: In a real application, we would use the actual ZoomEye API with proper authentication
+ * Now updated to use the ZoomEye library when available, falling back to mock data
  */
 export const queryZoomEyeApi = async (ip: string): Promise<Record<string, any>> => {
   console.log(`Querying ZoomEye for IP: ${ip}`);
   
-  // Simulate API delay
-  await new Promise(resolve => setTimeout(resolve, 1200));
-  
-  // Mock ZoomEye data for demonstration
+  try {
+    // Try to use the actual ZoomEye API if it's initialized
+    const zoomEyeResults = await getCameraDetailsByIp(ip);
+    
+    if (zoomEyeResults && zoomEyeResults.matches && zoomEyeResults.matches.length > 0) {
+      // Process and return real data from ZoomEye
+      const result = zoomEyeResults.matches[0];
+      
+      // Extract relevant information from the ZoomEye result
+      return {
+        'IP Address': ip,
+        'Last Scanned': result.timestamp || new Date().toISOString().split('T')[0],
+        'Manufacturer': result.app || 'Unknown',
+        'Model': result.device?.model || 'Unknown',
+        'Firmware Version': result.version || 'Unknown',
+        'Open Ports': result.portinfo?.port || 'Unknown',
+        'HTTP Service': result.portinfo?.service === 'http' ? `Port ${result.portinfo.port} - Web Management Interface` : 'Not detected',
+        'RTSP Service': result.portinfo?.service === 'rtsp' ? `Port ${result.portinfo.port} - Video Stream` : 'Not detected',
+        'SSL/TLS': result.ssl ? 'Enabled' : 'Disabled',
+        'Authentication': 'Unknown',
+        'Geolocation': {
+          lat: parseFloat(result.geoinfo?.latitude) || 0,
+          lng: parseFloat(result.geoinfo?.longitude) || 0,
+          accuracy: 'High'
+        }
+      };
+    }
+    
+    // Fall back to mock data if no results
+    console.log('No real ZoomEye data available, using mock data');
+    return getMockZoomEyeData(ip);
+  } catch (error) {
+    console.error('Error querying ZoomEye API:', error);
+    console.log('Falling back to mock data');
+    
+    // Simulate API delay
+    await new Promise(resolve => setTimeout(resolve, 1200));
+    
+    // Return mock data as fallback
+    return getMockZoomEyeData(ip);
+  }
+};
+
+/**
+ * Get mock ZoomEye data for demo purposes
+ */
+const getMockZoomEyeData = (ip: string): Record<string, any> => {
+  // Generate random recent date
   const randomRecentDate = () => {
     const date = new Date();
     date.setDate(date.getDate() - Math.floor(Math.random() * 30));
