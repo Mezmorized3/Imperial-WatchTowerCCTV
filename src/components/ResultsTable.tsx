@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
@@ -106,10 +105,8 @@ const ResultsTable: React.FC<ResultsTableProps> = ({ results }) => {
       return;
     }
     
-    // Generate stream URL
     const streamUrl = camera.url || `rtsp://${camera.ip}/Streaming/Channels/1`;
     
-    // Navigate to the enhanced viewer with additional params
     navigate(`/viewer?url=${encodeURIComponent(streamUrl)}&name=${encodeURIComponent(camera.brand || 'Unknown Camera')}&ip=${encodeURIComponent(camera.ip)}`);
     
     toast({
@@ -123,7 +120,6 @@ const ResultsTable: React.FC<ResultsTableProps> = ({ results }) => {
       e.stopPropagation();
     }
     
-    // Navigate to viewer with OSINT tab active
     const streamUrl = camera.url || `rtsp://${camera.ip}/Streaming/Channels/1`;
     navigate(`/viewer?url=${encodeURIComponent(streamUrl)}&name=${encodeURIComponent(camera.brand || 'Unknown Camera')}&ip=${encodeURIComponent(camera.ip)}#osint`);
     
@@ -132,15 +128,6 @@ const ResultsTable: React.FC<ResultsTableProps> = ({ results }) => {
       description: `Gathering intelligence for ${camera.ip}`,
     });
   };
-
-  const filteredResults = searchTerm
-    ? results.filter(camera => 
-        camera.ip.includes(searchTerm) || 
-        camera.brand?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        camera.model?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        camera.location?.country.toLowerCase().includes(searchTerm.toLowerCase())
-      )
-    : results;
 
   return (
     <Card className="bg-scanner-card border-gray-800 shadow-lg">
