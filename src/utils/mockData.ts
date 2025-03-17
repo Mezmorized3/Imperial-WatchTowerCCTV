@@ -51,8 +51,19 @@ export const startMockScan = (
       progress = 100;
       clearInterval(interval);
       
+      // Determine which mock results to return based on the region filter
+      let resultsToReturn = [...MOCK_CAMERA_RESULTS];
+      
+      // If region filters are applied, return cameras specific to those regions
+      if (options?.regionFilter && options.regionFilter.length > 0) {
+        const regionCode = options.regionFilter[0]; // Take the first selected region
+        if (REGION_SPECIFIC_CAMERAS[regionCode]) {
+          resultsToReturn = REGION_SPECIFIC_CAMERAS[regionCode];
+        }
+      }
+      
       // Complete the scan
-      onComplete(MOCK_CAMERA_RESULTS);
+      onComplete(resultsToReturn);
     } else {
       // Randomly find cameras during the scan
       if (Math.random() > 0.9) {
@@ -77,7 +88,239 @@ export const startMockScan = (
   };
 };
 
-// Add the mock camera results
+// Define region-specific camera results
+export const REGION_SPECIFIC_CAMERAS: Record<string, CameraResult[]> = {
+  us: [
+    {
+      id: '1',
+      ip: '192.168.1.100',
+      port: 554,
+      brand: 'Hikvision',
+      model: 'DS-2CD2142FWD-I',
+      url: 'rtsp://admin:admin@192.168.1.100:554/Streaming/Channels/101',
+      snapshotUrl: 'http://192.168.1.100:80/Streaming/Channels/1/picture',
+      status: 'vulnerable',
+      credentials: {
+        username: 'admin',
+        password: 'admin'
+      },
+      vulnerabilities: [
+        {
+          name: 'Default Credentials',
+          severity: 'high',
+          description: 'Camera is using default manufacturer credentials'
+        },
+        {
+          name: 'CVE-2017-7921',
+          severity: 'critical',
+          description: 'Authentication bypass vulnerability in Hikvision IP cameras'
+        }
+      ],
+      location: {
+        country: 'United States',
+        city: 'New York',
+        latitude: 40.7128,
+        longitude: -74.0060
+      },
+      lastSeen: new Date().toISOString(),
+      accessLevel: 'admin',
+      responseTime: 120
+    }
+  ],
+  ua: [
+    {
+      id: '2',
+      ip: '176.38.19.102',
+      port: 554,
+      brand: 'Dahua',
+      model: 'IPC-HDBW2231R-ZS',
+      url: 'rtsp://admin:admin@176.38.19.102:554/Streaming/Channels/101',
+      snapshotUrl: 'http://176.38.19.102:80/cgi-bin/snapshot.cgi',
+      status: 'authenticated',
+      credentials: {
+        username: 'admin',
+        password: 'admin123'
+      },
+      vulnerabilities: [
+        {
+          name: 'Default Credentials',
+          severity: 'high',
+          description: 'Camera is using default manufacturer credentials'
+        }
+      ],
+      location: {
+        country: 'Ukraine',
+        city: 'Kiev',
+        latitude: 50.4501,
+        longitude: 30.5234
+      },
+      lastSeen: new Date().toISOString(),
+      accessLevel: 'admin',
+      responseTime: 95
+    },
+    {
+      id: '3',
+      ip: '77.121.55.189',
+      port: 8080,
+      brand: 'Vivotek',
+      model: 'FD8169A',
+      url: 'rtsp://admin:admin@77.121.55.189:554/live/av0',
+      snapshotUrl: 'http://77.121.55.189:8080/cgi-bin/snapshot.cgi',
+      status: 'online',
+      credentials: null,
+      location: {
+        country: 'Ukraine',
+        city: 'Lviv',
+        latitude: 49.8397,
+        longitude: 24.0297
+      },
+      lastSeen: new Date().toISOString(),
+      accessLevel: 'view',
+      responseTime: 130
+    }
+  ],
+  ru: [
+    {
+      id: '4',
+      ip: '95.174.103.45',
+      port: 80,
+      brand: 'Hikvision',
+      model: 'DS-2CD2125FHWD-I',
+      url: 'rtsp://admin:pass@95.174.103.45:554/h264/ch1/main',
+      snapshotUrl: 'http://95.174.103.45:80/Streaming/Channels/1/picture',
+      status: 'vulnerable',
+      credentials: {
+        username: 'admin',
+        password: 'pass'
+      },
+      vulnerabilities: [
+        {
+          name: 'CVE-2021-36260',
+          severity: 'critical',
+          description: 'Command injection vulnerability in Hikvision IP cameras'
+        }
+      ],
+      location: {
+        country: 'Russia',
+        city: 'Moscow',
+        latitude: 55.7558,
+        longitude: 37.6173
+      },
+      lastSeen: new Date().toISOString(),
+      accessLevel: 'admin',
+      responseTime: 110
+    }
+  ],
+  pl: [
+    {
+      id: '5',
+      ip: '5.184.56.112',
+      port: 8000,
+      brand: 'Axis',
+      model: 'P3225-LVE',
+      url: 'rtsp://viewer:viewer@5.184.56.112:554/axis-media/media.amp',
+      snapshotUrl: 'http://5.184.56.112:8000/axis-cgi/jpg/image.cgi',
+      status: 'online',
+      credentials: {
+        username: 'viewer',
+        password: 'viewer'
+      },
+      location: {
+        country: 'Poland',
+        city: 'Warsaw',
+        latitude: 52.2297,
+        longitude: 21.0122
+      },
+      lastSeen: new Date().toISOString(),
+      accessLevel: 'view',
+      responseTime: 75
+    }
+  ],
+  ro: [
+    {
+      id: '6',
+      ip: '79.112.34.78',
+      port: 8080,
+      brand: 'Dahua',
+      model: 'IPC-HDW5231R-ZE',
+      url: 'rtsp://user:pass@79.112.34.78:554/cam/realmonitor',
+      snapshotUrl: 'http://79.112.34.78:8080/cgi-bin/snapshot.cgi',
+      status: 'authenticated',
+      credentials: {
+        username: 'user',
+        password: 'pass'
+      },
+      location: {
+        country: 'Romania',
+        city: 'Bucharest',
+        latitude: 44.4268,
+        longitude: 26.1025
+      },
+      lastSeen: new Date().toISOString(),
+      accessLevel: 'admin',
+      responseTime: 105
+    }
+  ],
+  ge: [
+    {
+      id: '7',
+      ip: '31.146.22.154',
+      port: 8080,
+      brand: 'Hikvision',
+      model: 'DS-2CD2055FWD-I',
+      url: 'rtsp://admin:admin@31.146.22.154:554/Streaming/Channels/101',
+      snapshotUrl: 'http://31.146.22.154:80/Streaming/Channels/1/picture',
+      status: 'vulnerable',
+      credentials: {
+        username: 'admin',
+        password: 'admin'
+      },
+      vulnerabilities: [
+        {
+          name: 'Default Credentials',
+          severity: 'high',
+          description: 'Camera is using default manufacturer credentials'
+        }
+      ],
+      location: {
+        country: 'Georgia',
+        city: 'Tbilisi',
+        latitude: 41.7151,
+        longitude: 44.8271
+      },
+      lastSeen: new Date().toISOString(),
+      accessLevel: 'admin',
+      responseTime: 125
+    }
+  ],
+  cn: [
+    {
+      id: '8',
+      ip: '180.149.145.209',
+      port: 554,
+      brand: 'Dahua',
+      model: 'IPC-HDW4431C-A',
+      url: 'rtsp://admin:admin@180.149.145.209:554/cam/realmonitor',
+      snapshotUrl: 'http://180.149.145.209:80/cgi-bin/snapshot.cgi',
+      status: 'online',
+      credentials: {
+        username: 'admin',
+        password: 'admin'
+      },
+      location: {
+        country: 'China',
+        city: 'Beijing',
+        latitude: 39.9042,
+        longitude: 116.4074
+      },
+      lastSeen: new Date().toISOString(),
+      accessLevel: 'admin',
+      responseTime: 150
+    }
+  ]
+};
+
+// Default mock camera results (used when no region filter is applied)
 export const MOCK_CAMERA_RESULTS: CameraResult[] = [
   {
     id: '1',
