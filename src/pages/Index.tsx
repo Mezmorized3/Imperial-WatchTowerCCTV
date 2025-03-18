@@ -215,16 +215,9 @@ const Index = () => {
     return countries[Math.floor(Math.random() * countries.length)];
   };
 
-  const handleNavigation = (path: string) => {
-    navigate(path);
-  };
-
   return (
     <div className="min-h-screen bg-scanner-dark text-white">
-      <DashboardHeader 
-        onSettingsClick={() => handleNavigation('/settings')}
-        onHelpClick={() => handleNavigation('/help')}
-      />
+      <DashboardHeader />
       
       <main className="container mx-auto py-6 px-4">
         {error && (

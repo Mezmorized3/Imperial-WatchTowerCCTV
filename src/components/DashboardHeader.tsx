@@ -3,15 +3,7 @@ import React from 'react';
 import { Shield } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 
-interface DashboardHeaderProps {
-  onSettingsClick?: () => void;
-  onHelpClick?: () => void;
-}
-
-const DashboardHeader: React.FC<DashboardHeaderProps> = ({ 
-  onSettingsClick,
-  onHelpClick
-}) => {
+const DashboardHeader: React.FC = () => {
   const location = useLocation();
   
   console.log('DashboardHeader rendering, current path:', location.pathname);
