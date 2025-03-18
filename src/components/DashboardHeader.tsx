@@ -20,16 +20,20 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
   const handleSettingsClick = () => {
     if (onSettingsClick) {
       onSettingsClick();
-    } else if (location.pathname !== '/settings') {
+    } else {
+      // Force navigation regardless of current path to ensure it works
       navigate('/settings');
+      console.log('Navigating to settings');
     }
   };
   
   const handleHelpClick = () => {
     if (onHelpClick) {
       onHelpClick();
-    } else if (location.pathname !== '/help') {
+    } else {
+      // Force navigation regardless of current path to ensure it works
       navigate('/help');
+      console.log('Navigating to help');
     }
   };
   

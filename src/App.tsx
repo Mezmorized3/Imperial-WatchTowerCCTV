@@ -13,6 +13,8 @@ import './App.css';
 const queryClient = new QueryClient();
 
 function App() {
+  console.log('App rendering with routes');
+  
   return (
     <ThemeProvider defaultTheme="dark">
       <QueryClientProvider client={queryClient}>
