@@ -1,261 +1,322 @@
 
 import React from 'react';
-import DashboardHeader from '@/components/DashboardHeader';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Info, Shield, Smartphone, Globe, FileText, Search, Camera, ShieldAlert } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import DashboardHeader from '@/components/DashboardHeader';
+import { Search, HelpCircle, FileText, BookOpen, MessageSquare, Video, ExternalLink } from 'lucide-react';
 
 const Help = () => {
   return (
-    <div className="min-h-screen bg-scanner-dark text-white">
+    <div className="flex flex-col min-h-screen bg-scanner-dark text-white">
       <DashboardHeader />
-      
-      <main className="container mx-auto py-6 px-4">
-        <h1 className="text-2xl font-bold mb-6 flex items-center">
-          <Info className="mr-2 h-6 w-6 text-scanner-info" />
-          Help & Documentation
-        </h1>
-        
-        <Tabs defaultValue="overview" className="space-y-4">
-          <TabsList className="bg-scanner-dark-alt">
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="scanning">Scanning</TabsTrigger>
-            <TabsTrigger value="security">Security</TabsTrigger>
-            <TabsTrigger value="desktop">Desktop App</TabsTrigger>
+
+      <div className="container max-w-6xl mx-auto py-8 px-4">
+        <div className="flex items-center mb-8">
+          <HelpCircle className="h-8 w-8 mr-3 text-scanner-primary" />
+          <h1 className="text-3xl font-bold">Help & Documentation</h1>
+        </div>
+
+        <div className="mb-8">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+            <Input 
+              placeholder="Search help topics..." 
+              className="w-full pl-10 bg-gray-800 border-gray-700"
+            />
+          </div>
+        </div>
+
+        <Tabs defaultValue="guides" className="space-y-6">
+          <TabsList className="bg-gray-800">
+            <TabsTrigger value="guides">User Guides</TabsTrigger>
+            <TabsTrigger value="faq">FAQ</TabsTrigger>
+            <TabsTrigger value="tutorials">Video Tutorials</TabsTrigger>
+            <TabsTrigger value="support">Support</TabsTrigger>
           </TabsList>
-          
-          <TabsContent value="overview" className="space-y-4">
-            <Card className="bg-scanner-card border-gray-800">
+
+          <TabsContent value="guides" className="space-y-6">
+            <Card className="bg-scanner-card border-gray-700">
               <CardHeader>
-                <CardTitle>WatchTower Scanner</CardTitle>
+                <CardTitle>Getting Started</CardTitle>
                 <CardDescription className="text-gray-400">
-                  Camera discovery and security assessment tool
+                  Basic guides to help you get started with Watchtower CCTV Scanner
                 </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <p>
-                  WatchTower Scanner is a powerful security tool designed to discover, analyze and monitor
-                  network cameras. The application helps security professionals identify vulnerable cameras
-                  and provides detailed security assessments.
-                </p>
-                
-                <h3 className="text-lg font-semibold mt-4">Key Features</h3>
-                <ul className="list-disc pl-5 space-y-2">
-                  <li>Network camera discovery with multiple scanning methods</li>
-                  <li>Vulnerability assessment and security analysis</li>
-                  <li>Threat intelligence integration</li>
-                  <li>Geolocation tracking with interactive globe visualization</li>
-                  <li>Real-time monitoring of discovered devices</li>
-                </ul>
-              </CardContent>
-            </Card>
-          </TabsContent>
-          
-          <TabsContent value="scanning" className="space-y-4">
-            <Card className="bg-scanner-card border-gray-800">
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <Search className="mr-2 h-5 w-5 text-scanner-info" />
-                  Scanning Guide
-                </CardTitle>
-              </CardHeader>
               <CardContent>
-                <ScrollArea className="h-[400px] pr-4">
+                <ScrollArea className="h-[500px] pr-4">
                   <div className="space-y-6">
-                    <div>
-                      <h3 className="text-lg font-semibold mb-2">Scan Types</h3>
-                      <Separator className="my-2 bg-gray-700" />
-                      <ul className="space-y-4">
-                        <li>
-                          <h4 className="font-medium text-scanner-info">IP Address</h4>
-                          <p className="text-sm text-gray-300 mt-1">
-                            Scan a single IP address for camera devices.
-                          </p>
-                        </li>
-                        <li>
-                          <h4 className="font-medium text-scanner-info">IP Range</h4>
-                          <p className="text-sm text-gray-300 mt-1">
-                            Scan a range of IP addresses using CIDR notation (e.g., 192.168.1.0/24).
-                          </p>
-                        </li>
-                        <li>
-                          <h4 className="font-medium text-scanner-info">Search Engines</h4>
-                          <p className="text-sm text-gray-300 mt-1">
-                            Use Shodan, ZoomEye, or Censys to discover cameras based on search queries.
-                          </p>
-                        </li>
-                      </ul>
-                    </div>
-                    
-                    <div>
-                      <h3 className="text-lg font-semibold mb-2">Scan Settings</h3>
-                      <Separator className="my-2 bg-gray-700" />
-                      <ul className="space-y-4">
-                        <li>
-                          <h4 className="font-medium text-scanner-info">Aggressive Mode</h4>
-                          <p className="text-sm text-gray-300 mt-1">
-                            Increases scanning speed but may be more easily detected.
-                          </p>
-                        </li>
-                        <li>
-                          <h4 className="font-medium text-scanner-info">Test Credentials</h4>
-                          <p className="text-sm text-gray-300 mt-1">
-                            Attempts to authenticate with common default credentials.
-                          </p>
-                        </li>
-                        <li>
-                          <h4 className="font-medium text-scanner-info">Check Vulnerabilities</h4>
-                          <p className="text-sm text-gray-300 mt-1">
-                            Tests discovered cameras for known security vulnerabilities.
-                          </p>
-                        </li>
-                      </ul>
-                    </div>
-                    
-                    <div>
-                      <h3 className="text-lg font-semibold mb-2">Interpreting Results</h3>
-                      <Separator className="my-2 bg-gray-700" />
-                      <p className="text-sm text-gray-300 mb-3">
-                        The results table shows all discovered cameras with their status:
+                    <div className="space-y-2">
+                      <h3 className="text-lg font-semibold flex items-center">
+                        <FileText className="h-5 w-5 mr-2 text-scanner-primary" />
+                        Introduction to Watchtower
+                      </h3>
+                      <p className="text-gray-400">
+                        Learn about the Watchtower CCTV Scanner platform and its capabilities for securing your surveillance systems.
                       </p>
-                      <ul className="space-y-3">
-                        <li className="flex items-center">
-                          <div className="w-3 h-3 rounded-full bg-cyan-500 mr-2"></div>
-                          <span className="font-medium">Online</span>
-                          <span className="text-sm text-gray-300 ml-2">- Camera is accessible but not vulnerable</span>
-                        </li>
-                        <li className="flex items-center">
-                          <div className="w-3 h-3 rounded-full bg-red-500 mr-2"></div>
-                          <span className="font-medium">Vulnerable</span>
-                          <span className="text-sm text-gray-300 ml-2">- Camera has security issues</span>
-                        </li>
-                        <li className="flex items-center">
-                          <div className="w-3 h-3 rounded-full bg-green-500 mr-2"></div>
-                          <span className="font-medium">Authenticated</span>
-                          <span className="text-sm text-gray-300 ml-2">- Successfully logged into camera</span>
-                        </li>
-                      </ul>
+                      <Button variant="link" className="px-0 text-scanner-primary">Read more</Button>
+                    </div>
+
+                    <div className="space-y-2">
+                      <h3 className="text-lg font-semibold flex items-center">
+                        <FileText className="h-5 w-5 mr-2 text-scanner-primary" />
+                        Setting Up Your First Scan
+                      </h3>
+                      <p className="text-gray-400">
+                        Learn how to configure and run your first CCTV security scan to identify potentially vulnerable cameras.
+                      </p>
+                      <Button variant="link" className="px-0 text-scanner-primary">Read more</Button>
+                    </div>
+
+                    <div className="space-y-2">
+                      <h3 className="text-lg font-semibold flex items-center">
+                        <FileText className="h-5 w-5 mr-2 text-scanner-primary" />
+                        Understanding Scan Results
+                      </h3>
+                      <p className="text-gray-400">
+                        Learn how to interpret scan results and vulnerability reports to secure your surveillance infrastructure.
+                      </p>
+                      <Button variant="link" className="px-0 text-scanner-primary">Read more</Button>
+                    </div>
+
+                    <div className="space-y-2">
+                      <h3 className="text-lg font-semibold flex items-center">
+                        <FileText className="h-5 w-5 mr-2 text-scanner-primary" />
+                        Globe View Navigation
+                      </h3>
+                      <p className="text-gray-400">
+                        Learn how to use the interactive globe to visualize and navigate camera locations around the world.
+                      </p>
+                      <Button variant="link" className="px-0 text-scanner-primary">Read more</Button>
+                    </div>
+
+                    <div className="space-y-2">
+                      <h3 className="text-lg font-semibold flex items-center">
+                        <FileText className="h-5 w-5 mr-2 text-scanner-primary" />
+                        Threat Intelligence Integration
+                      </h3>
+                      <p className="text-gray-400">
+                        Learn how Watchtower integrates with threat intelligence sources to provide context for your scan results.
+                      </p>
+                      <Button variant="link" className="px-0 text-scanner-primary">Read more</Button>
+                    </div>
+
+                    <div className="space-y-2">
+                      <h3 className="text-lg font-semibold flex items-center">
+                        <FileText className="h-5 w-5 mr-2 text-scanner-primary" />
+                        Configuration and Settings
+                      </h3>
+                      <p className="text-gray-400">
+                        Detailed guide on configuring Watchtower settings to match your security requirements and preferences.
+                      </p>
+                      <Button variant="link" className="px-0 text-scanner-primary">Read more</Button>
                     </div>
                   </div>
                 </ScrollArea>
               </CardContent>
             </Card>
           </TabsContent>
-          
-          <TabsContent value="security" className="space-y-4">
-            <Card className="bg-scanner-card border-gray-800">
+
+          <TabsContent value="faq" className="space-y-6">
+            <Card className="bg-scanner-card border-gray-700">
               <CardHeader>
-                <CardTitle className="flex items-center">
-                  <Shield className="mr-2 h-5 w-5 text-scanner-info" />
-                  Security Guidelines
-                </CardTitle>
+                <CardTitle>Frequently Asked Questions</CardTitle>
+                <CardDescription className="text-gray-400">
+                  Common questions and answers about using Watchtower
+                </CardDescription>
               </CardHeader>
               <CardContent>
-                <ScrollArea className="h-[400px] pr-4">
-                  <div className="space-y-6">
-                    <div>
-                      <h3 className="text-lg font-semibold mb-2">Usage Policy</h3>
-                      <Separator className="my-2 bg-gray-700" />
-                      <div className="text-sm text-gray-300 space-y-2">
-                        <p>
-                          This tool is intended for legitimate security research and assessment purposes only.
-                          You MUST have permission to scan any network or device.
-                        </p>
-                        <p className="text-scanner-danger font-medium">
-                          Unauthorized scanning of networks may violate computer crime laws in many jurisdictions.
-                        </p>
+                <Accordion type="single" collapsible className="w-full">
+                  <AccordionItem value="item-1" className="border-gray-700">
+                    <AccordionTrigger className="text-white hover:text-scanner-primary">
+                      Is Watchtower legal to use?
+                    </AccordionTrigger>
+                    <AccordionContent className="text-gray-400">
+                      Watchtower is designed for ethical security professionals and researchers. Always ensure you have proper authorization before scanning any networks or systems. The tool is meant for defensive security purposes, and users are responsible for complying with all applicable laws and regulations in their jurisdiction.
+                    </AccordionContent>
+                  </AccordionItem>
+                  
+                  <AccordionItem value="item-2" className="border-gray-700">
+                    <AccordionTrigger className="text-white hover:text-scanner-primary">
+                      How does Watchtower discover CCTV cameras?
+                    </AccordionTrigger>
+                    <AccordionContent className="text-gray-400">
+                      Watchtower uses a combination of network scanning techniques, device fingerprinting, and protocol detection to identify CCTV cameras. It looks for common RTSP streams, web interfaces, and manufacturer-specific signatures to locate and classify surveillance devices on networks.
+                    </AccordionContent>
+                  </AccordionItem>
+                  
+                  <AccordionItem value="item-3" className="border-gray-700">
+                    <AccordionTrigger className="text-white hover:text-scanner-primary">
+                      Can Watchtower detect all vulnerabilities?
+                    </AccordionTrigger>
+                    <AccordionContent className="text-gray-400">
+                      While Watchtower is designed to identify common vulnerabilities in CCTV systems, no security tool can detect 100% of all possible vulnerabilities. The scanner focuses on known security issues, default credentials, outdated firmware, and misconfiguration. Regular updates help ensure the detection capabilities remain current.
+                    </AccordionContent>
+                  </AccordionItem>
+                  
+                  <AccordionItem value="item-4" className="border-gray-700">
+                    <AccordionTrigger className="text-white hover:text-scanner-primary">
+                      Is my scan data kept private?
+                    </AccordionTrigger>
+                    <AccordionContent className="text-gray-400">
+                      Yes, all scan data is processed locally and remains private. Watchtower does not send your scan results to any external servers unless you explicitly enable the threat intelligence integration feature, which shares only anonymized data needed for analysis.
+                    </AccordionContent>
+                  </AccordionItem>
+                  
+                  <AccordionItem value="item-5" className="border-gray-700">
+                    <AccordionTrigger className="text-white hover:text-scanner-primary">
+                      How often should I scan my surveillance systems?
+                    </AccordionTrigger>
+                    <AccordionContent className="text-gray-400">
+                      For optimal security, we recommend scanning your surveillance systems at least monthly, after any system changes, and whenever new security advisories are published for your equipment. You can also set up automated periodic scanning in the settings panel.
+                    </AccordionContent>
+                  </AccordionItem>
+                  
+                  <AccordionItem value="item-6" className="border-gray-700">
+                    <AccordionTrigger className="text-white hover:text-scanner-primary">
+                      Can Watchtower help secure my cameras?
+                    </AccordionTrigger>
+                    <AccordionContent className="text-gray-400">
+                      Yes, Watchtower not only identifies vulnerabilities but also provides remediation guidance. For each issue detected, the platform offers specific recommendations to address the security concern, such as firmware update links, configuration changes, or best practices documentation.
+                    </AccordionContent>
+                  </AccordionItem>
+                </Accordion>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="tutorials" className="space-y-6">
+            <Card className="bg-scanner-card border-gray-700">
+              <CardHeader>
+                <CardTitle>Video Tutorials</CardTitle>
+                <CardDescription className="text-gray-400">
+                  Learn visually with our comprehensive video guides
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="bg-gray-800 rounded-lg overflow-hidden">
+                    <div className="aspect-video bg-gray-900 flex items-center justify-center">
+                      <Video className="h-12 w-12 text-gray-700" />
+                    </div>
+                    <div className="p-4">
+                      <h3 className="font-medium mb-1">Getting Started with Watchtower</h3>
+                      <p className="text-sm text-gray-400 mb-3">10:24 • Complete overview for new users</p>
+                      <Button variant="outline" size="sm" className="w-full">
+                        <ExternalLink className="h-4 w-4 mr-1" /> Watch Tutorial
+                      </Button>
+                    </div>
+                  </div>
+                  
+                  <div className="bg-gray-800 rounded-lg overflow-hidden">
+                    <div className="aspect-video bg-gray-900 flex items-center justify-center">
+                      <Video className="h-12 w-12 text-gray-700" />
+                    </div>
+                    <div className="p-4">
+                      <h3 className="font-medium mb-1">Advanced Scanning Techniques</h3>
+                      <p className="text-sm text-gray-400 mb-3">15:37 • Master the scanning capabilities</p>
+                      <Button variant="outline" size="sm" className="w-full">
+                        <ExternalLink className="h-4 w-4 mr-1" /> Watch Tutorial
+                      </Button>
+                    </div>
+                  </div>
+                  
+                  <div className="bg-gray-800 rounded-lg overflow-hidden">
+                    <div className="aspect-video bg-gray-900 flex items-center justify-center">
+                      <Video className="h-12 w-12 text-gray-700" />
+                    </div>
+                    <div className="p-4">
+                      <h3 className="font-medium mb-1">Analyzing Vulnerability Reports</h3>
+                      <p className="text-sm text-gray-400 mb-3">12:45 • Understand your scan results</p>
+                      <Button variant="outline" size="sm" className="w-full">
+                        <ExternalLink className="h-4 w-4 mr-1" /> Watch Tutorial
+                      </Button>
+                    </div>
+                  </div>
+                  
+                  <div className="bg-gray-800 rounded-lg overflow-hidden">
+                    <div className="aspect-video bg-gray-900 flex items-center justify-center">
+                      <Video className="h-12 w-12 text-gray-700" />
+                    </div>
+                    <div className="p-4">
+                      <h3 className="font-medium mb-1">Securing CCTV Infrastructure</h3>
+                      <p className="text-sm text-gray-400 mb-3">18:22 • Best practices for CCTV security</p>
+                      <Button variant="outline" size="sm" className="w-full">
+                        <ExternalLink className="h-4 w-4 mr-1" /> Watch Tutorial
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="support" className="space-y-6">
+            <Card className="bg-scanner-card border-gray-700">
+              <CardHeader>
+                <CardTitle>Contact Support</CardTitle>
+                <CardDescription className="text-gray-400">
+                  Need additional help? Our support team is here to help you.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="grid gap-6 md:grid-cols-2">
+                  <div className="bg-gray-800 p-6 rounded-lg">
+                    <BookOpen className="h-8 w-8 text-scanner-primary mb-4" />
+                    <h3 className="text-lg font-medium mb-2">Documentation</h3>
+                    <p className="text-gray-400 mb-4">
+                      Explore our comprehensive documentation for detailed guides and references.
+                    </p>
+                    <Button className="w-full">Browse Documentation</Button>
+                  </div>
+                  
+                  <div className="bg-gray-800 p-6 rounded-lg">
+                    <MessageSquare className="h-8 w-8 text-scanner-primary mb-4" />
+                    <h3 className="text-lg font-medium mb-2">Live Chat</h3>
+                    <p className="text-gray-400 mb-4">
+                      Chat with our support team for immediate assistance with your questions.
+                    </p>
+                    <Button className="w-full">Start Chat</Button>
+                  </div>
+                </div>
+                
+                <div className="bg-gray-800 p-6 rounded-lg">
+                  <h3 className="text-lg font-medium mb-4">Submit a Support Ticket</h3>
+                  <div className="space-y-4">
+                    <div className="grid gap-4 md:grid-cols-2">
+                      <div className="space-y-2">
+                        <label htmlFor="name" className="text-sm font-medium">Name</label>
+                        <Input id="name" className="bg-gray-700" placeholder="Your name" />
+                      </div>
+                      <div className="space-y-2">
+                        <label htmlFor="email" className="text-sm font-medium">Email</label>
+                        <Input id="email" className="bg-gray-700" placeholder="Your email" />
                       </div>
                     </div>
-                    
-                    <div>
-                      <h3 className="text-lg font-semibold mb-2">Camera Security Best Practices</h3>
-                      <Separator className="my-2 bg-gray-700" />
-                      <ul className="space-y-3">
-                        <li className="flex">
-                          <ShieldAlert className="h-5 w-5 text-scanner-info mr-2 flex-shrink-0 mt-0.5" />
-                          <div>
-                            <h4 className="font-medium">Change Default Credentials</h4>
-                            <p className="text-sm text-gray-300">Always change factory default usernames and passwords.</p>
-                          </div>
-                        </li>
-                        <li className="flex">
-                          <ShieldAlert className="h-5 w-5 text-scanner-info mr-2 flex-shrink-0 mt-0.5" />
-                          <div>
-                            <h4 className="font-medium">Regular Firmware Updates</h4>
-                            <p className="text-sm text-gray-300">Keep camera firmware updated to patch security vulnerabilities.</p>
-                          </div>
-                        </li>
-                        <li className="flex">
-                          <ShieldAlert className="h-5 w-5 text-scanner-info mr-2 flex-shrink-0 mt-0.5" />
-                          <div>
-                            <h4 className="font-medium">Network Isolation</h4>
-                            <p className="text-sm text-gray-300">Place cameras on a separate network segment with firewall protection.</p>
-                          </div>
-                        </li>
-                        <li className="flex">
-                          <ShieldAlert className="h-5 w-5 text-scanner-info mr-2 flex-shrink-0 mt-0.5" />
-                          <div>
-                            <h4 className="font-medium">Disable Unused Services</h4>
-                            <p className="text-sm text-gray-300">Turn off unnecessary protocols and services on camera devices.</p>
-                          </div>
-                        </li>
-                        <li className="flex">
-                          <ShieldAlert className="h-5 w-5 text-scanner-info mr-2 flex-shrink-0 mt-0.5" />
-                          <div>
-                            <h4 className="font-medium">Use HTTPS/TLS</h4>
-                            <p className="text-sm text-gray-300">Enable encrypted communications when available.</p>
-                          </div>
-                        </li>
-                      </ul>
+                    <div className="space-y-2">
+                      <label htmlFor="subject" className="text-sm font-medium">Subject</label>
+                      <Input id="subject" className="bg-gray-700" placeholder="Brief description of your issue" />
                     </div>
-                  </div>
-                </ScrollArea>
-              </CardContent>
-            </Card>
-          </TabsContent>
-          
-          <TabsContent value="desktop" className="space-y-4">
-            <Card className="bg-scanner-card border-gray-800">
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <Smartphone className="mr-2 h-5 w-5 text-scanner-info" />
-                  Desktop Application
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <p>
-                    The web version of WatchTower Scanner simulates network scanning, as browsers cannot perform
-                    actual network scans due to security restrictions. For full functionality, use the desktop application.
-                  </p>
-                  
-                  <h3 className="text-lg font-semibold">Desktop App Features</h3>
-                  <ul className="list-disc pl-5 space-y-2 text-gray-300">
-                    <li>Actual network scanning capabilities without simulation</li>
-                    <li>Advanced vulnerability testing tools</li>
-                    <li>Deeper OSINT integration</li>
-                    <li>Local storage of scan results and reports</li>
-                    <li>No browser security restrictions</li>
-                  </ul>
-                  
-                  <div className="p-4 bg-scanner-dark-alt rounded-md mt-6">
-                    <h4 className="font-medium mb-2 flex items-center">
-                      <FileText className="h-4 w-4 mr-2 text-scanner-info" />
-                      Desktop App Installation
-                    </h4>
-                    <p className="text-sm text-gray-300">
-                      The desktop version can be downloaded from our GitHub repository. It's available for
-                      Windows, macOS, and Linux.
-                    </p>
+                    <div className="space-y-2">
+                      <label htmlFor="message" className="text-sm font-medium">Message</label>
+                      <textarea 
+                        id="message" 
+                        rows={5} 
+                        className="w-full bg-gray-700 border border-gray-600 rounded-md p-3 text-white"
+                        placeholder="Describe your issue in detail..."
+                      ></textarea>
+                    </div>
+                    <Button className="w-full">Submit Ticket</Button>
                   </div>
                 </div>
               </CardContent>
             </Card>
           </TabsContent>
         </Tabs>
-      </main>
+      </div>
     </div>
   );
 };

@@ -1,358 +1,311 @@
 
-import React, { useState } from 'react';
-import DashboardHeader from '@/components/DashboardHeader';
+import React from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
-import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { Separator } from '@/components/ui/separator';
+import { Slider } from '@/components/ui/slider';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { AlertCircle, Save, Settings as SettingsIcon, Database, Key, BellRing, Shield } from 'lucide-react';
-import { useToast } from '@/components/ui/use-toast';
+import DashboardHeader from '@/components/DashboardHeader';
+import { Shield, BellRing, Globe, Lock, Eye, Settings as SettingsIcon, Monitor } from 'lucide-react';
+import { toast } from '@/components/ui/use-toast';
 
 const Settings = () => {
-  const { toast } = useToast();
-  const [apiKeys, setApiKeys] = useState({
-    shodan: '',
-    zoomeye: '',
-    censys: '',
-    virustotal: ''
-  });
-  
-  const [settings, setSettings] = useState({
-    darkMode: true,
-    saveHistory: true,
-    notificationsEnabled: true,
-    autoScanInterval: 'never',
-    maxThreads: 10,
-    scanTimeout: 30,
-    enableThreatIntel: true
-  });
-  
-  const handleSaveSettings = (settingType: string) => {
+  const handleSave = () => {
     toast({
-      title: "Settings Saved",
-      description: `Your ${settingType} settings have been updated.`,
-      duration: 3000
+      title: "Settings saved",
+      description: "Your settings have been saved successfully.",
     });
   };
-  
+
   return (
-    <div className="min-h-screen bg-scanner-dark text-white">
+    <div className="flex flex-col min-h-screen bg-scanner-dark text-white">
       <DashboardHeader />
-      
-      <main className="container mx-auto py-6 px-4">
-        <h1 className="text-2xl font-bold mb-6 flex items-center">
-          <SettingsIcon className="mr-2 h-6 w-6 text-scanner-info" />
-          Settings
-        </h1>
-        
-        <Tabs defaultValue="general" className="space-y-4">
-          <TabsList className="bg-scanner-dark-alt">
+
+      <div className="container max-w-6xl mx-auto py-8 px-4">
+        <div className="flex items-center mb-8">
+          <SettingsIcon className="h-8 w-8 mr-3 text-scanner-primary" />
+          <h1 className="text-3xl font-bold">Settings</h1>
+        </div>
+
+        <Tabs defaultValue="general" className="space-y-6">
+          <TabsList className="bg-gray-800">
             <TabsTrigger value="general">General</TabsTrigger>
-            <TabsTrigger value="api">API Keys</TabsTrigger>
-            <TabsTrigger value="scan">Scan Settings</TabsTrigger>
             <TabsTrigger value="notifications">Notifications</TabsTrigger>
+            <TabsTrigger value="security">Security</TabsTrigger>
+            <TabsTrigger value="appearance">Appearance</TabsTrigger>
+            <TabsTrigger value="advanced">Advanced</TabsTrigger>
           </TabsList>
-          
-          <TabsContent value="general" className="space-y-4">
-            <Card className="bg-scanner-card border-gray-800">
+
+          <TabsContent value="general" className="space-y-6">
+            <Card className="bg-scanner-card border-gray-700">
               <CardHeader>
                 <CardTitle>General Settings</CardTitle>
+                <CardDescription className="text-gray-400">
+                  Configure your scanner preferences and application settings.
+                </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <Label htmlFor="dark-mode">Dark Mode</Label>
-                    <p className="text-sm text-gray-400">Use dark theme for the application</p>
-                  </div>
-                  <Switch
-                    id="dark-mode"
-                    checked={settings.darkMode}
-                    onCheckedChange={(checked) => setSettings({...settings, darkMode: checked})}
-                  />
-                </div>
-                
-                <Separator className="bg-gray-800" />
-                
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <Label htmlFor="save-history">Save Scan History</Label>
-                    <p className="text-sm text-gray-400">Store scan results for future reference</p>
-                  </div>
-                  <Switch
-                    id="save-history"
-                    checked={settings.saveHistory}
-                    onCheckedChange={(checked) => setSettings({...settings, saveHistory: checked})}
-                  />
-                </div>
-                
-                <Separator className="bg-gray-800" />
-                
                 <div className="space-y-2">
-                  <Label htmlFor="language">Interface Language</Label>
-                  <Select defaultValue="english">
-                    <SelectTrigger className="bg-scanner-dark-alt border-gray-700">
-                      <SelectValue placeholder="Select Language" />
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="auto-scan" className="flex flex-col space-y-1">
+                      <span>Automatic Scanning</span>
+                      <span className="font-normal text-xs text-gray-400">Enable automatic periodic scanning of known devices</span>
+                    </Label>
+                    <Switch id="auto-scan" defaultChecked />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Scan Interval (hours)</Label>
+                  <Slider defaultValue={[24]} max={72} step={1} className="w-full" />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="data-retention">Data Retention Period</Label>
+                  <Select defaultValue="30">
+                    <SelectTrigger id="data-retention" className="w-full bg-gray-800">
+                      <SelectValue placeholder="Select period" />
                     </SelectTrigger>
-                    <SelectContent className="bg-scanner-dark-alt border-gray-700">
-                      <SelectItem value="english">English</SelectItem>
-                      <SelectItem value="spanish">Spanish</SelectItem>
-                      <SelectItem value="french">French</SelectItem>
-                      <SelectItem value="german">German</SelectItem>
-                      <SelectItem value="chinese">Chinese</SelectItem>
+                    <SelectContent>
+                      <SelectItem value="7">7 days</SelectItem>
+                      <SelectItem value="30">30 days</SelectItem>
+                      <SelectItem value="90">90 days</SelectItem>
+                      <SelectItem value="180">180 days</SelectItem>
+                      <SelectItem value="365">1 year</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
-                
-                <div className="pt-4">
-                  <Button 
-                    className="bg-scanner-info hover:bg-scanner-info/80" 
-                    onClick={() => handleSaveSettings('general')}
-                  >
-                    <Save className="mr-2 h-4 w-4" />
-                    Save Settings
-                  </Button>
-                </div>
               </CardContent>
             </Card>
-          </TabsContent>
-          
-          <TabsContent value="api" className="space-y-4">
-            <Card className="bg-scanner-card border-gray-800">
+
+            <Card className="bg-scanner-card border-gray-700">
               <CardHeader>
-                <CardTitle className="flex items-center">
-                  <Key className="mr-2 h-5 w-5 text-scanner-info" />
-                  API Keys
-                </CardTitle>
+                <CardTitle>Network Settings</CardTitle>
+                <CardDescription className="text-gray-400">
+                  Configure network scan settings and preferences.
+                </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
-                <div className="bg-scanner-dark-alt p-4 rounded-md border border-gray-700">
-                  <div className="flex items-start gap-2">
-                    <AlertCircle className="h-5 w-5 text-scanner-info flex-shrink-0 mt-0.5" />
-                    <p className="text-sm text-gray-300">
-                      API keys are required for accessing external services like Shodan, ZoomEye, and
-                      threat intelligence platforms. These keys will be stored locally in your browser.
-                    </p>
-                  </div>
-                </div>
-                
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="shodan-key">Shodan API Key</Label>
-                    <Input
-                      id="shodan-key"
-                      type="password"
-                      placeholder="Enter Shodan API key"
-                      value={apiKeys.shodan}
-                      onChange={(e) => setApiKeys({...apiKeys, shodan: e.target.value})}
-                      className="bg-scanner-dark-alt border-gray-700"
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="zoomeye-key">ZoomEye API Key</Label>
-                    <Input
-                      id="zoomeye-key"
-                      type="password"
-                      placeholder="Enter ZoomEye API key"
-                      value={apiKeys.zoomeye}
-                      onChange={(e) => setApiKeys({...apiKeys, zoomeye: e.target.value})}
-                      className="bg-scanner-dark-alt border-gray-700"
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="censys-key">Censys API Key</Label>
-                    <Input
-                      id="censys-key"
-                      type="password"
-                      placeholder="Enter Censys API key"
-                      value={apiKeys.censys}
-                      onChange={(e) => setApiKeys({...apiKeys, censys: e.target.value})}
-                      className="bg-scanner-dark-alt border-gray-700"
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="virustotal-key">VirusTotal API Key</Label>
-                    <Input
-                      id="virustotal-key"
-                      type="password"
-                      placeholder="Enter VirusTotal API key"
-                      value={apiKeys.virustotal}
-                      onChange={(e) => setApiKeys({...apiKeys, virustotal: e.target.value})}
-                      className="bg-scanner-dark-alt border-gray-700"
-                    />
-                  </div>
-                </div>
-                
-                <div className="pt-4">
-                  <Button 
-                    className="bg-scanner-info hover:bg-scanner-info/80" 
-                    onClick={() => handleSaveSettings('API')}
-                  >
-                    <Save className="mr-2 h-4 w-4" />
-                    Save API Keys
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-          
-          <TabsContent value="scan" className="space-y-4">
-            <Card className="bg-scanner-card border-gray-800">
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <Database className="mr-2 h-5 w-5 text-scanner-info" />
-                  Scan Configuration
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="space-y-2">
-                  <Label htmlFor="max-threads">Maximum Threads</Label>
-                  <div className="flex items-center gap-4">
-                    <Input
-                      id="max-threads"
-                      type="number"
-                      value={settings.maxThreads}
-                      onChange={(e) => setSettings({...settings, maxThreads: parseInt(e.target.value) || 1})}
-                      min="1"
-                      max="50"
-                      className="bg-scanner-dark-alt border-gray-700 w-24"
-                    />
-                    <p className="text-sm text-gray-400">Higher values may increase scan speed but use more resources</p>
-                  </div>
-                </div>
-                
-                <Separator className="bg-gray-800" />
-                
                 <div className="space-y-2">
                   <Label htmlFor="scan-timeout">Scan Timeout (seconds)</Label>
-                  <div className="flex items-center gap-4">
-                    <Input
-                      id="scan-timeout"
-                      type="number"
-                      value={settings.scanTimeout}
-                      onChange={(e) => setSettings({...settings, scanTimeout: parseInt(e.target.value) || 10})}
-                      min="5"
-                      max="120"
-                      className="bg-scanner-dark-alt border-gray-700 w-24"
-                    />
-                    <p className="text-sm text-gray-400">How long to wait for each target to respond</p>
-                  </div>
+                  <Input id="scan-timeout" className="bg-gray-800" defaultValue="30" />
                 </div>
-                
-                <Separator className="bg-gray-800" />
-                
+
                 <div className="space-y-2">
-                  <Label htmlFor="auto-scan">Automatic Scan Interval</Label>
-                  <Select 
-                    value={settings.autoScanInterval}
-                    onValueChange={(value) => setSettings({...settings, autoScanInterval: value})}
-                  >
-                    <SelectTrigger id="auto-scan" className="bg-scanner-dark-alt border-gray-700">
-                      <SelectValue placeholder="Select scan interval" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-scanner-dark-alt border-gray-700">
-                      <SelectItem value="never">Never (Manual only)</SelectItem>
-                      <SelectItem value="daily">Daily</SelectItem>
-                      <SelectItem value="weekly">Weekly</SelectItem>
-                      <SelectItem value="monthly">Monthly</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <Label htmlFor="concurrency">Max Concurrent Scans</Label>
+                  <Input id="concurrency" className="bg-gray-800" defaultValue="5" />
                 </div>
-                
-                <Separator className="bg-gray-800" />
-                
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <Label htmlFor="threat-intel">Enable Threat Intelligence</Label>
-                    <p className="text-sm text-gray-400">Fetch additional security data during scans</p>
+
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="aggressive-scan" className="flex flex-col space-y-1">
+                      <span>Aggressive Scanning</span>
+                      <span className="font-normal text-xs text-gray-400">May trigger security systems but provides more detailed results</span>
+                    </Label>
+                    <Switch id="aggressive-scan" />
                   </div>
-                  <Switch
-                    id="threat-intel"
-                    checked={settings.enableThreatIntel}
-                    onCheckedChange={(checked) => setSettings({...settings, enableThreatIntel: checked})}
-                  />
-                </div>
-                
-                <div className="pt-4">
-                  <Button 
-                    className="bg-scanner-info hover:bg-scanner-info/80" 
-                    onClick={() => handleSaveSettings('scan')}
-                  >
-                    <Save className="mr-2 h-4 w-4" />
-                    Save Scan Settings
-                  </Button>
                 </div>
               </CardContent>
             </Card>
           </TabsContent>
-          
-          <TabsContent value="notifications" className="space-y-4">
-            <Card className="bg-scanner-card border-gray-800">
+
+          <TabsContent value="notifications" className="space-y-6">
+            <Card className="bg-scanner-card border-gray-700">
               <CardHeader>
-                <CardTitle className="flex items-center">
-                  <BellRing className="mr-2 h-5 w-5 text-scanner-info" />
-                  Notification Settings
-                </CardTitle>
+                <CardTitle>Notification Settings</CardTitle>
+                <CardDescription className="text-gray-400">
+                  Configure how and when you receive notifications.
+                </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <Label htmlFor="enable-notifications">Enable Notifications</Label>
-                    <p className="text-sm text-gray-400">Receive alerts for important events</p>
-                  </div>
-                  <Switch
-                    id="enable-notifications"
-                    checked={settings.notificationsEnabled}
-                    onCheckedChange={(checked) => setSettings({...settings, notificationsEnabled: checked})}
-                  />
-                </div>
-                
-                <Separator className="bg-gray-800" />
-                
-                <div className="space-y-4">
-                  <h3 className="text-sm font-medium">Notification Events</h3>
-                  
+                <div className="space-y-2">
                   <div className="flex items-center justify-between">
-                    <Label htmlFor="notify-scan-complete" className="flex-1">Scan Completed</Label>
-                    <Switch id="notify-scan-complete" defaultChecked={true} />
-                  </div>
-                  
-                  <div className="flex items-center justify-between">
-                    <Label htmlFor="notify-vulnerabilities" className="flex-1">New Vulnerabilities Found</Label>
-                    <Switch id="notify-vulnerabilities" defaultChecked={true} />
-                  </div>
-                  
-                  <div className="flex items-center justify-between">
-                    <Label htmlFor="notify-device-status" className="flex-1">Device Status Changes</Label>
-                    <Switch id="notify-device-status" defaultChecked={true} />
-                  </div>
-                  
-                  <div className="flex items-center justify-between">
-                    <Label htmlFor="notify-system" className="flex-1">System Notifications</Label>
-                    <Switch id="notify-system" defaultChecked={true} />
+                    <Label htmlFor="vuln-alerts" className="flex flex-col space-y-1">
+                      <span>Vulnerability Alerts</span>
+                      <span className="font-normal text-xs text-gray-400">Receive alerts for newly detected vulnerabilities</span>
+                    </Label>
+                    <Switch id="vuln-alerts" defaultChecked />
                   </div>
                 </div>
-                
-                <div className="pt-4">
-                  <Button 
-                    className="bg-scanner-info hover:bg-scanner-info/80" 
-                    onClick={() => handleSaveSettings('notification')}
-                  >
-                    <Save className="mr-2 h-4 w-4" />
-                    Save Notification Settings
+
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="anomaly-alerts" className="flex flex-col space-y-1">
+                      <span>Anomaly Detection Alerts</span>
+                      <span className="font-normal text-xs text-gray-400">Receive alerts for unusual camera behavior</span>
+                    </Label>
+                    <Switch id="anomaly-alerts" defaultChecked />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="email-notifications" className="flex flex-col space-y-1">
+                      <span>Email Notifications</span>
+                      <span className="font-normal text-xs text-gray-400">Send alerts to your email address</span>
+                    </Label>
+                    <Switch id="email-notifications" defaultChecked />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email Address</Label>
+                  <Input id="email" className="bg-gray-800" placeholder="Enter your email" />
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="security" className="space-y-6">
+            <Card className="bg-scanner-card border-gray-700">
+              <CardHeader>
+                <CardTitle>Security Settings</CardTitle>
+                <CardDescription className="text-gray-400">
+                  Configure security preferences and access controls.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="two-factor" className="flex flex-col space-y-1">
+                      <span>Two-Factor Authentication</span>
+                      <span className="font-normal text-xs text-gray-400">Enable 2FA for increased security</span>
+                    </Label>
+                    <Switch id="two-factor" />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="session-timeout" className="flex flex-col space-y-1">
+                      <span>Session Timeout</span>
+                      <span className="font-normal text-xs text-gray-400">Automatically log out after period of inactivity</span>
+                    </Label>
+                    <Switch id="session-timeout" defaultChecked />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="timeout-duration">Timeout Duration (minutes)</Label>
+                  <Input id="timeout-duration" className="bg-gray-800" defaultValue="30" />
+                </div>
+
+                <Button variant="secondary" className="w-full mt-4">
+                  <Lock className="mr-2 h-4 w-4" /> Change Password
+                </Button>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="appearance" className="space-y-6">
+            <Card className="bg-scanner-card border-gray-700">
+              <CardHeader>
+                <CardTitle>Appearance Settings</CardTitle>
+                <CardDescription className="text-gray-400">
+                  Customize the look and feel of the application.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="space-y-2">
+                  <Label>Theme</Label>
+                  <Select defaultValue="dark">
+                    <SelectTrigger className="w-full bg-gray-800">
+                      <SelectValue placeholder="Select theme" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="dark">Dark</SelectItem>
+                      <SelectItem value="light">Light</SelectItem>
+                      <SelectItem value="system">System Default</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Globe View</Label>
+                  <Select defaultValue="realistic">
+                    <SelectTrigger className="w-full bg-gray-800">
+                      <SelectValue placeholder="Select globe style" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="realistic">Realistic</SelectItem>
+                      <SelectItem value="wireframe">Wireframe</SelectItem>
+                      <SelectItem value="satellite">Satellite</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Dashboard Layout</Label>
+                  <Select defaultValue="grid">
+                    <SelectTrigger className="w-full bg-gray-800">
+                      <SelectValue placeholder="Select layout" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="grid">Grid</SelectItem>
+                      <SelectItem value="list">List</SelectItem>
+                      <SelectItem value="compact">Compact</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="advanced" className="space-y-6">
+            <Card className="bg-scanner-card border-gray-700">
+              <CardHeader>
+                <CardTitle>Advanced Settings</CardTitle>
+                <CardDescription className="text-gray-400">
+                  Configure advanced settings for the scanner application.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="debug-mode" className="flex flex-col space-y-1">
+                      <span>Debug Mode</span>
+                      <span className="font-normal text-xs text-gray-400">Enable detailed logging for troubleshooting</span>
+                    </Label>
+                    <Switch id="debug-mode" />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="api-access" className="flex flex-col space-y-1">
+                      <span>API Access</span>
+                      <span className="font-normal text-xs text-gray-400">Allow external applications to access scanner data</span>
+                    </Label>
+                    <Switch id="api-access" />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="api-key">API Key</Label>
+                  <div className="flex space-x-2">
+                    <Input id="api-key" className="bg-gray-800" value="••••••••••••••••" readOnly />
+                    <Button variant="outline">Regenerate</Button>
+                  </div>
+                </div>
+
+                <div className="pt-4 pb-2">
+                  <Button variant="destructive" className="w-full">
+                    Reset All Settings
                   </Button>
                 </div>
               </CardContent>
             </Card>
           </TabsContent>
         </Tabs>
-      </main>
+
+        <div className="flex justify-end mt-8 space-x-4">
+          <Button variant="outline">Cancel</Button>
+          <Button onClick={handleSave}>Save Changes</Button>
+        </div>
+      </div>
     </div>
   );
 };
