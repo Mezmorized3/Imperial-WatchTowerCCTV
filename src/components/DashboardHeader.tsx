@@ -3,7 +3,7 @@ import React from 'react';
 import { Shield, Eye, Settings, HelpCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 
 interface DashboardHeaderProps {
   onSettingsClick?: () => void;
@@ -15,11 +15,12 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
   onHelpClick
 }) => {
   const navigate = useNavigate();
+  const location = useLocation();
   
   const handleSettingsClick = () => {
     if (onSettingsClick) {
       onSettingsClick();
-    } else {
+    } else if (location.pathname !== '/settings') {
       navigate('/settings');
     }
   };
@@ -27,7 +28,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
   const handleHelpClick = () => {
     if (onHelpClick) {
       onHelpClick();
-    } else {
+    } else if (location.pathname !== '/help') {
       navigate('/help');
     }
   };
@@ -49,7 +50,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
               <Button 
                 variant="ghost" 
                 size="icon" 
-                className="text-gray-400 hover:text-white hover:bg-gray-800"
+                className={`${location.pathname === '/settings' ? 'text-white bg-gray-800' : 'text-gray-400 hover:text-white hover:bg-gray-800'}`}
                 onClick={handleSettingsClick}
               >
                 <Settings className="h-5 w-5" />
@@ -67,7 +68,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
               <Button 
                 variant="ghost" 
                 size="icon" 
-                className="text-gray-400 hover:text-white hover:bg-gray-800"
+                className={`${location.pathname === '/help' ? 'text-white bg-gray-800' : 'text-gray-400 hover:text-white hover:bg-gray-800'}`}
                 onClick={handleHelpClick}
               >
                 <HelpCircle className="h-5 w-5" />
