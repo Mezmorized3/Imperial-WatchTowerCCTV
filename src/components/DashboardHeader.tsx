@@ -17,24 +17,24 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
   const navigate = useNavigate();
   const location = useLocation();
   
-  console.log('Current path:', location.pathname);
+  console.log('DashboardHeader rendering, current path:', location.pathname);
   
-  const handleSettingsClick = (e: React.MouseEvent) => {
-    e.preventDefault();
+  const handleSettingsClick = () => {
+    console.log('Settings button clicked');
     if (onSettingsClick) {
       onSettingsClick();
     } else {
-      console.log('Navigating to settings');
+      console.log('Navigating to /settings');
       navigate('/settings');
     }
   };
   
-  const handleHelpClick = (e: React.MouseEvent) => {
-    e.preventDefault();
+  const handleHelpClick = () => {
+    console.log('Help button clicked');
     if (onHelpClick) {
       onHelpClick();
     } else {
-      console.log('Navigating to help');
+      console.log('Navigating to /help');
       navigate('/help');
     }
   };
