@@ -19,9 +19,20 @@ const mockCameras: CameraResult[] = [
     port: 8080,
     brand: 'Hikvision',
     model: 'DS-2CD2032',
-    firmware: '5.4.5',
+    firmwareVersion: '5.4.5',
     status: 'vulnerable',
-    vulnerabilities: ['Default credentials', 'CVE-2021-36260'],
+    vulnerabilities: [
+      {
+        name: 'Default credentials',
+        severity: 'high',
+        description: 'Camera using default manufacturer credentials'
+      },
+      {
+        name: 'CVE-2021-36260',
+        severity: 'critical',
+        description: 'Remote command execution vulnerability in Hikvision devices'
+      }
+    ],
     services: ['rtsp', 'http'],
     location: {
       country: 'United States',
@@ -30,7 +41,8 @@ const mockCameras: CameraResult[] = [
       longitude: -74.0060
     },
     lastSeen: new Date().toISOString(),
-    firstSeen: new Date().toISOString()
+    firstSeen: new Date().toISOString(),
+    accessLevel: 'admin'
   },
   {
     id: '2',
@@ -38,7 +50,7 @@ const mockCameras: CameraResult[] = [
     port: 554,
     brand: 'Dahua',
     model: 'IPC-HDW4631C-A',
-    firmware: '2.800.0000000.40',
+    firmwareVersion: '2.800.0000000.40',
     status: 'online',
     services: ['rtsp'],
     location: {
@@ -48,7 +60,8 @@ const mockCameras: CameraResult[] = [
       longitude: 13.4050
     },
     lastSeen: new Date().toISOString(),
-    firstSeen: new Date().toISOString()
+    firstSeen: new Date().toISOString(),
+    accessLevel: 'view'
   },
   {
     id: '3',
@@ -56,7 +69,7 @@ const mockCameras: CameraResult[] = [
     port: 80,
     brand: 'Axis',
     model: 'P1448-LE',
-    firmware: '10.4.0',
+    firmwareVersion: '10.4.0',
     status: 'authenticated',
     services: ['http', 'https', 'rtsp'],
     location: {
@@ -66,7 +79,8 @@ const mockCameras: CameraResult[] = [
       longitude: 139.6503
     },
     lastSeen: new Date().toISOString(),
-    firstSeen: new Date().toISOString()
+    firstSeen: new Date().toISOString(),
+    accessLevel: 'control'
   }
 ];
 
