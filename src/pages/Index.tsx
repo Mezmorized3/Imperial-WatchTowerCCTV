@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import DashboardHeader from '@/components/DashboardHeader';
 import ScanForm from '@/components/ScanForm';
@@ -14,9 +13,11 @@ import { useToast } from '@/components/ui/use-toast';
 import { AlertCircle, Info, ShieldAlert, Map, Globe, BarChart } from 'lucide-react';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { getRandomGeoLocation } from '@/utils/osintUtils';
+import { useNavigate } from 'react-router-dom';
 
 const Index = () => {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [results, setResults] = useState<CameraResult[]>([]);
   const [scanProgress, setScanProgress] = useState<ScanProgress>({
     status: 'idle',
@@ -25,19 +26,17 @@ const Index = () => {
     camerasFound: 0
   });
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<string>('table');
+  const [activeTab, setActiveTab] = useState<string>('globe');
   const cleanupFunctionRef = useRef<(() => void) | null>(null);
   const scanInProgressRef = useRef<boolean>(false);
 
-  // Change tab to map/globe when scan starts
   useEffect(() => {
-    if (scanProgress.status === 'running' && activeTab === 'table') {
+    if (scanProgress.status === 'running') {
       setActiveTab('globe');
     }
-  }, [scanProgress.status, activeTab]);
+  }, [scanProgress.status]);
 
   const handleStartScan = async (target: ScanTarget, settings: ScanSettings) => {
-    // If there's already a scan in progress, we need to clean it up first
     if (scanInProgressRef.current && cleanupFunctionRef.current) {
       cleanupFunctionRef.current();
       toast({
@@ -46,43 +45,34 @@ const Index = () => {
       });
     }
 
-    // Reset current results and errors
     setResults([]);
     setError(null);
     scanInProgressRef.current = true;
     
     let ipRange = target.value;
     
-    // Calculate total targets (this would be more complex in a real app)
     let targetsTotal = 1;
     if (target.type === 'range') {
-      // Enhanced CIDR calculation
       const cidrMatch = target.value.match(/\/(\d+)$/);
       if (cidrMatch) {
         const cidrPrefix = parseInt(cidrMatch[1]);
         if (cidrPrefix <= 32) {
-          // Calculate number of IPs in the range
           targetsTotal = Math.pow(2, 32 - cidrPrefix);
-          
-          // For UI purposes, we'll show a reasonable limit
           if (targetsTotal > 2048) {
             targetsTotal = settings.aggressive ? 2048 : 1024;
           }
         }
       }
     } else if (['shodan', 'zoomeye', 'censys'].includes(target.type)) {
-      // For search engine queries, set an estimated number
-      targetsTotal = Math.floor(Math.random() * 20) + 10; // 10-30 results
+      targetsTotal = Math.floor(Math.random() * 20) + 10;
       toast({
         title: `${target.type.charAt(0).toUpperCase() + target.type.slice(1)} Query`,
         description: `Scanning using ${target.type} query: ${target.value}`,
       });
     }
     
-    // Determine target country for globe animation
     const targetCountry = getTargetCountry(target.value);
     
-    // Start progress tracking with enhanced metadata
     setScanProgress({
       status: 'running',
       targetsTotal,
@@ -95,12 +85,13 @@ const Index = () => {
       targetCountry
     });
     
+    setActiveTab('globe');
+    
     toast({
       title: "Scan Started",
       description: `Starting scan of ${target.value} with ${settings.aggressive ? 'aggressive' : 'standard'} settings`,
     });
     
-    // Show browser limitation notice
     toast({
       title: "Browser Limitation Notice",
       description: "This demo uses simulation since browsers don't allow direct network scanning. In a real application, this would connect to a backend service.",
@@ -109,17 +100,14 @@ const Index = () => {
     });
     
     try {
-      // Create an AbortController for this scan
       const abortController = new AbortController();
       
-      // Set up a cleanup function for this scan
       cleanupFunctionRef.current = () => {
         console.log("Scan cleanup called");
         abortController.abort();
         scanInProgressRef.current = false;
       };
       
-      // Start scan with appropriate scan type
       await scanNetwork(
         ipRange,
         settings,
@@ -135,20 +123,17 @@ const Index = () => {
         (camera) => {
           if (abortController.signal.aborted) return;
           
-          // Use a function form of setState to avoid stale closures
           setResults(prev => [...prev, camera]);
           setScanProgress(prev => ({
             ...prev,
             camerasFound: prev.camerasFound + 1
           }));
         },
-        target.type, // Pass the scan type to the network scanner
-        abortController.signal // Pass the abort signal to the scanner
+        target.type,
+        abortController.signal
       );
       
-      // Only update state if the scan wasn't aborted
       if (!abortController.signal.aborted) {
-        // Scan completed successfully
         setScanProgress(prevState => {
           const updatedState: ScanProgress = {
             ...prevState,
@@ -195,8 +180,7 @@ const Index = () => {
       }
     }
   };
-  
-  // Clean up scan when component unmounts
+
   useEffect(() => {
     return () => {
       if (cleanupFunctionRef.current && scanInProgressRef.current) {
@@ -205,7 +189,7 @@ const Index = () => {
       }
     };
   }, []);
-  
+
   const calculateElapsedTime = (startTime: Date) => {
     const elapsed = Math.floor((new Date().getTime() - startTime.getTime()) / 1000);
     const minutes = Math.floor(elapsed / 60);
@@ -214,9 +198,7 @@ const Index = () => {
     return `${minutes}m ${seconds}s`;
   };
 
-  // Guess target country based on IP or query
   const getTargetCountry = (value: string): string => {
-    // Try to extract country from search queries
     if (value.toLowerCase().includes('country:')) {
       const match = value.match(/country:["']?([a-zA-Z\s]+)["']?/i);
       if (match && match[1]) {
@@ -224,7 +206,6 @@ const Index = () => {
       }
     }
     
-    // For IP addresses, we'll just pick a random country
     const countries = [
       'United States', 'Germany', 'France', 'Netherlands', 
       'United Kingdom', 'Japan', 'Singapore', 'Australia',
@@ -234,9 +215,16 @@ const Index = () => {
     return countries[Math.floor(Math.random() * countries.length)];
   };
 
+  const handleNavigation = (path: string) => {
+    navigate(path);
+  };
+
   return (
     <div className="min-h-screen bg-scanner-dark text-white">
-      <DashboardHeader />
+      <DashboardHeader 
+        onSettingsClick={() => handleNavigation('/settings')}
+        onHelpClick={() => handleNavigation('/help')}
+      />
       
       <main className="container mx-auto py-6 px-4">
         {error && (
@@ -270,22 +258,27 @@ const Index = () => {
             
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
               <TabsList className="bg-scanner-dark-alt w-full justify-start">
-                <TabsTrigger value="table" className="data-[state=active]:bg-scanner-info/20">
-                  <BarChart className="h-4 w-4 mr-2" />
-                  Results Table
+                <TabsTrigger value="globe" className="data-[state=active]:bg-scanner-info/20">
+                  <Globe className="h-4 w-4 mr-2" />
+                  Interactive Globe
                 </TabsTrigger>
                 <TabsTrigger value="map" className="data-[state=active]:bg-scanner-info/20">
                   <Map className="h-4 w-4 mr-2" />
                   Location Map
                 </TabsTrigger>
-                <TabsTrigger value="globe" className="data-[state=active]:bg-scanner-info/20">
-                  <Globe className="h-4 w-4 mr-2" />
-                  Interactive Globe
+                <TabsTrigger value="table" className="data-[state=active]:bg-scanner-info/20">
+                  <BarChart className="h-4 w-4 mr-2" />
+                  Results Table
                 </TabsTrigger>
               </TabsList>
               
-              <TabsContent value="table">
-                <ResultsTable results={results} />
+              <TabsContent value="globe">
+                <GlobeView 
+                  cameras={results}
+                  scanInProgress={scanProgress.status === 'running'}
+                  currentTarget={scanProgress.currentTarget}
+                  targetCountry={scanProgress.targetCountry}
+                />
               </TabsContent>
               
               <TabsContent value="map">
@@ -302,13 +295,8 @@ const Index = () => {
                 />
               </TabsContent>
               
-              <TabsContent value="globe">
-                <GlobeView 
-                  cameras={results}
-                  scanInProgress={scanProgress.status === 'running'}
-                  currentTarget={scanProgress.currentTarget}
-                  targetCountry={scanProgress.targetCountry}
-                />
+              <TabsContent value="table">
+                <ResultsTable results={results} />
               </TabsContent>
             </Tabs>
           </div>
