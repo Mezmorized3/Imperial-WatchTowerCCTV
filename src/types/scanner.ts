@@ -1,3 +1,4 @@
+
 export type ScanTarget = {
   type: 'ip' | 'range' | 'file' | 'shodan' | 'zoomeye' | 'censys';
   value: string;
@@ -80,6 +81,7 @@ export type ScanProgress = {
   scanTarget?: ScanTarget;
   scanSettings?: ScanSettings;
   currentTarget?: string;
+  targetCountry?: string;
   scanSpeed?: number;
 };
 

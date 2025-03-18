@@ -4,12 +4,16 @@ import DashboardHeader from '@/components/DashboardHeader';
 import ScanForm from '@/components/ScanForm';
 import StatusBar from '@/components/StatusBar';
 import ResultsTable from '@/components/ResultsTable';
+import GlobeView from '@/components/GlobeView';
+import CameraMap from '@/components/CameraMap';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { ScanTarget, ScanSettings, ScanProgress, CameraResult } from '@/types/scanner';
 import { scanNetwork } from '@/utils/networkScanner';
 import { Toaster } from '@/components/ui/toaster';
 import { useToast } from '@/components/ui/use-toast';
-import { AlertCircle, Info, ShieldAlert } from 'lucide-react';
+import { AlertCircle, Info, ShieldAlert, Map, Globe, BarChart } from 'lucide-react';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
+import { getRandomGeoLocation } from '@/utils/osintUtils';
 
 const Index = () => {
   const { toast } = useToast();
@@ -21,8 +25,16 @@ const Index = () => {
     camerasFound: 0
   });
   const [error, setError] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<string>('table');
   const cleanupFunctionRef = useRef<(() => void) | null>(null);
   const scanInProgressRef = useRef<boolean>(false);
+
+  // Change tab to map/globe when scan starts
+  useEffect(() => {
+    if (scanProgress.status === 'running' && activeTab === 'table') {
+      setActiveTab('globe');
+    }
+  }, [scanProgress.status, activeTab]);
 
   const handleStartScan = async (target: ScanTarget, settings: ScanSettings) => {
     // If there's already a scan in progress, we need to clean it up first
@@ -67,6 +79,9 @@ const Index = () => {
       });
     }
     
+    // Determine target country for globe animation
+    const targetCountry = getTargetCountry(target.value);
+    
     // Start progress tracking with enhanced metadata
     setScanProgress({
       status: 'running',
@@ -75,7 +90,9 @@ const Index = () => {
       camerasFound: 0,
       startTime: new Date(),
       scanTarget: target,
-      scanSettings: settings
+      scanSettings: settings,
+      currentTarget: target.value,
+      targetCountry
     });
     
     toast({
@@ -111,7 +128,8 @@ const Index = () => {
           
           setScanProgress(prevState => ({
             ...prevState,
-            ...progress
+            ...progress,
+            targetCountry
           }));
         },
         (camera) => {
@@ -196,6 +214,26 @@ const Index = () => {
     return `${minutes}m ${seconds}s`;
   };
 
+  // Guess target country based on IP or query
+  const getTargetCountry = (value: string): string => {
+    // Try to extract country from search queries
+    if (value.toLowerCase().includes('country:')) {
+      const match = value.match(/country:["']?([a-zA-Z\s]+)["']?/i);
+      if (match && match[1]) {
+        return match[1].trim();
+      }
+    }
+    
+    // For IP addresses, we'll just pick a random country
+    const countries = [
+      'United States', 'Germany', 'France', 'Netherlands', 
+      'United Kingdom', 'Japan', 'Singapore', 'Australia',
+      'Brazil', 'Canada', 'Italy', 'Spain'
+    ];
+    
+    return countries[Math.floor(Math.random() * countries.length)];
+  };
+
   return (
     <div className="min-h-screen bg-scanner-dark text-white">
       <DashboardHeader />
@@ -229,7 +267,50 @@ const Index = () => {
           
           <div className="lg:col-span-2 space-y-6">
             <StatusBar progress={scanProgress} />
-            <ResultsTable results={results} />
+            
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+              <TabsList className="bg-scanner-dark-alt w-full justify-start">
+                <TabsTrigger value="table" className="data-[state=active]:bg-scanner-info/20">
+                  <BarChart className="h-4 w-4 mr-2" />
+                  Results Table
+                </TabsTrigger>
+                <TabsTrigger value="map" className="data-[state=active]:bg-scanner-info/20">
+                  <Map className="h-4 w-4 mr-2" />
+                  Location Map
+                </TabsTrigger>
+                <TabsTrigger value="globe" className="data-[state=active]:bg-scanner-info/20">
+                  <Globe className="h-4 w-4 mr-2" />
+                  Interactive Globe
+                </TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="table">
+                <ResultsTable results={results} />
+              </TabsContent>
+              
+              <TabsContent value="map">
+                <CameraMap 
+                  cameras={results} 
+                  onSelectCamera={(camera) => {
+                    console.log('Selected camera:', camera);
+                    toast({
+                      title: `Camera ${camera.ip}`,
+                      description: `${camera.brand || 'Unknown'} camera in ${camera.location?.country || 'Unknown location'}`,
+                      duration: 3000,
+                    });
+                  }} 
+                />
+              </TabsContent>
+              
+              <TabsContent value="globe">
+                <GlobeView 
+                  cameras={results}
+                  scanInProgress={scanProgress.status === 'running'}
+                  currentTarget={scanProgress.currentTarget}
+                  targetCountry={scanProgress.targetCountry}
+                />
+              </TabsContent>
+            </Tabs>
           </div>
         </div>
       </main>
