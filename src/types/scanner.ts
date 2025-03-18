@@ -1,4 +1,3 @@
-
 export type ScanTarget = {
   type: 'ip' | 'range' | 'file' | 'shodan' | 'zoomeye' | 'censys';
   value: string;
@@ -66,6 +65,8 @@ export type CameraResult = {
     lastUpdate?: string;
     recommendedVersion?: string;
   };
+  services?: string[];
+  firstSeen?: string;
 };
 
 export type ScanStatus = 'idle' | 'running' | 'completed' | 'failed';
