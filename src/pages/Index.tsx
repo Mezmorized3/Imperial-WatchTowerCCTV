@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import DashboardHeader from '@/components/DashboardHeader';
 import ScanForm from '@/components/ScanForm';
 import StatusBar from '@/components/StatusBar';
@@ -21,12 +21,23 @@ const Index = () => {
     camerasFound: 0
   });
   const [error, setError] = useState<string | null>(null);
-  const [cleanupFunction, setCleanupFunction] = useState<(() => void) | null>(null);
+  const cleanupFunctionRef = useRef<(() => void) | null>(null);
+  const scanInProgressRef = useRef<boolean>(false);
 
   const handleStartScan = async (target: ScanTarget, settings: ScanSettings) => {
+    // If there's already a scan in progress, we need to clean it up first
+    if (scanInProgressRef.current && cleanupFunctionRef.current) {
+      cleanupFunctionRef.current();
+      toast({
+        title: "Previous Scan Terminated",
+        description: "The previous scan was terminated to start a new one.",
+      });
+    }
+
     // Reset current results and errors
     setResults([]);
     setError(null);
+    scanInProgressRef.current = true;
     
     let ipRange = target.value;
     
@@ -73,80 +84,96 @@ const Index = () => {
     });
     
     try {
+      // Create an AbortController for this scan
+      const abortController = new AbortController();
+      
+      // Set up a cleanup function for this scan
+      cleanupFunctionRef.current = () => {
+        console.log("Scan cleanup called");
+        abortController.abort();
+        scanInProgressRef.current = false;
+      };
+      
       // Start real network scan with scan type
       await scanNetwork(
         ipRange,
         settings,
         (progress) => {
+          if (abortController.signal.aborted) return;
+          
           setScanProgress(prevState => ({
             ...prevState,
             ...progress
           }));
         },
         (camera) => {
+          if (abortController.signal.aborted) return;
+          
           setResults(prev => [...prev, camera]);
           setScanProgress(prev => ({
             ...prev,
             camerasFound: prev.camerasFound + 1
           }));
         },
-        target.type // Pass the scan type to the network scanner
+        target.type, // Pass the scan type to the network scanner
+        abortController.signal // Pass the abort signal to the scanner
       );
       
-      // Scan completed successfully
-      setScanProgress(prevState => {
-        const updatedState: ScanProgress = {
-          ...prevState,
-          status: 'completed',
-          targetsScanned: prevState.targetsTotal,
-          endTime: new Date()
-        };
-        
-        const elapsedTime = calculateElapsedTime(updatedState.startTime!);
-        toast({
-          title: "Scan Completed",
-          description: `Found ${results.length} cameras in ${elapsedTime}.`,
-          variant: "default",
+      // Only update state if the scan wasn't aborted
+      if (!abortController.signal.aborted) {
+        // Scan completed successfully
+        setScanProgress(prevState => {
+          const updatedState: ScanProgress = {
+            ...prevState,
+            status: 'completed',
+            targetsScanned: prevState.targetsTotal,
+            endTime: new Date()
+          };
+          
+          const elapsedTime = calculateElapsedTime(updatedState.startTime!);
+          toast({
+            title: "Scan Completed",
+            description: `Found ${results.length} cameras in ${elapsedTime}.`,
+            variant: "default",
+          });
+          
+          return updatedState;
         });
         
-        return updatedState;
-      });
-      
-      // Provide cleanup function
-      setCleanupFunction(() => () => {
-        console.log("Scan cleanup called");
-      });
+        scanInProgressRef.current = false;
+      }
       
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Unknown error during scan';
-      setError(errorMessage);
-      setScanProgress(prevState => ({
-        ...prevState,
-        status: 'failed',
-        error: errorMessage,
-        endTime: new Date()
-      }));
-      
-      toast({
-        title: "Scan Failed",
-        description: errorMessage,
-        variant: "destructive",
-      });
+      if (scanInProgressRef.current) {
+        const errorMessage = err instanceof Error ? err.message : 'Unknown error during scan';
+        setError(errorMessage);
+        setScanProgress(prevState => ({
+          ...prevState,
+          status: 'failed',
+          error: errorMessage,
+          endTime: new Date()
+        }));
+        
+        toast({
+          title: "Scan Failed",
+          description: errorMessage,
+          variant: "destructive",
+        });
+        
+        scanInProgressRef.current = false;
+      }
     }
   };
   
   // Clean up scan when component unmounts
   useEffect(() => {
     return () => {
-      if (cleanupFunction) {
-        cleanupFunction();
-        toast({
-          title: "Scan Terminated",
-          description: "The scan was terminated before completion.",
-        });
+      if (cleanupFunctionRef.current && scanInProgressRef.current) {
+        cleanupFunctionRef.current();
+        console.log("Component unmount: Scan terminated");
       }
     };
-  }, [cleanupFunction, toast]);
+  }, []);
   
   const calculateElapsedTime = (startTime: Date) => {
     const elapsed = Math.floor((new Date().getTime() - startTime.getTime()) / 1000);

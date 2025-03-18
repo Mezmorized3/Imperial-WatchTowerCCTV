@@ -9,11 +9,17 @@ export const scanNetwork = async (
   settings: ScanSettings,
   onProgress: (progress: ScanProgress) => void,
   onCameraFound: (camera: CameraResult) => void,
-  scanType?: string
+  scanType?: string,
+  abortSignal?: AbortSignal
 ): Promise<void> => {
+  // Check if scan has been aborted
+  if (abortSignal?.aborted) {
+    throw new Error('Scan was aborted');
+  }
+
   // If we're using a search engine query, handle it differently
   if (scanType && ['shodan', 'zoomeye', 'censys'].includes(scanType)) {
-    return await handleSearchEngineQuery(ipRange, scanType, settings, onProgress, onCameraFound);
+    return await handleSearchEngineQuery(ipRange, scanType, settings, onProgress, onCameraFound, abortSignal);
   }
   
   // Parse the CIDR notation to get start and end IPs
@@ -66,6 +72,11 @@ export const scanNetwork = async (
 
   // Perform the scan
   for (let i = 0; i < maxHosts; i++) {
+    // Check if scan has been aborted
+    if (abortSignal?.aborted) {
+      throw new Error('Scan was aborted');
+    }
+    
     const currentIpNum = baseIpNum + i;
     const currentIp = [
       (currentIpNum >>> 24) & 255,
@@ -90,9 +101,17 @@ export const scanNetwork = async (
 
     // Check if this IP is alive by attempting to fetch common camera endpoints
     for (const port of commonPorts) {
-      const scanPromise = scanIpForCamera(currentIp, port, settings)
+      // Check if scan has been aborted before starting a new port scan
+      if (abortSignal?.aborted) {
+        throw new Error('Scan was aborted');
+      }
+      
+      const scanPromise = scanIpForCamera(currentIp, port, settings, abortSignal)
         .then(async (result) => {
           if (result) {
+            // Check if scan has been aborted before processing result
+            if (abortSignal?.aborted) return;
+            
             foundCount++;
             
             // Enhance with threat intelligence if enabled
@@ -121,30 +140,58 @@ export const scanNetwork = async (
             });
           }
         })
-        .catch(() => {
+        .catch((err) => {
           // Silently ignore errors for IPs that don't respond
+          // But rethrow if it's an abort error
+          if (err.message === 'Scan was aborted') {
+            throw err;
+          }
         });
       
       portScanPromises.push(scanPromise);
       
       // Throttle requests to avoid overwhelming the network
       if (!settings.aggressive) {
-        await new Promise(resolve => setTimeout(resolve, 200));
+        try {
+          await new Promise((resolve, reject) => {
+            const timeout = setTimeout(resolve, 200);
+            
+            if (abortSignal) {
+              abortSignal.addEventListener('abort', () => {
+                clearTimeout(timeout);
+                reject(new Error('Scan was aborted'));
+              });
+            }
+          });
+        } catch (error) {
+          if (error instanceof Error && error.message === 'Scan was aborted') {
+            throw error;
+          }
+        }
       }
     }
   }
 
-  // Wait for all port scans to complete
-  await Promise.allSettled(portScanPromises);
+  // Wait for all port scans to complete, but only if not aborted
+  if (!abortSignal?.aborted) {
+    try {
+      await Promise.all(portScanPromises);
+    } catch (error) {
+      if (error instanceof Error && error.message === 'Scan was aborted') {
+        throw error;
+      }
+      // Ignore other errors from individual port scans
+    }
 
-  // Complete the scan
-  onProgress({
-    status: 'completed',
-    targetsTotal: maxHosts,
-    targetsScanned: maxHosts,
-    camerasFound: foundCount,
-    endTime: new Date()
-  });
+    // Complete the scan
+    onProgress({
+      status: 'completed',
+      targetsTotal: maxHosts,
+      targetsScanned: maxHosts,
+      camerasFound: foundCount,
+      endTime: new Date()
+    });
+  }
 };
 
 /**
@@ -155,8 +202,14 @@ const handleSearchEngineQuery = async (
   searchEngine: string,
   settings: ScanSettings,
   onProgress: (progress: ScanProgress) => void,
-  onCameraFound: (camera: CameraResult) => void
+  onCameraFound: (camera: CameraResult) => void,
+  abortSignal?: AbortSignal
 ): Promise<void> => {
+  // Check if scan has been aborted
+  if (abortSignal?.aborted) {
+    throw new Error('Scan was aborted');
+  }
+  
   // This would be connected to actual APIs in a real implementation
   // For now, we'll simulate the search results
   
@@ -172,7 +225,27 @@ const handleSearchEngineQuery = async (
   });
   
   // Simulate API call time
-  await new Promise(resolve => setTimeout(resolve, 1500));
+  try {
+    await new Promise((resolve, reject) => {
+      const timeout = setTimeout(resolve, 1500);
+      
+      if (abortSignal) {
+        abortSignal.addEventListener('abort', () => {
+          clearTimeout(timeout);
+          reject(new Error('Scan was aborted'));
+        });
+      }
+    });
+  } catch (error) {
+    if (error instanceof Error && error.message === 'Scan was aborted') {
+      throw error;
+    }
+  }
+  
+  // Check if scan has been aborted
+  if (abortSignal?.aborted) {
+    throw new Error('Scan was aborted');
+  }
   
   // Simulate getting results from the search engine
   // In a real app, we would call the respective API
@@ -182,10 +255,30 @@ const handleSearchEngineQuery = async (
   
   // Process each result
   for (let i = 0; i < simulatedResults.length; i++) {
+    // Check if scan has been aborted
+    if (abortSignal?.aborted) {
+      throw new Error('Scan was aborted');
+    }
+    
     const result = simulatedResults[i];
     
     // Simulate processing time
-    await new Promise(resolve => setTimeout(resolve, 100));
+    try {
+      await new Promise((resolve, reject) => {
+        const timeout = setTimeout(resolve, 100);
+        
+        if (abortSignal) {
+          abortSignal.addEventListener('abort', () => {
+            clearTimeout(timeout);
+            reject(new Error('Scan was aborted'));
+          });
+        }
+      });
+    } catch (error) {
+      if (error instanceof Error && error.message === 'Scan was aborted') {
+        throw error;
+      }
+    }
     
     // Create a camera result from the search engine data
     const cameraResult: CameraResult = {
@@ -228,6 +321,11 @@ const handleSearchEngineQuery = async (
       scanSpeed: settings.aggressive ? 10 : 5,
       startTime: new Date()
     });
+  }
+  
+  // Check if scan has been aborted
+  if (abortSignal?.aborted) {
+    throw new Error('Scan was aborted');
   }
   
   // Complete the scan
@@ -379,17 +477,33 @@ const generateRandomCity = (country: string): string => {
 const scanIpForCamera = async (
   ip: string,
   port: number,
-  settings: ScanSettings
+  settings: ScanSettings,
+  abortSignal?: AbortSignal
 ): Promise<CameraResult | null> => {
+  // Check if scan has been aborted
+  if (abortSignal?.aborted) {
+    throw new Error('Scan was aborted');
+  }
+  
   try {
     // Attempt to detect a camera at this IP:port
-    const cameraData = await detectCamera(ip, port, settings.timeout);
+    const cameraData = await detectCamera(ip, port, settings.timeout, abortSignal);
     if (!cameraData) return null;
+    
+    // Check if scan has been aborted
+    if (abortSignal?.aborted) {
+      throw new Error('Scan was aborted');
+    }
     
     // Attempt to test default credentials if enabled
     let credentials = null;
     if (settings.testCredentials) {
-      credentials = await testDefaultCredentials(ip, port, cameraData.brand);
+      credentials = await testDefaultCredentials(ip, port, cameraData.brand, abortSignal);
+    }
+    
+    // Check if scan has been aborted
+    if (abortSignal?.aborted) {
+      throw new Error('Scan was aborted');
     }
     
     // Determine the camera status
@@ -401,7 +515,7 @@ const scanIpForCamera = async (
     // Check for vulnerabilities
     let vulnerabilities = undefined;
     if (settings.checkVulnerabilities) {
-      vulnerabilities = await checkCameraVulnerabilities(ip, port, cameraData.brand, cameraData.model);
+      vulnerabilities = await checkCameraVulnerabilities(ip, port, cameraData.brand, cameraData.model, abortSignal);
       if (vulnerabilities && vulnerabilities.length > 0) {
         status = 'vulnerable';
       }
@@ -427,6 +541,9 @@ const scanIpForCamera = async (
     
     return result;
   } catch (error) {
+    if (error instanceof Error && error.message === 'Scan was aborted') {
+      throw error;
+    }
     return null;
   }
 };
@@ -438,7 +555,8 @@ const scanIpForCamera = async (
 const detectCamera = async (
   ip: string, 
   port: number,
-  timeout = 3000
+  timeout = 3000,
+  abortSignal?: AbortSignal
 ): Promise<{
   brand: string;
   model: string;
@@ -447,6 +565,11 @@ const detectCamera = async (
   snapshotUrl?: string;
   responseTime: number;
 } | null> => {
+  // Check if scan has been aborted
+  if (abortSignal?.aborted) {
+    throw new Error('Scan was aborted');
+  }
+  
   const startTime = Date.now();
   
   // Common camera detection endpoints
@@ -467,11 +590,29 @@ const detectCamera = async (
   // Here we'll simulate some responses
   
   // Try each endpoint with a timeout
+  // Use the provided abortSignal if available
   const controller = new AbortController();
+  
+  // Create a timeout that will abort the controller
   const timeoutId = setTimeout(() => controller.abort(), timeout);
+  
+  // Link the external abort signal to our controller
+  let abortListener: ((event: Event) => void) | undefined;
+  if (abortSignal) {
+    abortListener = () => {
+      clearTimeout(timeoutId);
+      controller.abort();
+    };
+    abortSignal.addEventListener('abort', abortListener);
+  }
   
   try {
     for (const endpoint of endpoints) {
+      // Check if scan has been aborted
+      if (abortSignal?.aborted) {
+        throw new Error('Scan was aborted');
+      }
+      
       try {
         const url = `http://${ip}:${port}${endpoint.path}`;
         const response = await fetch(url, { 
@@ -503,9 +644,20 @@ const detectCamera = async (
           }
           
           clearTimeout(timeoutId);
+          if (abortSignal && abortListener) {
+            abortSignal.removeEventListener('abort', abortListener);
+          }
           return { brand, model, firmwareVersion, rtspPort, snapshotUrl, responseTime };
         }
-      } catch {
+      } catch (error) {
+        // Check if this is an abort error
+        if (error instanceof Error && error.name === 'AbortError') {
+          if (abortSignal?.aborted) {
+            // This is an external abort, not just a timeout
+            throw new Error('Scan was aborted');
+          }
+          // Otherwise it's just a timeout for this endpoint, continue to the next
+        }
         // Continue to the next endpoint if this one fails
         continue;
       }
@@ -513,9 +665,20 @@ const detectCamera = async (
     
     // If we get here, no camera was detected
     clearTimeout(timeoutId);
+    if (abortSignal && abortListener) {
+      abortSignal.removeEventListener('abort', abortListener);
+    }
     return null;
   } catch (error) {
     clearTimeout(timeoutId);
+    if (abortSignal && abortListener) {
+      abortSignal.removeEventListener('abort', abortListener);
+    }
+    
+    if (error instanceof Error && error.message === 'Scan was aborted') {
+      throw error;
+    }
+    
     return null;
   }
 };
@@ -526,8 +689,14 @@ const detectCamera = async (
 const testDefaultCredentials = async (
   ip: string, 
   port: number, 
-  brand?: string
+  brand?: string,
+  abortSignal?: AbortSignal
 ): Promise<{ username: string; password: string } | null> => {
+  // Check if scan has been aborted
+  if (abortSignal?.aborted) {
+    throw new Error('Scan was aborted');
+  }
+  
   // Common default credentials by brand
   const defaultCredentials = [
     { username: 'admin', password: 'admin' },
@@ -567,12 +736,18 @@ const checkCameraVulnerabilities = async (
   ip: string,
   port: number,
   brand?: string,
-  model?: string
+  model?: string,
+  abortSignal?: AbortSignal
 ): Promise<Array<{
   name: string;
   severity: 'low' | 'medium' | 'high' | 'critical';
   description: string;
 }> | undefined> => {
+  // Check if scan has been aborted
+  if (abortSignal?.aborted) {
+    throw new Error('Scan was aborted');
+  }
+  
   // Common camera vulnerabilities by brand
   const vulnerabilities: Array<{
     name: string;
