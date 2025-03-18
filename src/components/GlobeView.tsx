@@ -54,13 +54,13 @@ const GlobeScene = ({ cameras, scanInProgress, targetCountry }: GlobeViewProps) 
     const globe = new ThreeGlobe()
       .globeImageUrl('/earth-blue-marble.jpg')
       .bumpImageUrl('/earth-topology.png')
-      .atmosphereColor(new THREE.Color(0x3a228a))
+      .atmosphereColor('#3a228a') // Fix: Use string instead of THREE.Color
       .atmosphereAltitude(0.15)
       .hexPolygonsData(countries.features)
       .hexPolygonResolution(3)
       .hexPolygonMargin(0.7)
       .hexPolygonColor(() => {
-        return new THREE.Color(0x1f2937);
+        return '#1f2937'; // Fix: Return hex string instead of THREE.Color
       });
 
     // Configure globe
