@@ -10,6 +10,7 @@ import GlobeView from '@/components/GlobeView';
 import CameraMap from '@/components/CameraMap';
 import ResultsTable from '@/components/ResultsTable';
 import { CameraResult } from '@/types/scanner';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 // Mock data for demonstration
 const mockCameras: CameraResult[] = [
@@ -86,13 +87,20 @@ const mockCameras: CameraResult[] = [
 
 const Viewer = () => {
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
   const [activeTab, setActiveTab] = useState<string>('globe');
   const [cameras, setCameras] = useState<CameraResult[]>(mockCameras);
 
-  // Set the globe tab as active when component mounts
+  // Set the globe tab as active when component mounts and log for debugging
   useEffect(() => {
     setActiveTab('globe');
+    console.log("Viewer component mounted, setting active tab to globe");
   }, []);
+
+  // Debug log when tab changes
+  useEffect(() => {
+    console.log("Active tab changed to:", activeTab);
+  }, [activeTab]);
 
   return (
     <div className="min-h-screen bg-scanner-dark text-white">
@@ -115,7 +123,7 @@ const Viewer = () => {
 
       <main className="container mx-auto py-6 px-4">
         <div className="mb-6">
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <Tabs defaultValue="globe" value={activeTab} onValueChange={setActiveTab} className="w-full">
             <TabsList className="bg-scanner-dark-alt w-full justify-start">
               <TabsTrigger value="globe" className="data-[state=active]:bg-scanner-info/20">
                 <Globe className="h-4 w-4 mr-2" />
@@ -132,23 +140,29 @@ const Viewer = () => {
             </TabsList>
             
             <TabsContent value="globe" className="pt-4">
-              <GlobeView 
-                cameras={cameras}
-                scanInProgress={false}
-              />
+              {activeTab === 'globe' && (
+                <GlobeView 
+                  cameras={cameras}
+                  scanInProgress={false}
+                />
+              )}
             </TabsContent>
             
-            <TabsContent value="map">
-              <CameraMap 
-                cameras={cameras} 
-                onSelectCamera={(camera) => {
-                  console.log('Selected camera:', camera);
-                }} 
-              />
+            <TabsContent value="map" className="pt-4">
+              {activeTab === 'map' && (
+                <CameraMap 
+                  cameras={cameras} 
+                  onSelectCamera={(camera) => {
+                    console.log('Selected camera:', camera);
+                  }} 
+                />
+              )}
             </TabsContent>
             
-            <TabsContent value="table">
-              <ResultsTable results={cameras} />
+            <TabsContent value="table" className="pt-4">
+              {activeTab === 'table' && (
+                <ResultsTable results={cameras} />
+              )}
             </TabsContent>
           </Tabs>
         </div>
