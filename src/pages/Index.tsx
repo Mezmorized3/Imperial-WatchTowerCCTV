@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import DashboardHeader from '@/components/DashboardHeader';
 import ScanForm from '@/components/ScanForm';
@@ -10,7 +11,7 @@ import { ScanTarget, ScanSettings, ScanProgress, CameraResult } from '@/types/sc
 import { scanNetwork } from '@/utils/networkScanner';
 import { Toaster } from '@/components/ui/toaster';
 import { useToast } from '@/components/ui/use-toast';
-import { AlertCircle, Info, ShieldAlert, Map, Globe, BarChart } from 'lucide-react';
+import { AlertCircle, Info, Globe, Map, BarChart } from 'lucide-react';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { getRandomGeoLocation } from '@/utils/osintUtils';
 import { useNavigate } from 'react-router-dom';
@@ -29,6 +30,11 @@ const Index = () => {
   const [activeTab, setActiveTab] = useState<string>('globe');
   const cleanupFunctionRef = useRef<(() => void) | null>(null);
   const scanInProgressRef = useRef<boolean>(false);
+
+  // Force the globe tab to be active on initial load
+  useEffect(() => {
+    setActiveTab('globe');
+  }, []);
 
   useEffect(() => {
     if (scanProgress.status === 'running') {
@@ -244,11 +250,13 @@ const Index = () => {
               onStartScan={handleStartScan}
               isScanning={scanProgress.status === 'running'}
             />
+            
+            <div className="mt-6">
+              <StatusBar progress={scanProgress} />
+            </div>
           </div>
           
-          <div className="lg:col-span-2 space-y-6">
-            <StatusBar progress={scanProgress} />
-            
+          <div className="lg:col-span-2">
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
               <TabsList className="bg-scanner-dark-alt w-full justify-start">
                 <TabsTrigger value="globe" className="data-[state=active]:bg-scanner-info/20">
@@ -265,7 +273,7 @@ const Index = () => {
                 </TabsTrigger>
               </TabsList>
               
-              <TabsContent value="globe">
+              <TabsContent value="globe" className="pt-4">
                 <GlobeView 
                   cameras={results}
                   scanInProgress={scanProgress.status === 'running'}
