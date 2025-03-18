@@ -90,11 +90,16 @@ const Viewer = () => {
   const isMobile = useIsMobile();
   const [activeTab, setActiveTab] = useState<string>('globe');
   const [cameras, setCameras] = useState<CameraResult[]>(mockCameras);
+  const [isGlobeReady, setIsGlobeReady] = useState(false);
 
-  // Set the globe tab as active when component mounts and log for debugging
+  // Initialize globe tab
   useEffect(() => {
-    setActiveTab('globe');
-    console.log("Viewer component mounted, setting active tab to globe");
+    console.log("Viewer component mounted");
+    // Force a re-render to make sure the globe is initialized
+    setTimeout(() => {
+      setIsGlobeReady(true);
+      console.log("Setting globe ready state to true");
+    }, 100);
   }, []);
 
   // Debug log when tab changes
@@ -123,6 +128,7 @@ const Viewer = () => {
 
       <main className="container mx-auto py-6 px-4">
         <div className="mb-6">
+          {/* Ensure the globe tab is selected by default */}
           <Tabs defaultValue="globe" value={activeTab} onValueChange={setActiveTab} className="w-full">
             <TabsList className="bg-scanner-dark-alt w-full justify-start">
               <TabsTrigger value="globe" className="data-[state=active]:bg-scanner-info/20">
@@ -140,12 +146,13 @@ const Viewer = () => {
             </TabsList>
             
             <TabsContent value="globe" className="pt-4">
-              {activeTab === 'globe' && (
+              {/* Always render the GlobeView when on globe tab, regardless of conditional checks */}
+              <div style={{ height: '500px', width: '100%', position: 'relative' }}>
                 <GlobeView 
                   cameras={cameras}
                   scanInProgress={false}
                 />
-              )}
+              </div>
             </TabsContent>
             
             <TabsContent value="map" className="pt-4">
