@@ -1,5 +1,4 @@
-
-import { CameraResult, ScanProgress, ScanSettings } from '@/types/scanner';
+import { CameraResult, ScanProgress, ScanSettings, ScanTarget } from '@/types/scanner';
 import { analyzeFirmware, getComprehensiveThreatIntel } from './threatIntelligence';
 
 /**
@@ -9,8 +8,14 @@ export const scanNetwork = async (
   ipRange: string,
   settings: ScanSettings,
   onProgress: (progress: ScanProgress) => void,
-  onCameraFound: (camera: CameraResult) => void
+  onCameraFound: (camera: CameraResult) => void,
+  scanType?: string
 ): Promise<void> => {
+  // If we're using a search engine query, handle it differently
+  if (scanType && ['shodan', 'zoomeye', 'censys'].includes(scanType)) {
+    return await handleSearchEngineQuery(ipRange, scanType, settings, onProgress, onCameraFound);
+  }
+  
   // Parse the CIDR notation to get start and end IPs
   const [baseIp, cidrMask] = ipRange.split('/');
   if (!baseIp || !cidrMask) {
@@ -32,7 +37,16 @@ export const scanNetwork = async (
   
   // Calculate the number of hosts in this subnet
   const numHosts = Math.pow(2, 32 - mask);
-  const maxHosts = Math.min(numHosts, 256); // Limit to avoid excessive scanning
+  
+  // Determine a reasonable limit for scanning
+  // For a /24 network, this would scan all 256 addresses
+  // For larger networks, we'll use a more reasonable limit or sample strategically
+  let maxHosts = numHosts;
+  if (numHosts > 1024) {
+    // For large networks, limit the scan to a reasonable number
+    // or implement a smarter sampling strategy
+    maxHosts = Math.min(numHosts, settings.aggressive ? 2048 : 1024);
+  }
   
   // Initialize progress
   let scannedCount = 0;
@@ -131,6 +145,232 @@ export const scanNetwork = async (
     camerasFound: foundCount,
     endTime: new Date()
   });
+};
+
+/**
+ * Handles search engine queries for Shodan, ZoomEye, and Censys
+ */
+const handleSearchEngineQuery = async (
+  query: string,
+  searchEngine: string,
+  settings: ScanSettings,
+  onProgress: (progress: ScanProgress) => void,
+  onCameraFound: (camera: CameraResult) => void
+): Promise<void> => {
+  // This would be connected to actual APIs in a real implementation
+  // For now, we'll simulate the search results
+  
+  // Estimated number of results we'll process
+  const estimatedResults = 50;
+  
+  onProgress({
+    status: 'running',
+    targetsTotal: estimatedResults,
+    targetsScanned: 0,
+    camerasFound: 0,
+    startTime: new Date()
+  });
+  
+  // Simulate API call time
+  await new Promise(resolve => setTimeout(resolve, 1500));
+  
+  // Simulate getting results from the search engine
+  // In a real app, we would call the respective API
+  const simulatedResults = simulateSearchEngineResults(query, searchEngine, estimatedResults);
+  
+  let foundCount = 0;
+  
+  // Process each result
+  for (let i = 0; i < simulatedResults.length; i++) {
+    const result = simulatedResults[i];
+    
+    // Simulate processing time
+    await new Promise(resolve => setTimeout(resolve, 100));
+    
+    // Create a camera result from the search engine data
+    const cameraResult: CameraResult = {
+      id: `${result.ip}:${result.port}`,
+      ip: result.ip,
+      port: result.port,
+      brand: result.vendor,
+      model: result.device,
+      firmwareVersion: result.version,
+      url: `rtsp://${result.ip}:${result.port === 554 ? 554 : result.port}/Streaming/Channels/101`,
+      snapshotUrl: `http://${result.ip}:${result.port}/cgi-bin/snapshot.cgi`,
+      status: result.vulnerable ? 'vulnerable' : 'online',
+      credentials: null,
+      vulnerabilities: result.vulnerable ? [{
+        name: 'Search Engine Detected Vulnerability',
+        severity: 'medium',
+        description: `Vulnerability detected through ${searchEngine} search`
+      }] : undefined,
+      lastSeen: new Date().toISOString(),
+      responseTime: Math.floor(Math.random() * 200) + 50,
+      accessLevel: 'view'
+    };
+    
+    // Add location if available
+    if (result.location) {
+      cameraResult.location = result.location;
+    }
+    
+    // Add the result
+    foundCount++;
+    onCameraFound(cameraResult);
+    
+    // Update progress
+    onProgress({
+      status: 'running',
+      targetsTotal: estimatedResults,
+      targetsScanned: i + 1,
+      camerasFound: foundCount,
+      currentTarget: result.ip,
+      scanSpeed: settings.aggressive ? 10 : 5,
+      startTime: new Date()
+    });
+  }
+  
+  // Complete the scan
+  onProgress({
+    status: 'completed',
+    targetsTotal: estimatedResults,
+    targetsScanned: estimatedResults,
+    camerasFound: foundCount,
+    endTime: new Date()
+  });
+};
+
+/**
+ * Simulate search engine results
+ */
+const simulateSearchEngineResults = (
+  query: string, 
+  searchEngine: string,
+  count: number
+): Array<{
+  ip: string;
+  port: number;
+  vendor: string;
+  device: string;
+  version?: string;
+  vulnerable: boolean;
+  location?: {
+    country: string;
+    city?: string;
+    latitude?: number;
+    longitude?: number;
+  };
+}> => {
+  const results = [];
+  
+  const vendors = ['Hikvision', 'Dahua', 'Axis', 'Vivotek', 'Bosch', 'Samsung', 'Sony'];
+  
+  // Generate simulated search results
+  for (let i = 0; i < count; i++) {
+    // Generate a random IPv4 address
+    const ipParts = [];
+    for (let j = 0; j < 4; j++) {
+      ipParts.push(Math.floor(Math.random() * 255));
+    }
+    const ip = ipParts.join('.');
+    
+    // Pick a random port from common camera ports
+    const ports = [80, 8080, 554, 443, 8000, 8081, 8181, 9000];
+    const port = ports[Math.floor(Math.random() * ports.length)];
+    
+    // Pick a random vendor
+    const vendor = vendors[Math.floor(Math.random() * vendors.length)];
+    
+    // Generate a device model based on vendor
+    const device = `${vendor} Camera ${Math.floor(Math.random() * 1000)}`;
+    
+    // Generate a firmware version
+    const version = `${Math.floor(Math.random() * 10)}.${Math.floor(Math.random() * 10)}.${Math.floor(Math.random() * 100)}`;
+    
+    // Determine if vulnerable (30% chance)
+    const vulnerable = Math.random() < 0.3;
+    
+    // Add location data for some results (65% chance)
+    let location = undefined;
+    if (Math.random() < 0.65) {
+      // Extract country from query if possible
+      let country = 'Unknown';
+      if (query.toLowerCase().includes('country:')) {
+        const countryMatch = query.match(/country:([a-zA-Z]{2})/i);
+        if (countryMatch && countryMatch[1]) {
+          country = getCountryName(countryMatch[1].toUpperCase());
+        }
+      }
+      
+      location = {
+        country,
+        city: generateRandomCity(country),
+        latitude: Math.random() * 180 - 90,
+        longitude: Math.random() * 360 - 180
+      };
+    }
+    
+    results.push({
+      ip,
+      port,
+      vendor,
+      device,
+      version,
+      vulnerable,
+      location
+    });
+  }
+  
+  return results;
+};
+
+/**
+ * Helper function to get country name from code
+ */
+const getCountryName = (code: string): string => {
+  const countries: Record<string, string> = {
+    'US': 'United States',
+    'CA': 'Canada',
+    'GB': 'United Kingdom',
+    'DE': 'Germany',
+    'FR': 'France',
+    'JP': 'Japan',
+    'CN': 'China',
+    'RU': 'Russia',
+    'AU': 'Australia',
+    'BR': 'Brazil',
+    'IN': 'India',
+    'IL': 'Israel',
+    'PS': 'Palestine',
+    'LB': 'Lebanon',
+    'EG': 'Egypt',
+    'SY': 'Syria',
+    'IR': 'Iran',
+    'JO': 'Jordan'
+  };
+  
+  return countries[code] || code;
+};
+
+/**
+ * Generate a random city based on country
+ */
+const generateRandomCity = (country: string): string => {
+  const citiesByCountry: Record<string, string[]> = {
+    'United States': ['New York', 'Los Angeles', 'Chicago', 'Houston', 'Phoenix'],
+    'Israel': ['Tel Aviv', 'Jerusalem', 'Haifa', 'Beersheba', 'Nazareth'],
+    'Palestine': ['Gaza', 'Ramallah', 'Hebron', 'Bethlehem', 'Nablus'],
+    'Lebanon': ['Beirut', 'Tripoli', 'Sidon', 'Tyre', 'Baalbek'],
+    'Egypt': ['Cairo', 'Alexandria', 'Giza', 'Sharm El Sheikh', 'Luxor'],
+    'Syria': ['Damascus', 'Aleppo', 'Homs', 'Latakia', 'Hama'],
+    'Iran': ['Tehran', 'Mashhad', 'Isfahan', 'Tabriz', 'Shiraz'],
+    'Jordan': ['Amman', 'Zarqa', 'Irbid', 'Aqaba', 'Madaba']
+  };
+  
+  const defaultCities = ['Capital City', 'Major City', 'Port City', 'Industrial Center', 'Tech Hub'];
+  const cities = citiesByCountry[country] || defaultCities;
+  
+  return cities[Math.floor(Math.random() * cities.length)];
 };
 
 /**

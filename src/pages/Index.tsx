@@ -40,13 +40,16 @@ const Index = () => {
         if (cidrPrefix <= 32) {
           // Calculate number of IPs in the range
           targetsTotal = Math.pow(2, 32 - cidrPrefix);
-          // Limit large scans for UI purposes
-          if (targetsTotal > 1000000) targetsTotal = 1000000;
+          
+          // For UI purposes, we'll show a reasonable limit
+          if (targetsTotal > 2048) {
+            targetsTotal = settings.aggressive ? 2048 : 1024;
+          }
         }
       }
     } else if (['shodan', 'zoomeye', 'censys'].includes(target.type)) {
       // For search engine queries, set an estimated number
-      targetsTotal = 100;
+      targetsTotal = 50;
       toast({
         title: `${target.type.charAt(0).toUpperCase() + target.type.slice(1)} Query`,
         description: `Scanning using ${target.type} query: ${target.value}`,
@@ -65,12 +68,12 @@ const Index = () => {
     });
     
     toast({
-      title: "Real Network Scan Started",
+      title: "Network Scan Started",
       description: `Starting scan of ${target.value} with ${settings.aggressive ? 'aggressive' : 'standard'} settings`,
     });
     
     try {
-      // Start real network scan
+      // Start real network scan with scan type
       await scanNetwork(
         ipRange,
         settings,
@@ -86,7 +89,8 @@ const Index = () => {
             ...prev,
             camerasFound: prev.camerasFound + 1
           }));
-        }
+        },
+        target.type // Pass the scan type to the network scanner
       );
       
       // Scan completed successfully
@@ -94,7 +98,7 @@ const Index = () => {
         const updatedState: ScanProgress = {
           ...prevState,
           status: 'completed',
-          targetsScanned: targetsTotal,
+          targetsScanned: prevState.targetsTotal,
           endTime: new Date()
         };
         
