@@ -1,11 +1,11 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Globe, ArrowLeft, Map, BarChart } from 'lucide-react';
-import GlobeView from '@/components/GlobeView';
+import { Globe, ArrowLeft, Map, BarChart, Camera } from 'lucide-react';
 import CameraMap from '@/components/CameraMap';
 import ResultsTable from '@/components/ResultsTable';
 import { CameraResult } from '@/types/scanner';
@@ -87,7 +87,7 @@ const mockCameras: CameraResult[] = [
 const Viewer = () => {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
-  const [activeTab, setActiveTab] = useState<string>('globe');
+  const [activeTab, setActiveTab] = useState<string>('overview');
   const [cameras, setCameras] = useState<CameraResult[]>(mockCameras);
 
   // Debug logs for monitoring component lifecycle
@@ -98,6 +98,21 @@ const Viewer = () => {
   useEffect(() => {
     console.log("Active tab changed to:", activeTab);
   }, [activeTab]);
+
+  // Group cameras by country
+  const camerasByCountry = cameras.reduce((acc, camera) => {
+    const country = camera.location?.country || 'Unknown';
+    if (!acc[country]) {
+      acc[country] = [];
+    }
+    acc[country].push(camera);
+    return acc;
+  }, {} as Record<string, CameraResult[]>);
+
+  // Summary stats
+  const totalCameras = cameras.length;
+  const vulnerableCameras = cameras.filter(c => c.status === 'vulnerable').length;
+  const countriesCount = Object.keys(camerasByCountry).length;
 
   return (
     <div className="min-h-screen bg-scanner-dark text-white">
@@ -120,11 +135,11 @@ const Viewer = () => {
 
       <main className="container mx-auto py-6 px-4">
         <div className="mb-6">
-          <Tabs defaultValue="globe" value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <Tabs defaultValue="overview" value={activeTab} onValueChange={setActiveTab} className="w-full">
             <TabsList className="bg-scanner-dark-alt w-full justify-start">
-              <TabsTrigger value="globe" className="data-[state=active]:bg-scanner-info/20">
+              <TabsTrigger value="overview" className="data-[state=active]:bg-scanner-info/20">
                 <Globe className="h-4 w-4 mr-2" />
-                Interactive Globe
+                Overview
               </TabsTrigger>
               <TabsTrigger value="map" className="data-[state=active]:bg-scanner-info/20">
                 <Map className="h-4 w-4 mr-2" />
@@ -136,12 +151,67 @@ const Viewer = () => {
               </TabsTrigger>
             </TabsList>
             
-            <TabsContent value="globe" className="pt-4">
-              <div style={{ height: '600px', width: '100%' }}>
-                <GlobeView 
-                  cameras={cameras}
-                  scanInProgress={false}
-                />
+            <TabsContent value="overview" className="pt-4">
+              <div className="grid gap-6 md:grid-cols-3">
+                <Card className="bg-scanner-card border-gray-800">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-white flex items-center space-x-2">
+                      <Camera className="w-5 h-5 text-scanner-primary" />
+                      <span>Cameras Found</span>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-4xl font-bold text-white">{totalCameras}</div>
+                    <p className="text-gray-400 mt-2">Total number of cameras discovered</p>
+                  </CardContent>
+                </Card>
+                
+                <Card className="bg-scanner-card border-gray-800">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-white flex items-center space-x-2">
+                      <Globe className="w-5 h-5 text-scanner-primary" />
+                      <span>Countries</span>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-4xl font-bold text-white">{countriesCount}</div>
+                    <p className="text-gray-400 mt-2">Spanning across {countriesCount} countries</p>
+                  </CardContent>
+                </Card>
+                
+                <Card className="bg-scanner-card border-gray-800">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-white flex items-center space-x-2">
+                      <span className="w-5 h-5 bg-red-500 rounded-full flex items-center justify-center text-white">!</span>
+                      <span>Vulnerable</span>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-4xl font-bold text-white">{vulnerableCameras}</div>
+                    <p className="text-gray-400 mt-2">Cameras with security issues</p>
+                  </CardContent>
+                </Card>
+              </div>
+              
+              <div className="mt-6">
+                <Card className="bg-scanner-card border-gray-800">
+                  <CardHeader>
+                    <CardTitle className="text-white">Cameras by Country</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <ul className="space-y-3">
+                      {Object.entries(camerasByCountry).map(([country, camerasInCountry]) => (
+                        <li key={country} className="flex items-center justify-between p-3 bg-scanner-dark-alt rounded-md">
+                          <div className="flex items-center">
+                            <span className="mr-2 text-lg">{country === 'United States' ? '🇺🇸' : country === 'Germany' ? '🇩🇪' : country === 'Japan' ? '🇯🇵' : '🌍'}</span>
+                            <span>{country}</span>
+                          </div>
+                          <Badge className="bg-scanner-primary">{camerasInCountry.length}</Badge>
+                        </li>
+                      ))}
+                    </ul>
+                  </CardContent>
+                </Card>
               </div>
             </TabsContent>
             
