@@ -1,5 +1,5 @@
 
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Index from '@/pages/Index';
 import Viewer from '@/pages/Viewer';
 import Help from '@/pages/Help';
@@ -24,10 +24,11 @@ function App() {
             <Route path="/viewer" element={<Viewer />} />
             <Route path="/help" element={<Help />} />
             <Route path="/settings" element={<Settings />} />
-            <Route path="*" element={<NotFound />} />
+            <Route path="/404" element={<NotFound />} />
+            <Route path="*" element={<Navigate to="/404" replace />} />
           </Routes>
+          <Toaster />
         </Router>
-        <Toaster />
       </QueryClientProvider>
     </ThemeProvider>
   );

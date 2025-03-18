@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Shield, Eye, Settings, HelpCircle } from 'lucide-react';
+import { Shield, Settings, HelpCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
@@ -17,23 +17,25 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
   const navigate = useNavigate();
   const location = useLocation();
   
-  const handleSettingsClick = () => {
+  console.log('Current path:', location.pathname);
+  
+  const handleSettingsClick = (e: React.MouseEvent) => {
+    e.preventDefault();
     if (onSettingsClick) {
       onSettingsClick();
     } else {
-      // Force navigation regardless of current path to ensure it works
-      navigate('/settings');
       console.log('Navigating to settings');
+      navigate('/settings');
     }
   };
   
-  const handleHelpClick = () => {
+  const handleHelpClick = (e: React.MouseEvent) => {
+    e.preventDefault();
     if (onHelpClick) {
       onHelpClick();
     } else {
-      // Force navigation regardless of current path to ensure it works
-      navigate('/help');
       console.log('Navigating to help');
+      navigate('/help');
     }
   };
   
