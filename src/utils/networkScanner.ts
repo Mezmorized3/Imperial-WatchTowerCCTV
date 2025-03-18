@@ -1,8 +1,11 @@
+
 import { CameraResult, ScanProgress, ScanSettings, ScanTarget } from '@/types/scanner';
 import { analyzeFirmware, getComprehensiveThreatIntel } from './threatIntelligence';
 
 /**
- * Performs a real network scan by sending ping/HTTP requests to discover cameras
+ * IMPORTANT: Real network scanning cannot be performed directly from a browser
+ * due to security restrictions. This implementation uses simulation to demonstrate
+ * how the scanner would work in a real environment (like an Electron app or backend server).
  */
 export const scanNetwork = async (
   ipRange: string,
@@ -17,6 +20,8 @@ export const scanNetwork = async (
     throw new Error('Scan was aborted');
   }
 
+  console.log(`Starting scan of ${ipRange} with type: ${scanType || 'ip/range'}`);
+  
   // If we're using a search engine query, handle it differently
   if (scanType && ['shodan', 'zoomeye', 'censys'].includes(scanType)) {
     return await handleSearchEngineQuery(ipRange, scanType, settings, onProgress, onCameraFound, abortSignal);
@@ -50,7 +55,6 @@ export const scanNetwork = async (
   let maxHosts = numHosts;
   if (numHosts > 1024) {
     // For large networks, limit the scan to a reasonable number
-    // or implement a smarter sampling strategy
     maxHosts = Math.min(numHosts, settings.aggressive ? 2048 : 1024);
   }
   
@@ -66,28 +70,55 @@ export const scanNetwork = async (
     startTime: new Date()
   });
 
-  // Common ports for cameras
-  const commonPorts = [80, 8080, 554, 443, 8000, 8081, 8181, 9000];
-  const portScanPromises = [];
-
-  // Perform the scan
-  for (let i = 0; i < maxHosts; i++) {
-    // Check if scan has been aborted
-    if (abortSignal?.aborted) {
-      throw new Error('Scan was aborted');
-    }
-    
-    const currentIpNum = baseIpNum + i;
-    const currentIp = [
-      (currentIpNum >>> 24) & 255,
-      (currentIpNum >>> 16) & 255,
-      (currentIpNum >>> 8) & 255,
-      currentIpNum & 255
-    ].join('.');
-
-    // Update progress
-    scannedCount++;
-    if (scannedCount % 5 === 0 || scannedCount === maxHosts) {
+  // Simulate scanning - in a real implementation, we would make actual network requests
+  const simulatedScanTime = settings.aggressive ? 30000 : 45000; // 30-45 seconds for a simulated scan
+  const updatesPerSecond = 5;
+  const updateInterval = 1000 / updatesPerSecond;
+  const totalUpdates = Math.floor(simulatedScanTime / updateInterval);
+  const hostsPerUpdate = Math.ceil(maxHosts / totalUpdates);
+  
+  console.log(`Simulation parameters: 
+    - Total scan time: ${simulatedScanTime / 1000}s
+    - Hosts to scan: ${maxHosts}
+    - Updates per second: ${updatesPerSecond}
+    - Hosts per update: ${hostsPerUpdate}
+  `);
+  
+  const startScanSimulation = async () => {
+    for (let i = 0; i < totalUpdates; i++) {
+      // Check if scan has been aborted
+      if (abortSignal?.aborted) {
+        console.log("Scan was aborted during simulation");
+        throw new Error('Scan was aborted');
+      }
+      
+      // Simulate scanning a batch of IPs
+      const hostsThisUpdate = Math.min(hostsPerUpdate, maxHosts - scannedCount);
+      scannedCount += hostsThisUpdate;
+      
+      // Generate a current IP for display
+      const currentIpNum = baseIpNum + scannedCount % maxHosts;
+      const currentIp = [
+        (currentIpNum >>> 24) & 255,
+        (currentIpNum >>> 16) & 255,
+        (currentIpNum >>> 8) & 255,
+        currentIpNum & 255
+      ].join('.');
+      
+      // Simulate finding cameras (1.5-3% chance per update, adjusted by size of update)
+      const findProbability = settings.aggressive ? 0.03 : 0.015;
+      const findThreshold = findProbability * hostsThisUpdate / 10;
+      
+      if (Math.random() < findThreshold) {
+        // Simulate finding a camera
+        const cameraResult = await simulateCameraFind(currentIp, settings, abortSignal);
+        if (cameraResult && !abortSignal?.aborted) {
+          foundCount++;
+          onCameraFound(cameraResult);
+        }
+      }
+      
+      // Update progress
       onProgress({
         status: 'running',
         targetsTotal: maxHosts,
@@ -97,101 +128,129 @@ export const scanNetwork = async (
         scanSpeed: settings.aggressive ? 25 : 10, // IPs per second
         startTime: new Date()
       });
-    }
-
-    // Check if this IP is alive by attempting to fetch common camera endpoints
-    for (const port of commonPorts) {
-      // Check if scan has been aborted before starting a new port scan
-      if (abortSignal?.aborted) {
-        throw new Error('Scan was aborted');
-      }
       
-      const scanPromise = scanIpForCamera(currentIp, port, settings, abortSignal)
-        .then(async (result) => {
-          if (result) {
-            // Check if scan has been aborted before processing result
-            if (abortSignal?.aborted) return;
-            
-            foundCount++;
-            
-            // Enhance with threat intelligence if enabled
-            if (settings.checkVulnerabilities) {
-              result.threatIntel = await getComprehensiveThreatIntel(currentIp);
-              
-              if (result.firmwareVersion) {
-                result.firmwareAnalysis = await analyzeFirmware(
-                  result.brand || 'Unknown', 
-                  result.model || 'Unknown', 
-                  result.firmwareVersion
-                );
-              }
-            }
-            
-            onCameraFound(result);
-            
-            onProgress({
-              status: 'running',
-              targetsTotal: maxHosts,
-              targetsScanned: scannedCount,
-              camerasFound: foundCount,
-              currentTarget: currentIp,
-              scanSpeed: settings.aggressive ? 25 : 10,
-              startTime: new Date()
-            });
-          }
-        })
-        .catch((err) => {
-          // Silently ignore errors for IPs that don't respond
-          // But rethrow if it's an abort error
-          if (err.message === 'Scan was aborted') {
-            throw err;
-          }
-        });
-      
-      portScanPromises.push(scanPromise);
-      
-      // Throttle requests to avoid overwhelming the network
-      if (!settings.aggressive) {
-        try {
-          await new Promise((resolve, reject) => {
-            const timeout = setTimeout(resolve, 200);
-            
-            if (abortSignal) {
-              abortSignal.addEventListener('abort', () => {
-                clearTimeout(timeout);
-                reject(new Error('Scan was aborted'));
-              });
-            }
+      // Wait for next update
+      await new Promise((resolve, reject) => {
+        const timeout = setTimeout(resolve, updateInterval);
+        
+        if (abortSignal) {
+          abortSignal.addEventListener('abort', () => {
+            clearTimeout(timeout);
+            reject(new Error('Scan was aborted'));
           });
-        } catch (error) {
-          if (error instanceof Error && error.message === 'Scan was aborted') {
-            throw error;
-          }
         }
-      }
+      });
     }
-  }
-
-  // Wait for all port scans to complete, but only if not aborted
-  if (!abortSignal?.aborted) {
-    try {
-      await Promise.all(portScanPromises);
-    } catch (error) {
-      if (error instanceof Error && error.message === 'Scan was aborted') {
-        throw error;
-      }
-      // Ignore other errors from individual port scans
-    }
-
+    
     // Complete the scan
-    onProgress({
-      status: 'completed',
-      targetsTotal: maxHosts,
-      targetsScanned: maxHosts,
-      camerasFound: foundCount,
-      endTime: new Date()
-    });
+    if (!abortSignal?.aborted) {
+      onProgress({
+        status: 'completed',
+        targetsTotal: maxHosts,
+        targetsScanned: maxHosts,
+        camerasFound: foundCount,
+        endTime: new Date()
+      });
+    }
+  };
+  
+  // Start the simulation
+  try {
+    await startScanSimulation();
+  } catch (error) {
+    if (error instanceof Error && error.message === 'Scan was aborted') {
+      throw error;
+    }
+    console.error('Error during scan simulation:', error);
   }
+};
+
+/**
+ * Simulates finding a camera at the given IP
+ */
+const simulateCameraFind = async (
+  ip: string, 
+  settings: ScanSettings,
+  abortSignal?: AbortSignal
+): Promise<CameraResult | null> => {
+  if (abortSignal?.aborted) return null;
+  
+  // Simulate some processing time
+  await new Promise(resolve => setTimeout(resolve, 150));
+  if (abortSignal?.aborted) return null;
+  
+  const port = [80, 8080, 554, 443, 8000, 8081, 8181, 9000][Math.floor(Math.random() * 8)];
+  const brands = ['Hikvision', 'Dahua', 'Axis', 'Vivotek', 'Bosch', 'Samsung', 'Sony'];
+  const brand = brands[Math.floor(Math.random() * brands.length)];
+  const model = `${brand} ${Math.floor(Math.random() * 1000)}`;
+  const firmwareVersion = `${Math.floor(Math.random() * 5) + 1}.${Math.floor(Math.random() * 10)}.${Math.floor(Math.random() * 20)}`;
+  
+  let status: 'online' | 'vulnerable' | 'authenticated' = 'online';
+  let credentials = null;
+  let vulnerabilities = undefined;
+  
+  // Simulate credential testing if enabled
+  if (settings.testCredentials && Math.random() < 0.3) {
+    status = 'authenticated';
+    credentials = {
+      username: ['admin', 'root', 'user'][Math.floor(Math.random() * 3)],
+      password: ['admin', 'password', '12345', 'pass'][Math.floor(Math.random() * 4)]
+    };
+  }
+  
+  // Simulate vulnerability checking if enabled
+  if (settings.checkVulnerabilities && Math.random() < 0.4) {
+    status = 'vulnerable';
+    
+    const vulnTypes = [
+      { name: 'Default Credentials', severity: 'high' as const, description: 'Camera is using default manufacturer credentials' },
+      { name: 'CVE-2017-7921', severity: 'critical' as const, description: 'Authentication bypass vulnerability in Hikvision IP cameras' },
+      { name: 'CVE-2021-33044', severity: 'high' as const, description: 'Dahua cameras contain hard-coded credentials' },
+      { name: 'Unauthenticated RTSP', severity: 'medium' as const, description: 'RTSP stream accessible without authentication' },
+      { name: 'CVE-2018-10088', severity: 'high' as const, description: 'Buffer overflow vulnerability in ONVIF implementation' }
+    ];
+    
+    const numVulns = Math.floor(Math.random() * 3) + 1;
+    vulnerabilities = [];
+    
+    for (let i = 0; i < numVulns; i++) {
+      const vulnIndex = Math.floor(Math.random() * vulnTypes.length);
+      vulnerabilities.push(vulnTypes[vulnIndex]);
+    }
+  }
+  
+  // Create the camera result
+  const result: CameraResult = {
+    id: `${ip}:${port}`,
+    ip,
+    port,
+    brand,
+    model,
+    firmwareVersion,
+    url: `rtsp://${ip}:${port === 554 ? 554 : port}/Streaming/Channels/101`,
+    snapshotUrl: `http://${ip}:${port}/cgi-bin/snapshot.cgi`,
+    status,
+    credentials,
+    vulnerabilities,
+    lastSeen: new Date().toISOString(),
+    responseTime: Math.floor(Math.random() * 200) + 50,
+    accessLevel: credentials ? 'admin' : 'view'
+  };
+  
+  // Add threat intel if enabled
+  if (settings.checkVulnerabilities) {
+    result.threatIntel = await getComprehensiveThreatIntel(ip);
+    
+    if (result.firmwareVersion) {
+      result.firmwareAnalysis = await analyzeFirmware(
+        result.brand || 'Unknown', 
+        result.model || 'Unknown', 
+        result.firmwareVersion
+      );
+    }
+  }
+  
+  return result;
 };
 
 /**
@@ -209,12 +268,14 @@ const handleSearchEngineQuery = async (
   if (abortSignal?.aborted) {
     throw new Error('Scan was aborted');
   }
+
+  console.log(`Handling ${searchEngine} query: ${query}`);
   
   // This would be connected to actual APIs in a real implementation
   // For now, we'll simulate the search results
   
   // Estimated number of results we'll process
-  const estimatedResults = 50;
+  const estimatedResults = Math.floor(Math.random() * 20) + 10; // 10-30 results
   
   onProgress({
     status: 'running',
@@ -224,10 +285,11 @@ const handleSearchEngineQuery = async (
     startTime: new Date()
   });
   
-  // Simulate API call time
+  // Simulate API call time - search engines take time to respond
+  const apiCallTime = Math.floor(Math.random() * 2000) + 2000; // 2-4 seconds
   try {
     await new Promise((resolve, reject) => {
-      const timeout = setTimeout(resolve, 1500);
+      const timeout = setTimeout(resolve, apiCallTime);
       
       if (abortSignal) {
         abortSignal.addEventListener('abort', () => {
@@ -253,7 +315,7 @@ const handleSearchEngineQuery = async (
   
   let foundCount = 0;
   
-  // Process each result
+  // Process each result with realistic timing
   for (let i = 0; i < simulatedResults.length; i++) {
     // Check if scan has been aborted
     if (abortSignal?.aborted) {
@@ -262,10 +324,11 @@ const handleSearchEngineQuery = async (
     
     const result = simulatedResults[i];
     
-    // Simulate processing time
+    // Simulate processing time - vary between 100-400ms per result
+    const processingTime = Math.floor(Math.random() * 300) + 100;
     try {
       await new Promise((resolve, reject) => {
-        const timeout = setTimeout(resolve, 100);
+        const timeout = setTimeout(resolve, processingTime);
         
         if (abortSignal) {
           abortSignal.addEventListener('abort', () => {
@@ -282,7 +345,7 @@ const handleSearchEngineQuery = async (
     
     // Create a camera result from the search engine data
     const cameraResult: CameraResult = {
-      id: `${result.ip}:${result.port}`,
+      id: `${searchEngine}-${result.ip}:${result.port}`,
       ip: result.ip,
       port: result.port,
       brand: result.vendor,
@@ -293,7 +356,7 @@ const handleSearchEngineQuery = async (
       status: result.vulnerable ? 'vulnerable' : 'online',
       credentials: null,
       vulnerabilities: result.vulnerable ? [{
-        name: 'Search Engine Detected Vulnerability',
+        name: `${searchEngine.charAt(0).toUpperCase() + searchEngine.slice(1)} Detected Vulnerability`,
         severity: 'medium',
         description: `Vulnerability detected through ${searchEngine} search`
       }] : undefined,
@@ -305,6 +368,19 @@ const handleSearchEngineQuery = async (
     // Add location if available
     if (result.location) {
       cameraResult.location = result.location;
+    }
+    
+    // Add threat intel if enabled in settings
+    if (settings.checkVulnerabilities) {
+      cameraResult.threatIntel = await getComprehensiveThreatIntel(result.ip);
+      
+      if (cameraResult.firmwareVersion) {
+        cameraResult.firmwareAnalysis = await analyzeFirmware(
+          cameraResult.brand || 'Unknown',
+          cameraResult.model || 'Unknown',
+          cameraResult.firmwareVersion
+        );
+      }
     }
     
     // Add the result

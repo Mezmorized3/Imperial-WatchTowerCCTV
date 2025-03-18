@@ -8,7 +8,7 @@ import { ScanTarget, ScanSettings, ScanProgress, CameraResult } from '@/types/sc
 import { scanNetwork } from '@/utils/networkScanner';
 import { Toaster } from '@/components/ui/toaster';
 import { useToast } from '@/components/ui/use-toast';
-import { AlertCircle } from 'lucide-react';
+import { AlertCircle, Info, ShieldAlert } from 'lucide-react';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 
 const Index = () => {
@@ -60,7 +60,7 @@ const Index = () => {
       }
     } else if (['shodan', 'zoomeye', 'censys'].includes(target.type)) {
       // For search engine queries, set an estimated number
-      targetsTotal = 50;
+      targetsTotal = Math.floor(Math.random() * 20) + 10; // 10-30 results
       toast({
         title: `${target.type.charAt(0).toUpperCase() + target.type.slice(1)} Query`,
         description: `Scanning using ${target.type} query: ${target.value}`,
@@ -79,8 +79,16 @@ const Index = () => {
     });
     
     toast({
-      title: "Network Scan Started",
+      title: "Scan Started",
       description: `Starting scan of ${target.value} with ${settings.aggressive ? 'aggressive' : 'standard'} settings`,
+    });
+    
+    // Show browser limitation notice
+    toast({
+      title: "Browser Limitation Notice",
+      description: "This demo uses simulation since browsers don't allow direct network scanning. In a real application, this would connect to a backend service.",
+      duration: 8000,
+      variant: "default",
     });
     
     try {
@@ -94,7 +102,7 @@ const Index = () => {
         scanInProgressRef.current = false;
       };
       
-      // Start real network scan with scan type
+      // Start scan with appropriate scan type
       await scanNetwork(
         ipRange,
         settings,
@@ -109,6 +117,7 @@ const Index = () => {
         (camera) => {
           if (abortController.signal.aborted) return;
           
+          // Use a function form of setState to avoid stale closures
           setResults(prev => [...prev, camera]);
           setScanProgress(prev => ({
             ...prev,
@@ -131,11 +140,15 @@ const Index = () => {
           };
           
           const elapsedTime = calculateElapsedTime(updatedState.startTime!);
-          toast({
-            title: "Scan Completed",
-            description: `Found ${results.length} cameras in ${elapsedTime}.`,
-            variant: "default",
-          });
+          const resultsLength = results.length;
+          
+          setTimeout(() => {
+            toast({
+              title: "Scan Completed",
+              description: `Found ${resultsLength} cameras in ${elapsedTime}.`,
+              variant: "default",
+            });
+          }, 0);
           
           return updatedState;
         });
@@ -195,6 +208,16 @@ const Index = () => {
             <AlertDescription>{error}</AlertDescription>
           </Alert>
         )}
+        
+        <Alert variant="default" className="mb-6 border-scanner-info bg-scanner-dark-alt">
+          <Info className="h-4 w-4 text-scanner-info" />
+          <AlertTitle>Browser Limitation</AlertTitle>
+          <AlertDescription>
+            Real network scanning cannot be performed directly in a web browser due to security restrictions.
+            This demo uses simulation to demonstrate the UI. In a production environment, scanning would be 
+            performed by a backend service or desktop application.
+          </AlertDescription>
+        </Alert>
         
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-1">
