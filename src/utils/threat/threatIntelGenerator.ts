@@ -1,5 +1,6 @@
 
 import { ThreatIntelData } from '@/types/scanner';
+import { getRandomMalwareNames, getRandomReporters, getRandomTags } from './threatDataGenerators';
 
 /**
  * Generate simulated threat intelligence data for an IP
