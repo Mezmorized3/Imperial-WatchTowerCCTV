@@ -139,6 +139,43 @@ export const searchOpenDirectories = async (
 };
 
 /**
+ * Simulates searching for a username across various platforms
+ */
+export const searchUsername = async (username: string) => {
+  await simulateNetworkDelay(1500);
+  
+  // Simulate platforms we might search
+  const platforms = [
+    'Twitter', 'Instagram', 'Facebook', 'LinkedIn', 'GitHub', 
+    'Reddit', 'YouTube', 'TikTok', 'Pinterest', 'Tumblr',
+    'Flickr', 'Twitch', 'DeviantArt', 'Spotify', 'SoundCloud'
+  ];
+  
+  // Generate simulated results
+  const results = platforms.map(platform => {
+    // Randomly determine if the username exists on this platform
+    const exists = Math.random() > 0.3; // 70% chance of existing
+    const baseUrl = platform.toLowerCase().replace(' ', '');
+    
+    return {
+      platform,
+      url: exists ? `https://www.${baseUrl}.com/${username}` : `https://www.${baseUrl}.com`,
+      exists,
+      username,
+      note: exists ? 
+        'Profile found' : 
+        `Username ${username} not found on ${platform}`
+    };
+  });
+  
+  return { 
+    success: true,
+    username,
+    results
+  };
+};
+
+/**
  * Perform a Google dork search for cameras and other web resources
  * This simulates what a real google dork search would return
  */

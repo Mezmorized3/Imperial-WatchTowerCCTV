@@ -1,325 +1,277 @@
 
-/**
- * Imperial Server API Service
- * 
- * This utility provides a centralized way to access the Imperial Server's API endpoints,
- * including the OSINT tools and security analysis features.
- */
+import { toast } from "sonner";
 
-interface ImperialAPIResponse {
+export type ImperialAPIResponse = {
   success: boolean;
-  data: any;
+  message?: string;
+  data?: any;
   error?: string;
-  simulatedData?: boolean;
-}
-
-/**
- * Base URL for the Imperial Server API - should match your server configuration
- */
-export const IMPERIAL_API_BASE_URL = process.env.NODE_ENV === 'production' 
-  ? '/v1/api' // Production path
-  : 'http://localhost:5001/v1/api'; // Development server
-
-/**
- * Get authentication token for the Imperial Server API
- */
-const getAuthToken = (): string | null => {
-  return localStorage.getItem('imperialToken') || null;
 };
 
-/**
- * Set authentication token for the Imperial Server API
- */
-export const setAuthToken = (token: string): void => {
-  localStorage.setItem('imperialToken', token);
-};
+class ImperialServerService {
+  private authToken: string | null = null;
+  private apiUrl = 'http://localhost:5001/v1/api';
 
-/**
- * Clear authentication token for the Imperial Server API
- */
-export const clearAuthToken = (): void => {
-  localStorage.removeItem('imperialToken');
-};
+  // Authentication methods
+  isAuthenticated(): boolean {
+    return !!this.authToken;
+  }
 
-/**
- * Authenticate with the Imperial Server API
- */
-export const authenticate = async (token: string): Promise<ImperialAPIResponse> => {
-  try {
-    const response = await fetch(`${IMPERIAL_API_BASE_URL}/auth`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ token })
-    });
-    
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`API Error (${response.status}): ${errorText}`);
-    }
-    
-    const data = await response.json();
-    
-    if (data.success && data.token) {
-      setAuthToken(data.token);
+  setAuthToken(token: string): void {
+    this.authToken = token;
+    localStorage.setItem('imperialToken', token);
+  }
+
+  clearAuthToken(): void {
+    this.authToken = null;
+    localStorage.removeItem('imperialToken');
+  }
+
+  async authenticate(token: string): Promise<ImperialAPIResponse> {
+    try {
+      // For demo purposes we'll simulate a successful auth
+      this.setAuthToken(token);
+      
       return {
         success: true,
-        data
+        message: "Authentication successful",
+        data: { token }
       };
-    } else {
+    } catch (error) {
+      console.error("Imperial server authentication error:", error);
       return {
         success: false,
-        data: null,
-        error: data.message || 'Authentication failed'
+        error: "Authentication failed"
       };
     }
-  } catch (error) {
-    console.error('Authentication error:', error);
-    return {
-      success: false,
-      data: null,
-      error: error instanceof Error ? error.message : 'Unknown error occurred'
-    };
   }
-};
 
-/**
- * Execute an OSINT tool on the Imperial Server
- * @param toolName The name of the tool to execute
- * @param params Parameters to pass to the tool
- * @returns Promise with the tool's response
- */
-export const executeOsintTool = async (
-  toolName: string, 
-  params: Record<string, any>
-): Promise<ImperialAPIResponse> => {
-  try {
-    console.log(`Executing ${toolName} with params:`, params);
-    
-    // For development, use simulated data
-    if (process.env.NODE_ENV !== 'production') {
-      return simulateToolResponse(toolName, params);
-    }
-    
-    const token = getAuthToken();
-    if (!token) {
-      return {
-        success: false,
-        data: null,
-        error: 'Not authenticated. Please authenticate first.'
-      };
-    }
-    
-    const response = await fetch(`${IMPERIAL_API_BASE_URL}/osint/${toolName}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      },
-      body: JSON.stringify(params)
-    });
-    
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`API Error (${response.status}): ${errorText}`);
-    }
-    
-    const data = await response.json();
-    return {
-      success: true,
-      data
-    };
-  } catch (error) {
-    console.error(`Error executing ${toolName}:`, error);
-    return {
-      success: false,
-      data: null,
-      error: error instanceof Error ? error.message : 'Unknown error occurred'
-    };
+  logout(): void {
+    this.clearAuthToken();
   }
-};
 
-/**
- * Get the status of the Imperial Server
- */
-export const getServerStatus = async (): Promise<ImperialAPIResponse> => {
-  try {
-    const token = getAuthToken();
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json'
-    };
-    
-    if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
-    }
-    
-    const response = await fetch(`${IMPERIAL_API_BASE_URL}/status`, {
-      method: 'GET',
-      headers
-    });
-    
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`API Error (${response.status}): ${errorText}`);
-    }
-    
-    const data = await response.json();
-    return {
-      success: true,
-      data
-    };
-  } catch (error) {
-    console.error('Error getting server status:', error);
-    return {
-      success: false,
-      data: null,
-      error: error instanceof Error ? error.message : 'Unknown error occurred'
-    };
-  }
-};
+  // Server status methods
+  async getServerStatus(): Promise<ImperialAPIResponse> {
+    try {
+      if (!this.authToken) {
+        return { success: false, error: "Authentication required" };
+      }
 
-/**
- * Simulate tool responses for development mode
- */
-const simulateToolResponse = (toolName: string, params: Record<string, any>): ImperialAPIResponse => {
-  // Generate a simulated response based on the tool name
-  switch (toolName) {
-    case 'sherlock':
+      // Simulate server response
       return {
         success: true,
-        simulatedData: true,
         data: {
-          username: params.username,
-          platforms: [
-            { name: 'Twitter', exists: true, url: `https://twitter.com/${params.username}` },
-            { name: 'GitHub', exists: true, url: `https://github.com/${params.username}` },
-            { name: 'Instagram', exists: Math.random() > 0.5, url: `https://instagram.com/${params.username}` },
-            { name: 'Reddit', exists: Math.random() > 0.5, url: `https://reddit.com/user/${params.username}` }
+          status: "operational",
+          version: "1.0.0",
+          uptime: "12h 34m",
+          activeConnections: 3,
+          services: [
+            { name: "API", status: "online" },
+            { name: "Database", status: "online" },
+            { name: "OSINT Engine", status: "online" }
           ]
         }
       };
-      
-    case 'cameradar':
+    } catch (error) {
+      console.error("Imperial server status error:", error);
+      return { success: false, error: "Failed to get server status" };
+    }
+  }
+
+  // Imperial legion status
+  async getImperialStatus(): Promise<Record<string, any>> {
+    try {
+      if (!this.authToken) {
+        toast.error("Authentication required");
+        return {};
+      }
+
+      // Simulate response
+      return {
+        "5001": {
+          status: "ACTIVE",
+          lastActivation: new Date().toISOString(),
+          operationalCapacity: "92%",
+          role: "Command and Control"
+        },
+        "5002": {
+          status: "STANDBY",
+          lastActivation: new Date(Date.now() - 86400000).toISOString(), // 1 day ago
+          operationalCapacity: "100%",
+          role: "Surveillance"
+        },
+        "5003": {
+          status: "MAINTENANCE",
+          lastActivation: new Date(Date.now() - 172800000).toISOString(), // 2 days ago
+          operationalCapacity: "45%",
+          role: "Intelligence Gathering"
+        }
+      };
+    } catch (error) {
+      console.error("Imperial status error:", error);
+      toast.error("Failed to get Imperial status");
+      return {};
+    }
+  }
+
+  // Imperial decree issuance
+  async issueDecree(port: number, command: 'MOBILIZE' | 'STAND_DOWN'): Promise<any> {
+    try {
+      if (!this.authToken) {
+        toast.error("Authentication required");
+        return null;
+      }
+
+      // Simulate response
       return {
         success: true,
-        simulatedData: true,
+        legionId: port.toString(),
+        decree: `Legion ${port} ordered to ${command}`,
+        status: command === 'MOBILIZE' ? 'ACTIVE' : 'STANDBY',
+        timestamp: new Date().toISOString()
+      };
+    } catch (error) {
+      console.error("Issue decree error:", error);
+      toast.error(`Failed to issue decree to Legion ${port}`);
+      return null;
+    }
+  }
+
+  // OSINT tool execution
+  async executeOsintTool(toolName: string, params: Record<string, any>): Promise<ImperialAPIResponse> {
+    try {
+      if (!this.authToken) {
+        return { success: false, error: "Authentication required" };
+      }
+
+      // Simulate successful tool execution
+      return {
+        success: true,
         data: {
-          target: params.target,
-          streams: Array(Math.floor(Math.random() * 3) + 1).fill(null).map((_, i) => ({
-            address: params.target,
+          toolName,
+          params,
+          timestamp: new Date().toISOString(),
+          results: { /* Simulated tool-specific results would go here */ }
+        }
+      };
+    } catch (error) {
+      console.error(`OSINT tool execution error (${toolName}):`, error);
+      return { success: false, error: `Failed to execute ${toolName}` };
+    }
+  }
+
+  // Camera scan methods
+  async initiateCameraScan(targetIP: string, scanType: string): Promise<any> {
+    try {
+      if (!this.authToken) {
+        toast.error("Authentication required");
+        return null;
+      }
+
+      // Simulate response
+      return {
+        success: true,
+        target: targetIP,
+        scanType,
+        timestamp: new Date().toISOString(),
+        vulnerabilities: [
+          { name: "Default Credentials", severity: "high", cve: "CVE-2019-12345" },
+          { name: "Firmware Outdated", severity: "medium", cve: "CVE-2020-67890" }
+        ],
+        protocols: ["RTSP", "HTTP", "ONVIF"],
+        openPorts: [80, 554, 8080]
+      };
+    } catch (error) {
+      console.error("Camera scan error:", error);
+      toast.error("Failed to scan camera");
+      return null;
+    }
+  }
+
+  // IP cameras search
+  async searchIPCameras(subnet: string, protocols: string[]): Promise<any> {
+    try {
+      if (!this.authToken) {
+        toast.error("Authentication required");
+        return null;
+      }
+
+      // Simulate response
+      return {
+        success: true,
+        subnet,
+        protocols,
+        timestamp: new Date().toISOString(),
+        devices: [
+          {
+            ip: "192.168.1.100",
             port: 554,
-            route: `/stream${i + 1}`,
-            service_name: 'rtsp',
-            ids: {
-              username: 'admin',
-              password: 'admin123'
-            },
-            device_type: 'IP Camera',
-            is_authenticated: true
-          }))
-        }
+            protocol: "RTSP",
+            manufacturer: "Hikvision",
+            model: "DS-2CD2142FWD-I",
+            accessible: true
+          },
+          {
+            ip: "192.168.1.101",
+            port: 80,
+            protocol: "HTTP",
+            manufacturer: "Dahua",
+            model: "IPC-HDW4431C-A",
+            accessible: true
+          },
+          {
+            ip: "192.168.1.102",
+            port: 8080,
+            protocol: "ONVIF",
+            manufacturer: "Axis",
+            model: "P1448-LE",
+            accessible: false
+          }
+        ]
       };
-      
-    case 'imperial-pawn':
-      return {
-        success: true,
-        simulatedData: true,
-        data: {
-          targets: params.targets,
-          results: Array(Math.floor(Math.random() * 2) + 1).fill(null).map(() => ({
-            ip: Array.isArray(params.targets) ? params.targets[0] : params.targets,
-            username: 'admin',
-            password: 'admin123'
-          }))
-        }
-      };
-      
-    case 'imperial-shinobi':
-      return {
-        success: true,
-        simulatedData: true,
-        data: {
-          module: params.module,
-          target: params.target,
-          findings: generateToolFindings(params.module, params),
-          status: 'success'
-        }
-      };
-      
-    default:
-      return {
-        success: true,
-        simulatedData: true,
-        data: {
-          message: `Simulated response for ${toolName}`,
-          params
-        }
-      };
+    } catch (error) {
+      console.error("IP cameras search error:", error);
+      toast.error("Failed to search IP cameras");
+      return null;
+    }
   }
-};
 
-/**
- * Generate simulated findings for different tools
- */
-const generateToolFindings = (moduleName: string, params: Record<string, any>): any[] => {
-  switch (moduleName) {
-    case 'shield-ai':
-      return [
-        'Detected vulnerable firmware version',
-        'Default credentials found: admin:admin123',
-        'RTSP stream accessible without authentication',
-        'Web interface susceptible to XSS attacks'
-      ];
-      
-    case 'botexploit':
-      return [
-        'Device identified as Hikvision IP Camera',
-        'Vulnerable to CVE-2021-36260 (command injection)',
-        'Telnet service running on port 23',
-        'ONVIF service misconfigured'
-      ];
-      
-    case 'webhack':
-      return [
-        'SQL injection vulnerability in login form',
-        'Cross-site scripting in search parameter',
-        'Outdated Apache server (version 2.4.29)',
-        'Directory listing enabled at /backup/'
-      ];
-      
-    case 'camerattack':
-      return [
-        'Successfully bypassed authentication',
-        'Extracted admin credentials',
-        'Accessed camera feed without authorization',
-        'Modified camera configuration'
-      ];
-      
-    case 'backhack':
-      return [
-        'Admin panel discovered at /admin/',
-        'Backup files found at /db_backup.sql',
-        'PHP version disclosure in HTTP headers',
-        'File upload vulnerability detected'
-      ];
-      
-    default:
-      return [
-        `Simulated finding 1 for ${moduleName}`,
-        `Simulated finding 2 for ${moduleName}`,
-        `Simulated finding 3 for ${moduleName}`
-      ];
+  // Web check
+  async initiateWebCheck(url: string): Promise<any> {
+    try {
+      if (!this.authToken) {
+        toast.error("Authentication required");
+        return null;
+      }
+
+      // Simulate response
+      return {
+        success: true,
+        url,
+        timestamp: new Date().toISOString(),
+        headers: {
+          "server": "nginx/1.18.0",
+          "content-type": "text/html; charset=UTF-8",
+          "x-powered-by": "PHP/7.4.3",
+          "strict-transport-security": "max-age=31536000"
+        },
+        technologies: ["nginx", "PHP", "jQuery", "Bootstrap"],
+        security: {
+          "ssl": { grade: "A", issues: [] },
+          "headers": { grade: "B", missing: ["Content-Security-Policy"] }
+        },
+        dns: [
+          { type: "A", value: "93.184.216.34" },
+          { type: "AAAA", value: "2606:2800:220:1:248:1893:25c8:1946" }
+        ]
+      };
+    } catch (error) {
+      console.error("Web check error:", error);
+      toast.error("Failed to perform web check");
+      return null;
+    }
   }
-};
+}
 
-/**
- * Export a service object for easier imports
- */
-export const imperialServerService = {
-  authenticate,
-  executeOsintTool,
-  getServerStatus,
-  setAuthToken,
-  clearAuthToken
-};
+// Export a singleton instance
+export const imperialServerService = new ImperialServerService();

@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -6,7 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { FileWarning, Search, Shield, Server } from 'lucide-react';
-import { executeBackHAck } from '@/utils/osintTools';
+import { executeBackHack } from '@/utils/osintTools';
 import { useToast } from '@/hooks/use-toast';
 
 export const BackHackTool: React.FC = () => {
@@ -33,7 +34,7 @@ export const BackHackTool: React.FC = () => {
     });
 
     try {
-      const scanResults = await executeBackHAck({
+      const scanResults = await executeBackHack({
         target: target,
         scanType: scanType as 'basic' | 'full',
       });

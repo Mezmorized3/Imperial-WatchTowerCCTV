@@ -1,194 +1,112 @@
 
-/**
- * Utilities for threat intelligence data
- */
-import { simulateNetworkDelay } from './networkUtils';
-
-export type ThreatIntelData = {
-  threatScore: number;
-  classifications: string[];
-  firstSeen?: string;
-  lastSeen?: string;
-  malwareSamples?: {
-    name: string;
-    type: string;
-    firstSeen: string;
-  }[];
-  activityLog?: {
-    date: string;
-    activity: string;
-    severity: 'low' | 'medium' | 'high' | 'critical';
-  }[];
-};
+import { ThreatIntelData } from '@/types/scanner';
 
 /**
- * Get comprehensive threat intelligence for an IP
+ * Generate simulated threat intelligence data for an IP
  */
-export const getComprehensiveThreatIntel = async (ip: string): Promise<ThreatIntelData> => {
-  await simulateNetworkDelay();
+export const generateThreatIntelligence = (ip: string): ThreatIntelData => {
+  // Random confidence score between 0 and 100
+  const confidenceScore = Math.floor(Math.random() * 100);
   
-  // Generate a threat score based on the IP (for simulation)
-  const ipParts = ip.split('.');
-  const lastOctet = parseInt(ipParts[ipParts.length - 1]);
+  // Random reputation score between 0 and 100
+  const ipReputation = Math.floor(Math.random() * 100);
   
-  // Make the last octet influence the threat score (for demo purposes)
-  // Higher last octets will have higher threat scores
-  const threatScore = Math.min(100, Math.round((lastOctet / 255) * 100));
+  // Calculate date strings
+  const now = new Date();
+  const daysAgo = Math.floor(Math.random() * 90); // Up to 90 days ago
+  const firstSeen = new Date(now.getTime() - (daysAgo * 86400000)).toISOString();
   
-  // Generate random classifications based on the threat score
-  const possibleClassifications = [
-    'Malware C2', 'Botnet Node', 'Spam', 'Scanning', 'Brute Force', 
-    'Web Attacks', 'Phishing', 'Proxy', 'TOR Exit Node', 'Cryptocurrency Mining'
-  ];
-  
-  // Higher threat score means more classifications
-  const numClassifications = Math.max(1, Math.floor(threatScore / 20));
-  const classifications = [];
-  
-  // Select random classifications without duplicates
-  const shuffled = [...possibleClassifications].sort(() => 0.5 - Math.random());
-  for (let i = 0; i < numClassifications; i++) {
-    classifications.push(shuffled[i]);
-  }
-  
-  // Generate first seen date (higher threat score = seen longer ago)
-  const daysAgo = Math.floor((threatScore / 100) * 365) + 1;
-  const firstSeen = new Date(Date.now() - daysAgo * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-  
-  // Generate last seen date (higher threat score = seen more recently)
-  const lastSeenDaysAgo = Math.max(0, Math.floor((1 - threatScore / 100) * 30));
-  const lastSeen = new Date(Date.now() - lastSeenDaysAgo * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-  
-  // Generate malware samples if threat score is high enough
-  let malwareSamples = undefined;
-  if (threatScore > 70) {
-    const possibleMalware = [
-      { name: 'Emotet', type: 'Trojan' },
-      { name: 'TrickBot', type: 'Banking Trojan' },
-      { name: 'Dridex', type: 'Banking Malware' },
-      { name: 'Maze', type: 'Ransomware' },
-      { name: 'Ryuk', type: 'Ransomware' },
-      { name: 'ZeuS', type: 'Banking Trojan' },
-      { name: 'CobaltStrike', type: 'Penetration Testing' },
-      { name: 'Mirai', type: 'IoT Botnet' }
-    ];
-    
-    const numSamples = Math.floor(Math.random() * 3) + 1;
-    malwareSamples = [];
-    
-    for (let i = 0; i < numSamples; i++) {
-      const sample = possibleMalware[Math.floor(Math.random() * possibleMalware.length)];
-      const sampleDaysAgo = Math.floor(Math.random() * 180) + 1;
-      const sampleDate = new Date(Date.now() - sampleDaysAgo * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-      
-      malwareSamples.push({
-        ...sample,
-        firstSeen: sampleDate
-      });
-    }
-  }
-  
-  // Generate activity log if threat score is medium or higher
-  let activityLog = undefined;
-  if (threatScore > 30) {
-    activityLog = [];
-    const numActivities = Math.floor((threatScore / 100) * 10) + 1;
-    
-    const possibleActivities = [
-      { activity: 'Port scan detected', severity: 'low' as const },
-      { activity: 'Multiple failed login attempts', severity: 'medium' as const },
-      { activity: 'Suspicious outbound connection', severity: 'medium' as const },
-      { activity: 'Malware communication detected', severity: 'high' as const },
-      { activity: 'Data exfiltration attempt', severity: 'high' as const },
-      { activity: 'Ransomware communication', severity: 'critical' as const }
-    ];
-    
-    for (let i = 0; i < numActivities; i++) {
-      const activity = possibleActivities[Math.floor(Math.random() * possibleActivities.length)];
-      const activityDaysAgo = Math.floor(Math.random() * 30) + 1;
-      const activityDate = new Date(Date.now() - activityDaysAgo * 24 * 60 * 60 * 1000).toISOString();
-      
-      activityLog.push({
-        date: activityDate,
-        activity: activity.activity,
-        severity: activity.severity
-      });
-    }
-    
-    // Sort by date, most recent first
-    activityLog.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-  }
-  
-  return {
-    threatScore,
-    classifications,
-    firstSeen,
-    lastSeen,
-    malwareSamples,
-    activityLog
+  // If reputation is low, add malicious report details
+  let threatIntel: ThreatIntelData = {
+    ipReputation,
+    confidenceScore,
+    source: Math.random() > 0.7 ? 'virustotal' : 
+            Math.random() > 0.5 ? 'abuseipdb' : 
+            Math.random() > 0.2 ? 'threatfox' : 'other',
   };
-};
-
-/**
- * Check vulnerability database for firmware vulnerabilities
- */
-export const analyzeFirmware = async (
-  manufacturer: string, 
-  model: string, 
-  version: string
-): Promise<any> => {
-  await simulateNetworkDelay();
   
-  // For demonstration, if the version number's first digit is low, show more vulnerabilities
-  const majorVersion = parseInt(version.split('.')[0]);
-  const isVulnerable = majorVersion < 3; // Older versions are more vulnerable
-  
-  if (!isVulnerable) {
-    return {
-      vulnerabilities: [],
-      latestVersion: `${majorVersion + 1}.0.0`,
-      updateAvailable: true,
-      risk: 'low'
+  // For lower reputation IPs, add more threat data
+  if (ipReputation < 50) {
+    const reportedDaysAgo = Math.floor(Math.random() * daysAgo);
+    
+    threatIntel = {
+      ...threatIntel,
+      lastReportedMalicious: new Date(now.getTime() - (reportedDaysAgo * 86400000)).toISOString(),
+      associatedMalware: getRandomMalwareNames(),
+      reportedBy: getRandomReporters(),
+      firstSeen,
+      tags: getRandomTags()
     };
   }
   
-  // Generate list of potential vulnerabilities
-  const vulnerabilities = [
-    {
-      cve: 'CVE-2019-1234',
-      severity: 'high',
-      description: 'Buffer overflow in web interface allows remote code execution',
-      affectedVersions: 'All versions below 3.0.0'
-    },
-    {
-      cve: 'CVE-2020-5678',
-      severity: 'medium',
-      description: 'Default credentials vulnerability allows unauthorized access',
-      affectedVersions: 'All versions below 2.5.0'
-    },
-    {
-      cve: 'CVE-2018-9012',
-      severity: 'critical',
-      description: 'Remote command injection through RTSP stack',
-      affectedVersions: 'All versions below 2.0.0'
-    }
+  return threatIntel;
+};
+
+/**
+ * Get random malware names for threat intelligence
+ */
+const getRandomMalwareNames = (): string[] => {
+  const malwareNames = [
+    'Emotet', 'TrickBot', 'Dridex', 'Ryuk', 'WannaCry', 
+    'NotPetya', 'Maze', 'Conti', 'REvil', 'LockBit',
+    'CobaltStrike', 'BlackMatter', 'DarkSide', 'PlugX', 'SUNBURST'
   ];
   
-  // Filter vulnerabilities based on version
-  const applicableVulnerabilities = vulnerabilities.filter(v => {
-    if (v.cve.includes('2018') && majorVersion < 2) return true;
-    if (v.cve.includes('2019') && majorVersion < 3) return true;
-    if (v.cve.includes('2020') && majorVersion < 2.5) return true;
-    return false;
-  });
+  const count = Math.floor(Math.random() * 3) + 1;
+  const result: string[] = [];
   
-  return {
-    vulnerabilities: applicableVulnerabilities,
-    latestVersion: `${majorVersion + 2}.0.0`,
-    updateAvailable: true,
-    risk: applicableVulnerabilities.length > 0 ? 
-      (applicableVulnerabilities.some(v => v.severity === 'critical') ? 'critical' : 
-       applicableVulnerabilities.some(v => v.severity === 'high') ? 'high' : 'medium') 
-      : 'low'
-  };
+  for (let i = 0; i < count; i++) {
+    const index = Math.floor(Math.random() * malwareNames.length);
+    if (!result.includes(malwareNames[index])) {
+      result.push(malwareNames[index]);
+    }
+  }
+  
+  return result;
+};
+
+/**
+ * Get random reporter names for threat intelligence
+ */
+const getRandomReporters = (): string[] => {
+  const reporters = [
+    'VirusTotal', 'AbuseIPDB', 'ThreatFox', 'AlienVault OTX',
+    'IBM X-Force', 'Mandiant', 'CrowdStrike', 'Symantec',
+    'Kaspersky', 'ESET', 'Palo Alto Networks', 'Microsoft'
+  ];
+  
+  const count = Math.floor(Math.random() * 3) + 1;
+  const result: string[] = [];
+  
+  for (let i = 0; i < count; i++) {
+    const index = Math.floor(Math.random() * reporters.length);
+    if (!result.includes(reporters[index])) {
+      result.push(reporters[index]);
+    }
+  }
+  
+  return result;
+};
+
+/**
+ * Get random tags for threat intelligence
+ */
+const getRandomTags = (): string[] => {
+  const tags = [
+    'c2', 'phishing', 'ransomware', 'spam', 'tor-exit-node',
+    'scanner', 'brute-force', 'ddos', 'proxy', 'botnet',
+    'malware-hosting', 'exploit-kit', 'crypto-mining', 'apt'
+  ];
+  
+  const count = Math.floor(Math.random() * 4) + 1;
+  const result: string[] = [];
+  
+  for (let i = 0; i < count; i++) {
+    const index = Math.floor(Math.random() * tags.length);
+    if (!result.includes(tags[index])) {
+      result.push(tags[index]);
+    }
+  }
+  
+  return result;
 };

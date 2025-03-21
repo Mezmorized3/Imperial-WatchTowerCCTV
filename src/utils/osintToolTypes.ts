@@ -14,6 +14,7 @@ export type ToolParams = {
   mode?: string;
   country?: string;
   limit?: number | string;
+  timeout?: number;
 };
 
 export type ToolResult = {
@@ -99,6 +100,10 @@ export type TorBotParams = {
 export type WebhackParams = {
   url: string;
   scanType?: string;
+  findVulnerabilities?: boolean;
+  checkHeaders?: boolean;
+  testXss?: boolean;
+  testSql?: boolean;
 };
 
 export type SpeedCameraParams = {
@@ -129,19 +134,29 @@ export type ShieldAIParams = {
   target: string;
   mode?: string;
   depth?: string;
+  aiModel?: string;
 };
 
 export type BotExploitsParams = {
   target: string;
   scanType?: string;
+  timeout?: number;
 };
 
 export type CamerattackParams = {
   target: string;
   mode?: string;
+  duration?: number;
+  rate?: number;
 };
 
 export type BackHackParams = {
   target: string;
   scanType?: string;
+};
+
+export type PhotonParams = {
+  url: string;
+  depth?: number;
+  timeout?: number;
 };

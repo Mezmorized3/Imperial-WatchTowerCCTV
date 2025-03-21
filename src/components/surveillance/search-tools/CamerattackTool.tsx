@@ -52,7 +52,7 @@ export const CamerattackTool: React.FC = () => {
       const formattedIP = targetIP.trim();
       const scanResults = await executeCamerattack({
         target: formattedIP,
-        method: attackType,  // Change 'mode' to 'method' to match the CamerattackParams type
+        mode: attackType,
         duration: parseInt(duration),
         rate: parseInt(rate)
       });

@@ -54,7 +54,7 @@ export const WebHackTool: React.FC = () => {
     try {
       const formattedUrl = url.startsWith('http') ? url : `https://${url}`;
       const scanResults = await executeWebhack({
-        target: formattedUrl,
+        url: formattedUrl,
         scanType: scanType as 'basic' | 'full',
         findVulnerabilities,
         checkHeaders,

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -25,7 +24,6 @@ export const UsernameSearchTool: React.FC = () => {
   const [pythonApiAvailable, setPythonApiAvailable] = useState<boolean | null>(null);
   const [apiChecked, setApiChecked] = useState(false);
 
-  // Check Python API availability on component mount
   React.useEffect(() => {
     const checkApi = async () => {
       const status = await checkPythonApiStatus();
@@ -42,7 +40,6 @@ export const UsernameSearchTool: React.FC = () => {
     checkApi();
   }, []);
 
-  // Handle username search
   const handleSearch = async () => {
     if (!username.trim()) {
       toast({
@@ -64,7 +61,6 @@ export const UsernameSearchTool: React.FC = () => {
     try {
       let result;
       
-      // Try to use Python API first if available
       if (pythonApiAvailable) {
         const pythonResponse = await executePythonTool(PYTHON_TOOLS.SHERLOCK, { 
           username: username,
@@ -78,7 +74,6 @@ export const UsernameSearchTool: React.FC = () => {
             description: "Results from server-side Sherlock tool",
           });
         } else {
-          // Fall back to browser implementation
           toast({
             title: "Python API Failed",
             description: "Falling back to browser implementation",
@@ -87,7 +82,6 @@ export const UsernameSearchTool: React.FC = () => {
           result = await searchUsername(username);
         }
       } else {
-        // Use browser implementation
         result = await searchUsername(username);
       }
       
@@ -111,7 +105,6 @@ export const UsernameSearchTool: React.FC = () => {
       setSearchProgress(100);
       setIsSearching(false);
       
-      // Reset progress after animation completes
       setTimeout(() => setSearchProgress(0), 1000);
     }
   };
@@ -146,7 +139,6 @@ export const UsernameSearchTool: React.FC = () => {
         <Progress value={searchProgress} className="h-2" />
       )}
       
-      {/* Username Search Results */}
       {searchResults.length > 0 && (
         <div className="mt-4 space-y-4">
           <h3 className="text-lg font-medium border-b border-gray-700 pb-2">
