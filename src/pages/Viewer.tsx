@@ -1,11 +1,10 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Globe, ArrowLeft, Map, BarChart, Camera } from 'lucide-react';
+import { ArrowLeft, Map, BarChart, Camera } from 'lucide-react';
 import CameraMap from '@/components/CameraMap';
 import ResultsTable from '@/components/ResultsTable';
 import { CameraResult } from '@/types/scanner';
@@ -130,15 +129,6 @@ const Viewer = () => {
             </Button>
             <h1 className="text-xl font-bold">Camera Viewer</h1>
           </div>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={() => navigate('/globe')}
-            className="bg-scanner-dark-alt border-scanner-primary text-scanner-primary hover:bg-scanner-primary/20"
-          >
-            <Globe className="h-4 w-4 mr-2" />
-            View 3D Globe
-          </Button>
         </div>
       </header>
 
@@ -147,7 +137,7 @@ const Viewer = () => {
           <Tabs defaultValue="overview" value={activeTab} onValueChange={setActiveTab} className="w-full">
             <TabsList className="bg-scanner-dark-alt w-full justify-start">
               <TabsTrigger value="overview" className="data-[state=active]:bg-scanner-info/20">
-                <Globe className="h-4 w-4 mr-2" />
+                <Camera className="h-4 w-4 mr-2" />
                 Overview
               </TabsTrigger>
               <TabsTrigger value="map" className="data-[state=active]:bg-scanner-info/20">
@@ -178,7 +168,7 @@ const Viewer = () => {
                 <Card className="bg-scanner-card border-gray-800">
                   <CardHeader className="pb-2">
                     <CardTitle className="text-white flex items-center space-x-2">
-                      <Globe className="w-5 h-5 text-scanner-primary" />
+                      <Map className="w-5 h-5 text-scanner-primary" />
                       <span>Countries</span>
                     </CardTitle>
                   </CardHeader>
