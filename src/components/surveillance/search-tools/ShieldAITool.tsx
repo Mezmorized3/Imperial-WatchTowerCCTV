@@ -6,7 +6,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Shield, Database, Network, AlertTriangle, Cpu, Bar } from 'lucide-react';
+import { Shield, Database, Network, AlertTriangle, Cpu, BarChart } from 'lucide-react';
 import { executeShieldAI } from '@/utils/osintTools';
 import { useToast } from '@/hooks/use-toast';
 import { Progress } from '@/components/ui/progress';
@@ -215,7 +215,7 @@ export const ShieldAITool: React.FC = () => {
                 )}
                 {results.result.anomalyDetection && (
                   <TabsTrigger value="anomalyDetection" className="flex items-center">
-                    <Bar className="mr-2 h-4 w-4" />
+                    <BarChart className="mr-2 h-4 w-4" />
                     Anomalies
                   </TabsTrigger>
                 )}
@@ -278,7 +278,7 @@ export const ShieldAITool: React.FC = () => {
                 <TabsContent value="anomalyDetection" className="pt-4">
                   <div className="p-4 bg-scanner-dark rounded-md border border-gray-700">
                     <h4 className="text-md font-medium mb-3 flex items-center">
-                      <Bar className="h-4 w-4 text-blue-400 mr-2" />
+                      <BarChart className="h-4 w-4 text-blue-400 mr-2" />
                       Anomaly Detection Results
                     </h4>
                     
