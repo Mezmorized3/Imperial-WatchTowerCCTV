@@ -1,8 +1,7 @@
 
 import React from 'react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Globe, Map, BarChart } from 'lucide-react';
-import GlobeView from '@/components/GlobeView';
+import { Map, BarChart } from 'lucide-react';
 import CameraMap from '@/components/CameraMap';
 import ResultsTable from '@/components/ResultsTable';
 import { CameraResult, ScanProgress } from '@/types/scanner';
@@ -26,10 +25,6 @@ const DashboardTabs: React.FC<DashboardTabsProps> = ({
   return (
     <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
       <TabsList className="bg-scanner-dark-alt w-full justify-start">
-        <TabsTrigger value="globe" className="data-[state=active]:bg-scanner-info/20">
-          <Globe className="h-4 w-4 mr-2" />
-          Interactive Globe
-        </TabsTrigger>
         <TabsTrigger value="map" className="data-[state=active]:bg-scanner-info/20">
           <Map className="h-4 w-4 mr-2" />
           Location Map
@@ -39,15 +34,6 @@ const DashboardTabs: React.FC<DashboardTabsProps> = ({
           Results Table
         </TabsTrigger>
       </TabsList>
-      
-      <TabsContent value="globe" className="pt-4">
-        <GlobeView 
-          cameras={results}
-          scanInProgress={scanProgress.status === 'running'}
-          currentTarget={scanProgress.currentTarget}
-          targetCountry={scanProgress.targetCountry}
-        />
-      </TabsContent>
       
       <TabsContent value="map">
         <CameraMap 

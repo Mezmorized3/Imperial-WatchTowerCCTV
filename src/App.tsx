@@ -22,23 +22,6 @@ function App() {
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/viewer" element={<Viewer />} />
-            {/* Lazy load the Globe component to avoid import issues */}
-            <Route 
-              path="/globe" 
-              element={
-                <Suspense fallback={<div>Loading Globe page...</div>}>
-                  {(() => {
-                    try {
-                      const GlobePage = require('./pages/Globe').default;
-                      return <GlobePage />;
-                    } catch (e) {
-                      console.error("Failed to load Globe page:", e);
-                      return <div>Error loading Globe page</div>;
-                    }
-                  })()}
-                </Suspense>
-              } 
-            />
             <Route path="/404" element={<NotFound />} />
             <Route path="*" element={<Navigate to="/404" replace />} />
           </Routes>

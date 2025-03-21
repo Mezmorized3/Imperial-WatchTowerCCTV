@@ -19,15 +19,15 @@ const Index = () => {
     camerasFound: 0
   });
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<string>('globe');
+  const [activeTab, setActiveTab] = useState<string>('map');
 
   useEffect(() => {
-    setActiveTab('globe');
+    setActiveTab('map');
   }, []);
 
   useEffect(() => {
     if (scanProgress.status === 'running') {
-      setActiveTab('globe');
+      setActiveTab('map');
     }
   }, [scanProgress.status]);
 
