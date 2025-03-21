@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Shield } from 'lucide-react';
+import { Shield, Eye, Terminal, Camera, Lock, Server, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -13,6 +13,7 @@ import ImperialRegistry from '@/components/imperial-control/ImperialRegistry';
 import ImperialCompliance from '@/components/imperial-control/ImperialCompliance';
 import ImperialSiege from '@/components/imperial-control/ImperialSiege';
 import ImperialLoot from '@/components/imperial-control/ImperialLoot';
+import ImperialShinobi from '@/components/imperial-control/ImperialShinobi';
 
 // Types
 interface LegionStatus {
@@ -338,22 +339,26 @@ const ImperialControl = () => {
         
         <CardContent className="pt-6">
           <Tabs defaultValue="registry" value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid grid-cols-4 mb-6">
+            <TabsList className="grid grid-cols-5 mb-6">
               <TabsTrigger value="registry" className="flex items-center">
-                Database
+                <Database className="h-4 w-4 mr-2" />
                 Imperial Registry
               </TabsTrigger>
               <TabsTrigger value="compliance" className="flex items-center">
-                Shield
+                <Shield className="h-4 w-4 mr-2" />
                 Compliance Check
               </TabsTrigger>
               <TabsTrigger value="siege" className="flex items-center">
-                Radar
+                <Radar className="h-4 w-4 mr-2" />
                 Commence Siege
               </TabsTrigger>
               <TabsTrigger value="loot" className="flex items-center">
-                Lock
+                <Lock className="h-4 w-4 mr-2" />
                 Secure Loot
+              </TabsTrigger>
+              <TabsTrigger value="shinobi" className="flex items-center">
+                <Eye className="h-4 w-4 mr-2" />
+                Imperial Shinobi
               </TabsTrigger>
             </TabsList>
             
@@ -402,6 +407,11 @@ const ImperialControl = () => {
                 progressValue={progressValue}
                 scanResults={scanResults}
               />
+            </TabsContent>
+            
+            {/* Imperial Shinobi */}
+            <TabsContent value="shinobi">
+              <ImperialShinobi />
             </TabsContent>
           </Tabs>
         </CardContent>

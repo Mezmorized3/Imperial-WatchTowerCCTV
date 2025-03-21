@@ -4,6 +4,7 @@
  */
 
 import { toast } from "sonner";
+import { executeImperialShinobi } from "./pythonIntegration";
 
 const IMPERIAL_SERVER_BASE_URL = 'http://localhost:7443/v1';
 const ADMIN_API_URL = `${IMPERIAL_SERVER_BASE_URL}/admin`;
@@ -231,6 +232,19 @@ class ImperialServerService {
     };
     
     return this.executeOsintTool('imperial-pawn', formattedParams);
+  }
+
+  /**
+   * Execute Imperial Shinobi for advanced camera security operations
+   */
+  async executeImperialShinobi(params: {
+    module: string;
+    target: string;
+    scanType?: string;
+    authType?: string;
+    customParams?: string;
+  }): Promise<any | null> {
+    return this.executeOsintTool('imperial-shinobi', params);
   }
 
   /**

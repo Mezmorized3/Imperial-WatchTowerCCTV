@@ -1,4 +1,3 @@
-
 /**
  * This utility provides integration with Python-based OSINT tools running on the server
  */
@@ -74,7 +73,8 @@ export const PYTHON_TOOLS = {
   INSECAM: 'insecam',
   IPCAMSEARCH: 'ipcamsearch',
   CCTVMAP: 'cctvmap',
-  IMPERIAL_PAWN: 'imperial-pawn'  // Added the new Imperial Pawn tool
+  IMPERIAL_PAWN: 'imperial-pawn',
+  IMPERIAL_SHINOBI: 'imperial-shinobi'
 };
 
 /**
@@ -125,3 +125,17 @@ export const executeImperialPawn = async (params: {
   return executePythonTool(PYTHON_TOOLS.IMPERIAL_PAWN, formattedParams);
 };
 
+/**
+ * Execute Imperial Shinobi tools for camera security
+ * @param params Configuration for the Imperial Shinobi tools
+ * @returns Promise with the operation results
+ */
+export const executeImperialShinobi = async (params: {
+  module: string;
+  target: string;
+  scanType?: string;
+  authType?: string;
+  customParams?: string;
+}): Promise<PythonToolResponse> => {
+  return executePythonTool(PYTHON_TOOLS.IMPERIAL_SHINOBI, params);
+};
