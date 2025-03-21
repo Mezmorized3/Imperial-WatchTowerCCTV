@@ -2,9 +2,10 @@
 import React from 'react';
 import { CameraResult } from '@/types/scanner';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Shield, HardDrive } from 'lucide-react';
+import { Shield, HardDrive, Server } from 'lucide-react';
 import ThreatReputation from './ThreatReputation';
 import FirmwareDetails from './FirmwareDetails';
+import ServerStatus from '../ServerStatus';
 
 interface ThreatIntelligenceProps {
   camera: CameraResult | null;
@@ -49,6 +50,22 @@ const ThreatIntelligence: React.FC<ThreatIntelligenceProps> = ({ camera }) => {
         </CardHeader>
         <CardContent>
           <FirmwareDetails camera={camera} />
+        </CardContent>
+      </Card>
+
+      {/* Imperial Server Section */}
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-lg flex items-center">
+            <Server className="mr-2 h-5 w-5" />
+            Imperial Server
+          </CardTitle>
+          <CardDescription>
+            Status of the Imperial Server and its services
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <ServerStatus />
         </CardContent>
       </Card>
     </div>

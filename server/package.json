@@ -1,0 +1,24 @@
+
+{
+  "name": "imperial-server",
+  "version": "1.0.0",
+  "description": "Imperial Server for Security Camera Scanner",
+  "main": "imperialServer.js",
+  "scripts": {
+    "start": "node imperialServer.js",
+    "start:dev": "node imperialServer.js --security-level=normal",
+    "start:secure": "node imperialServer.js --security-level=max --encryption=military"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "helmet": "^7.1.0",
+    "express-rate-limit": "^7.1.5",
+    "prom-client": "^15.0.0",
+    "winston": "^3.11.0",
+    "express-session": "^1.18.0",
+    "@godaddy/terminus": "^4.12.1",
+    "minimist": "^1.2.8",
+    "jsonwebtoken": "^9.0.2",
+    "jaeger-client": "^3.19.0"
+  }
+}

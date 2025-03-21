@@ -6,7 +6,8 @@ import ThreatIntelligence from './threat/ThreatIntelligence';
 import FirmwareAnalysis from './FirmwareAnalysis';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { AlertCircle, Shield, Cpu } from 'lucide-react';
+import { AlertCircle, Shield, Cpu, Server } from 'lucide-react';
+import ServerStatus from './ServerStatus';
 
 interface ThreatAnalysisDashboardProps {
   selectedCamera: CameraResult | null;
@@ -45,7 +46,7 @@ const ThreatAnalysisDashboard: React.FC<ThreatAnalysisDashboardProps> = ({ selec
       )}
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-2">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="threatIntel" className="flex items-center">
             <Shield className="mr-2 h-4 w-4" />
             Threat Intelligence
@@ -53,6 +54,10 @@ const ThreatAnalysisDashboard: React.FC<ThreatAnalysisDashboardProps> = ({ selec
           <TabsTrigger value="firmwareAnalysis" className="flex items-center">
             <Cpu className="mr-2 h-4 w-4" />
             Firmware Analysis
+          </TabsTrigger>
+          <TabsTrigger value="serverStatus" className="flex items-center">
+            <Server className="mr-2 h-4 w-4" />
+            Imperial Server
           </TabsTrigger>
         </TabsList>
         
@@ -63,6 +68,10 @@ const ThreatAnalysisDashboard: React.FC<ThreatAnalysisDashboardProps> = ({ selec
           
           <TabsContent value="firmwareAnalysis" className="mt-0">
             <FirmwareAnalysis camera={selectedCamera} />
+          </TabsContent>
+
+          <TabsContent value="serverStatus" className="mt-0">
+            <ServerStatus />
           </TabsContent>
         </ScrollArea>
       </Tabs>

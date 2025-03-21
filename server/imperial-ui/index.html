@@ -1,0 +1,51 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Imperial Server Administration</title>
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <div class="imperial-container">
+    <header class="imperial-header">
+      <h1>Imperial Server Administration</h1>
+      <div class="auth-section">
+        <input type="password" id="token-input" placeholder="Enter admin token">
+        <button id="login-btn">Authenticate</button>
+      </div>
+    </header>
+
+    <main class="imperial-dashboard">
+      <section class="dashboard-section">
+        <h2>Server Status</h2>
+        <div id="server-status-container" class="status-container">
+          <p>Please authenticate to view server status</p>
+        </div>
+      </section>
+
+      <section class="dashboard-section">
+        <h2>Legion Management</h2>
+        <div class="legion-control">
+          <select id="port-select">
+            <option value="">Select a legion (port)</option>
+          </select>
+          <button id="mobilize-btn" disabled>Mobilize</button>
+          <button id="standdown-btn" disabled>Stand Down</button>
+        </div>
+      </section>
+
+      <section class="dashboard-section">
+        <h2>System Diagnostics</h2>
+        <button id="diagnostics-btn" disabled>Run Diagnostics</button>
+        <div id="diagnostics-container" class="status-container">
+          <p>Run diagnostics to see results</p>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="./imperial-admin.js"></script>
+</body>
+</html>

@@ -1,0 +1,22 @@
+
+{
+  "ports": {
+    "8080": "Main web application (React app)",
+    "8000": "Ticker HTML server",
+    "5000": "SocketIO/ticker server",
+    "5001": "Control panel API server",
+    "3000": "HLS Restream Server"
+  },
+  "adminToken": "imperial-scanner-admin-token",
+  "royalCourtPort": 7443,
+  "useHttps": false,
+  "sslOptions": {
+    "keyPath": "./ssl/key.pem",
+    "certPath": "./ssl/cert.pem"
+  },
+  "tracing": {
+    "serviceName": "imperial_scanner",
+    "agentHost": "localhost",
+    "agentPort": 6831
+  }
+}
