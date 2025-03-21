@@ -1,10 +1,13 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import GlobeComponent from '@/components/GlobeView';
 import { CameraResult } from '@/types/scanner';
+
+// Console log to debug component loading
+console.log('GlobeView.tsx loaded, GlobePage component will be exported');
 
 // Mock data for demonstration
 const mockCameras: CameraResult[] = [
@@ -83,6 +86,10 @@ const GlobePage = () => {
   const navigate = useNavigate();
   const [cameras] = useState<CameraResult[]>(mockCameras);
 
+  useEffect(() => {
+    console.log('GlobePage component mounted');
+  }, []);
+
   return (
     <div className="min-h-screen bg-scanner-dark text-white">
       <header className="bg-scanner-dark-alt border-b border-gray-800 py-4 px-6">
@@ -113,5 +120,8 @@ const GlobePage = () => {
     </div>
   );
 };
+
+// Explicitly log before exporting to ensure the component is properly defined
+console.log('About to export GlobePage component from GlobeView.tsx');
 
 export default GlobePage;
