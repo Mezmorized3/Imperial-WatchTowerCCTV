@@ -16,12 +16,10 @@ import {
 import { imperialOsintService, ImperialOsintService } from "./imperial/osintService";
 import { executeImperialShinobi } from "./pythonIntegration";
 
-// Re-export interfaces
-export {
-  ImperialServerStatus,
-  DiagnosticsResponse,
-  DecreeResponse
-};
+// Re-export interfaces with 'export type' to fix TypeScript errors
+export type { ImperialServerStatus };
+export type { DiagnosticsResponse };
+export type { DecreeResponse };
 
 /**
  * Imperial Server Service - Main Facade
