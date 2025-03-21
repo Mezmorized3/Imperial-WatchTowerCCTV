@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { vi } from 'vitest';
+import { vi, describe, it, expect, beforeEach } from 'vitest';
 import ImperialShinobi from '../ImperialShinobi';
 import { imperialServerService } from '@/utils/imperialServerService';
 
@@ -43,12 +43,12 @@ describe('ImperialShinobi', () => {
     fireEvent.click(startButton);
     
     // Should show error toast
-    expect(toast.error).toHaveBeenCalledWith('Please provide a target IP or range');
+    expect(vi.mocked(toast.error)).toHaveBeenCalledWith('Please provide a target IP or range');
   });
 
   it('executes the selected module correctly', async () => {
     // Mock successful response
-    imperialServerService.executeOsintTool.mockResolvedValue({
+    vi.mocked(imperialServerService.executeOsintTool).mockResolvedValue({
       success: true,
       data: {
         findings: ['Camera vulnerability found', 'Default credentials detected'],
@@ -68,7 +68,7 @@ describe('ImperialShinobi', () => {
     
     // Should call the service with correct params
     await waitFor(() => {
-      expect(imperialServerService.executeOsintTool).toHaveBeenCalledWith(
+      expect(vi.mocked(imperialServerService.executeOsintTool)).toHaveBeenCalledWith(
         'imperial-shinobi',
         expect.objectContaining({
           module: 'camerattack',
@@ -80,7 +80,7 @@ describe('ImperialShinobi', () => {
     
     // Should show success toast
     await waitFor(() => {
-      expect(toast.success).toHaveBeenCalledWith(expect.stringContaining('completed'));
+      expect(vi.mocked(toast.success)).toHaveBeenCalledWith(expect.stringContaining('completed'));
     });
   });
 });

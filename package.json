@@ -42,6 +42,8 @@
     "@react-three/drei": "^9.77.0",
     "@react-three/fiber": "^8.13.0",
     "@tanstack/react-query": "^5.56.2",
+    "@testing-library/react": "^14.3.1",
+    "@types/jest": "^29.5.14",
     "@types/three": "^0.154.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
@@ -69,6 +71,7 @@
     "three": "^0.154.0",
     "three-globe": "^2.27.0",
     "vaul": "^0.9.3",
+    "vitest": "^1.6.1",
     "winston": "^3.17.0",
     "world-countries": "^4.0.0",
     "zod": "^3.23.8"
