@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -7,10 +8,9 @@ import { Slider } from '@/components/ui/slider';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import DashboardHeader from '@/components/DashboardHeader';
 import { Shield, BellRing, Globe, Lock, Eye, Settings as SettingsIcon, Monitor, Key } from 'lucide-react';
-import { toast } from '@/components/ui/use-toast';
 import { useToast } from '@/components/ui/use-toast';
+import { Toaster } from '@/components/ui/toaster';
 
 const Settings = () => {
   const { toast } = useToast();
@@ -18,6 +18,15 @@ const Settings = () => {
   const [abuseIPDBApiKey, setAbuseIPDBApiKey] = useState(localStorage.getItem('ABUSEIPDB_API_KEY') || '');
   const [nvdApiKey, setNvdApiKey] = useState(localStorage.getItem('NVD_API_KEY') || '');
   const [isApiKeySaved, setIsApiKeySaved] = useState(false);
+  
+  const imperialProtocolBanner = `
+    ██╗███╗   ███╗██████╗ ███████╗██████╗ ██╗ █████╗ ██╗         ██████╗ ██████╗  ██████╗ ████████╗ ██████╗  ██████╗ ██████╗ ██╗     
+    ██║████╗ ████║██╔══██╗██╔════╝██╔══██╗██║██╔══██╗██║         ██╔══██╗██╔══██╗██╔═══██╗╚══██╔══╝██╔═══██╗██╔════╝██╔═══██╗██║     
+    ██║██╔████╔██║██████╔╝█████╗  ██████╔╝██║███████║██║         ██████╔╝██████╔╝██║   ██║   ██║   ██║   ██║██║     ██║   ██║██║     
+    ██║██║╚██╔╝██║██╔═══╝ ██╔══╝  ██╔══██╗██║██╔══██║██║         ██╔═══╝ ██╔══██╗██║   ██║   ██║   ██║   ██║██║     ██║   ██║██║     
+    ██║██║ ╚═╝ ██║██║     ███████╗██║  ██║██║██║  ██║███████╗    ██║     ██║  ██║╚██████╔╝   ██║   ╚██████╔╝╚██████╗╚██████╔╝███████╗
+    ╚═╝╚═╝     ╚═╝╚═╝     ╚══════╝╚═╝  ╚═╝╚═╝╚═╝  ╚═╝╚══════╝    ╚═╝     ╚═╝  ╚═╝ ╚═════╝    ╚═╝    ╚═════╝  ╚═════╝ ╚═════╝ ╚══════╝
+  `;
 
   const handleSave = () => {
     // Save API keys to localStorage
@@ -46,12 +55,20 @@ const Settings = () => {
 
   return (
     <div className="flex flex-col min-h-screen bg-scanner-dark text-white">
-      <DashboardHeader />
+      <header className="bg-scanner-dark-alt border-b border-gray-800 py-4 px-6">
+        <div className="container mx-auto">
+          <div className="flex flex-col items-center justify-center">
+            <div className="bg-scanner-dark p-4 rounded-md overflow-x-auto w-full">
+              <pre className="text-[#ea384c] text-xs font-mono">{imperialProtocolBanner}</pre>
+            </div>
+          </div>
+        </div>
+      </header>
 
       <div className="container max-w-6xl mx-auto py-8 px-4">
         <div className="flex items-center mb-8">
           <SettingsIcon className="h-8 w-8 mr-3 text-scanner-primary" />
-          <h1 className="text-3xl font-bold">Settings</h1>
+          <h1 className="text-3xl font-bold">Imperial Protocol</h1>
         </div>
 
         <Tabs defaultValue="general" className="space-y-6">
@@ -447,6 +464,8 @@ const Settings = () => {
           <Button onClick={handleSave}>Save Changes</Button>
         </div>
       </div>
+      
+      <Toaster />
     </div>
   );
 };
