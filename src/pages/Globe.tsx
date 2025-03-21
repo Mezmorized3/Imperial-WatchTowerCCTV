@@ -1,4 +1,5 @@
-import React from 'react';
+
+import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
@@ -78,13 +79,15 @@ const mockCameras: CameraResult[] = [
   }
 ];
 
-console.log('Globe.tsx page file loaded');
-
-const GlobePage = () => {
+const Globe = () => {
   const navigate = useNavigate();
   const [cameras] = React.useState<CameraResult[]>(mockCameras);
 
-  console.log('GlobePage component rendering');
+  useEffect(() => {
+    console.log('Globe page component mounted');
+  }, []);
+
+  console.log('Globe page component rendering');
 
   return (
     <div className="min-h-screen bg-scanner-dark text-white">
@@ -117,4 +120,4 @@ const GlobePage = () => {
   );
 };
 
-export default GlobePage;
+export default Globe;
