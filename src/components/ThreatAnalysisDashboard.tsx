@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { CameraResult } from '@/types/scanner';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import ThreatIntelligence from './ThreatIntelligence';
+import ThreatIntelligence from './threat/ThreatIntelligence';
 import FirmwareAnalysis from './FirmwareAnalysis';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';

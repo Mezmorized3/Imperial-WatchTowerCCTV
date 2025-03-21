@@ -1,0 +1,58 @@
+
+import React from 'react';
+import { CameraResult } from '@/types/scanner';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Shield, HardDrive } from 'lucide-react';
+import ThreatReputation from './ThreatReputation';
+import FirmwareDetails from './FirmwareDetails';
+
+interface ThreatIntelligenceProps {
+  camera: CameraResult | null;
+}
+
+const ThreatIntelligence: React.FC<ThreatIntelligenceProps> = ({ camera }) => {
+  if (!camera) {
+    return <div className="p-4 text-muted-foreground">Select a camera to view threat intelligence.</div>;
+  }
+
+  const { threatIntel, ip } = camera;
+
+  return (
+    <div className="space-y-4">
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-lg flex items-center">
+            <Shield className="mr-2 h-5 w-5" />
+            Threat Intelligence
+          </CardTitle>
+          <CardDescription>
+            IP reputation and threat data for {camera.ip}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <ThreatReputation threatIntel={threatIntel} />
+        </CardContent>
+      </Card>
+
+      {/* Firmware Analysis Section */}
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-lg flex items-center">
+            <HardDrive className="mr-2 h-5 w-5" />
+            Firmware Analysis
+          </CardTitle>
+          <CardDescription>
+            {camera.firmwareVersion 
+              ? `Analysis of firmware version ${camera.firmwareVersion}`
+              : 'No firmware version detected'}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <FirmwareDetails camera={camera} />
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
+
+export default ThreatIntelligence;
