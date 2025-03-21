@@ -1,11 +1,11 @@
 
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { CameraResult } from '@/types/scanner';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Globe, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useNavigate } from 'react-router-dom';
 import GlobeView from './globe/GlobeView';
 import ScanAlert from './globe/ScanAlert';
 import NoDataOverlay from './globe/NoDataOverlay';
@@ -32,11 +32,14 @@ const GlobeComponent: React.FC<GlobeComponentProps> = (props) => {
   const handleGlobeNavigation = () => {
     console.log('Navigating to /globe');
     
-    // Force the navigation to globe page
-    window.location.href = '/globe';
-    
-    // As a fallback, also try the React Router navigation
-    // navigate('/globe');
+    // Try both navigation methods for redundancy
+    try {
+      navigate('/globe');
+    } catch (err) {
+      console.error('Navigation error:', err);
+      // Fallback to direct URL change if React Router navigation fails
+      window.location.href = '/globe';
+    }
   };
 
   return (

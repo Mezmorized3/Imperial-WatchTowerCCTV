@@ -2,18 +2,21 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Index from '@/pages/Index';
 import Viewer from '@/pages/Viewer';
-import Globe from '@/pages/Globe'; // Ensure correct path
 import NotFound from '@/pages/NotFound';
 import { ThemeProvider } from '@/components/ui/theme-provider';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from './components/ui/toaster';
 import './App.css';
 
+// Import Globe directly without using @ alias to avoid path resolution issues
+import Globe from './pages/Globe';
+
 // Create a new query client
 const queryClient = new QueryClient();
 
 function App() {
-  console.log('App rendering with Globe component:', typeof Globe, Globe);
+  console.log('App rendering with Globe component exists:', Globe !== undefined);
+  console.log('App rendering with Globe component type:', typeof Globe);
   
   return (
     <ThemeProvider defaultTheme="dark">
