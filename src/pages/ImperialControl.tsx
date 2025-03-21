@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -297,12 +296,12 @@ const ImperialControl = () => {
   };
 
   const imperialBanner = `
-    ██████╗ ██████╗ ███╗   ██╗████████╗██████╗  ██████╗ ██╗         ██╗   ██╗███╗   ██╗██╗████████╗
-   ██╔════╝██╔═══██╗████╗  ██║╚══██╔══╝██╔══██╗██╔═══██╗██║         ██║   ██║████╗  ██║██║╚══██╔══╝
-   ██║     ██║   ██║██╔██╗ ██║   ██║   ██████╔╝██║   ██║██║         ██║   ██║██╔██╗ ██║██║   ██║   
-   ██║     ██║   ██║██║╚██╗██║   ██║   ██╔══██╗██║   ██║██║         ██║   ██║██║╚██╗██║██║   ██║   
-   ╚██████╗╚██████╔╝██║ ╚████║   ██║   ██║  ██║╚██████╔╝███████╗    ╚██████╔╝██║ ╚████║██║   ██║   
-    ╚═════╝ ╚═════╝ ╚═╝  ╚═══╝   ╚═╝   ╚═╝  ╚═╝ ╚═════╝ ╚══════╝     ╚═════╝ ╚═╝  ╚═══╝╚═╝   ╚═╝   
+    ██████╗ ██████╗ ███╗   ██╗████████╗██████╗  ██████╗ ██╗         ██████╗ ██████╗ ███╗   ██╗████████╗██████╗  ██████╗ ██╗
+   ██╔════╝██╔═══██╗████╗  ██║╚══██╔══╝██╔══██╗██╔═══██╗██║         ██╔════╝██╔═══██╗████╗  ██║╚══██╔══╝██╔══██╗██╔═══██╗██║
+   ██║     ██║   ██║██╔██╗ ██║   ██║   ██████╔╝██║   ██║██║         ██║     ██║   ██║██╔██╗ ██║   ██║   ██████╔╝██║   ██║██║
+   ██║     ██║   ██║██║╚██╗██║   ██║   ██╔══██╗██║   ██║██║         ██║     ██║   ██║██║╚██╗██║   ██║   ██╔══██╗██║   ██║██║
+   ╚██████╗╚██████╔╝██║ ╚████║   ██║   ██║  ██║╚██████╔╝███████╗    ╚██████╗╚██████╔╝██║ ╚████║   ██║   ██║  ██║╚██████╔╝███████╗
+    ╚═════╝ ╚═════╝ ╚═╝  ╚═══╝   ╚═╝   ╚═╝  ╚═╝ ╚═════╝ ╚══════╝     ╚═════╝ ╚═════╝ ╚═╝  ╚═══╝   ╚═╝   ╚═╝  ╚═╝ ╚═════╝ ╚══════╝
   `;
 
   if (!isAuthenticated) {
@@ -310,7 +309,7 @@ const ImperialControl = () => {
       <div className="min-h-screen bg-scanner-dark text-white p-6">
         <Card className="max-w-4xl mx-auto bg-scanner-dark-alt border-gray-700">
           <CardHeader className="border-b border-gray-700">
-            <CardTitle className="text-2xl text-center text-red-500">Imperial Control Unit</CardTitle>
+            <CardTitle className="text-2xl text-center text-red-500">Imperial Control</CardTitle>
             <CardDescription className="text-gray-400 text-center">
               Authentication Required
             </CardDescription>
@@ -355,7 +354,7 @@ const ImperialControl = () => {
         <CardHeader className="border-b border-gray-700">
           <div className="flex justify-between items-center">
             <CardTitle className="text-2xl flex items-center">
-              <Shield className="mr-2 text-red-500" /> Imperial Control Unit
+              <Shield className="mr-2 text-red-500" /> Imperial Control
             </CardTitle>
             <Button variant="outline" size="sm" onClick={handleLogout}>
               Terminate Session
