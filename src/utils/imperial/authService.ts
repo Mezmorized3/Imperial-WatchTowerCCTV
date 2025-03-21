@@ -12,22 +12,31 @@ export class ImperialAuthService {
    */
   async authenticate(token: string): Promise<boolean> {
     try {
-      // First check if token works by attempting to get status
-      const response = await fetch(`http://localhost:7443/v1/admin/status`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-
-      if (response.ok) {
+      // Instead of connecting directly to localhost, use a simulated authentication
+      // This allows the app to work in a browser environment
+      console.log("Authenticating with token:", token);
+      
+      // Simulate authentication by validating the token against config.json
+      const configResponse = await fetch('/server/config.json');
+      if (!configResponse.ok) {
+        throw new Error('Failed to fetch server configuration');
+      }
+      
+      const config = await configResponse.json();
+      
+      // Validate the provided token against the one in config
+      if (token === config.adminToken) {
+        // Store token and return success
         this.authToken = token;
         localStorage.setItem('imperialToken', token);
+        toast.success("Imperial authentication successful");
         return true;
       } else {
-        throw new Error('Authentication failed');
+        throw new Error('Invalid authentication token');
       }
     } catch (error) {
       console.error('Imperial authentication error:', error);
+      toast.error("Authentication failed: Invalid token");
       return false;
     }
   }
