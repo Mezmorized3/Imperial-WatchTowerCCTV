@@ -4,6 +4,8 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
 import ImperialShinobi from '../ImperialShinobi';
 import { imperialServerService } from '@/utils/imperialServerService';
+import { toast } from 'sonner';
+import '@testing-library/jest-dom'; // Import jest-dom for DOM assertions
 
 // Mock the Imperial Server Service
 vi.mock('@/utils/imperialServerService', () => ({
@@ -43,7 +45,7 @@ describe('ImperialShinobi', () => {
     fireEvent.click(startButton);
     
     // Should show error toast
-    expect(vi.mocked(toast.error)).toHaveBeenCalledWith('Please provide a target IP or range');
+    expect(toast.error).toHaveBeenCalledWith('Please provide a target IP or range');
   });
 
   it('executes the selected module correctly', async () => {
@@ -68,7 +70,7 @@ describe('ImperialShinobi', () => {
     
     // Should call the service with correct params
     await waitFor(() => {
-      expect(vi.mocked(imperialServerService.executeOsintTool)).toHaveBeenCalledWith(
+      expect(imperialServerService.executeOsintTool).toHaveBeenCalledWith(
         'imperial-shinobi',
         expect.objectContaining({
           module: 'camerattack',
@@ -80,7 +82,7 @@ describe('ImperialShinobi', () => {
     
     // Should show success toast
     await waitFor(() => {
-      expect(vi.mocked(toast.success)).toHaveBeenCalledWith(expect.stringContaining('completed'));
+      expect(toast.success).toHaveBeenCalledWith(expect.stringContaining('completed'));
     });
   });
 });
