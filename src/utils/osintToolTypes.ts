@@ -148,6 +148,7 @@ export type CamerattackParams = {
   mode?: string;
   duration?: number;
   rate?: number;
+  method?: string;
 };
 
 export type BackHackParams = {
