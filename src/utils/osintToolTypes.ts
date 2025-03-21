@@ -161,3 +161,21 @@ export type PhotonParams = {
   depth?: number;
   timeout?: number;
 };
+
+// Add Imperial Shield Protocol types
+export type ImperialShieldParams = {
+  targetUrl: string;
+  port?: number;
+  protocol?: 'http' | 'https';
+  authToken?: string;
+  validateCert?: boolean;
+};
+
+export type ImperialShieldResult = {
+  success: boolean;
+  data?: any;
+  error?: string;
+  responseTime?: number;
+  shieldStatus?: 'active' | 'inactive' | 'breached';
+  securityRating?: number;
+};
