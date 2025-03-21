@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Button } from "@/components/ui/button";
 import { Camera, Cpu, Globe, Search, Shield, Webhook, Map, User, Scan, Globe2, Flag, Tv, Bot, Link, Zap, FileWarning } from 'lucide-react';
 import { SearchCamTool } from './search-tools/SearchCamTool';
 import { IPCamSearchTool } from './search-tools/IPCamSearchTool';
@@ -138,6 +139,3 @@ const CameraSearchTools: React.FC = () => {
 };
 
 export default CameraSearchTools;
-
-// Import Button for pagination
-import { Button } from "@/components/ui/button";
