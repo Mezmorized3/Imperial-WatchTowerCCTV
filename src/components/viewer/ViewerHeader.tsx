@@ -11,7 +11,7 @@ const ViewerHeader: React.FC = () => {
   return (
     <header className="bg-scanner-dark-alt border-b border-gray-800 py-4 px-6">
       <div className="container mx-auto flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0">
-        <div className="flex items-center space-x-4">
+        <div className="flex items-center space-x-4 w-full">
           <Button 
             variant="ghost" 
             size="sm" 
@@ -21,10 +21,19 @@ const ViewerHeader: React.FC = () => {
             <ArrowLeft className="h-4 w-4 mr-2" /> 
             Back to Scanner
           </Button>
-          <h1 className="text-xl font-bold flex items-center">
-            <Camera className="h-5 w-5 mr-2 text-blue-400" />
-            Camera Surveillance Suite
-          </h1>
+          
+          <div className="w-full">
+            <pre className="text-xs md:text-sm text-red-500 font-mono">
+{`
+██╗███╗   ███╗██████╗ ███████╗██████╗ ██╗ █████╗ ██╗         ██████╗ ██████╗ ██╗   ██╗██████╗ ████████╗
+██║████╗ ████║██╔══██╗██╔════╝██╔══██╗██║██╔══██╗██║        ██╔════╝██╔═══██╗██║   ██║██╔══██╗╚══██╔══╝
+██║██╔████╔██║██████╔╝█████╗  ██████╔╝██║███████║██║        ██║     ██║   ██║██║   ██║██████╔╝   ██║   
+██║██║╚██╔╝██║██╔═══╝ ██╔══╝  ██╔══██╗██║██╔══██║██║        ██║     ██║   ██║██║   ██║██╔══██╗   ██║   
+██║██║ ╚═╝ ██║██║     ███████╗██║  ██║██║██║  ██║███████╗    ╚██████╗╚██████╔╝╚██████╔╝██║  ██║   ██║   
+╚═╝╚═╝     ╚═╝╚═╝     ╚══════╝╚═╝  ╚═╝╚═╝╚═╝  ╚═╝╚══════╝     ╚═════╝ ╚═════╝  ╚═════╝ ╚═╝  ╚═╝   ╚═╝   
+`}
+            </pre>
+          </div>
         </div>
         
         <div className="flex items-center space-x-2">
