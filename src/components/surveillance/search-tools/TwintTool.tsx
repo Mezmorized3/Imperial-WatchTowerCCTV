@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -14,14 +13,15 @@ import { useToast } from '@/hooks/use-toast';
 
 export const TwintTool: React.FC = () => {
   const [username, setUsername] = useState('');
-  const [searchTerm, setSearchTerm] = useState('');
-  const [since, setSince] = useState('');
-  const [until, setUntil] = useState('');
+  const [keyword, setKeyword] = useState('');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
   const [limit, setLimit] = useState(50);
   const [verified, setVerified] = useState(false);
   const [searchMode, setSearchMode] = useState<'username' | 'term'>('username');
   const [isSearching, setIsSearching] = useState(false);
   const [results, setResults] = useState<any>(null);
+  const [tweetCount, setTweetCount] = useState(0);
   const { toast } = useToast();
 
   const handleSearch = async () => {
@@ -34,7 +34,7 @@ export const TwintTool: React.FC = () => {
       return;
     }
     
-    if (searchMode === 'term' && !searchTerm) {
+    if (searchMode === 'term' && !keyword) {
       toast({
         title: "Search Term Required",
         description: "Please enter a search term",
@@ -48,26 +48,29 @@ export const TwintTool: React.FC = () => {
       title: "Twitter Search Initiated",
       description: searchMode === 'username' 
         ? `Searching tweets from @${username}...` 
-        : `Searching tweets containing "${searchTerm}"...`,
+        : `Searching tweets containing "${keyword}"...`,
     });
     
     try {
-      const searchResults = await executeTwint({
-        username: searchMode === 'username' ? username : undefined,
-        search: searchMode === 'term' ? searchTerm : undefined,
-        since: since || undefined,
-        until: until || undefined,
-        limit,
-        verified
+      const scanResults = await executeTwint({
+        username: username,
+        search: keyword,
+        since: startDate,
+        until: endDate,
+        limit: parseInt(limit)
       });
       
-      setResults(searchResults);
+      setResults(scanResults);
       toast({
         title: "Search Complete",
-        description: searchResults?.simulatedData 
+        description: scanResults?.simulatedData 
           ? "Showing simulated results (dev mode)" 
-          : `Found ${searchResults?.tweets?.length || 0} tweets`,
+          : "Twitter search completed successfully",
       });
+
+      if (scanResults?.data?.tweets) {
+        setTweetCount(scanResults.data.tweets.length);
+      }
     } catch (error) {
       console.error('Twint search error:', error);
       toast({
@@ -142,15 +145,15 @@ export const TwintTool: React.FC = () => {
             <div className="md:col-span-2">
               <Input
                 placeholder="Enter search term or hashtag"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                value={keyword}
+                onChange={(e) => setKeyword(e.target.value)}
                 className="bg-scanner-dark"
               />
             </div>
             <div>
               <Button 
                 onClick={handleSearch} 
-                disabled={isSearching || !searchTerm}
+                disabled={isSearching || !keyword}
                 className="w-full"
               >
                 {isSearching ? (
@@ -177,8 +180,8 @@ export const TwintTool: React.FC = () => {
                   id="since-date"
                   type="date"
                   className="bg-scanner-dark"
-                  value={since}
-                  onChange={(e) => setSince(e.target.value)}
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
                 />
               </div>
               
@@ -188,8 +191,8 @@ export const TwintTool: React.FC = () => {
                   id="until-date"
                   type="date"
                   className="bg-scanner-dark"
-                  value={until}
-                  onChange={(e) => setUntil(e.target.value)}
+                  value={endDate}
+                  onChange={(e) => setEndDate(e.target.value)}
                 />
               </div>
             </div>

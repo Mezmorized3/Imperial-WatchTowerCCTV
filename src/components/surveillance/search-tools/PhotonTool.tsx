@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -16,8 +15,6 @@ export const PhotonTool: React.FC = () => {
   const [url, setUrl] = useState('');
   const [depth, setDepth] = useState(2);
   const [timeout, setTimeout] = useState(10);
-  const [findSecrets, setFindSecrets] = useState(true);
-  const [findKeys, setFindKeys] = useState(true);
   const [isScanning, setIsScanning] = useState(false);
   const [results, setResults] = useState<any>(null);
   const { toast } = useToast();
@@ -55,9 +52,7 @@ export const PhotonTool: React.FC = () => {
       const scanResults = await executePhoton({
         url: formattedUrl,
         depth,
-        timeout,
-        findSecrets,
-        findKeys
+        timeout
       });
       
       setResults(scanResults);
@@ -141,28 +136,6 @@ export const PhotonTool: React.FC = () => {
                 />
                 <p className="text-xs text-gray-400">Maximum time to wait for each request</p>
               </div>
-            </div>
-            
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="find-secrets" className="text-sm">Find Secrets</Label>
-                <Switch 
-                  id="find-secrets" 
-                  checked={findSecrets}
-                  onCheckedChange={setFindSecrets}
-                />
-              </div>
-              <p className="text-xs text-gray-400">Look for hardcoded passwords, tokens, and keys</p>
-              
-              <div className="flex items-center justify-between mt-4">
-                <Label htmlFor="find-keys" className="text-sm">Find API Keys</Label>
-                <Switch 
-                  id="find-keys" 
-                  checked={findKeys}
-                  onCheckedChange={setFindKeys}
-                />
-              </div>
-              <p className="text-xs text-gray-400">Detect common API key patterns in code</p>
             </div>
           </div>
         </CardContent>

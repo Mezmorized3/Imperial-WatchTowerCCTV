@@ -1,49 +1,52 @@
-
 import React, { useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
-import { Globe, List, Mail, AlertTriangle } from 'lucide-react';
 import { executeTorBot } from '@/utils/osintTools';
 import { useToast } from '@/hooks/use-toast';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ScrollArea } from '@/components/ui/scroll-area';
 
 export const TorBotTool: React.FC = () => {
-  const [url, setUrl] = useState('');
-  const [scanType, setScanType] = useState('basic');
-  const [checkLive, setCheckLive] = useState(true);
-  const [findMail, setFindMail] = useState(true);
-  const [saveCrawl, setSaveCrawl] = useState(false);
-  const [isScanning, setIsScanning] = useState(false);
+  const [onionUrl, setOnionUrl] = useState('');
+  const [scanMode, setScanMode] = useState('standard');
+  const [scanDepth, setScanDepth] = useState('3');
+  const [isSearching, setIsSearching] = useState(false);
   const [results, setResults] = useState<any>(null);
   const { toast } = useToast();
 
   const handleSearch = async () => {
-    if (!url) {
+    if (!onionUrl) {
       toast({
-        title: "URL Required",
-        description: "Please enter a .onion URL to scan",
+        title: "Onion URL Required",
+        description: "Please enter an Onion URL to scan",
         variant: "destructive"
       });
       return;
     }
     
-    setIsScanning(true);
+    // Validate URL format
+    try {
+      new URL(onionUrl.startsWith('http') ? onionUrl : `http://${onionUrl}`);
+    } catch (e) {
+      toast({
+        title: "Invalid URL",
+        description: "Please enter a valid Onion URL",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    setIsSearching(true);
     toast({
       title: "TorBot Scan Initiated",
-      description: `Scanning ${url}...`,
+      description: `Scanning ${onionUrl}...`,
     });
     
     try {
+      const formattedUrl = onionUrl.startsWith('http') ? onionUrl : `http://${onionUrl}`;
       const scanResults = await executeTorBot({
-        url,
-        scanType: scanType as 'basic' | 'deep',
-        checkLive,
-        findMail,
-        saveCrawl
+        url: formattedUrl,
+        mode: scanMode,  // Change 'scanType' to 'mode' to match the TorBotParams type
+        depth: parseInt(scanDepth)
       });
       
       setResults(scanResults);
@@ -61,48 +64,33 @@ export const TorBotTool: React.FC = () => {
         variant: "destructive"
       });
     } finally {
-      setIsScanning(false);
+      setIsSearching(false);
     }
   };
 
   return (
     <div className="space-y-4">
-      <Card className="bg-scanner-dark border border-yellow-900">
-        <CardContent className="pt-4 pb-3">
-          <div className="flex items-start space-x-2">
-            <AlertTriangle className="h-5 w-5 text-yellow-500 flex-shrink-0 mt-0.5" />
-            <div className="text-sm text-yellow-200">
-              <p className="font-medium">Dark Web Tool Warning</p>
-              <p className="text-yellow-300/80">
-                This tool interacts with the TOR network. Ensure you have proper authorization before scanning .onion domains. All activity is logged and may be reported to authorities if misused.
-              </p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-      
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="md:col-span-2">
           <Input
-            placeholder="Enter .onion URL (e.g., abcdefg.onion)"
-            value={url}
-            onChange={(e) => setUrl(e.target.value)}
+            placeholder="Enter Onion URL to scan (e.g., example.onion)"
+            value={onionUrl}
+            onChange={(e) => setOnionUrl(e.target.value)}
             className="bg-scanner-dark"
           />
         </div>
         <div>
           <Button 
             onClick={handleSearch} 
-            disabled={isScanning || !url}
+            disabled={isSearching || !onionUrl}
             className="w-full"
-            variant="outline"
           >
-            {isScanning ? (
+            {isSearching ? (
               <>Scanning...</>
             ) : (
               <>
-                <Globe className="mr-2 h-4 w-4" />
-                Search Dark Web
+                <Search className="mr-2 h-4 w-4" />
+                Scan Onion URL
               </>
             )}
           </Button>
@@ -112,111 +100,49 @@ export const TorBotTool: React.FC = () => {
       <Card className="bg-scanner-dark-alt border-gray-700">
         <CardContent className="pt-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="scan-type" className="text-sm">Deep Scan</Label>
-                <Switch 
-                  id="scan-type" 
-                  checked={scanType === 'deep'}
-                  onCheckedChange={(checked) => setScanType(checked ? 'deep' : 'basic')}
-                />
-              </div>
-              
-              <div className="flex items-center justify-between">
-                <Label htmlFor="check-live" className="text-sm">Check If Links are Live</Label>
-                <Switch 
-                  id="check-live" 
-                  checked={checkLive}
-                  onCheckedChange={setCheckLive}
-                />
+            <div>
+              <Label className="text-sm text-gray-400">Scan Mode</Label>
+              <div className="mt-1">
+                <Tabs value={scanMode} onValueChange={setScanMode} className="w-full">
+                  <TabsList className="w-full">
+                    <TabsTrigger value="standard" className="flex-1">Standard</TabsTrigger>
+                    <TabsTrigger value="deep" className="flex-1">Deep Scan</TabsTrigger>
+                  </TabsList>
+                </Tabs>
               </div>
             </div>
             
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="find-mail" className="text-sm">Find Email Addresses</Label>
-                <Switch 
-                  id="find-mail" 
-                  checked={findMail}
-                  onCheckedChange={setFindMail}
-                />
-              </div>
-              
-              <div className="flex items-center justify-between">
-                <Label htmlFor="save-crawl" className="text-sm">Save Crawl Results</Label>
-                <Switch 
-                  id="save-crawl" 
-                  checked={saveCrawl}
-                  onCheckedChange={setSaveCrawl}
-                />
-              </div>
+            <div>
+              <Label className="text-sm text-gray-400">Scan Depth</Label>
+              <Input
+                type="number"
+                placeholder="Enter scan depth (default: 3)"
+                value={scanDepth}
+                onChange={(e) => setScanDepth(e.target.value)}
+                className="bg-scanner-dark"
+              />
             </div>
           </div>
         </CardContent>
       </Card>
       
       {results && (
-        <Tabs defaultValue="links" className="w-full">
-          <TabsList className="w-full">
-            <TabsTrigger value="links" className="flex items-center">
-              <List className="mr-2 h-4 w-4" />
-              Links ({results.links?.length || 0})
-            </TabsTrigger>
-            {results.emails && results.emails.length > 0 && (
-              <TabsTrigger value="emails" className="flex items-center">
-                <Mail className="mr-2 h-4 w-4" />
-                Emails ({results.emails.length})
-              </TabsTrigger>
+        <Card className="bg-scanner-dark-alt border-gray-700">
+          <CardContent className="pt-4">
+            <h3 className="text-lg font-semibold mb-4">Scan Results</h3>
+            {results.links_found && results.links_found.length > 0 ? (
+              <ul className="list-disc pl-5">
+                {results.links_found.map((link: string, index: number) => (
+                  <li key={index} className="text-blue-400 hover:underline">
+                    <a href={link} target="_blank" rel="noopener noreferrer">{link}</a>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-gray-400">No links found.</p>
             )}
-          </TabsList>
-          
-          <TabsContent value="links" className="pt-4">
-            <Card className="bg-scanner-dark-alt border-gray-700">
-              <CardContent className="pt-4">
-                {results.links && results.links.length > 0 ? (
-                  <ScrollArea className="h-[300px]">
-                    <ul className="space-y-2">
-                      {results.links.map((link: string, index: number) => (
-                        <li key={index} className="p-2 bg-scanner-dark rounded hover:bg-scanner-dark-alt">
-                          <div className="flex items-center">
-                            <Globe className="h-4 w-4 text-gray-400 mr-2" />
-                            <span className="text-blue-400 font-mono text-sm">{link}</span>
-                          </div>
-                        </li>
-                      ))}
-                    </ul>
-                  </ScrollArea>
-                ) : (
-                  <div className="text-center py-8 text-gray-400">
-                    <Globe className="h-12 w-12 mx-auto mb-2" />
-                    <p>No links discovered</p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-          
-          {results.emails && results.emails.length > 0 && (
-            <TabsContent value="emails" className="pt-4">
-              <Card className="bg-scanner-dark-alt border-gray-700">
-                <CardContent className="pt-4">
-                  <ScrollArea className="h-[300px]">
-                    <ul className="space-y-2">
-                      {results.emails.map((email: string, index: number) => (
-                        <li key={index} className="p-2 bg-scanner-dark rounded hover:bg-scanner-dark-alt">
-                          <div className="flex items-center">
-                            <Mail className="h-4 w-4 text-gray-400 mr-2" />
-                            <span className="text-green-400 font-mono text-sm">{email}</span>
-                          </div>
-                        </li>
-                      ))}
-                    </ul>
-                  </ScrollArea>
-                </CardContent>
-              </Card>
-            </TabsContent>
-          )}
-        </Tabs>
+          </CardContent>
+        </Card>
       )}
     </div>
   );

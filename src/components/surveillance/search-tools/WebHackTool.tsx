@@ -8,7 +8,7 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Search, Shield, Server, AlertTriangle } from 'lucide-react';
-import { executeWebHack } from '@/utils/osintTools';
+import { executeWebhack } from '@/utils/osintTools';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 
@@ -53,8 +53,8 @@ export const WebHackTool: React.FC = () => {
     
     try {
       const formattedUrl = url.startsWith('http') ? url : `https://${url}`;
-      const scanResults = await executeWebHack({
-        url: formattedUrl,
+      const scanResults = await executeWebhack({
+        target: formattedUrl,
         scanType: scanType as 'basic' | 'full',
         findVulnerabilities,
         checkHeaders,

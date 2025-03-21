@@ -1,4 +1,3 @@
-
 /**
  * OSINT Tools Utilities
  * 
@@ -37,6 +36,10 @@ interface WebhackParams {
   ports?: string;
   threads?: number;
   scanType?: string;
+  findVulnerabilities?: boolean;
+  checkHeaders?: boolean;
+  testXss?: boolean;
+  testSql?: boolean;
 }
 
 interface CCTVParams {
@@ -130,6 +133,27 @@ interface SecurityAdminParams {
   };
 }
 
+// Add exports for all functions and type interfaces
+export {
+  ToolResult,
+  ShieldAIParams,
+  CameradarParams,
+  WebhackParams,
+  CCTVParams,
+  PhotonParams,
+  TorBotParams,
+  SherlockParams,
+  WebCheckParams,
+  TwintParams,
+  OSINTParams,
+  BotExploitsParams,
+  ShinobiParams,
+  CamerattackParams,
+  BackHAckParams,
+  FFmpegParams,
+  SecurityAdminParams
+};
+
 // Shield AI Tool Implementation
 export const executeShieldAI = async (params: ShieldAIParams): Promise<ToolResult> => {
   try {
@@ -211,7 +235,7 @@ export const executeSpeedCamera = async (params: { source: string, sensitivity?:
   }
 };
 
-// Webhack
+// Webhack function - ensure this is exported with lowercase 'h'
 export const executeWebhack = async (params: WebhackParams): Promise<ToolResult> => {
   try {
     if (process.env.NODE_ENV !== 'production') {
@@ -227,7 +251,11 @@ export const executeWebhack = async (params: WebhackParams): Promise<ToolResult>
       target: params.target,
       scanType: params.scanType || 'standard',
       ports: params.ports,
-      threads: params.threads
+      threads: params.threads,
+      findVulnerabilities: params.findVulnerabilities,
+      checkHeaders: params.checkHeaders,
+      testXss: params.testXss,
+      testSql: params.testSql
     });
   } catch (error) {
     console.error('Webhack execution error:', error);
