@@ -296,6 +296,418 @@ export const getComprehensiveOsintData = async (ip: string): Promise<Record<stri
   }
 };
 
+// NEW FUNCTIONALITY: InsecamOrg country-based camera search
+
+/**
+ * Get list of countries with camera counts from Insecam
+ */
+export const getInsecamCountries = async (): Promise<Array<{
+  code: string;
+  country: string;
+  count: number;
+}>> => {
+  console.log('Fetching countries list from Insecam');
+  
+  // Simulate API delay
+  await new Promise(resolve => setTimeout(resolve, 1500));
+  
+  // In a real implementation, this would scrape data from insecam.org
+  // For demonstration purposes, we'll use mock data
+  return [
+    { code: 'US', country: 'United States', count: 4352 },
+    { code: 'JP', country: 'Japan', count: 1532 },
+    { code: 'KR', country: 'South Korea', count: 1227 },
+    { code: 'GB', country: 'United Kingdom', count: 985 },
+    { code: 'FR', country: 'France', count: 865 },
+    { code: 'DE', country: 'Germany', count: 759 },
+    { code: 'IT', country: 'Italy', count: 703 },
+    { code: 'TR', country: 'Turkey', count: 673 },
+    { code: 'RU', country: 'Russia', count: 587 },
+    { code: 'CA', country: 'Canada', count: 552 },
+    { code: 'CN', country: 'China', count: 513 },
+    { code: 'AU', country: 'Australia', count: 428 },
+    { code: 'IN', country: 'India', count: 387 },
+    { code: 'MX', country: 'Mexico', count: 346 },
+    { code: 'BR', country: 'Brazil', count: 321 },
+    { code: 'ES', country: 'Spain', count: 298 },
+    { code: 'NL', country: 'Netherlands', count: 276 },
+    { code: 'IL', country: 'Israel', count: 224 },
+    { code: 'PS', country: 'Palestine', count: 198 },
+    { code: 'SA', country: 'Saudi Arabia', count: 187 },
+    { code: 'AE', country: 'United Arab Emirates', count: 173 },
+    { code: 'EG', country: 'Egypt', count: 162 },
+    { code: 'UA', country: 'Ukraine', count: 151 },
+    { code: 'BE', country: 'Belgium', count: 142 },
+    { code: 'PL', country: 'Poland', count: 134 }
+  ];
+};
+
+/**
+ * Search for cameras in a specific country using Insecam
+ */
+export const searchInsecamByCountry = async (countryCode: string, page: number = 1): Promise<{
+  cameras: Array<{
+    id: string;
+    ip: string;
+    port: number;
+    previewUrl: string;
+    location: string;
+    manufacturer?: string;
+  }>;
+  totalPages: number;
+  currentPage: number;
+}> => {
+  console.log(`Searching Insecam for cameras in country: ${countryCode}, page: ${page}`);
+  
+  // Simulate API delay
+  await new Promise(resolve => setTimeout(resolve, 2000));
+  
+  // In a real implementation, this would scrape data from insecam.org/en/bycountry/{countryCode}/?page={page}
+  // For demonstration purposes, we'll generate mock results
+  
+  // Generate a random total between 3-12 pages
+  const totalPages = Math.floor(Math.random() * 10) + 3;
+  
+  // Generate 8-16 camera results per page
+  const cameraCount = Math.floor(Math.random() * 9) + 8;
+  const cameras = [];
+  
+  for (let i = 0; i < cameraCount; i++) {
+    const ip = `${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}`;
+    const port = [80, 8080, 8081, 9000, 554][Math.floor(Math.random() * 5)];
+    const manufacturers = ['Hikvision', 'Dahua', 'Axis', 'Foscam', 'Amcrest', 'Reolink', 'Vivotek', 'Bosch', 'Samsung', undefined];
+    
+    cameras.push({
+      id: `insecam-${ip}-${port}`,
+      ip,
+      port,
+      previewUrl: `http://${ip}:${port}/snapshot.jpg`,
+      location: getCountryName(countryCode),
+      manufacturer: manufacturers[Math.floor(Math.random() * manufacturers.length)]
+    });
+  }
+  
+  return {
+    cameras,
+    totalPages,
+    currentPage: page
+  };
+};
+
+// NEW FUNCTIONALITY: Google dork search for cameras (similar to SearchCAM)
+
+/**
+ * Perform a Google dork search for cameras
+ */
+export const googleDorkSearch = async (dorkQuery: string): Promise<{
+  results: Array<{
+    id: string;
+    title: string;
+    url: string;
+    snippet: string;
+    isCamera: boolean;
+  }>;
+}> => {
+  console.log(`Performing Google dork search with query: ${dorkQuery}`);
+  
+  // Simulate API delay
+  await new Promise(resolve => setTimeout(resolve, 2500));
+  
+  // In a real implementation, this would use Google search API or scrape Google results
+  // For demonstration purposes, we'll generate mock results
+  
+  // Common camera dork queries to simulate matching against
+  const cameraDorks = [
+    'intitle:"live view"',
+    'inurl:view/index.shtml',
+    'intitle:"webcamXP"',
+    'inurl:/view.shtml',
+    'intitle:"IP CAMERA Viewer"',
+    'intitle:"AXIS Video Server"',
+    'intext:"powered by webcamXP"',
+    'intitle:"View Video"',
+    'intitle:"Live NetSnap Cam-Server feed"',
+    'intitle:"Active Webcam Page"'
+  ];
+  
+  // Check if the query contains any camera dorks to determine likelihood of results
+  const containsCameraDork = cameraDorks.some(dork => dorkQuery.toLowerCase().includes(dork.toLowerCase()));
+  
+  // Generate 3-12 results
+  const resultCount = containsCameraDork ? Math.floor(Math.random() * 10) + 3 : Math.floor(Math.random() * 5) + 1;
+  const results = [];
+  
+  for (let i = 0; i < resultCount; i++) {
+    // Generate realistic-looking results
+    const isCamera = containsCameraDork ? Math.random() > 0.3 : Math.random() > 0.7;
+    
+    // Generate different types of URLs and titles based on whether it's a camera
+    let url, title, snippet;
+    
+    if (isCamera) {
+      // Generate a camera-like URL and title
+      const ip = `${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}`;
+      const port = [80, 8080, 8081, 9000, 554][Math.floor(Math.random() * 5)];
+      const paths = ['/view.shtml', '/index.html', '/live.html', '/webcam.html', '/camera.html'];
+      const path = paths[Math.floor(Math.random() * paths.length)];
+      
+      url = `http://${ip}:${port}${path}`;
+      
+      const titles = [
+        'Live View - Network Camera',
+        'IP Camera Viewer',
+        'AXIS Video Server',
+        'Live NetSnap Cam-Server feed',
+        'Webcam XP 5 - Live View',
+        'Surveillance Camera - Live Feed',
+        'Security Camera Web Interface'
+      ];
+      
+      title = titles[Math.floor(Math.random() * titles.length)];
+      
+      const snippets = [
+        'Live view of security camera. User: admin Password: admin ... View different camera angles and configure motion detection settings.',
+        'Control panel for IP camera system. Set recording schedules, view live feeds, and configure alert settings.',
+        'RTSP stream available at rtsp://admin:admin@... View live camera feed and access recording archive.',
+        'Web interface for surveillance camera. PTZ controls available. Current status: recording.',
+        'Access your security camera remotely. Supports ONVIF protocol and integrates with NVR systems.'
+      ];
+      
+      snippet = snippets[Math.floor(Math.random() * snippets.length)];
+    } else {
+      // Generate a non-camera result that might have matched the query
+      const domains = ['security-camera-reviews.com', 'cctv-forum.net', 'surveillance-guide.org', 'securitycameras.com', 'ipcamtalk.com'];
+      const domain = domains[Math.floor(Math.random() * domains.length)];
+      const paths = ['/best-cameras', '/setup-guide', '/how-to-access-cameras', '/camera-comparison', '/security-tips'];
+      const path = paths[Math.floor(Math.random() * paths.length)];
+      
+      url = `https://${domain}${path}`;
+      
+      const titles = [
+        'How to Access Security Cameras Remotely - Complete Guide',
+        'Best IP Cameras for Home Security in 2023',
+        'Security Camera Setup Instructions',
+        'Understanding RTSP, ONVIF and Other Camera Protocols',
+        'Forum: Can\'t Access My Security Camera'
+      ];
+      
+      title = titles[Math.floor(Math.random() * titles.length)];
+      
+      const snippets = [
+        'Learn how to access your security cameras from anywhere using port forwarding and dynamic DNS services.',
+        'Comprehensive comparison of the top IP camera brands including Hikvision, Dahua, Axis and more.',
+        'Step-by-step guide to setting up your surveillance system including camera placement and wiring.',
+        'Discussion about common security vulnerabilities in IP cameras and how to protect your system.',
+        'Troubleshooting guide for common connection issues with IP cameras and NVR systems.'
+      ];
+      
+      snippet = snippets[Math.floor(Math.random() * snippets.length)];
+    }
+    
+    results.push({
+      id: `dork-${i}-${Date.now()}`,
+      title,
+      url,
+      snippet,
+      isCamera
+    });
+  }
+  
+  return { results };
+};
+
+// NEW FUNCTIONALITY: Sherlock-like username search
+
+/**
+ * Search for a username across multiple platforms (similar to Sherlock)
+ */
+export const searchUsername = async (username: string): Promise<{
+  results: Array<{
+    platform: string;
+    url: string;
+    exists: boolean;
+    username: string;
+    note?: string;
+  }>;
+}> => {
+  console.log(`Searching for username: ${username} across platforms`);
+  
+  // Simulate API delay
+  await new Promise(resolve => setTimeout(resolve, 3000));
+  
+  // In a real implementation, this would check each site for the username
+  // For demonstration purposes, we'll generate mock results
+  
+  const platforms = [
+    { name: 'GitHub', url: `https://github.com/${username}`, probability: 0.7 },
+    { name: 'Twitter', url: `https://twitter.com/${username}`, probability: 0.8 },
+    { name: 'Instagram', url: `https://instagram.com/${username}`, probability: 0.75 },
+    { name: 'Facebook', url: `https://facebook.com/${username}`, probability: 0.65 },
+    { name: 'LinkedIn', url: `https://linkedin.com/in/${username}`, probability: 0.6 },
+    { name: 'Reddit', url: `https://reddit.com/user/${username}`, probability: 0.7 },
+    { name: 'YouTube', url: `https://youtube.com/@${username}`, probability: 0.5 },
+    { name: 'Tumblr', url: `https://${username}.tumblr.com`, probability: 0.4 },
+    { name: 'Medium', url: `https://medium.com/@${username}`, probability: 0.5 },
+    { name: 'Pinterest', url: `https://pinterest.com/${username}`, probability: 0.55 },
+    { name: 'Steam', url: `https://steamcommunity.com/id/${username}`, probability: 0.6 },
+    { name: 'Twitch', url: `https://twitch.tv/${username}`, probability: 0.5 },
+    { name: 'Patreon', url: `https://patreon.com/${username}`, probability: 0.3 },
+    { name: 'TikTok', url: `https://tiktok.com/@${username}`, probability: 0.65 },
+    { name: 'HackerOne', url: `https://hackerone.com/${username}`, probability: 0.2 }
+  ];
+  
+  const results = platforms.map(platform => {
+    const exists = Math.random() < platform.probability;
+    
+    return {
+      platform: platform.name,
+      url: platform.url,
+      exists,
+      username,
+      note: exists ? undefined : Math.random() > 0.7 ? 'Profile set to private' : undefined
+    };
+  });
+  
+  return { results };
+};
+
+// NEW FUNCTIONALITY: Web-Check like site analysis
+
+/**
+ * Analyze a website for security and information (similar to Web-Check)
+ */
+export const analyzeWebsite = async (url: string): Promise<{
+  dns: Array<{type: string, value: string}>;
+  headers: Record<string, string>;
+  technologies: string[];
+  securityHeaders: Array<{header: string, value: string | null, status: 'good' | 'warning' | 'bad'}>;
+  certificates: {
+    issuer: string;
+    validFrom: string;
+    validTo: string;
+    daysRemaining: number;
+  } | null;
+  ports: Array<{port: number, service: string, state: 'open' | 'closed' | 'filtered'}>;
+}> => {
+  console.log(`Analyzing website: ${url}`);
+  
+  // Simulate API delay
+  await new Promise(resolve => setTimeout(resolve, 4000));
+  
+  // In a real implementation, this would perform actual checks on the website
+  // For demonstration purposes, we'll generate mock results
+  
+  // Parse domain from URL
+  let domain = url;
+  try {
+    domain = new URL(url.startsWith('http') ? url : `https://${url}`).hostname;
+  } catch (e) {
+    // If URL parsing fails, just use the original input
+    console.error('Error parsing URL:', e);
+  }
+  
+  // Generate mock DNS records
+  const dns = [
+    { type: 'A', value: `${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}` },
+    { type: 'MX', value: `mail.${domain}` },
+    { type: 'TXT', value: `v=spf1 include:_spf.${domain} -all` },
+    { type: 'NS', value: `ns1.${domain.split('.').slice(-2).join('.')}` },
+    { type: 'NS', value: `ns2.${domain.split('.').slice(-2).join('.')}` },
+    { type: 'CNAME', value: `www.${domain}` }
+  ];
+  
+  // Generate mock HTTP headers
+  const headers = {
+    'Server': ['Apache', 'nginx', 'Microsoft-IIS/10.0', 'cloudflare'][Math.floor(Math.random() * 4)],
+    'Content-Type': 'text/html; charset=UTF-8',
+    'Cache-Control': 'max-age=3600',
+    'X-Powered-By': Math.random() > 0.5 ? ['PHP/7.4.3', 'ASP.NET', 'Express'][Math.floor(Math.random() * 3)] : undefined,
+    'Date': new Date().toUTCString()
+  };
+  
+  // Generate mock technologies
+  const techOptions = [
+    'WordPress', 'React', 'Angular', 'jQuery', 'Bootstrap', 'PHP', 
+    'ASP.NET', 'Node.js', 'Ruby on Rails', 'Google Analytics', 
+    'Cloudflare', 'AWS', 'Google Cloud', 'Azure', 'Nginx', 'Apache', 
+    'MySQL', 'MongoDB', 'PostgreSQL', 'Redis'
+  ];
+  
+  const techCount = Math.floor(Math.random() * 6) + 3; // 3-8 technologies
+  const technologies = [];
+  
+  for (let i = 0; i < techCount; i++) {
+    const tech = techOptions[Math.floor(Math.random() * techOptions.length)];
+    if (!technologies.includes(tech)) {
+      technologies.push(tech);
+    }
+  }
+  
+  // Generate mock security headers
+  const securityHeaders = [
+    {
+      header: 'Content-Security-Policy',
+      value: Math.random() > 0.5 ? "default-src 'self'" : null,
+      status: Math.random() > 0.5 ? 'good' : 'bad'
+    },
+    {
+      header: 'X-XSS-Protection',
+      value: Math.random() > 0.7 ? '1; mode=block' : null,
+      status: Math.random() > 0.5 ? 'good' : 'warning'
+    },
+    {
+      header: 'X-Frame-Options',
+      value: Math.random() > 0.6 ? 'SAMEORIGIN' : null,
+      status: Math.random() > 0.5 ? 'good' : 'bad'
+    },
+    {
+      header: 'X-Content-Type-Options',
+      value: Math.random() > 0.8 ? 'nosniff' : null,
+      status: Math.random() > 0.5 ? 'good' : 'warning'
+    },
+    {
+      header: 'Strict-Transport-Security',
+      value: Math.random() > 0.7 ? 'max-age=31536000; includeSubDomains' : null,
+      status: Math.random() > 0.5 ? 'good' : 'bad'
+    }
+  ];
+  
+  // Generate mock SSL certificate info
+  const certificates = Math.random() > 0.2 ? {
+    issuer: ['Let\'s Encrypt Authority X3', 'DigiCert SHA2 Secure Server CA', 'Sectigo RSA Domain Validation Secure Server CA'][Math.floor(Math.random() * 3)],
+    validFrom: new Date(Date.now() - Math.random() * 15768000000).toISOString(), // Valid from 0-6 months ago
+    validTo: new Date(Date.now() + Math.random() * 31536000000).toISOString(), // Valid for 0-12 months
+    daysRemaining: Math.floor(Math.random() * 365)
+  } : null;
+  
+  // Generate mock open ports
+  const commonPorts = [
+    { port: 21, service: 'FTP' },
+    { port: 22, service: 'SSH' },
+    { port: 25, service: 'SMTP' },
+    { port: 80, service: 'HTTP' },
+    { port: 443, service: 'HTTPS' },
+    { port: 3306, service: 'MySQL' },
+    { port: 8080, service: 'HTTP-Proxy' },
+    { port: 8443, service: 'HTTPS-Alt' }
+  ];
+  
+  const ports = commonPorts.map(p => ({
+    port: p.port,
+    service: p.service,
+    state: ['open', 'closed', 'filtered'][Math.floor(Math.random() * 3)] as 'open' | 'closed' | 'filtered'
+  }));
+  
+  return {
+    dns,
+    headers,
+    technologies,
+    securityHeaders,
+    certificates,
+    ports
+  };
+};
+
 // Helper functions for generating mock data
 
 function getMockOrganization(ip: string): string {
@@ -346,3 +758,6 @@ function generateMockDomain(ip: string): string {
   
   return `${word1}-${word2}${tld}`;
 }
+
+//
+
