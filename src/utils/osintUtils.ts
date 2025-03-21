@@ -298,6 +298,39 @@ export const getComprehensiveOsintData = async (ip: string): Promise<Record<stri
 
 // NEW FUNCTIONALITY: InsecamOrg country-based camera search
 
+// Add the missing getCountryName function
+function getCountryName(countryCode: string): string {
+  const countryMap: Record<string, string> = {
+    'US': 'United States',
+    'JP': 'Japan',
+    'KR': 'South Korea',
+    'GB': 'United Kingdom',
+    'FR': 'France',
+    'DE': 'Germany',
+    'IT': 'Italy',
+    'TR': 'Turkey',
+    'RU': 'Russia',
+    'CA': 'Canada',
+    'CN': 'China',
+    'AU': 'Australia',
+    'IN': 'India',
+    'MX': 'Mexico',
+    'BR': 'Brazil',
+    'ES': 'Spain',
+    'NL': 'Netherlands',
+    'IL': 'Israel',
+    'PS': 'Palestine',
+    'SA': 'Saudi Arabia',
+    'AE': 'United Arab Emirates',
+    'EG': 'Egypt',
+    'UA': 'Ukraine',
+    'BE': 'Belgium',
+    'PL': 'Poland'
+  };
+  
+  return countryMap[countryCode] || countryCode;
+}
+
 /**
  * Get list of countries with camera counts from Insecam
  */
@@ -643,121 +676,27 @@ export const analyzeWebsite = async (url: string): Promise<{
     }
   }
   
-  // Generate mock security headers
+  // Fix the securityHeaders type by using explicit union types for status
   const securityHeaders = [
     {
       header: 'Content-Security-Policy',
       value: Math.random() > 0.5 ? "default-src 'self'" : null,
-      status: Math.random() > 0.5 ? 'good' : 'bad'
+      status: Math.random() > 0.5 ? 'good' : 'bad' as 'good' | 'bad'
     },
     {
       header: 'X-XSS-Protection',
       value: Math.random() > 0.7 ? '1; mode=block' : null,
-      status: Math.random() > 0.5 ? 'good' : 'warning'
+      status: Math.random() > 0.5 ? 'good' : 'warning' as 'good' | 'warning'
     },
     {
       header: 'X-Frame-Options',
       value: Math.random() > 0.6 ? 'SAMEORIGIN' : null,
-      status: Math.random() > 0.5 ? 'good' : 'bad'
+      status: Math.random() > 0.5 ? 'good' : 'bad' as 'good' | 'bad'
     },
     {
       header: 'X-Content-Type-Options',
       value: Math.random() > 0.8 ? 'nosniff' : null,
-      status: Math.random() > 0.5 ? 'good' : 'warning'
+      status: Math.random() > 0.5 ? 'good' : 'warning' as 'good' | 'warning'
     },
     {
-      header: 'Strict-Transport-Security',
-      value: Math.random() > 0.7 ? 'max-age=31536000; includeSubDomains' : null,
-      status: Math.random() > 0.5 ? 'good' : 'bad'
-    }
-  ];
-  
-  // Generate mock SSL certificate info
-  const certificates = Math.random() > 0.2 ? {
-    issuer: ['Let\'s Encrypt Authority X3', 'DigiCert SHA2 Secure Server CA', 'Sectigo RSA Domain Validation Secure Server CA'][Math.floor(Math.random() * 3)],
-    validFrom: new Date(Date.now() - Math.random() * 15768000000).toISOString(), // Valid from 0-6 months ago
-    validTo: new Date(Date.now() + Math.random() * 31536000000).toISOString(), // Valid for 0-12 months
-    daysRemaining: Math.floor(Math.random() * 365)
-  } : null;
-  
-  // Generate mock open ports
-  const commonPorts = [
-    { port: 21, service: 'FTP' },
-    { port: 22, service: 'SSH' },
-    { port: 25, service: 'SMTP' },
-    { port: 80, service: 'HTTP' },
-    { port: 443, service: 'HTTPS' },
-    { port: 3306, service: 'MySQL' },
-    { port: 8080, service: 'HTTP-Proxy' },
-    { port: 8443, service: 'HTTPS-Alt' }
-  ];
-  
-  const ports = commonPorts.map(p => ({
-    port: p.port,
-    service: p.service,
-    state: ['open', 'closed', 'filtered'][Math.floor(Math.random() * 3)] as 'open' | 'closed' | 'filtered'
-  }));
-  
-  return {
-    dns,
-    headers,
-    technologies,
-    securityHeaders,
-    certificates,
-    ports
-  };
-};
-
-// Helper functions for generating mock data
-
-function getMockOrganization(ip: string): string {
-  const orgs = [
-    'Cloudflare Inc.',
-    'Amazon Technologies Inc.',
-    'Google LLC',
-    'Microsoft Corporation',
-    'OVH SAS',
-    'Digital Ocean LLC',
-    'Hetzner Online GmbH',
-    'Level 3 Communications',
-    'Comcast Cable Communications',
-    'Tencent Cloud Computing'
-  ];
-  
-  // Use IP to deterministically select an organization
-  const ipSum = ip.split('.').reduce((sum, octet) => sum + parseInt(octet, 10), 0);
-  return orgs[ipSum % orgs.length];
-}
-
-function getMockNetworkRange(ip: string): string {
-  const parts = ip.split('.');
-  return `${parts[0]}.${parts[1]}.0.0/16`;
-}
-
-function getMockCountry(ip: string): string {
-  const countries = [
-    'United States', 'Germany', 'France', 'Netherlands', 
-    'United Kingdom', 'Japan', 'Singapore', 'Australia',
-    'Brazil', 'Canada', 'Italy', 'Spain'
-  ];
-  
-  // Use IP to deterministically select a country
-  const ipSum = ip.split('.').reduce((sum, octet) => sum + parseInt(octet, 10), 0);
-  return countries[ipSum % countries.length];
-}
-
-function generateMockDomain(ip: string): string {
-  const tlds = ['.com', '.net', '.org', '.io', '.cloud'];
-  const words = ['secure', 'net', 'server', 'host', 'cloud', 'data', 'stream', 'cdn', 'api', 'web'];
-  
-  // Use IP to deterministically generate a domain
-  const ipSum = ip.split('.').reduce((sum, octet) => sum + parseInt(octet, 10), 0);
-  const word1 = words[ipSum % words.length];
-  const word2 = words[(ipSum + 1) % words.length];
-  const tld = tlds[ipSum % tlds.length];
-  
-  return `${word1}-${word2}${tld}`;
-}
-
-//
-
+      header: 'Strict-Transport
