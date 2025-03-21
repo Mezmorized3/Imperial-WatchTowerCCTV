@@ -1,9 +1,7 @@
-
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
-import GlobeView from '@/components/globe/GlobeView';
 import { CameraResult } from '@/types/scanner';
 
 // Mock data for demonstration
@@ -82,15 +80,18 @@ const mockCameras: CameraResult[] = [
 console.log('Globe.tsx module is loading');
 
 const Globe = () => {
+  console.log('Starting Globe component rendering');
   const navigate = useNavigate();
   const [cameras] = React.useState<CameraResult[]>(mockCameras);
+  const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
     console.log('Globe component mounted');
     document.title = 'Globe View';
+    setLoaded(true);
   }, []);
 
-  console.log('Globe component rendering');
+  console.log('Globe component rendering, loaded:', loaded);
 
   return (
     <div className="min-h-screen bg-scanner-dark text-white">
@@ -100,7 +101,10 @@ const Globe = () => {
             <Button 
               variant="ghost" 
               size="sm" 
-              onClick={() => navigate('/')}
+              onClick={() => {
+                console.log('Navigating back to home');
+                navigate('/');
+              }}
               className="text-gray-400 hover:text-white"
             >
               <ArrowLeft className="h-4 w-4 mr-2" /> 
@@ -112,11 +116,34 @@ const Globe = () => {
       </header>
 
       <main className="container mx-auto py-6 px-4">
-        <div className="h-[700px] w-full bg-scanner-dark-alt rounded-lg overflow-hidden">
-          <GlobeView 
-            cameras={cameras} 
-            scanInProgress={false}
-          />
+        <div className="h-[700px] w-full bg-scanner-dark-alt rounded-lg overflow-hidden relative">
+          {!loaded ? (
+            <div className="flex items-center justify-center h-full">
+              <p>Loading globe visualization...</p>
+            </div>
+          ) : (
+            <>
+              {(() => {
+                try {
+                  const GlobeView = require('@/components/globe/GlobeView').default;
+                  console.log('GlobeView component loaded:', !!GlobeView);
+                  return (
+                    <GlobeView 
+                      cameras={cameras} 
+                      scanInProgress={false}
+                    />
+                  );
+                } catch (err) {
+                  console.error('Error loading GlobeView:', err);
+                  return (
+                    <div className="flex items-center justify-center h-full">
+                      <p>Error loading globe visualization. Please try again later.</p>
+                    </div>
+                  );
+                }
+              })()}
+            </>
+          )}
         </div>
       </main>
     </div>
