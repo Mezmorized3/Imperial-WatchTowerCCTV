@@ -1,4 +1,5 @@
-import React from 'react';
+
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -6,12 +7,30 @@ import { Terminal, Camera, User, Map } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 
 const DashboardHeader = () => {
+  const [showAscii, setShowAscii] = useState(false);
+  
+  const imperialArmyBanner = `
+    ██╗███╗   ███╗██████╗ ███████╗██████╗ ██╗ █████╗ ██╗          █████╗ ██████╗ ███╗   ███╗██╗   ██╗
+    ██║████╗ ████║██╔══██╗██╔════╝██╔══██╗██║██╔══██║██║         ██╔══██╗██╔══██╗████╗ ████║╚██╗ ██╔╝
+    ██║██╔████╔██║██████╔╝█████╗  ██████╔╝██║███████║██║         ███████║██████╔╝██╔████╔██║ ╚████╔╝ 
+    ██║██║╚██╔╝██║██╔═══╝ ██╔══╝  ██╔══██╗██║██╔══██║██║         ██╔══██║██╔══██╗██║╚██╔╝██║  ╚██╔╝  
+    ██║██║ ╚═╝ ██║██║     ███████╗██║  ██║██║██║  ██║███████╗    ██║  ██║██║  ██║██║ ╚═╝ ██║   ██║   
+    ╚═╝╚═╝     ╚═╝╚═╝     ╚══════╝╚═╝  ╚═╝╚═╝╚═╝  ╚═╝╚══════╝    ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝     ╚═╝   ╚═╝   
+  `;
+
+  const toggleAscii = () => {
+    setShowAscii(!showAscii);
+  };
+
   return (
     <header className="bg-scanner-dark-alt border-b border-gray-800 py-4 px-6">
       <div className="container mx-auto">
         <div className="flex justify-between items-center">
           <div className="flex items-center space-x-3">
-            <Terminal className="h-7 w-7 text-scanner-primary" />
+            <Terminal 
+              className="h-7 w-7 text-scanner-primary cursor-pointer" 
+              onClick={toggleAscii}
+            />
             <h1 className="text-2xl font-bold text-white">CameraScanner</h1>
             <Badge className="bg-scanner-primary ml-2">Beta</Badge>
           </div>
@@ -31,6 +50,12 @@ const DashboardHeader = () => {
             </Button>
           </div>
         </div>
+        
+        {showAscii && (
+          <div className="mt-4 bg-scanner-dark p-4 rounded-md overflow-x-auto">
+            <pre className="text-scanner-primary text-xs font-mono">{imperialArmyBanner}</pre>
+          </div>
+        )}
       </div>
     </header>
   );
