@@ -12,6 +12,7 @@
  * - API versioning (all endpoints under /v1)
  * - Administrative dashboard (React app served on port 8080)
  * - Modular design for further CI/CD integration and automated testing
+ * - Python tools integration for OSINT and camera discovery
  */
 
 const express = require('express');
@@ -30,33 +31,16 @@ const jwt = require('jsonwebtoken');  // For admin authentication
 const fs = require('fs');
 const https = require('https');
 const { spawn } = require('child_process');
+const cors = require('cors');  // Add CORS support for API access
+
+// Import the Python tools integration
+const pythonTools = require('./imperialPythonTools');
 
 // Optional: Distributed tracing (using jaeger-client as an example)
 const initTracer = require('jaeger-client').initTracer;
 
 // Load dynamic configuration (config.json should be in the same directory)
 const config = require('./config.json');
-// Example config.json structure:
-// {
-//   "ports": {
-//     "8080": "Main web application (React app)",
-//     "8000": "Ticker HTML server",
-//     "5000": "SocketIO/ticker server",
-//     "5001": "Control panel API server",
-//     "3000": "HLS Restream Server"
-//   },
-//   "adminToken": "your-super-secret-admin-token",
-//   "useHttps": true,
-//   "sslOptions": {
-//      "keyPath": "./ssl/key.pem",
-//      "certPath": "./ssl/cert.pem"
-//   },
-//   "tracing": {
-//      "serviceName": "imperial_server",
-//      "agentHost": "localhost",
-//      "agentPort": 6831
-//   }
-// }
 
 // COMMANDER OF FLAGS
 const argv = minimist(process.argv.slice(2));
@@ -186,6 +170,9 @@ class ImperialServer {
   }
 
   initializeRoyalProtocols() {
+    // Add CORS support
+    this.royalCourt.use(cors());
+    
     // Use helmet and rate limiting on the Imperial Court
     this.royalCourt.use(helmet(securityPolicy));
     this.royalCourt.use(rateLimit({ windowMs: 60 * 1000, max: 1000, legacyHeaders: false }));
@@ -221,6 +208,9 @@ class ImperialServer {
     Object.keys(PORTS_TO_MANAGE).forEach(portStr => {
       const port = Number(portStr);
       const legionApp = express();
+      
+      // Add CORS support for API legions
+      legionApp.use(cors());
 
       // API versioning: all routes under /v1
       const router = express.Router();
@@ -243,10 +233,99 @@ class ImperialServer {
           legionApp.use('/v1', router);
           break;
         case 5001:
-          // Control panel API server
+          // Control panel API server - This is where we add OSINT API endpoints
+          // Status endpoint
           router.get('/status', (req, res) => {
             res.json({ status: 'Control Panel API server is online' });
           });
+          
+          // OSINT API endpoints
+          router.get('/api/osint/status', (req, res) => {
+            res.json({
+              status: 'operational',
+              availableTools: [
+                'sherlock', 'cameradar', 'ipcamsearch', 'searchcam', 'webcheck'
+              ]
+            });
+          });
+          
+          // Sherlock - Username search across platforms
+          router.post('/api/osint/sherlock', adminAuth, async (req, res) => {
+            try {
+              const { username } = req.body;
+              if (!username) {
+                return res.status(400).json({ error: 'Username parameter is required' });
+              }
+              
+              const result = await pythonTools.runPythonTool('sherlock', { username });
+              res.json(result);
+            } catch (error) {
+              royalLogger.error('Sherlock tool error:', error);
+              res.status(500).json({ error: error.message });
+            }
+          });
+          
+          // Cameradar - RTSP stream discovery
+          router.post('/api/osint/cameradar', adminAuth, async (req, res) => {
+            try {
+              const { target, ports } = req.body;
+              if (!target) {
+                return res.status(400).json({ error: 'Target parameter is required' });
+              }
+              
+              const result = await pythonTools.runPythonTool('cameradar', { target, ports });
+              res.json(result);
+            } catch (error) {
+              royalLogger.error('Cameradar tool error:', error);
+              res.status(500).json({ error: error.message });
+            }
+          });
+          
+          // IPCamSearch - Camera discovery using various protocols
+          router.post('/api/osint/ipcamsearch', adminAuth, async (req, res) => {
+            try {
+              const { subnet, protocols } = req.body;
+              if (!subnet) {
+                return res.status(400).json({ error: 'Subnet parameter is required' });
+              }
+              
+              const result = await pythonTools.runPythonTool('ipcamsearch', { subnet, protocols: protocols || [] });
+              res.json(result);
+            } catch (error) {
+              royalLogger.error('IPCamSearch tool error:', error);
+              res.status(500).json({ error: error.message });
+            }
+          });
+          
+          // WebCheck - Website security and information analysis
+          router.post('/api/osint/webcheck', adminAuth, async (req, res) => {
+            try {
+              const { url } = req.body;
+              if (!url) {
+                return res.status(400).json({ error: 'URL parameter is required' });
+              }
+              
+              const result = await pythonTools.runPythonTool('webcheck', { url });
+              res.json(result);
+            } catch (error) {
+              royalLogger.error('WebCheck tool error:', error);
+              res.status(500).json({ error: error.message });
+            }
+          });
+          
+          // Authorization token generation for API access
+          router.post('/api/auth', async (req, res) => {
+            const { token } = req.body;
+            
+            if (token !== config.adminToken) {
+              return res.status(403).json({ success: false, message: 'Invalid token' });
+            }
+            
+            // Create a JWT that expires in 24 hours
+            const jwtToken = jwt.sign({ admin: true }, config.adminToken, { expiresIn: '24h' });
+            res.json({ success: true, token: jwtToken });
+          });
+          
           legionApp.use('/v1', router);
           break;
         case 3000:
@@ -294,6 +373,24 @@ class ImperialServer {
   }
 
   establishRoyalCourt() {
+    // Login endpoint for getting JWT token
+    this.royalCourt.post('/v1/auth/login', (req, res) => {
+      const { token } = req.body;
+      
+      if (!token || token !== config.adminToken) {
+        return res.status(401).json({ success: false, message: 'Invalid credentials' });
+      }
+      
+      // Sign a token with the admin role
+      const jwtToken = jwt.sign(
+        { role: 'admin' },
+        config.adminToken,
+        { expiresIn: '24h' }
+      );
+      
+      res.json({ success: true, token: jwtToken });
+    });
+
     // Protect administrative endpoints with JWT authentication
     const adminRouter = express.Router();
     adminRouter.use(adminAuth);

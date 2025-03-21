@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Input } from '@/components/ui/input';
@@ -9,7 +10,6 @@ import { useToast } from '@/components/ui/use-toast';
 import { ArrowRight, Globe, Search, Shield } from 'lucide-react';
 import { getRandomGeoLocation } from '@/utils/osintUtils';
 
-// Array of countries for the Imperial Network
 const IMPERIAL_TERRITORIES = [
   { code: 'US', name: 'United States', count: 5234 },
   { code: 'JP', name: 'Japan', count: 2918 },
@@ -36,8 +36,8 @@ const ImperialScanner = () => {
   const [scanProgress, setScanProgress] = useState<number>(0);
   const [scanResults, setScanResults] = useState<any[]>([]);
   const [commandAccepted, setCommandAccepted] = useState<boolean>(false);
-  
-  // Imperial banner ASCII art
+  const navigate = useNavigate();
+
   const imperialBanner = `
     ██╗███╗   ███╗██████╗ ███████╗██████╗ ██╗ █████╗ ██╗         ███████╗██╗   ██╗███████╗
     ██║████╗ ████║██╔══██╗██╔════╝██╔══██╗██║██╔══██╗██║         ██╔════╝╚██╗ ██╔╝██╔════╝
@@ -47,7 +47,6 @@ const ImperialScanner = () => {
     ╚═╝╚═╝     ╚═╝╚═╝     ╚══════╝╚═╝  ╚═╝╚═╝╚═╝  ╚═╝╚══════╝    ╚══════╝   ╚═╝   ╚══════╝
   `;
 
-  // Accept the imperial mandate
   const acceptImperialMandate = () => {
     setCommandAccepted(true);
     toast({
@@ -57,7 +56,6 @@ const ImperialScanner = () => {
     });
   };
 
-  // Start the scan operation
   const startScan = () => {
     if (!selectedTerritory && !searchQuery) {
       toast({
@@ -72,7 +70,6 @@ const ImperialScanner = () => {
     setScanProgress(0);
     setScanResults([]);
 
-    // Simulate scanning process
     const selectedCountry = IMPERIAL_TERRITORIES.find(t => t.code === selectedTerritory);
     const totalPages = selectedCountry ? Math.ceil(selectedCountry.count / 10) : 5;
     let currentPage = 0;
@@ -82,7 +79,6 @@ const ImperialScanner = () => {
       const newProgress = Math.min(100, Math.round((currentPage / totalPages) * 100));
       setScanProgress(newProgress);
 
-      // Generate a simulated result for this batch
       if (currentPage % 2 === 0 || currentPage === 1) {
         generateSimulatedResult();
       }
@@ -95,13 +91,11 @@ const ImperialScanner = () => {
           description: `Found ${scanResults.length + 1} cameras in target region.`,
           variant: "default",
         });
-        // Add one final result
         generateSimulatedResult();
       }
     }, 1000);
   };
 
-  // Generate simulated scan result
   const generateSimulatedResult = () => {
     const randomLocation = getRandomGeoLocation(selectedTerritory || 'US');
     
@@ -122,7 +116,6 @@ const ImperialScanner = () => {
     setScanResults(prev => [...prev, result]);
   };
 
-  // Run the search CAM query
   const executeSearchCamQuery = () => {
     if (!searchQuery) {
       toast({
@@ -141,7 +134,6 @@ const ImperialScanner = () => {
       variant: "default",
     });
 
-    // Simulate search process
     let progress = 0;
     const searchInterval = setInterval(() => {
       progress += 20;
@@ -182,6 +174,10 @@ const ImperialScanner = () => {
     }, 1000);
   };
 
+  const navigateToImperialControl = () => {
+    navigate('/imperial-control');
+  };
+
   if (!commandAccepted) {
     return (
       <div className="min-h-screen bg-scanner-dark text-white p-6">
@@ -218,16 +214,20 @@ const ImperialScanner = () => {
     <div className="min-h-screen bg-scanner-dark text-white p-6">
       <Card className="max-w-6xl mx-auto bg-scanner-dark-alt border-gray-700">
         <CardHeader className="border-b border-gray-700">
-          <CardTitle className="text-2xl flex items-center">
-            <Shield className="mr-2 text-red-500" /> Imperial Surveillance Network
-          </CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-2xl flex items-center">
+              <Shield className="mr-2 text-red-500" /> Imperial Surveillance Network
+            </CardTitle>
+            <Button variant="outline" size="sm" onClick={navigateToImperialControl}>
+              Imperial Control Center
+            </Button>
+          </div>
           <CardDescription className="text-gray-400">
             Select a territory for reconnaissance or use SearchCAM for targeted queries
           </CardDescription>
         </CardHeader>
         
         <CardContent className="pt-6 space-y-6">
-          {/* Territory selection */}
           <div className="space-y-4">
             <h3 className="text-lg font-medium flex items-center">
               <Globe className="mr-2 text-blue-400" /> Territory Selection
@@ -268,7 +268,6 @@ const ImperialScanner = () => {
             </div>
           </div>
           
-          {/* SearchCAM */}
           <div className="space-y-4">
             <h3 className="text-lg font-medium flex items-center">
               <Search className="mr-2 text-green-400" /> SearchCAM Protocol
@@ -299,7 +298,6 @@ const ImperialScanner = () => {
             </div>
           </div>
           
-          {/* Progress indicator */}
           {isScanning && (
             <div className="space-y-2">
               <div className="flex justify-between text-sm">
@@ -310,7 +308,6 @@ const ImperialScanner = () => {
             </div>
           )}
           
-          {/* Results */}
           {scanResults.length > 0 && (
             <div className="space-y-4">
               <h3 className="text-lg font-medium border-b border-gray-700 pb-2">
