@@ -1,4 +1,3 @@
-
 /**
  * Utility functions for RTSP stream handling
  */
@@ -46,7 +45,7 @@ export const convertRtspToHls = (rtspUrl: string): string => {
   // Get the proxy server URL from localStorage or use default
   const rtspProxyEnabled = localStorage.getItem('rtspProxyEnabled') !== 'false';
   const proxyServerUrl = rtspProxyEnabled 
-    ? localStorage.getItem('rtspProxyUrl') || 'http://localhost:3000' 
+    ? localStorage.getItem('rtspProxyUrl') || 'http://localhost:3005' 
     : process.env.RTSP_PROXY_SERVER || 'http://localhost:8083';
   
   // Format: http://rtsp-proxy-server/api/stream?url=rtsp://camera-ip
@@ -156,3 +155,5 @@ export const stopRecording = async (streamId: string): Promise<boolean> => {
     return false;
   }
 };
+
+

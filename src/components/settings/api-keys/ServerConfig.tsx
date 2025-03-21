@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
@@ -13,12 +12,11 @@ export const ServerConfig: React.FC = () => {
   const [imperialToken, setImperialToken] = useState('');
   const [serverUrl, setServerUrl] = useState('http://localhost:7443');
   const [rtspProxyEnabled, setRtspProxyEnabled] = useState(true);
-  const [rtspProxyUrl, setRtspProxyUrl] = useState('http://localhost:3000');
+  const [rtspProxyUrl, setRtspProxyUrl] = useState('http://localhost:3005');
   const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
   
   useEffect(() => {
-    // Load the settings from localStorage when component mounts
     const savedToken = localStorage.getItem('imperialToken');
     const savedServerUrl = localStorage.getItem('imperialServerUrl');
     const savedRtspProxyUrl = localStorage.getItem('rtspProxyUrl');
@@ -63,13 +61,11 @@ export const ServerConfig: React.FC = () => {
   const handleSaveConfig = () => {
     setIsSaving(true);
     
-    // Save all settings to localStorage
     localStorage.setItem('imperialToken', imperialToken);
     localStorage.setItem('imperialServerUrl', serverUrl);
     localStorage.setItem('rtspProxyUrl', rtspProxyUrl);
     localStorage.setItem('rtspProxyEnabled', rtspProxyEnabled.toString());
     
-    // Simulate an API call to save settings
     setTimeout(() => {
       setIsSaving(false);
       toast({
@@ -85,8 +81,6 @@ export const ServerConfig: React.FC = () => {
       description: "Attempting to connect to Imperial Server"
     });
     
-    // Here we would normally test the connection to the imperial server
-    // But for demo purposes, we'll just show a success message after a delay
     setTimeout(() => {
       toast({
         title: "Connection successful",
@@ -172,13 +166,13 @@ export const ServerConfig: React.FC = () => {
               <Input
                 id="rtsp-proxy-url"
                 className="bg-gray-800"
-                placeholder="http://localhost:3000"
+                placeholder="http://localhost:3005"
                 value={rtspProxyUrl}
                 onChange={handleRtspProxyUrlChange}
                 disabled={!rtspProxyEnabled}
               />
               <p className="text-xs text-gray-400">
-                URL of the HLS streaming server (port 3000 by default).
+                URL of the HLS streaming server (port 3005 by default).
               </p>
             </div>
           </TabsContent>
