@@ -10,7 +10,7 @@ export const analyzeFirmware = async (brand: string, model: string, version: str
   if (!nvdApiKey) {
     console.warn('No NVD API key configured. Please add your NVD API key in Settings -> API Keys.');
     return {
-      knownVulnerabilities: [],
+      knownVulnerabilities: [], // Now always returning an array, not undefined
       outdated: false,
       lastUpdate: null,
       recommendedVersion: null
@@ -31,7 +31,7 @@ export const analyzeFirmware = async (brand: string, model: string, version: str
     if (!response.ok) {
       console.error(`NVD API error: ${response.status} ${response.statusText}`);
       return {
-        knownVulnerabilities: [],
+        knownVulnerabilities: [], // Now always returning an array, not undefined
         outdated: false,
         lastUpdate: null,
         recommendedVersion: null
@@ -53,7 +53,7 @@ export const analyzeFirmware = async (brand: string, model: string, version: str
   } catch (error) {
     console.error(`Error analyzing firmware: ${error}`);
     return {
-      knownVulnerabilities: [],
+      knownVulnerabilities: [], // Now always returning an array, not undefined
       outdated: false,
       lastUpdate: null,
       recommendedVersion: null

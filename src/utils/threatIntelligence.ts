@@ -1,4 +1,3 @@
-
 import { ThreatIntelData } from '@/types/scanner';
 
 /**
@@ -144,7 +143,7 @@ export const analyzeFirmware = async (
   outdated: boolean;
   lastUpdate?: string;
   recommendedVersion?: string;
-  knownVulnerabilities?: string[];
+  knownVulnerabilities: string[];
   securityScore?: number;
   recommendations?: string[];
 }> => {
@@ -174,11 +173,10 @@ export const analyzeFirmware = async (
   const recommendedVersion = `${latestMajor}.${latestMinor}.${latestPatch}`;
   
   // Generate known vulnerabilities for outdated firmware
-  let knownVulnerabilities: string[] | undefined;
+  let knownVulnerabilities: string[] = [];
   if (outdated) {
     const vulnCount = Math.floor(Math.random() * 3) + (outdated ? 1 : 0);
     if (vulnCount > 0) {
-      knownVulnerabilities = [];
       const possibleCVEs = [
         'CVE-2021-36260', 'CVE-2021-33044', 'CVE-2021-32941', 
         'CVE-2020-25078', 'CVE-2020-9587', 'CVE-2019-9082', 
