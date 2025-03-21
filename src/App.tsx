@@ -2,7 +2,7 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Index from '@/pages/Index';
 import Viewer from '@/pages/Viewer';
-import GlobePage from '@/pages/GlobeView'; // Ensuring correct import path
+import GlobePage from '@/pages/Globe'; // Updated import path
 import NotFound from '@/pages/NotFound';
 import { ThemeProvider } from '@/components/ui/theme-provider';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -12,7 +12,7 @@ import './App.css';
 const queryClient = new QueryClient();
 
 function App() {
-  console.log('App rendering with routes', { GlobePage });
+  console.log('App rendering with updated Globe route');
   
   return (
     <ThemeProvider defaultTheme="dark">

@@ -1,31 +1,34 @@
 
 import React from 'react';
-import { Canvas } from '@react-three/fiber';
 import { CameraResult } from '@/types/scanner';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Globe, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
-
-// Import refactored components
-import GlobeScene from './globe/GlobeScene';
-import Legend from './globe/Legend';
-import NoDataOverlay from './globe/NoDataOverlay';
+import GlobeView from './globe/GlobeView';
 import ScanAlert from './globe/ScanAlert';
+import NoDataOverlay from './globe/NoDataOverlay';
 
-interface GlobeViewProps {
+interface GlobeComponentProps {
   cameras: CameraResult[];
   scanInProgress?: boolean;
   currentTarget?: string;
   targetCountry?: string;
 }
 
-const GlobeView: React.FC<GlobeViewProps> = (props) => {
+console.log('Dashboard GlobeComponent loaded');
+
+const GlobeComponent: React.FC<GlobeComponentProps> = (props) => {
   const { cameras, scanInProgress, currentTarget, targetCountry } = props;
   const camerasWithLocation = cameras.filter(c => c.location?.latitude && c.location?.longitude);
   const navigate = useNavigate();
   
+  console.log('Dashboard GlobeComponent rendering', { 
+    camerasCount: cameras.length, 
+    camerasWithLocationCount: camerasWithLocation.length 
+  });
+
   return (
     <Card className="bg-scanner-card border-gray-800 shadow-lg">
       <CardHeader className="pb-2">
@@ -42,7 +45,10 @@ const GlobeView: React.FC<GlobeViewProps> = (props) => {
           <Button 
             variant="ghost" 
             size="sm"
-            onClick={() => navigate('/globe')}
+            onClick={() => {
+              console.log('Navigating to /globe');
+              navigate('/globe');
+            }}
             className="text-gray-400 hover:text-white"
           >
             <ExternalLink className="h-4 w-4 mr-2" />
@@ -58,21 +64,18 @@ const GlobeView: React.FC<GlobeViewProps> = (props) => {
         />
         
         <div className="h-[500px] rounded-md overflow-hidden relative">
-          <Canvas camera={{ position: [0, 0, 300], fov: 50 }}>
-            <GlobeScene 
-              cameras={cameras} 
-              scanInProgress={scanInProgress} 
-              currentTarget={currentTarget}
-              targetCountry={targetCountry}
-            />
-          </Canvas>
+          <GlobeView 
+            cameras={cameras} 
+            scanInProgress={scanInProgress} 
+            currentTarget={currentTarget}
+            targetCountry={targetCountry}
+          />
           
           <NoDataOverlay visible={camerasWithLocation.length === 0 && !scanInProgress} />
-          <Legend />
         </div>
       </CardContent>
     </Card>
   );
 };
 
-export default GlobeView;
+export default GlobeComponent;
