@@ -1,10 +1,11 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
-import { AlertCircle, RefreshCw, Maximize2, Volume2, VolumeX } from 'lucide-react';
+import { AlertCircle, RefreshCw, Maximize2, Volume2, VolumeX, VideoOff, Video, DownloadCloud } from 'lucide-react';
 import ReactHlsPlayer from 'react-hls-player';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
-import { getProperStreamUrl, convertRtspToHls } from '@/utils/rtspUtils';
+import { getProperStreamUrl, convertRtspToHls, startRecording, stopRecording } from '@/utils/rtspUtils';
+import { useToast } from '@/hooks/use-toast';
 
 interface RtspPlayerProps {
   rtspUrl: string;
@@ -25,8 +26,13 @@ const RtspPlayer: React.FC<RtspPlayerProps> = ({
   const [isMuted, setIsMuted] = useState(true);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
+  const [isRecording, setIsRecording] = useState(false);
   const playerRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const { toast } = useToast();
+  
+  // Generate a stable stream ID from the RTSP URL
+  const streamId = btoa(rtspUrl).replace(/[/+=]/g, '').substring(0, 12);
   
   const initializeStream = () => {
     setIsLoading(true);
@@ -71,6 +77,41 @@ const RtspPlayer: React.FC<RtspPlayerProps> = ({
   const handleRetry = () => {
     setRetryCount(prev => prev + 1);
     initializeStream();
+  };
+  
+  const toggleRecording = async () => {
+    try {
+      if (isRecording) {
+        const success = await stopRecording(streamId);
+        if (success) {
+          setIsRecording(false);
+          toast({
+            title: "Recording stopped",
+            description: "Video recording has been saved"
+          });
+        } else {
+          throw new Error("Failed to stop recording");
+        }
+      } else {
+        const success = await startRecording(streamId);
+        if (success) {
+          setIsRecording(true);
+          toast({
+            title: "Recording started",
+            description: "Video is now being recorded"
+          });
+        } else {
+          throw new Error("Failed to start recording");
+        }
+      }
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Recording operation failed';
+      toast({
+        title: "Recording Error",
+        description: errorMessage,
+        variant: "destructive"
+      });
+    }
   };
   
   useEffect(() => {
@@ -182,7 +223,20 @@ const RtspPlayer: React.FC<RtspPlayerProps> = ({
             variant="ghost" 
             size="icon" 
             className="h-8 w-8 rounded-full bg-black/50 hover:bg-black/70"
+            onClick={toggleRecording}
+            title={isRecording ? "Stop Recording" : "Start Recording"}
+          >
+            {isRecording ? 
+              <VideoOff className="h-4 w-4 text-red-500" /> : 
+              <Video className="h-4 w-4" />
+            }
+          </Button>
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="h-8 w-8 rounded-full bg-black/50 hover:bg-black/70"
             onClick={toggleMute}
+            title={isMuted ? "Unmute" : "Mute"}
           >
             {isMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
           </Button>
@@ -191,6 +245,7 @@ const RtspPlayer: React.FC<RtspPlayerProps> = ({
             size="icon" 
             className="h-8 w-8 rounded-full bg-black/50 hover:bg-black/70"
             onClick={toggleFullscreen}
+            title="Fullscreen"
           >
             <Maximize2 className="h-4 w-4" />
           </Button>

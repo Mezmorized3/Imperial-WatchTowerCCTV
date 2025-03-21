@@ -43,11 +43,14 @@ export const getProperStreamUrl = (
  * Converts RTSP URL to a properly formatted proxy URL that the browser can display
  */
 export const convertRtspToHls = (rtspUrl: string): string => {
-  // Due to browser limitations, we need to proxy the RTSP stream through an HLS server
-  const proxyServerUrl = process.env.RTSP_PROXY_SERVER || 'http://localhost:8083';
+  // Get the proxy server URL from localStorage or use default
+  const rtspProxyEnabled = localStorage.getItem('rtspProxyEnabled') !== 'false';
+  const proxyServerUrl = rtspProxyEnabled 
+    ? localStorage.getItem('rtspProxyUrl') || 'http://localhost:3000' 
+    : process.env.RTSP_PROXY_SERVER || 'http://localhost:8083';
   
-  // Format: http://rtsp-proxy-server/stream?url=rtsp://camera-ip
-  return `${proxyServerUrl}/stream?url=${encodeURIComponent(rtspUrl)}`;
+  // Format: http://rtsp-proxy-server/api/stream?url=rtsp://camera-ip
+  return `${proxyServerUrl}/api/stream?url=${encodeURIComponent(rtspUrl)}`;
 };
 
 /**
@@ -67,6 +70,89 @@ export const testRtspConnection = async (rtspUrl: string): Promise<boolean> => {
     return response.ok;
   } catch (error) {
     console.error('Error testing RTSP connection:', error);
+    return false;
+  }
+};
+
+/**
+ * Get stream status from the Imperial Server
+ */
+export const getStreamStatus = async (streamId: string): Promise<any> => {
+  try {
+    const serverUrl = localStorage.getItem('imperialServerUrl') || 'http://localhost:7443';
+    const token = localStorage.getItem('imperialToken');
+    
+    if (!token) {
+      throw new Error('Authentication token required');
+    }
+    
+    const response = await fetch(`${serverUrl}/v1/admin/streams/${streamId}`, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    
+    if (!response.ok) {
+      throw new Error('Failed to get stream status');
+    }
+    
+    return await response.json();
+  } catch (error) {
+    console.error('Error getting stream status:', error);
+    return { status: 'error', message: error instanceof Error ? error.message : 'Unknown error' };
+  }
+};
+
+/**
+ * Start recording a stream
+ */
+export const startRecording = async (streamId: string): Promise<boolean> => {
+  try {
+    const serverUrl = localStorage.getItem('imperialServerUrl') || 'http://localhost:7443';
+    const token = localStorage.getItem('imperialToken');
+    
+    if (!token) {
+      throw new Error('Authentication token required');
+    }
+    
+    const response = await fetch(`${serverUrl}/v1/admin/streams/${streamId}/record/start`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    return response.ok;
+  } catch (error) {
+    console.error('Error starting recording:', error);
+    return false;
+  }
+};
+
+/**
+ * Stop recording a stream
+ */
+export const stopRecording = async (streamId: string): Promise<boolean> => {
+  try {
+    const serverUrl = localStorage.getItem('imperialServerUrl') || 'http://localhost:7443';
+    const token = localStorage.getItem('imperialToken');
+    
+    if (!token) {
+      throw new Error('Authentication token required');
+    }
+    
+    const response = await fetch(`${serverUrl}/v1/admin/streams/${streamId}/record/stop`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    return response.ok;
+  } catch (error) {
+    console.error('Error stopping recording:', error);
     return false;
   }
 };
