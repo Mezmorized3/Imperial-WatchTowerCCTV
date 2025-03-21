@@ -17,8 +17,6 @@ interface GlobeComponentProps {
   targetCountry?: string;
 }
 
-console.log('Dashboard GlobeComponent loaded');
-
 const GlobeComponent: React.FC<GlobeComponentProps> = (props) => {
   const { cameras, scanInProgress, currentTarget, targetCountry } = props;
   const camerasWithLocation = cameras.filter(c => c.location?.latitude && c.location?.longitude);
@@ -31,8 +29,6 @@ const GlobeComponent: React.FC<GlobeComponentProps> = (props) => {
 
   const handleGlobeNavigation = () => {
     console.log('Navigating to /globe');
-    
-    // Try React Router navigation first
     navigate('/globe');
   };
 

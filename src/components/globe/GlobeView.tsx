@@ -13,8 +13,6 @@ interface GlobeViewProps {
   targetCountry?: string;
 }
 
-console.log('GlobeView component file loaded');
-
 const GlobeView: React.FC<GlobeViewProps> = (props) => {
   const { cameras, scanInProgress, currentTarget, targetCountry } = props;
   console.log('GlobeView component rendering', { camerasCount: cameras.length });
@@ -35,5 +33,8 @@ const GlobeView: React.FC<GlobeViewProps> = (props) => {
     </Card>
   );
 };
+
+// Explicitly set the component name to avoid confusion
+GlobeView.displayName = 'GlobeView';
 
 export default GlobeView;
