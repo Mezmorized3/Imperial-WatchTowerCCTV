@@ -2,7 +2,6 @@
 import React, { useState, useEffect } from 'react';
 import { ScanProgress, CameraResult } from '@/types/scanner';
 import { Toaster } from '@/components/ui/toaster';
-import DashboardHeader from '@/components/DashboardHeader';
 
 // Import refactored components
 import ScanController from '@/components/dashboard/ScanController';
@@ -53,8 +52,6 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-scanner-dark text-white">
-      <DashboardHeader />
-      
       {/* Imperial Army ASCII banner */}
       {showAscii && (
         <div className="container mx-auto mt-2">
