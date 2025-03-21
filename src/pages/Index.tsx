@@ -1,6 +1,5 @@
 
 import React, { useState, useEffect } from 'react';
-import DashboardHeader from '@/components/DashboardHeader';
 import { ScanProgress, CameraResult } from '@/types/scanner';
 import { Toaster } from '@/components/ui/toaster';
 
@@ -20,6 +19,16 @@ const Index = () => {
   });
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<string>('map');
+  const [showAscii, setShowAscii] = useState(true);
+  
+  const imperialControlBanner = `
+    ██╗███╗   ███╗██████╗ ███████╗██████╗ ██╗ █████╗ ██╗          ██████╗ ██████╗ ███╗   ██╗████████╗██████╗  ██████╗ ██╗     
+    ██║████╗ ████║██╔══██╗██╔════╝██╔══██╗██║██╔══██╗██║         ██╔════╝██╔═══██╗████╗  ██║╚══██╔══╝██╔══██╗██╔═══██╗██║     
+    ██║██╔████╔██║██████╔╝█████╗  ██████╔╝██║███████║██║         ██║     ██║   ██║██╔██╗ ██║   ██║   ██████╔╝██║   ██║██║     
+    ██║██║╚██╔╝██║██╔═══╝ ██╔══╝  ██╔══██╗██║██╔══██║██║         ██║     ██║   ██║██║╚██╗██║   ██║   ██╔══██╗██║   ██║██║     
+    ██║██║ ╚═╝ ██║██║     ███████╗██║  ██║██║██║  ██║███████╗    ╚██████╗╚██████╔╝██║ ╚████║   ██║   ██║  ██║╚██████╔╝███████╗
+    ╚═╝╚═╝     ╚═╝╚═╝     ╚══════╝╚═╝  ╚═╝╚═╝╚═╝  ╚═╝╚══════╝     ╚═════╝ ╚═════╝ ╚═╝  ╚═══╝   ╚═╝   ╚═╝  ╚═╝ ╚═════╝ ╚══════╝
+  `;
 
   useEffect(() => {
     setActiveTab('map');
@@ -37,9 +46,23 @@ const Index = () => {
     onErrorOccurred: setError
   });
 
+  const toggleAscii = () => {
+    setShowAscii(!showAscii);
+  };
+
   return (
     <div className="min-h-screen bg-scanner-dark text-white">
-      <DashboardHeader />
+      <header className="bg-scanner-dark-alt border-b border-gray-800 py-4 px-6">
+        <div className="container mx-auto">
+          <div className="flex flex-col items-center justify-center">
+            {showAscii && (
+              <div className="bg-scanner-dark p-4 rounded-md overflow-x-auto w-full">
+                <pre className="text-[#ea384c] text-xs font-mono">{imperialControlBanner}</pre>
+              </div>
+            )}
+          </div>
+        </div>
+      </header>
       
       <main className="container mx-auto py-6 px-4">
         <ScanNotifications error={error} />
