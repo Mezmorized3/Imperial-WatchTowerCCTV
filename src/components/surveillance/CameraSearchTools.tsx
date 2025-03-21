@@ -30,7 +30,7 @@ const CameraSearchTools: React.FC = () => {
     <Card className="bg-scanner-dark-alt border-gray-700">
       <CardHeader>
         <CardTitle className="text-xl flex items-center">
-          <Camera className="mr-2" /> Advanced Camera & OSINT Tools
+          <Camera className="mr-2" /> Advanced Camera &amp; OSINT Tools
         </CardTitle>
         <CardDescription>
           Multiple methods to discover cameras and gather intelligence
