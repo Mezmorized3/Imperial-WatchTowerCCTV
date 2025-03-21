@@ -1,4 +1,3 @@
-
 /**
  * Function to perform a Google Dork search for cameras
  * This is the TypeScript/JavaScript implementation inspired by the SearchCAM tool
@@ -152,4 +151,76 @@ export const checkCameraAccessibility = async (url: string): Promise<{
     requiresAuth: Math.random() > 0.5,
     streamType: ['MJPEG', 'RTSP', 'HLS', 'HTTP'][Math.floor(Math.random() * 4)]
   };
+};
+
+/**
+ * Function to search for a username across various platforms
+ * Inspired by the Sherlock project
+ * https://github.com/sherlock-project/sherlock
+ */
+export const searchUsername = async (username: string): Promise<{
+  results: Array<{
+    platform: string;
+    url: string;
+    exists: boolean;
+    username: string;
+    note?: string;
+  }>;
+}> => {
+  console.log(`Searching for username: ${username} across platforms`);
+  
+  // Simulate API delay
+  await new Promise(resolve => setTimeout(resolve, 2000));
+  
+  // List of platforms to check (mocked version)
+  const platforms = [
+    { name: 'Twitter', urlPattern: 'https://twitter.com/{username}', popularity: 0.9 },
+    { name: 'Instagram', urlPattern: 'https://instagram.com/{username}', popularity: 0.85 },
+    { name: 'Facebook', urlPattern: 'https://facebook.com/{username}', popularity: 0.75 },
+    { name: 'LinkedIn', urlPattern: 'https://linkedin.com/in/{username}', popularity: 0.7 },
+    { name: 'GitHub', urlPattern: 'https://github.com/{username}', popularity: 0.65 },
+    { name: 'Reddit', urlPattern: 'https://reddit.com/user/{username}', popularity: 0.6 },
+    { name: 'YouTube', urlPattern: 'https://youtube.com/@{username}', popularity: 0.8 },
+    { name: 'TikTok', urlPattern: 'https://tiktok.com/@{username}', popularity: 0.75 },
+    { name: 'Pinterest', urlPattern: 'https://pinterest.com/{username}', popularity: 0.5 },
+    { name: 'Medium', urlPattern: 'https://medium.com/@{username}', popularity: 0.4 },
+    { name: 'Twitch', urlPattern: 'https://twitch.tv/{username}', popularity: 0.55 },
+    { name: 'Imgur', urlPattern: 'https://imgur.com/user/{username}', popularity: 0.35 },
+    { name: 'Steam', urlPattern: 'https://steamcommunity.com/id/{username}', popularity: 0.5 },
+    { name: 'DeviantArt', urlPattern: 'https://{username}.deviantart.com', popularity: 0.3 },
+    { name: 'SoundCloud', urlPattern: 'https://soundcloud.com/{username}', popularity: 0.45 }
+  ];
+  
+  // Check each platform (mock results)
+  const results = platforms.map(platform => {
+    const url = platform.urlPattern.replace('{username}', username);
+    
+    // Simulate if the username exists based on platform popularity and randomness
+    // More popular platforms are more likely to have the username
+    const exists = Math.random() < platform.popularity;
+    
+    let note;
+    if (!exists) {
+      const reasons = [
+        'Username not found',
+        'Account may be private',
+        'Platform returned 404 status',
+        'Username format invalid for this platform'
+      ];
+      note = reasons[Math.floor(Math.random() * reasons.length)];
+    }
+    
+    return {
+      platform: platform.name,
+      url,
+      exists,
+      username,
+      note
+    };
+  });
+  
+  // Randomize the order a bit
+  results.sort(() => Math.random() - 0.5);
+  
+  return { results };
 };
