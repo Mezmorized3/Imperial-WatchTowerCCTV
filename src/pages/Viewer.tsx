@@ -130,6 +130,15 @@ const Viewer = () => {
             </Button>
             <h1 className="text-xl font-bold">Camera Viewer</h1>
           </div>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => navigate('/globe')}
+            className="bg-scanner-dark-alt border-scanner-primary text-scanner-primary hover:bg-scanner-primary/20"
+          >
+            <Globe className="h-4 w-4 mr-2" />
+            View 3D Globe
+          </Button>
         </div>
       </header>
 
