@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import DashboardHeader from '@/components/DashboardHeader';
 import ScanForm from '@/components/ScanForm';
@@ -31,7 +30,6 @@ const Index = () => {
   const cleanupFunctionRef = useRef<(() => void) | null>(null);
   const scanInProgressRef = useRef<boolean>(false);
 
-  // Force the globe tab to be active on initial load
   useEffect(() => {
     setActiveTab('globe');
   }, []);
@@ -187,6 +185,10 @@ const Index = () => {
     }
   };
 
+  const navigateToGlobe = () => {
+    navigate('/globe');
+  };
+
   useEffect(() => {
     return () => {
       if (cleanupFunctionRef.current && scanInProgressRef.current) {
@@ -253,6 +255,17 @@ const Index = () => {
             
             <div className="mt-6">
               <StatusBar progress={scanProgress} />
+            </div>
+            
+            <div className="mt-4">
+              <Button 
+                onClick={navigateToGlobe}
+                variant="outline"
+                className="w-full flex items-center justify-center"
+              >
+                <Globe className="mr-2 h-4 w-4" />
+                Open Full Globe View
+              </Button>
             </div>
           </div>
           
