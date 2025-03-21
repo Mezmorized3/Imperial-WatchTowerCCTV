@@ -1,67 +1,199 @@
 
+/**
+ * Imperial Server Authentication Service
+ * Handles authentication and token management for interacting with the Imperial Server
+ */
+
 import { toast } from "sonner";
 
-/**
- * Authentication service for the Imperial Server
- */
-export class ImperialAuthService {
-  private authToken: string | null = localStorage.getItem('imperialToken');
+export type ImperialAPIResponse = {
+  success: boolean;
+  message?: string;
+  token?: string;
+  data?: any;
+  error?: string;
+};
+
+class ImperialAuthService {
+  private TOKEN_KEY = 'imperial_auth_token';
   
   /**
    * Authenticate with the Imperial Server
    */
-  async authenticate(token: string): Promise<boolean> {
+  async authenticate(token: string): Promise<ImperialAPIResponse> {
     try {
-      // Instead of connecting directly to localhost, use a simulated authentication
-      // This allows the app to work in a browser environment
-      console.log("Authenticating with token:", token);
+      const response = await fetch('http://localhost:5001/v1/api/auth', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ token })
+      });
+
+      const data = await response.json();
       
-      // Simulate authentication by validating the token against config.json
-      const configResponse = await fetch('/server/config.json');
-      if (!configResponse.ok) {
-        throw new Error('Failed to fetch server configuration');
-      }
-      
-      const config = await configResponse.json();
-      
-      // Validate the provided token against the one in config
-      if (token === config.adminToken) {
-        // Store token and return success
-        this.authToken = token;
-        localStorage.setItem('imperialToken', token);
-        toast.success("Imperial authentication successful");
-        return true;
+      if (data.success && data.token) {
+        this.setAuthToken(data.token);
+        return {
+          success: true,
+          token: data.token,
+          message: 'Authentication successful'
+        };
       } else {
-        throw new Error('Invalid authentication token');
+        return {
+          success: false,
+          error: data.message || 'Authentication failed'
+        };
       }
     } catch (error) {
       console.error('Imperial authentication error:', error);
-      toast.error("Authentication failed: Invalid token");
-      return false;
+      toast.error('Failed to connect to Imperial Server');
+      return {
+        success: false,
+        error: 'Connection to Imperial Server failed'
+      };
     }
   }
-
+  
   /**
-   * Check if we're authenticated with the Imperial Server
+   * Check if user is authenticated
    */
   isAuthenticated(): boolean {
-    return !!this.authToken;
+    return !!this.getAuthToken();
   }
-
+  
   /**
-   * Get the current auth token
+   * Get the stored auth token
    */
   getAuthToken(): string | null {
-    return this.authToken;
+    return localStorage.getItem(this.TOKEN_KEY);
   }
-
+  
   /**
-   * Log out from the Imperial Server
+   * Set the auth token
+   */
+  setAuthToken(token: string): void {
+    localStorage.setItem(this.TOKEN_KEY, token);
+  }
+  
+  /**
+   * Clear the auth token (logout)
+   */
+  clearAuthToken(): void {
+    localStorage.removeItem(this.TOKEN_KEY);
+  }
+  
+  /**
+   * Log out from Imperial Server
    */
   logout(): void {
-    this.authToken = null;
-    localStorage.removeItem('imperialToken');
-    toast.info('Imperial authentication revoked');
+    this.clearAuthToken();
+    toast.success('Logged out from Imperial Server');
+  }
+  
+  /**
+   * Get Imperial Server status
+   */
+  async getImperialStatus(): Promise<ImperialAPIResponse> {
+    const token = this.getAuthToken();
+    
+    if (!token) {
+      return {
+        success: false,
+        error: 'Not authenticated'
+      };
+    }
+    
+    try {
+      const response = await fetch('http://localhost:5001/v1/admin/status', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Server returned ${response.status}`);
+      }
+      
+      const data = await response.json();
+      return {
+        success: true,
+        data
+      };
+    } catch (error) {
+      console.error('Error getting Imperial status:', error);
+      return {
+        success: false,
+        error: 'Failed to get Imperial Server status'
+      };
+    }
+  }
+  
+  /**
+   * Issue a decree to the Imperial Server
+   */
+  async issueDecree(port: number, command: string): Promise<ImperialAPIResponse> {
+    const token = this.getAuthToken();
+    
+    if (!token) {
+      return {
+        success: false,
+        error: 'Not authenticated'
+      };
+    }
+    
+    try {
+      const response = await fetch(`http://localhost:5001/v1/admin/decree/${port}`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ command })
+      });
+      
+      const data = await response.json();
+      return {
+        success: data.status < 400,
+        data,
+        message: data.decree
+      };
+    } catch (error) {
+      console.error('Error issuing decree:', error);
+      return {
+        success: false,
+        error: 'Failed to issue decree to Imperial Server'
+      };
+    }
+  }
+  
+  /**
+   * Get server status
+   */
+  async getServerStatus(): Promise<ImperialAPIResponse> {
+    try {
+      // Non-authenticated endpoint for basic status
+      const response = await fetch('http://localhost:5001/v1/status', {
+        method: 'GET'
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Server returned ${response.status}`);
+      }
+      
+      const data = await response.json();
+      return {
+        success: true,
+        data
+      };
+    } catch (error) {
+      console.error('Error getting server status:', error);
+      return {
+        success: false,
+        error: 'Failed to connect to Imperial Server'
+      };
+    }
   }
 }
 

@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -31,12 +32,12 @@ export const CCTVTool: React.FC = () => {
     
     try {
       const scanResults = await executeCCTV({
-        country: country,  // Change 'target' to 'country' to match the CCTVParams type
+        country: country,
         type: cameraType,
         limit: parseInt(limit)
       });
       
-      setResults(scanResults);
+      setResults(scanResults.data);
       toast({
         title: "Search Complete",
         description: scanResults?.simulatedData 

@@ -1,81 +1,75 @@
 
 /**
- * Generate a random geolocation near the country associated with the IP
+ * Geo utilities for handling geolocation data
  */
-export const getRandomGeoLocation = (ip: string): {lat: number; lng: number; accuracy: string; country: string; city: string} => {
-  // Use the mock country to determine a base location
-  const country = getMockCountry(ip);
-  
-  // Base coordinates for countries (approximate centers)
-  const countryCoords: Record<string, [number, number]> = {
-    'United States': [37.0902, -95.7129],
-    'Germany': [51.1657, 10.4515],
-    'France': [46.2276, 2.2137],
-    'Netherlands': [52.1326, 5.2913],
-    'United Kingdom': [55.3781, -3.4360],
-    'Japan': [36.2048, 138.2529],
-    'Singapore': [1.3521, 103.8198],
-    'Australia': [-25.2744, 133.7751],
-    'Brazil': [-14.2350, -51.9253],
-    'Canada': [56.1304, -106.3468],
-    'Italy': [41.8719, 12.5674],
-    'Spain': [40.4637, -3.7492]
-  };
-  
-  // Default to US if country not found
-  const baseCoords = countryCoords[country] || countryCoords['United States'];
-  
-  // Add some randomness to the coordinates (within ~50-100km)
-  const latVariation = (Math.random() - 0.5) * 0.9;
-  const lngVariation = (Math.random() - 0.5) * 0.9;
-  
-  // Generate a random city based on the country
-  const cities: Record<string, string[]> = {
-    'United States': ['New York', 'Los Angeles', 'Chicago', 'Houston', 'Phoenix'],
-    'Germany': ['Berlin', 'Munich', 'Hamburg', 'Cologne', 'Frankfurt'],
-    'France': ['Paris', 'Marseille', 'Lyon', 'Toulouse', 'Nice'],
-    'Netherlands': ['Amsterdam', 'Rotterdam', 'The Hague', 'Utrecht', 'Eindhoven'],
-    'United Kingdom': ['London', 'Manchester', 'Birmingham', 'Glasgow', 'Liverpool'],
-    'Japan': ['Tokyo', 'Osaka', 'Kyoto', 'Yokohama', 'Sapporo'],
-    'Singapore': ['Singapore'],
-    'Australia': ['Sydney', 'Melbourne', 'Brisbane', 'Perth', 'Adelaide'],
-    'Brazil': ['São Paulo', 'Rio de Janeiro', 'Brasília', 'Salvador', 'Fortaleza'],
-    'Canada': ['Toronto', 'Montreal', 'Vancouver', 'Calgary', 'Ottawa'],
-    'Italy': ['Rome', 'Milan', 'Naples', 'Turin', 'Florence'],
-    'Spain': ['Madrid', 'Barcelona', 'Valencia', 'Seville', 'Zaragoza']
-  };
-  
-  // Choose a random city for the country
-  const countryCity = cities[country] || cities['United States'];
-  const city = countryCity[Math.floor(Math.random() * countryCity.length)];
-  
-  return {
-    lat: baseCoords[0] + latVariation,
-    lng: baseCoords[1] + lngVariation,
-    accuracy: Math.random() > 0.7 ? 'High' : Math.random() > 0.4 ? 'Medium' : 'Low',
-    country: country,
-    city: city
-  };
-};
 
-// Helper function
-function getMockCountry(ip: string): string {
+/**
+ * Generate random geolocation for an IP (for simulation)
+ */
+export const getRandomGeoLocation = (ip: string): Record<string, any> => {
+  // Use the IP to deterministically generate a location
+  const ipHash = ip.split('.').reduce((sum, num) => sum + parseInt(num), 0);
+  
+  // List of countries and cities
   const countries = [
-    'United States',
-    'Germany',
-    'France',
-    'Netherlands',
-    'United Kingdom',
-    'Japan',
-    'Singapore',
-    'Australia',
-    'Brazil',
-    'Canada',
-    'Italy',
-    'Spain'
+    { code: 'US', name: 'United States', cities: ['New York', 'Los Angeles', 'Chicago', 'Houston', 'Phoenix'] },
+    { code: 'GB', name: 'United Kingdom', cities: ['London', 'Manchester', 'Birmingham', 'Glasgow', 'Liverpool'] },
+    { code: 'DE', name: 'Germany', cities: ['Berlin', 'Munich', 'Hamburg', 'Cologne', 'Frankfurt'] },
+    { code: 'FR', name: 'France', cities: ['Paris', 'Marseille', 'Lyon', 'Toulouse', 'Nice'] },
+    { code: 'JP', name: 'Japan', cities: ['Tokyo', 'Osaka', 'Kyoto', 'Yokohama', 'Sapporo'] },
+    { code: 'CA', name: 'Canada', cities: ['Toronto', 'Montreal', 'Vancouver', 'Calgary', 'Ottawa'] },
+    { code: 'AU', name: 'Australia', cities: ['Sydney', 'Melbourne', 'Brisbane', 'Perth', 'Adelaide'] }
   ];
   
-  // Use the second octet of the IP to determine the country (for consistent mock results)
-  const secondOctet = parseInt(ip.split('.')[1]);
-  return countries[secondOctet % countries.length];
-}
+  // Select a country based on the IP hash
+  const country = countries[ipHash % countries.length];
+  
+  // Select a city based on the IP hash
+  const city = country.cities[(ipHash * 31) % country.cities.length];
+  
+  // Generate latitude and longitude
+  // These are very rough approximations for demonstration
+  let lat, lon;
+  
+  switch (country.code) {
+    case 'US':
+      lat = 37 + (ipHash % 15) - 7.5;
+      lon = -100 + (ipHash % 50) - 25;
+      break;
+    case 'GB':
+      lat = 54 + (ipHash % 5) - 2.5;
+      lon = -2 + (ipHash % 3) - 1.5;
+      break;
+    case 'DE':
+      lat = 51 + (ipHash % 5) - 2.5;
+      lon = 10 + (ipHash % 5) - 2.5;
+      break;
+    case 'FR':
+      lat = 47 + (ipHash % 5) - 2.5;
+      lon = 2 + (ipHash % 5) - 2.5;
+      break;
+    case 'JP':
+      lat = 36 + (ipHash % 5) - 2.5;
+      lon = 138 + (ipHash % 5) - 2.5;
+      break;
+    case 'CA':
+      lat = 56 + (ipHash % 10) - 5;
+      lon = -106 + (ipHash % 50) - 25;
+      break;
+    case 'AU':
+      lat = -25 + (ipHash % 10) - 5;
+      lon = 135 + (ipHash % 10) - 5;
+      break;
+    default:
+      lat = (ipHash % 180) - 90;
+      lon = (ipHash % 360) - 180;
+  }
+  
+  return {
+    country: country.name,
+    countryCode: country.code,
+    city: city,
+    coordinates: [lat, lon],
+    ip: ip
+  };
+};

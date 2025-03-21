@@ -1,226 +1,140 @@
-/**
- * Function to perform a Google Dork search for cameras
- * This is the TypeScript/JavaScript implementation inspired by the SearchCAM tool
- * Original: https://github.com/AngelSecurityTeam/SearchCAM
- */
-export const googleDorkSearch = async (query: string): Promise<{
-  results: Array<{
-    id: string;
-    title: string;
-    url: string;
-    snippet: string;
-    isCamera: boolean;
-  }>;
-}> => {
-  console.log(`Performing Google dork search for: ${query}`);
-  
-  // Simulate API delay
-  await new Promise(resolve => setTimeout(resolve, 2000));
-  
-  // In a real implementation, this would perform an actual search
-  // For demo purposes, we'll return mock results
-  
-  // Common camera-related keywords to check if a result is likely a camera
-  const cameraKeywords = [
-    'webcam', 'ipcam', 'camera', 'cctv', 'surveillance', 
-    'axis', 'hikvision', 'dahua', 'amcrest', 'foscam',
-    'live view', 'live stream', 'rtsp', 'mjpeg', 'videostream'
-  ];
-  
-  // Generate random number of results (3-10)
-  const resultCount = Math.floor(Math.random() * 8) + 3;
-  
-  // Common camera URL patterns
-  const cameraUrls = [
-    'http://123.45.67.89/view/index.shtml',
-    'http://98.76.54.32:8080/view/viewer_index.shtml',
-    'http://192.168.1.1/axis-cgi/mjpg/video.cgi',
-    'http://webcam.example.com/mjpg/video.mjpg',
-    'http://10.0.0.1/VideoStream.cgi',
-    'http://camera.example.org:8000/mjpg/video.mjpg',
-    'http://85.214.112.37/record/current.jpg',
-    'http://216.104.165.138/ViewerFrame?Mode=Motion',
-    'http://83.213.205.137:8080/view/viewer_index.shtml',
-    'http://88.53.197.250/axis-cgi/jpg/image.cgi',
-    'http://193.34.144.164/view/index.shtml',
-    'http://97.68.91.195/anony/mjpg.cgi',
-    'http://75.8.93.44:8082'
-  ];
-  
-  // Generate mock search results
-  const results = Array.from({ length: resultCount }).map((_, index) => {
-    // Pick a random camera URL or generate a random one
-    const useRealExample = Math.random() > 0.5;
-    const url = useRealExample 
-      ? cameraUrls[Math.floor(Math.random() * cameraUrls.length)]
-      : `http://${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}:${[80, 8080, 554, 8000, 8081, 8082][Math.floor(Math.random() * 6)]}`;
-    
-    // Generate a random title
-    const titles = [
-      'Network Camera - Live View',
-      'IP Camera Viewer',
-      'AXIS Camera MJPG Stream',
-      'Surveillance Camera Admin Page',
-      'Home Security Camera - Live Feed',
-      'WebCam Server - Live Stream Available',
-      'Hikvision IP Camera',
-      'Dahua Technology Network Camera',
-      'CCTV Camera Feed',
-      'Foscam IP Camera',
-      'Building Entrance Camera',
-      'Parking Lot Surveillance',
-      'Traffic Camera Live Feed'
-    ];
-    
-    const title = titles[Math.floor(Math.random() * titles.length)];
-    
-    // Generate a random snippet
-    const snippets = [
-      'Live view of the surveillance camera. This page provides access to the video stream.',
-      'Network camera web interface. View and control your security camera remotely.',
-      'IP camera live stream. Motion detection enabled. Administrator access required for settings.',
-      'MJPEG stream from network camera. Refresh rate: 15fps. Resolution: 1080p.',
-      'Camera web viewer. Pan, tilt, and zoom controls available for authorized users.',
-      'Surveillance system web interface. Multiple camera views available.',
-      'Public webcam feed. This camera updates every 30 seconds with a new image.',
-      'Security camera admin console. Login required for configuration options.',
-      'IP camera viewer page. This device is configured to allow anonymous viewing.'
-    ];
-    
-    const snippet = snippets[Math.floor(Math.random() * snippets.length)];
-    
-    // Determine if this result is likely a camera
-    const titleLower = title.toLowerCase();
-    const snippetLower = snippet.toLowerCase();
-    
-    const isCamera = cameraKeywords.some(keyword => 
-      titleLower.includes(keyword) || snippetLower.includes(keyword)
-    ) || Math.random() > 0.3; // Add some randomness
-    
-    return {
-      id: `result-${Date.now()}-${index}`,
-      title,
-      url,
-      snippet,
-      isCamera
-    };
-  });
-  
-  return { results };
-};
 
 /**
- * Function to search for open directories containing camera feeds
- * Inspired by various OSINT camera tools
+ * Utilities for search-related functions
  */
-export const searchOpenDirectories = async (keywords: string[]): Promise<string[]> => {
-  console.log(`Searching for open directories with keywords: ${keywords.join(', ')}`);
-  
-  // Simulate API delay
-  await new Promise(resolve => setTimeout(resolve, 1500));
-  
-  // Mock implementation
-  const mockDirectories = [
-    'http://example.com/cameras/',
-    'http://server.example.org/webcams/public/',
-    'http://unsecured.example.net/cctv/feeds/',
-    'http://company.example.com/surveillance/exterior/',
-    'http://campus.example.edu/security/cameras/'
-  ];
-  
-  // Filter based on keywords (simplified mock)
-  return mockDirectories.filter(() => Math.random() > 0.3);
-};
+import { simulateNetworkDelay } from './networkUtils';
 
 /**
- * Function to check if a camera stream is accessible
+ * Parse Google dork string into a structured query
  */
-export const checkCameraAccessibility = async (url: string): Promise<{
-  accessible: boolean;
-  requiresAuth: boolean;
-  streamType?: string;
-}> => {
-  console.log(`Checking accessibility of camera at: ${url}`);
-  
-  // Simulate check
-  await new Promise(resolve => setTimeout(resolve, 800));
-  
-  // Mock response (in a real app, this would actually check the URL)
-  return {
-    accessible: Math.random() > 0.3,
-    requiresAuth: Math.random() > 0.5,
-    streamType: ['MJPEG', 'RTSP', 'HLS', 'HTTP'][Math.floor(Math.random() * 4)]
+export const parseGoogleDork = (dorkString: string): Record<string, string> => {
+  const results: Record<string, string> = {
+    query: dorkString
   };
+  
+  // Extract site: operator
+  const siteMatch = dorkString.match(/site:([^\s]+)/);
+  if (siteMatch) {
+    results.site = siteMatch[1];
+  }
+  
+  // Extract intitle: operator
+  const intitleMatch = dorkString.match(/intitle:([^\s]+)/);
+  if (intitleMatch) {
+    results.intitle = intitleMatch[1].replace(/"/g, '');
+  }
+  
+  // Extract inurl: operator
+  const inurlMatch = dorkString.match(/inurl:([^\s]+)/);
+  if (inurlMatch) {
+    results.inurl = inurlMatch[1].replace(/"/g, '');
+  }
+  
+  // Extract intext: operator
+  const intextMatch = dorkString.match(/intext:([^\s]+)/);
+  if (intextMatch) {
+    results.intext = intextMatch[1].replace(/"/g, '');
+  }
+  
+  // Extract filetype: operator
+  const filetypeMatch = dorkString.match(/filetype:([^\s]+)/);
+  if (filetypeMatch) {
+    results.filetype = filetypeMatch[1];
+  }
+  
+  return results;
 };
 
 /**
- * Function to search for a username across various platforms
- * Inspired by the Sherlock project
- * https://github.com/sherlock-project/sherlock
+ * Generate a Google dork string for searching for cameras
  */
-export const searchUsername = async (username: string): Promise<{
-  results: Array<{
-    platform: string;
-    url: string;
-    exists: boolean;
-    username: string;
-    note?: string;
-  }>;
-}> => {
-  console.log(`Searching for username: ${username} across platforms`);
+export const generateCameraDork = (
+  cameraType: string = 'generic',
+  country: string = ''
+): string => {
+  const dorks: Record<string, string[]> = {
+    hikvision: [
+      'intitle:"Hikvision" inurl:"/doc/page/login.asp"',
+      'intitle:"Hikvision" inurl:"/doc/index.asp"',
+      'intitle:"Hikvision" inurl:"/doc/page"'
+    ],
+    dahua: [
+      'intitle:"WEB SERVICE" inurl:"/index.asp?language=English"',
+      'intitle:"Dahua" inurl:"/index.asp"',
+      'intitle:"Dahua" inurl:"/login.asp"'
+    ],
+    axis: [
+      'intitle:"AXIS" inurl:"/view/view.shtml"',
+      'intitle:"AXIS" inurl:"/jpg/image.jpg"'
+    ],
+    generic: [
+      'intitle:"webcamXP" inurl:":8080"',
+      'intitle:"webcam 7" inurl:"/webcam.html"',
+      'intitle:"Live View / - AXIS" | inurl:view/view.shtml',
+      'inurl:"/view/index.shtml"',
+      'inurl:"ViewerFrame?Mode="',
+      'inurl:"/viewerframe?mode=motion"',
+      'inurl:CgiStart?page=Single',
+      'inurl:/view.shtml',
+      'inurl:ViewerFrame?Mode=',
+      'inurl:axis-cgi/jpg'
+    ]
+  };
   
-  // Simulate API delay
-  await new Promise(resolve => setTimeout(resolve, 2000));
+  const type = cameraType.toLowerCase();
+  const typeList = dorks[type] || dorks.generic;
+  const dork = typeList[Math.floor(Math.random() * typeList.length)];
   
-  // List of platforms to check (mocked version)
-  const platforms = [
-    { name: 'Twitter', urlPattern: 'https://twitter.com/{username}', popularity: 0.9 },
-    { name: 'Instagram', urlPattern: 'https://instagram.com/{username}', popularity: 0.85 },
-    { name: 'Facebook', urlPattern: 'https://facebook.com/{username}', popularity: 0.75 },
-    { name: 'LinkedIn', urlPattern: 'https://linkedin.com/in/{username}', popularity: 0.7 },
-    { name: 'GitHub', urlPattern: 'https://github.com/{username}', popularity: 0.65 },
-    { name: 'Reddit', urlPattern: 'https://reddit.com/user/{username}', popularity: 0.6 },
-    { name: 'YouTube', urlPattern: 'https://youtube.com/@{username}', popularity: 0.8 },
-    { name: 'TikTok', urlPattern: 'https://tiktok.com/@{username}', popularity: 0.75 },
-    { name: 'Pinterest', urlPattern: 'https://pinterest.com/{username}', popularity: 0.5 },
-    { name: 'Medium', urlPattern: 'https://medium.com/@{username}', popularity: 0.4 },
-    { name: 'Twitch', urlPattern: 'https://twitch.tv/{username}', popularity: 0.55 },
-    { name: 'Imgur', urlPattern: 'https://imgur.com/user/{username}', popularity: 0.35 },
-    { name: 'Steam', urlPattern: 'https://steamcommunity.com/id/{username}', popularity: 0.5 },
-    { name: 'DeviantArt', urlPattern: 'https://{username}.deviantart.com', popularity: 0.3 },
-    { name: 'SoundCloud', urlPattern: 'https://soundcloud.com/{username}', popularity: 0.45 }
+  if (country) {
+    return `${dork} site:${country}`;
+  }
+  
+  return dork;
+};
+
+/**
+ * Simulate searching for open directories containing camera feeds
+ */
+export const searchOpenDirectories = async (
+  query: string = '',
+  maxResults: number = 10
+): Promise<string[]> => {
+  await simulateNetworkDelay(1500);
+  
+  // Generate a list of fake open directory URLs
+  const results: string[] = [];
+  const hosts = [
+    'camera-feeds.example.com',
+    'cctv-archive.example.org',
+    'surveillance.example.net',
+    'security-cams.example.io',
+    'traffic-cams.example.gov'
   ];
   
-  // Check each platform (mock results)
-  const results = platforms.map(platform => {
-    const url = platform.urlPattern.replace('{username}', username);
+  const paths = [
+    '/cameras/',
+    '/feeds/',
+    '/archive/',
+    '/public/',
+    '/streams/',
+    '/video/',
+    '/cctv/',
+    '/surveillance/'
+  ];
+  
+  for (let i = 0; i < Math.min(maxResults, 20); i++) {
+    const host = hosts[Math.floor(Math.random() * hosts.length)];
+    const path = paths[Math.floor(Math.random() * paths.length)];
     
-    // Simulate if the username exists based on platform popularity and randomness
-    // More popular platforms are more likely to have the username
-    const exists = Math.random() < platform.popularity;
-    
-    let note;
-    if (!exists) {
-      const reasons = [
-        'Username not found',
-        'Account may be private',
-        'Platform returned 404 status',
-        'Username format invalid for this platform'
-      ];
-      note = reasons[Math.floor(Math.random() * reasons.length)];
+    // If query is provided, filter results
+    if (query) {
+      if (host.includes(query) || path.includes(query)) {
+        results.push(`http://${host}${path}`);
+      }
+    } else {
+      results.push(`http://${host}${path}`);
     }
-    
-    return {
-      platform: platform.name,
-      url,
-      exists,
-      username,
-      note
-    };
-  });
+  }
   
-  // Randomize the order a bit
-  results.sort(() => Math.random() - 0.5);
-  
-  return { results };
+  return results;
 };

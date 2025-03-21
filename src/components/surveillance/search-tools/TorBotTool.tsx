@@ -1,9 +1,13 @@
+
 import React, { useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { executeTorBot } from '@/utils/osintTools';
 import { useToast } from '@/hooks/use-toast';
+import { Search } from 'lucide-react';
+import { Label } from '@/components/ui/label';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 export const TorBotTool: React.FC = () => {
   const [onionUrl, setOnionUrl] = useState('');
@@ -45,7 +49,7 @@ export const TorBotTool: React.FC = () => {
       const formattedUrl = onionUrl.startsWith('http') ? onionUrl : `http://${onionUrl}`;
       const scanResults = await executeTorBot({
         url: formattedUrl,
-        mode: scanMode,  // Change 'scanType' to 'mode' to match the TorBotParams type
+        mode: scanMode,
         depth: parseInt(scanDepth)
       });
       

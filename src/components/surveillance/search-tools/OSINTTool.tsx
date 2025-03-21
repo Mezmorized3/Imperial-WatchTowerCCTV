@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -36,7 +37,7 @@ export const OSINTTool: React.FC = () => {
         depth: searchDepth
       });
 
-      setResults(scanResults);
+      setResults(scanResults.data);
       toast({
         title: "Search Complete",
         description: scanResults?.simulatedData
