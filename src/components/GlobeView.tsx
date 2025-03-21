@@ -29,6 +29,11 @@ const GlobeComponent: React.FC<GlobeComponentProps> = (props) => {
     camerasWithLocationCount: camerasWithLocation.length 
   });
 
+  const handleGlobeNavigation = () => {
+    console.log('Navigating to /globe');
+    navigate('/globe');
+  };
+
   return (
     <Card className="bg-scanner-card border-gray-800 shadow-lg">
       <CardHeader className="pb-2">
@@ -45,10 +50,7 @@ const GlobeComponent: React.FC<GlobeComponentProps> = (props) => {
           <Button 
             variant="ghost" 
             size="sm"
-            onClick={() => {
-              console.log('Navigating to /globe');
-              navigate('/globe');
-            }}
+            onClick={handleGlobeNavigation}
             className="text-gray-400 hover:text-white"
           >
             <ExternalLink className="h-4 w-4 mr-2" />

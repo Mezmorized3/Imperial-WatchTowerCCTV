@@ -79,6 +79,9 @@ const mockCameras: CameraResult[] = [
   }
 ];
 
+// Explicitly log when this file loads
+console.log('Globe.tsx module is loading');
+
 const Globe = () => {
   const navigate = useNavigate();
   const [cameras] = React.useState<CameraResult[]>(mockCameras);
@@ -119,5 +122,8 @@ const Globe = () => {
     </div>
   );
 };
+
+// Add a debug export check
+console.log('Exporting Globe component:', typeof Globe);
 
 export default Globe;
