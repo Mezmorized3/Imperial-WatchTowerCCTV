@@ -31,7 +31,12 @@ const GlobeComponent: React.FC<GlobeComponentProps> = (props) => {
 
   const handleGlobeNavigation = () => {
     console.log('Navigating to /globe');
-    navigate('/globe');
+    
+    // Force the navigation to globe page
+    window.location.href = '/globe';
+    
+    // As a fallback, also try the React Router navigation
+    // navigate('/globe');
   };
 
   return (

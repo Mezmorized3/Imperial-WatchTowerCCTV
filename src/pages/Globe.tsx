@@ -82,12 +82,15 @@ const mockCameras: CameraResult[] = [
 // Explicitly log when this file loads
 console.log('Globe.tsx module is loading');
 
-const Globe = () => {
+const Globe: React.FC = () => {
   const navigate = useNavigate();
   const [cameras] = React.useState<CameraResult[]>(mockCameras);
 
   useEffect(() => {
     console.log('Globe page component mounted');
+    
+    // Force browser to recognize this component is loaded
+    document.title = 'Globe View';
   }, []);
 
   console.log('Globe page component rendering');
@@ -123,7 +126,7 @@ const Globe = () => {
   );
 };
 
-// Add a debug export check
+// Add debug export check
 console.log('Exporting Globe component:', typeof Globe);
 
 export default Globe;
