@@ -1,7 +1,7 @@
 
-import { useRef, useFrame } from '@react-three/fiber';
+import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
-import ThreeGlobe from 'three-globe';
+import { useRef } from 'react'; // Correct import for useRef
 
 interface UseGlobeAnimationProps {
   groupRef: React.RefObject<THREE.Group>;
