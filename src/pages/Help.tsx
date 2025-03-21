@@ -6,18 +6,34 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import DashboardHeader from '@/components/DashboardHeader';
 import { Search, HelpCircle, FileText, BookOpen, MessageSquare, Video, ExternalLink } from 'lucide-react';
 
 const Help = () => {
+  const imperialDirectiveBanner = `
+    ██╗███╗   ███╗██████╗ ███████╗██████╗ ██╗ █████╗ ██╗         ██████╗ ██╗██████╗ ███████╗ ██████╗████████╗██╗██╗   ██╗███████╗
+    ██║████╗ ████║██╔══██╗██╔════╝██╔══██╗██║██╔══██╗██║         ██╔══██╗██║██╔══██╗██╔════╝██╔════╝╚══██╔══╝██║██║   ██║██╔════╝
+    ██║██╔████╔██║██████╔╝█████╗  ██████╔╝██║███████║██║         ██║  ██║██║██████╔╝█████╗  ██║        ██║   ██║██║   ██║█████╗  
+    ██║██║╚██╔╝██║██╔═══╝ ██╔══╝  ██╔══██╗██║██╔══██║██║         ██║  ██║██║██╔══██╗██╔══╝  ██║        ██║   ██║╚██╗ ██╔╝██╔══╝  
+    ██║██║ ╚═╝ ██║██║     ███████╗██║  ██║██║██║  ██║███████╗    ██████╔╝██║██║  ██║███████╗╚██████╗   ██║   ██║ ╚████╔╝ ███████╗
+    ╚═╝╚═╝     ╚═╝╚═╝     ╚══════╝╚═╝  ╚═╝╚═╝╚═╝  ╚═╝╚══════╝    ╚═════╝ ╚═╝╚═╝  ╚═╝╚══════╝ ╚═════╝   ╚═╝   ╚═╝  ╚═══╝  ╚══════╝
+  `;
+
   return (
     <div className="flex flex-col min-h-screen bg-scanner-dark text-white">
-      <DashboardHeader />
+      <header className="bg-scanner-dark-alt border-b border-gray-800 py-4 px-6">
+        <div className="container mx-auto">
+          <div className="flex flex-col items-center justify-center">
+            <div className="bg-scanner-dark p-4 rounded-md overflow-x-auto w-full">
+              <pre className="text-[#ea384c] text-xs font-mono">{imperialDirectiveBanner}</pre>
+            </div>
+          </div>
+        </div>
+      </header>
 
       <div className="container max-w-6xl mx-auto py-8 px-4">
         <div className="flex items-center mb-8">
           <HelpCircle className="h-8 w-8 mr-3 text-scanner-primary" />
-          <h1 className="text-3xl font-bold">Help & Documentation</h1>
+          <h1 className="text-3xl font-bold">Imperial Directive</h1>
         </div>
 
         <div className="mb-8">
