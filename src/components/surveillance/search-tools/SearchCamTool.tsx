@@ -69,7 +69,7 @@ export const SearchCamTool: React.FC = () => {
     <div className="flex flex-col space-y-4">
       <div className="flex space-x-2">
         <Input
-          placeholder="intitle:\"webcam\" OR inurl:\"ViewerFrame\""
+          placeholder='intitle:"webcam" OR inurl:"ViewerFrame"'
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           className="bg-scanner-dark border-gray-700 text-white"
