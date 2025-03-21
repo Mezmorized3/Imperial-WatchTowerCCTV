@@ -16,7 +16,9 @@ import {
   ShieldAIParams, 
   BotExploitsParams,
   CamerattackParams, 
-  BackHackParams
+  BackHackParams,
+  ImperialOculusParams,
+  PhotonParams
 } from './osintToolTypes';
 
 /**
@@ -393,6 +395,81 @@ export const executePhoton = async (params: PhotonParams): Promise<ToolResult> =
 };
 
 /**
+ * Execute Imperial Oculus network scanner
+ */
+export const executeImperialOculus = async (params: ImperialOculusParams): Promise<ToolResult> => {
+  await simulateNetworkDelay(3000);
+  console.log('Executing Imperial Oculus:', params);
+
+  // Simulated results
+  const numDevices = Math.floor(Math.random() * 8) + 2;
+  const devices = [];
+
+  const commonPorts = [
+    { port: 21, service: 'FTP' },
+    { port: 22, service: 'SSH' },
+    { port: 23, service: 'Telnet' },
+    { port: 25, service: 'SMTP' },
+    { port: 53, service: 'DNS' },
+    { port: 80, service: 'HTTP' },
+    { port: 443, service: 'HTTPS' },
+    { port: 445, service: 'SMB' },
+    { port: 3306, service: 'MySQL' },
+    { port: 3389, service: 'RDP' },
+    { port: 8080, service: 'HTTP-Proxy' },
+    { port: 8443, service: 'HTTPS-Alt' },
+    { port: 554, service: 'RTSP' },
+    { port: 8554, service: 'RTSP-Alt' }
+  ];
+
+  // Subnet structure extraction
+  const subnet = params.target.split('/')[0].split('.');
+  const baseIp = `${subnet[0]}.${subnet[1]}.${subnet[2]}.`;
+
+  for (let i = 0; i < numDevices; i++) {
+    // Generate random last octet for IP in subnet
+    const lastOctet = Math.floor(Math.random() * 254) + 1;
+    const ip = baseIp + lastOctet;
+    
+    // Randomly select number of open ports for this device
+    const numOpenPorts = Math.floor(Math.random() * 5) + 1;
+    
+    // Randomly select ports from common ports
+    const shuffledPorts = [...commonPorts].sort(() => 0.5 - Math.random());
+    const openPorts = shuffledPorts.slice(0, numOpenPorts);
+    
+    devices.push({
+      ip,
+      hostName: Math.random() > 0.7 ? `host-${lastOctet}.local` : null,
+      macAddress: Math.random() > 0.6 ? `00:1A:${Math.floor(Math.random() * 100).toString(16).padStart(2, '0')}:${Math.floor(Math.random() * 100).toString(16).padStart(2, '0')}:${Math.floor(Math.random() * 100).toString(16).padStart(2, '0')}:${Math.floor(Math.random() * 100).toString(16).padStart(2, '0')}` : null,
+      manufacturer: Math.random() > 0.6 ? ['Cisco', 'Dell', 'HP', 'Netgear', 'D-Link', 'TP-Link'][Math.floor(Math.random() * 6)] : null,
+      openPorts
+    });
+  }
+
+  // Sort devices by IP for consistent display
+  devices.sort((a, b) => {
+    const aOctet = parseInt(a.ip.split('.')[3]);
+    const bOctet = parseInt(b.ip.split('.')[3]);
+    return aOctet - bOctet;
+  });
+
+  return {
+    success: true,
+    data: { 
+      target: params.target,
+      scan_type: params.scanType || 'basic',
+      devices,
+      total_hosts: devices.length,
+      total_ports: devices.reduce((sum, device) => sum + device.openPorts.length, 0),
+      scan_time: `${Math.floor(Math.random() * 40) + 10} seconds`,
+      timestamp: new Date().toISOString()
+    },
+    simulatedData: true
+  };
+};
+
+/**
  * Execute comprehensive OSINT tool
  */
 export const executeOSINT = async (params: OSINTParams): Promise<ToolResult> => {
@@ -628,4 +705,3 @@ export const executeBackHack = async (params: BackHackParams): Promise<ToolResul
     simulatedData: true
   };
 };
-

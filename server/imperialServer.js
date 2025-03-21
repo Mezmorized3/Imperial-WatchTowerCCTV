@@ -243,7 +243,8 @@ class ImperialServer {
             res.json({
               status: 'operational',
               availableTools: [
-                'sherlock', 'cameradar', 'ipcamsearch', 'searchcam', 'webcheck', 'imperial-pawn'
+                'sherlock', 'cameradar', 'ipcamsearch', 'searchcam', 'webcheck', 
+                'imperial-pawn', 'imperial-oculus'
               ]
             });
           });
@@ -342,6 +343,35 @@ class ImperialServer {
               res.json(result);
             } catch (error) {
               royalLogger.error('Imperial Pawn tool error:', error);
+              res.status(500).json({ error: error.message });
+            }
+          });
+          
+          // Imperial Oculus - Network scanner
+          router.post('/api/osint/imperial-oculus', adminAuth, async (req, res) => {
+            try {
+              const { target, scanType, ports, timeout } = req.body;
+              
+              if (!target) {
+                return res.status(400).json({ error: 'Target network parameter is required (e.g., 192.168.1.0/24)' });
+              }
+              
+              // Regex to validate CIDR notation
+              const cidrRegex = /^(?:[0-9]{1,3}\.){3}[0-9]{1,3}\/([0-9]|[1-2][0-9]|3[0-2])$/;
+              if (!cidrRegex.test(target)) {
+                return res.status(400).json({ error: 'Invalid CIDR notation for target network' });
+              }
+              
+              const result = await pythonTools.runPythonTool('imperial-oculus', {
+                target,
+                scanType: scanType || 'basic',
+                ports,
+                timeout: timeout || 60
+              });
+              
+              res.json(result);
+            } catch (error) {
+              royalLogger.error('Imperial Oculus tool error:', error);
               res.status(500).json({ error: error.message });
             }
           });

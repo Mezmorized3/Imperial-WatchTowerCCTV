@@ -74,7 +74,8 @@ export const PYTHON_TOOLS = {
   IPCAMSEARCH: 'ipcamsearch',
   CCTVMAP: 'cctvmap',
   IMPERIAL_PAWN: 'imperial-pawn',
-  IMPERIAL_SHINOBI: 'imperial-shinobi'
+  IMPERIAL_SHINOBI: 'imperial-shinobi',
+  IMPERIAL_OCULUS: 'imperial-oculus'
 };
 
 /**
@@ -138,4 +139,18 @@ export const executeImperialShinobi = async (params: {
   customParams?: string;
 }): Promise<PythonToolResponse> => {
   return executePythonTool(PYTHON_TOOLS.IMPERIAL_SHINOBI, params);
+};
+
+/**
+ * Execute Imperial Oculus network scanner
+ * @param params Configuration for the Imperial Oculus scanner
+ * @returns Promise with the network scan results
+ */
+export const executeImperialOculus = async (params: {
+  target: string;
+  scanType?: 'basic' | 'full' | 'stealth';
+  ports?: string;
+  timeout?: number;
+}): Promise<PythonToolResponse> => {
+  return executePythonTool(PYTHON_TOOLS.IMPERIAL_OCULUS, params);
 };

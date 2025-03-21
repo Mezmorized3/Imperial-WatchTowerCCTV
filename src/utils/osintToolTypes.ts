@@ -1,4 +1,3 @@
-
 /**
  * Types for OSINT tools and their parameters
  */
@@ -71,6 +70,7 @@ export interface BackHackParams {
 export interface WebHackParams {
   url: string;
   scanType?: string;
+  findVulnerabilities?: boolean;
 }
 
 export interface SpeedCameraParams {
@@ -84,6 +84,13 @@ export interface CCTVParams {
   type?: string;
   country?: string; // Added country parameter
   limit?: number; // Added limit parameter
+}
+
+export interface ImperialOculusParams {
+  target: string;
+  scanType?: 'basic' | 'full' | 'stealth';
+  ports?: string;
+  timeout?: number;
 }
 
 // OSINT tool result types
@@ -122,6 +129,7 @@ export interface CameraResult {
   type: string;
   accessible: boolean;
   stream_url?: string;
+  protocol?: string;
 }
 
 // OSINT parameters
@@ -135,8 +143,10 @@ export interface OSINTParams {
 export interface ShieldAIParams {
   target: string;
   mode?: string;
+  depth?: string;
 }
 
+// Imperial Shield parameters
 export interface ImperialShieldParams {
   targetUrl: string;
   port?: number;

@@ -21,7 +21,8 @@ export type {
   ShieldAIParams,
   BotExploitsParams,
   CamerattackParams,
-  BackHackParams
+  BackHackParams,
+  ImperialOculusParams
 } from './osintToolTypes';
 
 // Import function implementations from specific modules
@@ -40,7 +41,8 @@ import {
   executeShieldAI,
   executeBotExploits, 
   executeCamerattack, 
-  executeBackHack
+  executeBackHack,
+  executeImperialOculus
 } from './osintImplementations';
 
 // Export the functions directly
@@ -59,7 +61,8 @@ export {
   executeShieldAI,
   executeBotExploits, 
   executeCamerattack, 
-  executeBackHack
+  executeBackHack,
+  executeImperialOculus
 };
 
 // Export utility functions from other modules
