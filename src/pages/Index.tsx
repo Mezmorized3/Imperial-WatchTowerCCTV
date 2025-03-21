@@ -52,7 +52,6 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-scanner-dark text-white">
-      
       {/* Imperial Army ASCII banner */}
       {showAscii && (
         <div className="container mx-auto mt-2">
