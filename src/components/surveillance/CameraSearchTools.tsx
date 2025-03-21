@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Camera, Cpu, Globe, Search, Shield, Webhook, Map, User, Scan, Globe2, Flag, Tv, Bot, Link } from 'lucide-react';
+import { Camera, Cpu, Globe, Search, Shield, Webhook, Map, User, Scan, Globe2, Flag, Tv, Bot, Link, Zap, FileWarning } from 'lucide-react';
 import { SearchCamTool } from './search-tools/SearchCamTool';
 import { IPCamSearchTool } from './search-tools/IPCamSearchTool';
 import { CameradarTool } from './search-tools/CameradarTool';
@@ -16,8 +16,14 @@ import { PhotonTool } from './search-tools/PhotonTool';
 import { TwintTool } from './search-tools/TwintTool';
 import { WebHackTool } from './search-tools/WebHackTool';
 import { BotExploitsTool } from './search-tools/BotExploitsTool';
+import { SpeedCameraTool } from './search-tools/SpeedCameraTool';
+import { CCTVTool } from './search-tools/CCTVTool';
+import { CamerattackTool } from './search-tools/CamerattackTool';
+import { OSINTTool } from './search-tools/OSINTTool';
+import { ShieldAITool } from './search-tools/ShieldAITool';
+import { BackHackTool } from './search-tools/BackHackTool';
 
-// Search methods definitions
+// Search methods definitions with all tools
 const SEARCH_METHODS = [
   { id: 'searchcam', name: 'SearchCAM', description: 'Google dorks to find camera streams', icon: <Search className="h-4 w-4" /> },
   { id: 'ipcamsearch', name: 'IPCam Protocol', description: 'Search using camera discovery protocols', icon: <Webhook className="h-4 w-4" /> },
@@ -26,11 +32,17 @@ const SEARCH_METHODS = [
   { id: 'username', name: 'Username Search', description: 'Find accounts across platforms', icon: <User className="h-4 w-4" /> },
   { id: 'webcheck', name: 'Web Check', description: 'Analyze website security', icon: <Globe2 className="h-4 w-4" /> },
   { id: 'cctvmap', name: 'CCTV Mapper', description: 'Geolocation mapping of cameras', icon: <Map className="h-4 w-4" /> },
+  { id: 'cctv', name: 'CCTV Tools', description: 'Common CCTV hacking techniques', icon: <Tv className="h-4 w-4" /> },
+  { id: 'speedcamera', name: 'Speed Camera', description: 'Motion-based camera detection', icon: <Zap className="h-4 w-4" /> },
   { id: 'torbot', name: 'TorBot', description: 'Dark web OSINT tool', icon: <Globe className="h-4 w-4" /> },
   { id: 'photon', name: 'Photon', description: 'Web crawler and information gatherer', icon: <Link className="h-4 w-4" /> },
   { id: 'twint', name: 'Twint', description: 'Twitter intelligence tool', icon: <Scan className="h-4 w-4" /> },
-  { id: 'webhack', name: 'WebHack', description: 'Web application scanner', icon: <Shield className="h-4 w-4" /> },
-  { id: 'botexploits', name: 'BotExploits', description: 'IoT device discovery & analysis', icon: <Bot className="h-4 w-4" /> }
+  { id: 'webhack', name: 'WebHack', description: 'Web application scanner', icon: <Cpu className="h-4 w-4" /> },
+  { id: 'botexploits', name: 'BotExploits', description: 'IoT device discovery & analysis', icon: <Bot className="h-4 w-4" /> },
+  { id: 'camerattack', name: 'CamerAttack', description: 'Camera specific attacks', icon: <Shield className="h-4 w-4" /> },
+  { id: 'osint', name: 'OSINT Suite', description: 'Comprehensive OSINT collection', icon: <Search className="h-4 w-4" /> },
+  { id: 'shieldai', name: 'Shield AI', description: 'AI-powered security analysis', icon: <Shield className="h-4 w-4" /> },
+  { id: 'backhack', name: 'BackHack', description: 'Backend system analysis', icon: <FileWarning className="h-4 w-4" /> }
 ];
 
 const CameraSearchTools: React.FC = () => {
@@ -105,6 +117,12 @@ const CameraSearchTools: React.FC = () => {
               {method.id === 'twint' && <TwintTool />}
               {method.id === 'webhack' && <WebHackTool />}
               {method.id === 'botexploits' && <BotExploitsTool />}
+              {method.id === 'speedcamera' && <SpeedCameraTool />}
+              {method.id === 'cctv' && <CCTVTool />}
+              {method.id === 'camerattack' && <CamerattackTool />}
+              {method.id === 'osint' && <OSINTTool />}
+              {method.id === 'shieldai' && <ShieldAITool />}
+              {method.id === 'backhack' && <BackHackTool />}
             </TabsContent>
           ))}
         </Tabs>
