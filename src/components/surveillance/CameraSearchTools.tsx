@@ -130,6 +130,22 @@ const CameraSearchTools: React.FC = () => {
     return results;
   };
 
+  // Helper function to get the appropriate icon based on method id
+  const getMethodIcon = (methodId: string) => {
+    switch (methodId) {
+      case 'searchcam':
+        return <Search className="h-4 w-4" />;
+      case 'ipcamsearch':
+        return <Webhook className="h-4 w-4" />;
+      case 'cameradar':
+        return <Shield className="h-4 w-4" />;
+      case 'speedcam':
+        return <Cpu className="h-4 w-4" />;
+      default:
+        return <Globe className="h-4 w-4" />;
+    }
+  };
+
   return (
     <Card className="bg-scanner-dark-alt border-gray-700">
       <CardHeader>
@@ -154,11 +170,7 @@ const CameraSearchTools: React.FC = () => {
           {SEARCH_METHODS.map(method => (
             <TabsContent key={method.id} value={method.id} className="space-y-4">
               <Alert>
-                <method.id === 'searchcam' ? Search : 
-                 method.id === 'ipcamsearch' ? Webhook :
-                 method.id === 'cameradar' ? Shield :
-                 method.id === 'speedcam' ? Cpu :
-                 Globe} className="h-4 w-4" />
+                {getMethodIcon(method.id)}
                 <AlertTitle>{method.name}</AlertTitle>
                 <AlertDescription>{method.description}</AlertDescription>
               </Alert>
