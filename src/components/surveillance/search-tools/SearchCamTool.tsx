@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/components/ui/use-toast';
 import { ExternalLink, Link } from 'lucide-react';
-import { googleDorkSearch } from '@/utils/osintUtils';
+import { googleDorkSearch } from '@/utils/searchUtils';
 
 export const SearchCamTool: React.FC = () => {
   const { toast } = useToast();
