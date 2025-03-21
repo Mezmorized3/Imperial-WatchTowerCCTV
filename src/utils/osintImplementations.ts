@@ -1,4 +1,3 @@
-
 /**
  * Implementation of OSINT and camera discovery tools
  * This file contains the actual implementations of the tools
@@ -9,7 +8,7 @@ import {
   ToolResult, 
   CCTVParams, 
   TorBotParams, 
-  WebhackParams,
+  WebHackParams,
   SpeedCameraParams, 
   WebCheckParams, 
   TwintParams,
@@ -246,7 +245,7 @@ export const executeTorBot = async (params: TorBotParams): Promise<ToolResult> =
 /**
  * Execute Webhack web application scanner
  */
-export const executeWebhack = async (params: WebhackParams): Promise<ToolResult> => {
+export const executeWebhack = async (params: WebHackParams): Promise<ToolResult> => {
   await simulateNetworkDelay(2500);
   console.log('Executing Webhack:', params);
 
@@ -306,7 +305,7 @@ export const executeSpeedCamera = async (params: SpeedCameraParams): Promise<Too
   return {
     success: true,
     data: { 
-      source: params.source,
+      source: params.source || 'camera',
       threshold: params.threshold || 10,
       detections,
       count: detections.length
@@ -323,7 +322,7 @@ export const executeTwint = async (params: TwintParams): Promise<ToolResult> => 
   console.log('Executing Twint:', params);
 
   // Simulated results
-  const numTweets = Math.min(parseInt(params.limit || '10'), 50);
+  const numTweets = Math.min(params.limit || 10, 50);
   const tweets = [];
 
   for (let i = 0; i < numTweets; i++) {
@@ -361,7 +360,7 @@ export const executeTwint = async (params: TwintParams): Promise<ToolResult> => 
 /**
  * Execute Photon web crawler
  */
-export const executePhoton = async (params: { url: string, depth?: number }): Promise<ToolResult> => {
+export const executePhoton = async (params: PhotonParams): Promise<ToolResult> => {
   await simulateNetworkDelay(3000);
   console.log('Executing Photon:', params);
 
@@ -629,3 +628,4 @@ export const executeBackHack = async (params: BackHackParams): Promise<ToolResul
     simulatedData: true
   };
 };
+

@@ -24,6 +24,7 @@ export interface SherlockParams {
 export interface TorBotParams {
   url: string;
   depth?: number;
+  mode?: string; // Added mode parameter
 }
 
 export interface PhotonParams {
@@ -38,6 +39,7 @@ export interface TwintParams {
   since?: string;
   until?: string;
   limit?: number;
+  verified?: boolean; // Added verified parameter
 }
 
 export interface IPCamSearchParams {
@@ -49,11 +51,16 @@ export interface IPCamSearchParams {
 export interface BotExploitsParams {
   target: string;
   botType?: string;
+  scanType?: string; // Added scanType parameter
+  timeout?: number; // Added timeout parameter
 }
 
 export interface CamerattackParams {
   target: string;
   method?: string;
+  mode?: string; // Added mode parameter
+  duration?: number; // Added duration parameter
+  rate?: number; // Added rate parameter
 }
 
 export interface BackHackParams {
@@ -69,14 +76,66 @@ export interface WebHackParams {
 export interface SpeedCameraParams {
   location?: string;
   threshold?: number;
+  source?: string; // Added source parameter
 }
 
 export interface CCTVParams {
   region?: string;
   type?: string;
+  country?: string; // Added country parameter
+  limit?: number; // Added limit parameter
 }
 
 // OSINT tool result types
+
+// General result type for all OSINT tools
+export interface ToolResult {
+  success: boolean;
+  data?: any;
+  error?: string;
+  simulatedData?: boolean;
+}
+
+// Common type for all OSINT tool parameters
+export interface ToolParams {
+  [key: string]: any;
+}
+
+// Specific result types
+export interface ScanResult {
+  success: boolean;
+  findings: string[];
+  target: string;
+}
+
+export interface UsernameResult {
+  platform: string;
+  url: string;
+  username: string;
+  found: boolean;
+  profileData?: any;
+}
+
+export interface CameraResult {
+  ip: string;
+  port: number;
+  type: string;
+  accessible: boolean;
+  stream_url?: string;
+}
+
+// OSINT parameters
+export interface OSINTParams {
+  target: string;
+  type?: string;
+  depth?: string;
+}
+
+// Shield AI parameters
+export interface ShieldAIParams {
+  target: string;
+  mode?: string;
+}
 
 export interface ImperialShieldParams {
   targetUrl: string;

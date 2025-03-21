@@ -13,7 +13,7 @@ export type {
   CameraResult,
   CCTVParams,
   TorBotParams,
-  WebhackParams,
+  WebHackParams,
   SpeedCameraParams,
   WebCheckParams,
   TwintParams,
