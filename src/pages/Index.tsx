@@ -20,7 +20,7 @@ const Index = () => {
   });
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<string>('map');
-  const [showAscii, setShowAscii] = useState(false);
+  const [showAscii, setShowAscii] = useState(true);
   
   const imperialArmyBanner = `
     ██╗███╗   ███╗██████╗ ███████╗██████╗ ██╗ █████╗ ██╗          █████╗ ██████╗ ███╗   ███╗██╗   ██╗
@@ -53,8 +53,16 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-scanner-dark text-white">
-      {/* Add DashboardHeader component here */}
       <DashboardHeader />
+      
+      {/* Imperial Army ASCII banner */}
+      {showAscii && (
+        <div className="container mx-auto mt-2">
+          <div className="bg-scanner-dark p-4 rounded-md overflow-x-auto w-full">
+            <pre className="text-[#ea384c] text-xs font-mono">{imperialArmyBanner}</pre>
+          </div>
+        </div>
+      )}
       
       <main className="container mx-auto py-6 px-4">
         <ScanNotifications error={error} />
