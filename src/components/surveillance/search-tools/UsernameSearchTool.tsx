@@ -5,8 +5,10 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/components/ui/use-toast';
-import { ExternalLink, User } from 'lucide-react';
+import { ExternalLink, User, AlertCircle } from 'lucide-react';
 import { searchUsername } from '@/utils/searchUtils';
+import { executePythonTool, PYTHON_TOOLS, checkPythonApiStatus } from '@/utils/pythonIntegration';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 export const UsernameSearchTool: React.FC = () => {
   const { toast } = useToast();
@@ -20,6 +22,25 @@ export const UsernameSearchTool: React.FC = () => {
     username: string;
     note?: string;
   }>>([]);
+  const [pythonApiAvailable, setPythonApiAvailable] = useState<boolean | null>(null);
+  const [apiChecked, setApiChecked] = useState(false);
+
+  // Check Python API availability on component mount
+  React.useEffect(() => {
+    const checkApi = async () => {
+      const status = await checkPythonApiStatus();
+      setPythonApiAvailable(status.available);
+      setApiChecked(true);
+      
+      if (status.available) {
+        console.log('Python OSINT API is available with tools:', status.tools);
+      } else {
+        console.log('Python OSINT API is not available, will use browser implementation');
+      }
+    };
+    
+    checkApi();
+  }, []);
 
   // Handle username search
   const handleSearch = async () => {
@@ -41,7 +62,35 @@ export const UsernameSearchTool: React.FC = () => {
     }, 100);
     
     try {
-      const result = await searchUsername(username);
+      let result;
+      
+      // Try to use Python API first if available
+      if (pythonApiAvailable) {
+        const pythonResponse = await executePythonTool(PYTHON_TOOLS.SHERLOCK, { 
+          username: username,
+          timeout: 30  // 30 second timeout
+        });
+        
+        if (pythonResponse.success) {
+          result = pythonResponse.data;
+          toast({
+            title: "Python API Used",
+            description: "Results from server-side Sherlock tool",
+          });
+        } else {
+          // Fall back to browser implementation
+          toast({
+            title: "Python API Failed",
+            description: "Falling back to browser implementation",
+            variant: "destructive",
+          });
+          result = await searchUsername(username);
+        }
+      } else {
+        // Use browser implementation
+        result = await searchUsername(username);
+      }
+      
       setSearchResults(result.results);
       
       const foundCount = result.results.filter(r => r.exists).length;
@@ -69,6 +118,15 @@ export const UsernameSearchTool: React.FC = () => {
 
   return (
     <div className="flex flex-col space-y-4">
+      {apiChecked && pythonApiAvailable === false && (
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>
+            Python API not available. Using browser simulation mode.
+          </AlertDescription>
+        </Alert>
+      )}
+      
       <div className="flex space-x-2">
         <Input
           placeholder="Enter a username to search"

@@ -1,12 +1,14 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/components/ui/use-toast';
-import { ExternalLink, Link } from 'lucide-react';
+import { ExternalLink, Link, AlertCircle } from 'lucide-react';
 import { googleDorkSearch } from '@/utils/searchUtils';
+import { executePythonTool, PYTHON_TOOLS, checkPythonApiStatus } from '@/utils/pythonIntegration';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 export const SearchCamTool: React.FC = () => {
   const { toast } = useToast();
@@ -20,6 +22,25 @@ export const SearchCamTool: React.FC = () => {
     snippet: string;
     isCamera: boolean;
   }>>([]);
+  const [pythonApiAvailable, setPythonApiAvailable] = useState<boolean | null>(null);
+  const [apiChecked, setApiChecked] = useState(false);
+
+  // Check Python API availability on component mount
+  useEffect(() => {
+    const checkApi = async () => {
+      const status = await checkPythonApiStatus();
+      setPythonApiAvailable(status.available);
+      setApiChecked(true);
+      
+      if (status.available) {
+        console.log('Python OSINT API is available with tools:', status.tools);
+      } else {
+        console.log('Python OSINT API is not available, will use browser implementation');
+      }
+    };
+    
+    checkApi();
+  }, []);
 
   // Handle Google dork search - implementation inspired by SearchCAM tool
   const handleDorkSearch = async () => {
@@ -41,7 +62,35 @@ export const SearchCamTool: React.FC = () => {
     }, 100);
     
     try {
-      const result = await googleDorkSearch(query);
+      let result;
+      
+      // Try to use Python API first if available
+      if (pythonApiAvailable) {
+        const pythonResponse = await executePythonTool(PYTHON_TOOLS.SEARCHCAM, { 
+          query: query,
+          timeout: 60  // 60 second timeout
+        });
+        
+        if (pythonResponse.success) {
+          result = pythonResponse.data;
+          toast({
+            title: "Python API Used",
+            description: "Results from server-side SearchCAM tool",
+          });
+        } else {
+          // Fall back to browser implementation
+          toast({
+            title: "Python API Failed",
+            description: "Falling back to browser implementation",
+            variant: "destructive",
+          });
+          result = await googleDorkSearch(query);
+        }
+      } else {
+        // Use browser implementation
+        result = await googleDorkSearch(query);
+      }
+      
       setDorkResults(result.results);
       
       toast({
@@ -67,6 +116,15 @@ export const SearchCamTool: React.FC = () => {
 
   return (
     <div className="flex flex-col space-y-4">
+      {apiChecked && pythonApiAvailable === false && (
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>
+            Python API not available. Using browser simulation mode.
+          </AlertDescription>
+        </Alert>
+      )}
+      
       <div className="flex space-x-2">
         <Input
           placeholder='intitle:"webcam" OR inurl:"ViewerFrame"'
