@@ -18,5 +18,26 @@
     "serviceName": "imperial_scanner",
     "agentHost": "localhost",
     "agentPort": 6831
+  },
+  "apiServices": {
+    "virusTotal": {
+      "enabled": true,
+      "endpoint": "https://www.virustotal.com/api/v3"
+    },
+    "abuseIPDB": {
+      "enabled": true,
+      "endpoint": "https://api.abuseipdb.com/api/v2"
+    },
+    "nvd": {
+      "enabled": true,
+      "endpoint": "https://services.nvd.nist.gov/rest/json/cves/2.0"
+    }
+  },
+  "securitySettings": {
+    "rateLimits": {
+      "apiRequests": 100,
+      "authAttempts": 5
+    },
+    "tokenExpiration": "24h"
   }
 }

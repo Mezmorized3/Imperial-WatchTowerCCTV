@@ -5,10 +5,10 @@
 export const analyzeFirmware = async (brand: string, model: string, version: string) => {
   console.log(`Analyzing firmware for ${brand} ${model} version ${version}`);
   
-  // We need access to a vulnerability database or API
-  const nvdApiKey = process.env.NVD_API_KEY;
+  // Get NVD API key from localStorage
+  const nvdApiKey = localStorage.getItem('NVD_API_KEY');
   if (!nvdApiKey) {
-    console.warn('No NVD API key configured. Set NVD_API_KEY environment variable for firmware analysis.');
+    console.warn('No NVD API key configured. Please add your NVD API key in Settings -> API Keys.');
     return {
       knownVulnerabilities: [],
       outdated: false,

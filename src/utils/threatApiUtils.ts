@@ -8,9 +8,9 @@ import { ThreatIntelData } from '@/types/scanner';
 export const checkVirusTotal = async (ip: string): Promise<ThreatIntelData | null> => {
   console.log(`Checking VirusTotal for IP: ${ip}`);
   
-  const apiKey = process.env.VIRUSTOTAL_API_KEY;
+  const apiKey = localStorage.getItem('VIRUSTOTAL_API_KEY');
   if (!apiKey) {
-    console.error('No VirusTotal API key provided');
+    console.error('No VirusTotal API key found. Please add your API key in Settings -> API Keys.');
     return null;
   }
   
@@ -65,9 +65,9 @@ export const checkVirusTotal = async (ip: string): Promise<ThreatIntelData | nul
 export const checkAbuseIPDB = async (ip: string): Promise<ThreatIntelData | null> => {
   console.log(`Checking AbuseIPDB for IP: ${ip}`);
   
-  const apiKey = process.env.ABUSEIPDB_API_KEY;
+  const apiKey = localStorage.getItem('ABUSEIPDB_API_KEY');
   if (!apiKey) {
-    console.error('No AbuseIPDB API key provided');
+    console.error('No AbuseIPDB API key found. Please add your API key in Settings -> API Keys.');
     return null;
   }
   
@@ -110,4 +110,3 @@ export const checkAbuseIPDB = async (ip: string): Promise<ThreatIntelData | null
     return null;
   }
 };
-
