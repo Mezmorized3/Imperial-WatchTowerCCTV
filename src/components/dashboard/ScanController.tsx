@@ -91,7 +91,7 @@ const ScanController = ({
     
     const targetCountry = getTargetCountry(target.value);
     
-    onScanProgressUpdate({
+    const initialProgress: ScanProgress = {
       status: 'running',
       targetsTotal,
       targetsScanned: 0,
@@ -101,7 +101,9 @@ const ScanController = ({
       scanSettings: settings,
       currentTarget: target.value,
       targetCountry
-    });
+    };
+    
+    onScanProgressUpdate(initialProgress);
     
     toast({
       title: "Scan Started",
@@ -130,46 +132,51 @@ const ScanController = ({
         (progress) => {
           if (abortController.signal.aborted) return;
           
-          onScanProgressUpdate(prevState => ({
-            ...prevState,
+          // Create a new object that includes all previous state and the new progress data
+          const updatedProgress: ScanProgress = {
             ...progress,
             targetCountry
-          }));
+          };
+          onScanProgressUpdate(updatedProgress);
         },
         (camera) => {
           if (abortController.signal.aborted) return;
           
-          onResultsUpdate(prev => [...prev, camera]);
-          onScanProgressUpdate(prev => ({
-            ...prev,
-            camerasFound: prev.camerasFound + 1
-          }));
+          // Get current results and add the new camera
+          const newResults = [...results, camera];
+          onResultsUpdate(newResults);
+          
+          // Update scan progress with new camera count
+          const updatedProgress: ScanProgress = {
+            ...scanProgress,
+            camerasFound: scanProgress.camerasFound + 1
+          };
+          onScanProgressUpdate(updatedProgress);
         },
         target.type,
         abortController.signal
       );
       
       if (!abortController.signal.aborted) {
-        onScanProgressUpdate(prevState => {
-          const updatedState: ScanProgress = {
-            ...prevState,
-            status: 'completed',
-            targetsScanned: prevState.targetsTotal,
-            endTime: new Date()
-          };
-          
-          const elapsedTime = calculateElapsedTime(updatedState.startTime!);
-          
-          setTimeout(() => {
-            toast({
-              title: "Scan Completed",
-              description: `Found ${prevState.camerasFound} cameras in ${elapsedTime}.`,
-              variant: "default",
-            });
-          }, 0);
-          
-          return updatedState;
-        });
+        // Create final progress state for completed scan
+        const completedProgress: ScanProgress = {
+          ...scanProgress,
+          status: 'completed',
+          targetsScanned: scanProgress.targetsTotal,
+          endTime: new Date()
+        };
+        
+        onScanProgressUpdate(completedProgress);
+        
+        const elapsedTime = calculateElapsedTime(completedProgress.startTime!);
+        
+        setTimeout(() => {
+          toast({
+            title: "Scan Completed",
+            description: `Found ${completedProgress.camerasFound} cameras in ${elapsedTime}.`,
+            variant: "default",
+          });
+        }, 0);
         
         scanInProgressRef.current = false;
       }
@@ -178,12 +185,16 @@ const ScanController = ({
       if (scanInProgressRef.current) {
         const errorMessage = err instanceof Error ? err.message : 'Unknown error during scan';
         onErrorOccurred(errorMessage);
-        onScanProgressUpdate(prevState => ({
-          ...prevState,
+        
+        // Create error progress state
+        const errorProgress: ScanProgress = {
+          ...scanProgress,
           status: 'failed',
           error: errorMessage,
           endTime: new Date()
-        }));
+        };
+        
+        onScanProgressUpdate(errorProgress);
         
         toast({
           title: "Scan Failed",
@@ -195,6 +206,15 @@ const ScanController = ({
       }
     }
   };
+
+  // These state variables were missing but are used in the code
+  const [results, setResults] = useState<CameraResult[]>([]);
+  const [scanProgress, setScanProgress] = useState<ScanProgress>({
+    status: 'idle',
+    targetsTotal: 0,
+    targetsScanned: 0,
+    camerasFound: 0
+  });
 
   return { handleStartScan };
 };
