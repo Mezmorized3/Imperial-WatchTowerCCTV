@@ -1,4 +1,3 @@
-
 /**
  * Imperial Server – Enhanced Edition (Final)
  *
@@ -244,7 +243,7 @@ class ImperialServer {
             res.json({
               status: 'operational',
               availableTools: [
-                'sherlock', 'cameradar', 'ipcamsearch', 'searchcam', 'webcheck'
+                'sherlock', 'cameradar', 'ipcamsearch', 'searchcam', 'webcheck', 'imperial-pawn'
               ]
             });
           });
@@ -309,6 +308,40 @@ class ImperialServer {
               res.json(result);
             } catch (error) {
               royalLogger.error('WebCheck tool error:', error);
+              res.status(500).json({ error: error.message });
+            }
+          });
+          
+          // Imperial Pawn - Advanced CCTV bruteforce tool
+          router.post('/api/osint/imperial-pawn', adminAuth, async (req, res) => {
+            try {
+              const { 
+                targets, 
+                usernames, 
+                passwords, 
+                generateLoginCombos, 
+                threads, 
+                timeout, 
+                skipCameraCheck 
+              } = req.body;
+              
+              if (!targets || !Array.isArray(targets) || targets.length === 0) {
+                return res.status(400).json({ error: 'At least one target IP is required' });
+              }
+              
+              const result = await pythonTools.runPythonTool('imperial-pawn', {
+                targets,
+                usernames,
+                passwords,
+                generateLoginCombos,
+                threads,
+                timeout,
+                skipCameraCheck
+              });
+              
+              res.json(result);
+            } catch (error) {
+              royalLogger.error('Imperial Pawn tool error:', error);
               res.status(500).json({ error: error.message });
             }
           });

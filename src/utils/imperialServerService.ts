@@ -1,4 +1,3 @@
-
 /**
  * Imperial Server Service
  * Provides communication with the Imperial Server for various operations
@@ -212,6 +211,26 @@ class ImperialServerService {
       toast.error(`Failed to execute ${tool}`);
       return null;
     }
+  }
+
+  /**
+   * Execute Imperial Pawn for CCTV camera bruteforcing
+   */
+  async executeImperialPawn(params: {
+    targets: string[] | string;
+    usernames?: string[];
+    passwords?: string[];
+    generateLoginCombos?: boolean;
+    threads?: number;
+    timeout?: number;
+    skipCameraCheck?: boolean;
+  }): Promise<any | null> {
+    const formattedParams = {
+      ...params,
+      targets: Array.isArray(params.targets) ? params.targets : params.targets.split(',').map(t => t.trim())
+    };
+    
+    return this.executeOsintTool('imperial-pawn', formattedParams);
   }
 
   /**

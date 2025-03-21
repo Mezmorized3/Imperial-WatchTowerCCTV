@@ -73,7 +73,8 @@ export const PYTHON_TOOLS = {
   WEBCHECK: 'webcheck',
   INSECAM: 'insecam',
   IPCAMSEARCH: 'ipcamsearch',
-  CCTVMAP: 'cctvmap'
+  CCTVMAP: 'cctvmap',
+  IMPERIAL_PAWN: 'imperial-pawn'  // Added the new Imperial Pawn tool
 };
 
 /**
@@ -100,3 +101,27 @@ export const checkPythonApiStatus = async (): Promise<{
     return { available: false, tools: [] };
   }
 };
+
+/**
+ * Execute Imperial Pawn CCTV bruteforce tool
+ * @param params Configuration for the Imperial Pawn tool
+ * @returns Promise with the bruteforce results
+ */
+export const executeImperialPawn = async (params: {
+  targets: string[] | string;
+  usernames?: string[];
+  passwords?: string[];
+  generateLoginCombos?: boolean;
+  threads?: number;
+  timeout?: number;
+  skipCameraCheck?: boolean;
+}): Promise<PythonToolResponse> => {
+  // Format the targets as an array if it's a string (could be IP range or single IP)
+  const formattedParams = {
+    ...params,
+    targets: Array.isArray(params.targets) ? params.targets : [params.targets]
+  };
+  
+  return executePythonTool(PYTHON_TOOLS.IMPERIAL_PAWN, formattedParams);
+};
+
