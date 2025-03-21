@@ -1,4 +1,5 @@
 
+import React, { Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Index from '@/pages/Index';
 import Viewer from '@/pages/Viewer';
@@ -25,7 +26,7 @@ function App() {
             <Route 
               path="/globe" 
               element={
-                <React.Suspense fallback={<div>Loading Globe page...</div>}>
+                <Suspense fallback={<div>Loading Globe page...</div>}>
                   {(() => {
                     try {
                       const GlobePage = require('./pages/Globe').default;
@@ -35,7 +36,7 @@ function App() {
                       return <div>Error loading Globe page</div>;
                     }
                   })()}
-                </React.Suspense>
+                </Suspense>
               } 
             />
             <Route path="/404" element={<NotFound />} />
