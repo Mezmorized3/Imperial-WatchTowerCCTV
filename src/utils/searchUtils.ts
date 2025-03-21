@@ -1,11 +1,10 @@
 
-import { ThreatIntelData } from '@/types/scanner';
-import { getComprehensiveThreatIntel, analyzeFirmware } from './threatIntelligence';
-
 /**
- * Perform a Google dork search for cameras
+ * Function to perform a Google Dork search for cameras
+ * This is the TypeScript/JavaScript implementation inspired by the SearchCAM tool
+ * Original: https://github.com/AngelSecurityTeam/SearchCAM
  */
-export const googleDorkSearch = async (dorkQuery: string): Promise<{
+export const googleDorkSearch = async (query: string): Promise<{
   results: Array<{
     id: string;
     title: string;
@@ -14,163 +13,143 @@ export const googleDorkSearch = async (dorkQuery: string): Promise<{
     isCamera: boolean;
   }>;
 }> => {
-  console.log(`Performing Google dork search with query: ${dorkQuery}`);
+  console.log(`Performing Google dork search for: ${query}`);
   
   // Simulate API delay
-  await new Promise(resolve => setTimeout(resolve, 2500));
+  await new Promise(resolve => setTimeout(resolve, 2000));
   
-  // In a real implementation, this would use Google search API or scrape Google results
-  // For demonstration purposes, we'll generate mock results
+  // In a real implementation, this would perform an actual search
+  // For demo purposes, we'll return mock results
   
-  // Common camera dork queries to simulate matching against
-  const cameraDorks = [
-    'intitle:"live view"',
-    'inurl:view/index.shtml',
-    'intitle:"webcamXP"',
-    'inurl:/view.shtml',
-    'intitle:"IP CAMERA Viewer"',
-    'intitle:"AXIS Video Server"',
-    'intext:"powered by webcamXP"',
-    'intitle:"View Video"',
-    'intitle:"Live NetSnap Cam-Server feed"',
-    'intitle:"Active Webcam Page"'
+  // Common camera-related keywords to check if a result is likely a camera
+  const cameraKeywords = [
+    'webcam', 'ipcam', 'camera', 'cctv', 'surveillance', 
+    'axis', 'hikvision', 'dahua', 'amcrest', 'foscam',
+    'live view', 'live stream', 'rtsp', 'mjpeg', 'videostream'
   ];
   
-  // Check if the query contains any camera dorks to determine likelihood of results
-  const containsCameraDork = cameraDorks.some(dork => dorkQuery.toLowerCase().includes(dork.toLowerCase()));
+  // Generate random number of results (3-10)
+  const resultCount = Math.floor(Math.random() * 8) + 3;
   
-  // Generate 3-12 results
-  const resultCount = containsCameraDork ? Math.floor(Math.random() * 10) + 3 : Math.floor(Math.random() * 5) + 1;
-  const results = [];
+  // Common camera URL patterns
+  const cameraUrls = [
+    'http://123.45.67.89/view/index.shtml',
+    'http://98.76.54.32:8080/view/viewer_index.shtml',
+    'http://192.168.1.1/axis-cgi/mjpg/video.cgi',
+    'http://webcam.example.com/mjpg/video.mjpg',
+    'http://10.0.0.1/VideoStream.cgi',
+    'http://camera.example.org:8000/mjpg/video.mjpg',
+    'http://85.214.112.37/record/current.jpg',
+    'http://216.104.165.138/ViewerFrame?Mode=Motion',
+    'http://83.213.205.137:8080/view/viewer_index.shtml',
+    'http://88.53.197.250/axis-cgi/jpg/image.cgi',
+    'http://193.34.144.164/view/index.shtml',
+    'http://97.68.91.195/anony/mjpg.cgi',
+    'http://75.8.93.44:8082'
+  ];
   
-  for (let i = 0; i < resultCount; i++) {
-    // Generate realistic-looking results
-    const isCamera = containsCameraDork ? Math.random() > 0.3 : Math.random() > 0.7;
+  // Generate mock search results
+  const results = Array.from({ length: resultCount }).map((_, index) => {
+    // Pick a random camera URL or generate a random one
+    const useRealExample = Math.random() > 0.5;
+    const url = useRealExample 
+      ? cameraUrls[Math.floor(Math.random() * cameraUrls.length)]
+      : `http://${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}:${[80, 8080, 554, 8000, 8081, 8082][Math.floor(Math.random() * 6)]}`;
     
-    // Generate different types of URLs and titles based on whether it's a camera
-    let url, title, snippet;
+    // Generate a random title
+    const titles = [
+      'Network Camera - Live View',
+      'IP Camera Viewer',
+      'AXIS Camera MJPG Stream',
+      'Surveillance Camera Admin Page',
+      'Home Security Camera - Live Feed',
+      'WebCam Server - Live Stream Available',
+      'Hikvision IP Camera',
+      'Dahua Technology Network Camera',
+      'CCTV Camera Feed',
+      'Foscam IP Camera',
+      'Building Entrance Camera',
+      'Parking Lot Surveillance',
+      'Traffic Camera Live Feed'
+    ];
     
-    if (isCamera) {
-      // Generate a camera-like URL and title
-      const ip = `${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}`;
-      const port = [80, 8080, 8081, 9000, 554][Math.floor(Math.random() * 5)];
-      const paths = ['/view.shtml', '/index.html', '/live.html', '/webcam.html', '/camera.html'];
-      const path = paths[Math.floor(Math.random() * paths.length)];
-      
-      url = `http://${ip}:${port}${path}`;
-      
-      const titles = [
-        'Live View - Network Camera',
-        'IP Camera Viewer',
-        'AXIS Video Server',
-        'Live NetSnap Cam-Server feed',
-        'Webcam XP 5 - Live View',
-        'Surveillance Camera - Live Feed',
-        'Security Camera Web Interface'
-      ];
-      
-      title = titles[Math.floor(Math.random() * titles.length)];
-      
-      const snippets = [
-        'Live view of security camera. User: admin Password: admin ... View different camera angles and configure motion detection settings.',
-        'Control panel for IP camera system. Set recording schedules, view live feeds, and configure alert settings.',
-        'RTSP stream available at rtsp://admin:admin@... View live camera feed and access recording archive.',
-        'Web interface for surveillance camera. PTZ controls available. Current status: recording.',
-        'Access your security camera remotely. Supports ONVIF protocol and integrates with NVR systems.'
-      ];
-      
-      snippet = snippets[Math.floor(Math.random() * snippets.length)];
-    } else {
-      // Generate a non-camera result that might have matched the query
-      const domains = ['security-camera-reviews.com', 'cctv-forum.net', 'surveillance-guide.org', 'securitycameras.com', 'ipcamtalk.com'];
-      const domain = domains[Math.floor(Math.random() * domains.length)];
-      const paths = ['/best-cameras', '/setup-guide', '/how-to-access-cameras', '/camera-comparison', '/security-tips'];
-      const path = paths[Math.floor(Math.random() * paths.length)];
-      
-      url = `https://${domain}${path}`;
-      
-      const titles = [
-        'How to Access Security Cameras Remotely - Complete Guide',
-        'Best IP Cameras for Home Security in 2023',
-        'Security Camera Setup Instructions',
-        'Understanding RTSP, ONVIF and Other Camera Protocols',
-        'Forum: Can\'t Access My Security Camera'
-      ];
-      
-      title = titles[Math.floor(Math.random() * titles.length)];
-      
-      const snippets = [
-        'Learn how to access your security cameras from anywhere using port forwarding and dynamic DNS services.',
-        'Comprehensive comparison of the top IP camera brands including Hikvision, Dahua, Axis and more.',
-        'Step-by-step guide to setting up your surveillance system including camera placement and wiring.',
-        'Discussion about common security vulnerabilities in IP cameras and how to protect your system.',
-        'Troubleshooting guide for common connection issues with IP cameras and NVR systems.'
-      ];
-      
-      snippet = snippets[Math.floor(Math.random() * snippets.length)];
-    }
+    const title = titles[Math.floor(Math.random() * titles.length)];
     
-    results.push({
-      id: `dork-${i}-${Date.now()}`,
+    // Generate a random snippet
+    const snippets = [
+      'Live view of the surveillance camera. This page provides access to the video stream.',
+      'Network camera web interface. View and control your security camera remotely.',
+      'IP camera live stream. Motion detection enabled. Administrator access required for settings.',
+      'MJPEG stream from network camera. Refresh rate: 15fps. Resolution: 1080p.',
+      'Camera web viewer. Pan, tilt, and zoom controls available for authorized users.',
+      'Surveillance system web interface. Multiple camera views available.',
+      'Public webcam feed. This camera updates every 30 seconds with a new image.',
+      'Security camera admin console. Login required for configuration options.',
+      'IP camera viewer page. This device is configured to allow anonymous viewing.'
+    ];
+    
+    const snippet = snippets[Math.floor(Math.random() * snippets.length)];
+    
+    // Determine if this result is likely a camera
+    const titleLower = title.toLowerCase();
+    const snippetLower = snippet.toLowerCase();
+    
+    const isCamera = cameraKeywords.some(keyword => 
+      titleLower.includes(keyword) || snippetLower.includes(keyword)
+    ) || Math.random() > 0.3; // Add some randomness
+    
+    return {
+      id: `result-${Date.now()}-${index}`,
       title,
       url,
       snippet,
       isCamera
-    });
-  }
+    };
+  });
   
   return { results };
 };
 
 /**
- * Search for a username across multiple platforms (similar to Sherlock)
+ * Function to search for open directories containing camera feeds
+ * Inspired by various OSINT camera tools
  */
-export const searchUsername = async (username: string): Promise<{
-  results: Array<{
-    platform: string;
-    url: string;
-    exists: boolean;
-    username: string;
-    note?: string;
-  }>;
-}> => {
-  console.log(`Searching for username: ${username} across platforms`);
+export const searchOpenDirectories = async (keywords: string[]): Promise<string[]> => {
+  console.log(`Searching for open directories with keywords: ${keywords.join(', ')}`);
   
   // Simulate API delay
-  await new Promise(resolve => setTimeout(resolve, 3000));
+  await new Promise(resolve => setTimeout(resolve, 1500));
   
-  // In a real implementation, this would check each site for the username
-  // For demonstration purposes, we'll generate mock results
-  
-  const platforms = [
-    { name: 'GitHub', url: `https://github.com/${username}`, probability: 0.7 },
-    { name: 'Twitter', url: `https://twitter.com/${username}`, probability: 0.8 },
-    { name: 'Instagram', url: `https://instagram.com/${username}`, probability: 0.75 },
-    { name: 'Facebook', url: `https://facebook.com/${username}`, probability: 0.65 },
-    { name: 'LinkedIn', url: `https://linkedin.com/in/${username}`, probability: 0.6 },
-    { name: 'Reddit', url: `https://reddit.com/user/${username}`, probability: 0.7 },
-    { name: 'YouTube', url: `https://youtube.com/@${username}`, probability: 0.5 },
-    { name: 'Tumblr', url: `https://${username}.tumblr.com`, probability: 0.4 },
-    { name: 'Medium', url: `https://medium.com/@${username}`, probability: 0.5 },
-    { name: 'Pinterest', url: `https://pinterest.com/${username}`, probability: 0.55 },
-    { name: 'Steam', url: `https://steamcommunity.com/id/${username}`, probability: 0.6 },
-    { name: 'Twitch', url: `https://twitch.tv/${username}`, probability: 0.5 },
-    { name: 'Patreon', url: `https://patreon.com/${username}`, probability: 0.3 },
-    { name: 'TikTok', url: `https://tiktok.com/@${username}`, probability: 0.65 },
-    { name: 'HackerOne', url: `https://hackerone.com/${username}`, probability: 0.2 }
+  // Mock implementation
+  const mockDirectories = [
+    'http://example.com/cameras/',
+    'http://server.example.org/webcams/public/',
+    'http://unsecured.example.net/cctv/feeds/',
+    'http://company.example.com/surveillance/exterior/',
+    'http://campus.example.edu/security/cameras/'
   ];
   
-  const results = platforms.map(platform => {
-    const exists = Math.random() < platform.probability;
-    
-    return {
-      platform: platform.name,
-      url: platform.url,
-      exists,
-      username,
-      note: exists ? undefined : Math.random() > 0.7 ? 'Profile set to private' : undefined
-    };
-  });
+  // Filter based on keywords (simplified mock)
+  return mockDirectories.filter(() => Math.random() > 0.3);
+};
+
+/**
+ * Function to check if a camera stream is accessible
+ */
+export const checkCameraAccessibility = async (url: string): Promise<{
+  accessible: boolean;
+  requiresAuth: boolean;
+  streamType?: string;
+}> => {
+  console.log(`Checking accessibility of camera at: ${url}`);
   
-  return { results };
+  // Simulate check
+  await new Promise(resolve => setTimeout(resolve, 800));
+  
+  // Mock response (in a real app, this would actually check the URL)
+  return {
+    accessible: Math.random() > 0.3,
+    requiresAuth: Math.random() > 0.5,
+    streamType: ['MJPEG', 'RTSP', 'HLS', 'HTTP'][Math.floor(Math.random() * 4)]
+  };
 };

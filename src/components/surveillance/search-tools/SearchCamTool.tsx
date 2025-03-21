@@ -21,7 +21,7 @@ export const SearchCamTool: React.FC = () => {
     isCamera: boolean;
   }>>([]);
 
-  // Handle Google dork search
+  // Handle Google dork search - implementation inspired by SearchCAM tool
   const handleDorkSearch = async () => {
     if (!query.trim()) {
       toast({
