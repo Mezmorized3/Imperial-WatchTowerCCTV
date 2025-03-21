@@ -13,9 +13,9 @@ interface ImperialServerConfig {
 
 export class ImperialServerService {
   private config: ImperialServerConfig = {
-    baseUrl: process.env.IMPERIAL_SERVER_URL || 'localhost',
-    port: parseInt(process.env.IMPERIAL_SERVER_PORT || '5001'),
-    useHttps: process.env.IMPERIAL_SERVER_HTTPS === 'true'
+    baseUrl: import.meta.env.VITE_IMPERIAL_SERVER_URL || 'localhost',
+    port: parseInt(import.meta.env.VITE_IMPERIAL_SERVER_PORT || '5001'),
+    useHttps: import.meta.env.VITE_IMPERIAL_SERVER_HTTPS === 'true'
   };
   
   private authToken: string | null = null;
@@ -36,6 +36,21 @@ export class ImperialServerService {
       this.authToken = localStorage.getItem('imperialServerToken');
     }
     return this.authToken;
+  }
+  
+  /**
+   * Check if user is authenticated
+   */
+  isAuthenticated(): boolean {
+    return !!this.getAuthToken();
+  }
+  
+  /**
+   * Logout from Imperial Server
+   */
+  logout(): void {
+    this.authToken = null;
+    localStorage.removeItem('imperialServerToken');
   }
   
   /**
@@ -75,7 +90,7 @@ export class ImperialServerService {
     
     try {
       // In development, simulate responses
-      if (process.env.NODE_ENV === 'development') {
+      if (import.meta.env.DEV) {
         await new Promise(resolve => setTimeout(resolve, 1500));
         
         return {
@@ -112,9 +127,78 @@ export class ImperialServerService {
       };
     }
   }
-  
+
   /**
    * Get Imperial Server status
+   */
+  async getImperialStatus(): Promise<any> {
+    try {
+      const result = await imperialShieldProtocol.request({
+        targetUrl: `${this.config.baseUrl}/v1/admin/status`,
+        port: this.config.port,
+        protocol: this.config.useHttps ? 'https' : 'http',
+        authToken: this.getAuthToken()
+      });
+      
+      return result.data;
+    } catch (error) {
+      console.error('Error fetching Imperial Server status:', error);
+      return null;
+    }
+  }
+  
+  /**
+   * Issue a decree to the Imperial Server
+   */
+  async issueDecree(port: number, command: string): Promise<any> {
+    try {
+      const result = await imperialShieldProtocol.request({
+        targetUrl: `${this.config.baseUrl}/v1/admin/decree/${port}`,
+        port: this.config.port,
+        protocol: this.config.useHttps ? 'https' : 'http',
+        authToken: this.getAuthToken(),
+        method: 'POST',
+        body: { command }
+      });
+      
+      return result.data;
+    } catch (error) {
+      console.error('Error issuing decree:', error);
+      return null;
+    }
+  }
+  
+  /**
+   * Initiate a camera scan
+   */
+  async initiateCameraScan(targetIP: string, scanType: string): Promise<any> {
+    return this.executeOsintTool('cameradar', {
+      target: targetIP,
+      scanType: scanType
+    });
+  }
+
+  /**
+   * Search for IP cameras
+   */
+  async searchIPCameras(subnet: string, protocols: string[]): Promise<any> {
+    return this.executeOsintTool('ipcamsearch', {
+      subnet: subnet,
+      protocols: protocols
+    });
+  }
+
+  /**
+   * Initiate a web check
+   */
+  async initiateWebCheck(url: string): Promise<any> {
+    return this.executeOsintTool('webcheck', {
+      url: url
+    });
+  }
+  
+  /**
+   * Get server status
    */
   async getServerStatus(): Promise<any> {
     try {
@@ -130,6 +214,13 @@ export class ImperialServerService {
       console.error('Error fetching Imperial Server status:', error);
       return null;
     }
+  }
+
+  /**
+   * Execute Imperial Shinobi
+   */
+  async executeImperialShinobi(params: Record<string, any>): Promise<any> {
+    return this.executeOsintTool('imperial-shinobi', params);
   }
 }
 
