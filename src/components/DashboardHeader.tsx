@@ -1,22 +1,37 @@
-
 import React from 'react';
-import { Shield } from 'lucide-react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Terminal, Camera, User, Map } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
 
-const DashboardHeader: React.FC = () => {
-  const location = useLocation();
-  
-  console.log('DashboardHeader rendering, current path:', location.pathname);
-  
+const DashboardHeader = () => {
   return (
-    <header className="flex items-center justify-between px-6 py-4 bg-scanner-dark border-b border-gray-800">
-      <Link to="/" className="flex items-center space-x-2">
-        <Shield className="h-8 w-8 text-scanner-primary" />
-        <div className="flex flex-col">
-          <h1 className="text-xl font-bold text-white">Watchtower</h1>
-          <p className="text-xs text-gray-400">CCTV Scanner & Control Panel</p>
+    <header className="bg-scanner-dark-alt border-b border-gray-800 py-4 px-6">
+      <div className="container mx-auto">
+        <div className="flex justify-between items-center">
+          <div className="flex items-center space-x-3">
+            <Terminal className="h-7 w-7 text-scanner-primary" />
+            <h1 className="text-2xl font-bold text-white">CameraScanner</h1>
+            <Badge className="bg-scanner-primary ml-2">Beta</Badge>
+          </div>
+          
+          <div className="flex space-x-3">
+            <Button variant="outline" size="sm" className="text-gray-400 hover:text-white" asChild>
+              <Link to="/viewer">
+                <Camera className="h-4 w-4 mr-2" />
+                Camera Viewer
+              </Link>
+            </Button>
+            <Button variant="outline" size="sm" className="text-gray-400 hover:text-white" asChild>
+              <Link to="/imperial">
+                <Terminal className="h-4 w-4 mr-2" />
+                Imperial Scanner
+              </Link>
+            </Button>
+          </div>
         </div>
-      </Link>
+      </div>
     </header>
   );
 };

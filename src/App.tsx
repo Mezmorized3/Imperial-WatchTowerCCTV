@@ -4,6 +4,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import Index from '@/pages/Index';
 import Viewer from '@/pages/Viewer';
 import NotFound from '@/pages/NotFound';
+import ImperialScanner from '@/pages/ImperialScanner';
 import { ThemeProvider } from '@/components/ui/theme-provider';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from './components/ui/toaster';
@@ -22,6 +23,7 @@ function App() {
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/viewer" element={<Viewer />} />
+            <Route path="/imperial" element={<ImperialScanner />} />
             <Route path="/404" element={<NotFound />} />
             <Route path="*" element={<Navigate to="/404" replace />} />
           </Routes>
