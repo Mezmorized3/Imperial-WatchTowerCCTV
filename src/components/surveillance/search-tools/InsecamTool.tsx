@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -13,7 +12,7 @@ import { Badge } from '@/components/ui/badge';
 import { Pagination } from '@/components/ui/pagination';
 import { Camera, Monitor, Globe, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
-import { getInsecamCountries, searchInsecamByCountry } from '@/utils/cameraSearchUtils';
+import { getInsecamCountries, searchInsecamByCountry } from '@/utils/insecamUtils';
 
 export const InsecamTool: React.FC = () => {
   const { toast } = useToast();
@@ -36,12 +35,10 @@ export const InsecamTool: React.FC = () => {
     manufacturer?: string;
   }>>([]);
 
-  // Load countries on mount
   useEffect(() => {
     loadCountries();
   }, []);
 
-  // Load countries list
   const loadCountries = async () => {
     setIsLoadingCountries(true);
     try {
@@ -59,7 +56,6 @@ export const InsecamTool: React.FC = () => {
     }
   };
 
-  // Handle country selection
   const handleCountryChange = (value: string) => {
     setSelectedCountry(value);
     setCurrentPage(1);
@@ -68,14 +64,12 @@ export const InsecamTool: React.FC = () => {
     }
   };
 
-  // Handle page change
   const handlePageChange = (page: number) => {
     if (page < 1 || page > totalPages || page === currentPage) return;
     setCurrentPage(page);
     searchCameras(selectedCountry, page);
   };
 
-  // Search for cameras in the selected country
   const searchCameras = async (countryCode: string, page: number) => {
     setIsSearching(true);
     setCameras([]);
@@ -102,7 +96,6 @@ export const InsecamTool: React.FC = () => {
     }
   };
 
-  // Helper function to get a country name from code
   const getCountryName = (code: string): string => {
     const country = countries.find(c => c.code === code);
     return country ? country.country : code;
@@ -129,7 +122,6 @@ export const InsecamTool: React.FC = () => {
         </Select>
       </div>
       
-      {/* Camera Results */}
       {isSearching ? (
         <div className="text-center py-8">
           <Camera className="animate-pulse h-8 w-8 mx-auto mb-4" />
@@ -180,7 +172,6 @@ export const InsecamTool: React.FC = () => {
             ))}
           </div>
           
-          {/* Pagination */}
           {totalPages > 1 && (
             <div className="flex justify-center mt-4">
               <Pagination>

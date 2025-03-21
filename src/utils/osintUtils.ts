@@ -2,7 +2,7 @@
 import { CameraResult, ThreatIntelData } from '@/types/scanner';
 import { getComprehensiveThreatIntel, analyzeFirmware } from './threatIntelligence';
 import { fetchWhoisData, fetchDnsRecords } from './networkUtils';
-import { checkVulnerabilityDatabase } from './cameraSearchUtils';
+import { checkVulnerabilityDatabase } from './vulnerabilityUtils';
 import { getRandomGeoLocation } from './geoUtils';
 
 // Export the functions from our new modules to maintain backward compatibility
