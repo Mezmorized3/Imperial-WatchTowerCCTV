@@ -74,7 +74,7 @@ export const SpeedCameraTool: React.FC = () => {
       case 'vehicle':
         return <Car className="h-4 w-4 text-green-400" />;
       case 'animal':
-        return <Paw className="h-4 w-4 text-yellow-400" />;
+        return <Bird className="h-4 w-4 text-yellow-400" />;
       default:
         return <Eye className="h-4 w-4 text-gray-400" />;
     }
@@ -220,7 +220,7 @@ export const SpeedCameraTool: React.FC = () => {
                             ) : event.objectType === 'vehicle' ? (
                               <Car className="h-5 w-5 text-green-400 mr-2" />
                             ) : (
-                              <Eye className="h-5 w-5 text-yellow-400 mr-2" />
+                              <Bird className="h-5 w-5 text-yellow-400 mr-2" />
                             )}
                             <span className="font-medium">{event.objectType}</span>
                           </div>
@@ -262,4 +262,4 @@ export const SpeedCameraTool: React.FC = () => {
 };
 
 // Additional icon imports
-import { User, Car, Paw } from 'lucide-react';
+import { User, Car, Bird } from 'lucide-react';
