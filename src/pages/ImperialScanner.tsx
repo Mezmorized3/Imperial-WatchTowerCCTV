@@ -112,10 +112,10 @@ const ImperialScanner = () => {
       brand: ['Hikvision', 'Dahua', 'Axis', 'Bosch', 'Sony'][Math.floor(Math.random() * 5)],
       model: `Model-${Math.floor(Math.random() * 1000)}`,
       accessLevel: ['admin', 'view', 'none'][Math.floor(Math.random() * 3)],
-      country: randomLocation ? randomLocation.country : 'Unknown',
-      city: randomLocation ? randomLocation.city : 'Unknown',
-      latitude: randomLocation ? randomLocation.lat : 0,
-      longitude: randomLocation ? randomLocation.lng : 0,
+      country: randomLocation.country,
+      city: randomLocation.city,
+      latitude: randomLocation.lat,
+      longitude: randomLocation.lng,
       timestamp: new Date().toISOString()
     };
 
