@@ -1,3 +1,4 @@
+
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -78,19 +79,18 @@ const mockCameras: CameraResult[] = [
   }
 ];
 
-// Add this debug logging
 console.log('Globe.tsx module is loading');
 
-const GlobePage: React.FC = () => {
+const Globe = () => {
   const navigate = useNavigate();
   const [cameras] = React.useState<CameraResult[]>(mockCameras);
 
   useEffect(() => {
-    console.log('Globe page component mounted');
+    console.log('Globe component mounted');
     document.title = 'Globe View';
   }, []);
 
-  console.log('Globe page component rendering');
+  console.log('Globe component rendering');
 
   return (
     <div className="min-h-screen bg-scanner-dark text-white">
@@ -123,8 +123,6 @@ const GlobePage: React.FC = () => {
   );
 };
 
-// Rename the export and log it
-console.log('Exporting GlobePage component:', typeof GlobePage);
+console.log('Exporting Globe component:', typeof Globe);
 
-// Export with the same name as the file to avoid confusion
-export default GlobePage;
+export default Globe;

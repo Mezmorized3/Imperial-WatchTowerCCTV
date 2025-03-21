@@ -8,15 +8,14 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from './components/ui/toaster';
 import './App.css';
 
-// Import Globe directly without using @ alias to avoid path resolution issues
+// Import Globe directly with correct relative path
 import Globe from './pages/Globe';
 
 // Create a new query client
 const queryClient = new QueryClient();
 
 function App() {
-  console.log('App rendering with Globe component exists:', Globe !== undefined);
-  console.log('App rendering with Globe component type:', typeof Globe);
+  console.log('App rendering with Globe component:', Globe);
   
   return (
     <ThemeProvider defaultTheme="dark">
