@@ -12,7 +12,7 @@ import './App.css';
 const queryClient = new QueryClient();
 
 function App() {
-  console.log('App rendering with routes');
+  console.log('App rendering with routes', { GlobePage });
   
   return (
     <ThemeProvider defaultTheme="dark">
