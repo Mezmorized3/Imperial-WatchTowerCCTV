@@ -8,9 +8,10 @@ import { Slider } from '@/components/ui/slider';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Shield, BellRing, Globe, Lock, Eye, Settings as SettingsIcon, Monitor, Key } from 'lucide-react';
+import { Shield, BellRing, Globe, Lock, Eye, Settings as SettingsIcon, Monitor, Key, Home } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { Toaster } from '@/components/ui/toaster';
+import { Link } from 'react-router-dom';
 
 const Settings = () => {
   const { toast } = useToast();
@@ -66,9 +67,17 @@ const Settings = () => {
       </header>
 
       <div className="container max-w-6xl mx-auto py-8 px-4">
-        <div className="flex items-center mb-8">
-          <SettingsIcon className="h-8 w-8 mr-3 text-scanner-primary" />
-          <h1 className="text-3xl font-bold">Imperial Protocol</h1>
+        <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center">
+            <SettingsIcon className="h-8 w-8 mr-3 text-scanner-primary" />
+            <h1 className="text-3xl font-bold">Imperial Protocol</h1>
+          </div>
+          <Link to="/">
+            <Button variant="outline" className="flex items-center gap-2">
+              <Home className="h-4 w-4" />
+              Back to Dashboard
+            </Button>
+          </Link>
         </div>
 
         <Tabs defaultValue="general" className="space-y-6">
