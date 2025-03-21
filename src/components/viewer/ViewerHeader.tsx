@@ -1,15 +1,16 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Camera, Globe, Shield } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const ViewerHeader: React.FC = () => {
   const navigate = useNavigate();
   
   return (
     <header className="bg-scanner-dark-alt border-b border-gray-800 py-4 px-6">
-      <div className="container mx-auto flex justify-between items-center">
+      <div className="container mx-auto flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0">
         <div className="flex items-center space-x-4">
           <Button 
             variant="ghost" 
@@ -20,7 +21,32 @@ const ViewerHeader: React.FC = () => {
             <ArrowLeft className="h-4 w-4 mr-2" /> 
             Back to Scanner
           </Button>
-          <h1 className="text-xl font-bold">Camera Viewer</h1>
+          <h1 className="text-xl font-bold flex items-center">
+            <Camera className="h-5 w-5 mr-2 text-blue-400" />
+            Camera Surveillance Suite
+          </h1>
+        </div>
+        
+        <div className="flex items-center space-x-2">
+          <Button 
+            variant="ghost" 
+            size="sm"
+            onClick={() => navigate('/')}
+            className="text-gray-400 hover:text-white flex items-center"
+          >
+            <Globe className="h-4 w-4 mr-1" />
+            Scanner
+          </Button>
+          
+          <Button 
+            variant="ghost" 
+            size="sm"
+            onClick={() => navigate('/imperial')}
+            className="text-gray-400 hover:text-white flex items-center"
+          >
+            <Shield className="h-4 w-4 mr-1" />
+            Imperial
+          </Button>
         </div>
       </div>
     </header>

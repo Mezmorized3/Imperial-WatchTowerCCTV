@@ -1,390 +1,360 @@
 
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
 import { Progress } from '@/components/ui/progress';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/components/ui/use-toast';
-import { Badge } from '@/components/ui/badge';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { ArrowLeft, Search, AlertTriangle, Terminal, Camera } from 'lucide-react';
+import { ArrowRight, Globe, Search, Shield } from 'lucide-react';
 import { getRandomGeoLocation } from '@/utils/osintUtils';
-import { CameraResult } from '@/types/scanner';
+
+// Array of countries for the Imperial Network
+const IMPERIAL_TERRITORIES = [
+  { code: 'US', name: 'United States', count: 5234 },
+  { code: 'JP', name: 'Japan', count: 2918 },
+  { code: 'DE', name: 'Germany', count: 2456 },
+  { code: 'FR', name: 'France', count: 2089 },
+  { code: 'KR', name: 'South Korea', count: 1799 },
+  { code: 'GB', name: 'United Kingdom', count: 1527 },
+  { code: 'TW', name: 'Taiwan', count: 1289 },
+  { code: 'NL', name: 'Netherlands', count: 1125 },
+  { code: 'IT', name: 'Italy', count: 980 },
+  { code: 'RU', name: 'Russia', count: 867 },
+  { code: 'BR', name: 'Brazil', count: 784 },
+  { code: 'CA', name: 'Canada', count: 721 },
+  { code: 'IN', name: 'India', count: 634 },
+  { code: 'TR', name: 'Turkey', count: 573 },
+  { code: 'MX', name: 'Mexico', count: 512 }
+];
 
 const ImperialScanner = () => {
-  const navigate = useNavigate();
   const { toast } = useToast();
-  const [isScanning, setIsScanning] = useState(false);
-  const [progress, setProgress] = useState(0);
-  const [territoryCode, setTerritoryCode] = useState('');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [acceptedMandate, setAcceptedMandate] = useState(false);
-  const [results, setResults] = useState<CameraResult[]>([]);
-  const [countries, setCountries] = useState<{ [key: string]: { country: string; count: number } }>({});
-  const [consoleOutput, setConsoleOutput] = useState<string[]>([]);
+  const [selectedTerritory, setSelectedTerritory] = useState<string>('');
+  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [isScanning, setIsScanning] = useState<boolean>(false);
+  const [scanProgress, setScanProgress] = useState<number>(0);
+  const [scanResults, setScanResults] = useState<any[]>([]);
+  const [commandAccepted, setCommandAccepted] = useState<boolean>(false);
+  
+  // Imperial banner ASCII art
+  const imperialBanner = `
+    ██╗███╗   ███╗██████╗ ███████╗██████╗ ██╗ █████╗ ██╗         ███████╗██╗   ██╗███████╗
+    ██║████╗ ████║██╔══██╗██╔════╝██╔══██╗██║██╔══██╗██║         ██╔════╝╚██╗ ██╔╝██╔════╝
+    ██║██╔████╔██║██████╔╝█████╗  ██████╔╝██║███████║██║         █████╗   ╚████╔╝ ███████╗
+    ██║██║╚██╔╝██║██╔═══╝ ██╔══╝  ██╔══██╗██║██╔══██║██║         ██╔══╝    ╚██╔╝  ╚════██║
+    ██║██║ ╚═╝ ██║██║     ███████╗██║  ██║██║██║  ██║███████╗    ███████╗   ██║   ███████║
+    ╚═╝╚═╝     ╚═╝╚═╝     ╚══════╝╚═╝  ╚═╝╚═╝╚═╝  ╚═╝╚══════╝    ╚══════╝   ╚═╝   ╚══════╝
+  `;
 
-  // Simulate fetching country data
-  useEffect(() => {
-    const mockCountries = {
-      'US': { country: 'United States', count: 4721 },
-      'JP': { country: 'Japan', count: 1832 },
-      'DE': { country: 'Germany', count: 2508 },
-      'FR': { country: 'France', count: 1405 },
-      'UK': { country: 'United Kingdom', count: 2032 },
-      'IT': { country: 'Italy', count: 1264 },
-      'CA': { country: 'Canada', count: 1103 },
-      'AU': { country: 'Australia', count: 894 },
-      'RU': { country: 'Russia', count: 3781 },
-      'CN': { country: 'China', count: 2943 }
-    };
-    setCountries(mockCountries);
-  }, []);
-
-  const addConsoleMessage = (message: string, type: 'info' | 'error' | 'success' = 'info') => {
-    const coloredMessage = type === 'error' ? `[red]${message}[/]` : 
-                           type === 'success' ? `[green]${message}[/]` : 
-                           `[cyan]${message}[/]`;
-    setConsoleOutput(prev => [...prev, coloredMessage]);
+  // Accept the imperial mandate
+  const acceptImperialMandate = () => {
+    setCommandAccepted(true);
+    toast({
+      title: "Imperial Mandate Accepted",
+      description: "Welcome to the Imperial Surveillance Network.",
+      variant: "default",
+    });
   };
 
-  const startScan = async () => {
-    if (!territoryCode) {
+  // Start the scan operation
+  const startScan = () => {
+    if (!selectedTerritory && !searchQuery) {
       toast({
-        title: "Error",
-        description: "Please select a territory code",
+        title: "Command Error",
+        description: "Select a territory or enter a search query to begin.",
         variant: "destructive",
       });
       return;
     }
 
     setIsScanning(true);
-    setProgress(0);
-    setResults([]);
-    addConsoleMessage(`Initializing Voidwalker Protocol for ${countries[territoryCode]?.country || territoryCode}`, 'success');
-    
-    const totalPages = Math.floor(Math.random() * 10) + 5; // Random number of pages between 5-15
-    const totalCameras = Math.floor(Math.random() * 50) + 10; // Random number of cameras between 10-60
-    
-    for (let i = 0; i <= totalPages; i++) {
-      addConsoleMessage(`Deploying Legions to page ${i + 1}/${totalPages}`, 'info');
-      setProgress(Math.floor((i / totalPages) * 100));
-      
-      // Generate some random cameras for this page
-      const camerasThisPage = Math.floor(Math.random() * 8) + 1; // 1-8 cameras per page
-      
-      const newCameras: CameraResult[] = [];
-      for (let j = 0; j < camerasThisPage; j++) {
-        // Generate random IP
-        const ip = `${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}`;
-        const port = [80, 8080, 554, 443][Math.floor(Math.random() * 4)];
-        
-        const location = getRandomGeoLocation(countries[territoryCode]?.country || 'Unknown');
-        
-        const camera: CameraResult = {
-          id: `imp-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-          ip,
-          port,
-          status: ['online', 'vulnerable', 'authenticated'][Math.floor(Math.random() * 3)] as any,
-          location: {
-            country: countries[territoryCode]?.country || 'Unknown',
-            city: location.city,
-            latitude: location.latitude,
-            longitude: location.longitude
-          },
-          lastSeen: new Date().toISOString(),
-          accessLevel: ['none', 'view', 'control', 'admin'][Math.floor(Math.random() * 4)] as any,
-          brand: ['Hikvision', 'Dahua', 'Axis', 'Bosch', 'Sony', 'Panasonic'][Math.floor(Math.random() * 6)],
-          firmwareVersion: `${Math.floor(Math.random() * 9) + 1}.${Math.floor(Math.random() * 9) + 1}.${Math.floor(Math.random() * 9) + 1}`
-        };
-        
-        // Sometimes add vulnerabilities
-        if (Math.random() > 0.7) {
-          camera.vulnerabilities = [
-            {
-              name: ['Default credentials', 'CVE-2021-36260', 'Outdated firmware', 'Exposed RTSP'][Math.floor(Math.random() * 4)],
-              severity: ['low', 'medium', 'high', 'critical'][Math.floor(Math.random() * 4)] as any,
-              description: 'Security vulnerability detected'
-            }
-          ];
-        }
-        
-        newCameras.push(camera);
+    setScanProgress(0);
+    setScanResults([]);
+
+    // Simulate scanning process
+    const selectedCountry = IMPERIAL_TERRITORIES.find(t => t.code === selectedTerritory);
+    const totalPages = selectedCountry ? Math.ceil(selectedCountry.count / 10) : 5;
+    let currentPage = 0;
+
+    const scanInterval = setInterval(() => {
+      currentPage++;
+      const newProgress = Math.min(100, Math.round((currentPage / totalPages) * 100));
+      setScanProgress(newProgress);
+
+      // Generate a simulated result for this batch
+      if (currentPage % 2 === 0 || currentPage === 1) {
+        generateSimulatedResult();
       }
-      
-      // Wait for a short delay to simulate network request
-      await new Promise(resolve => setTimeout(resolve, 200));
-      
-      // Add the cameras to results
-      setResults(prev => [...prev, ...newCameras]);
-      
-      if (i === Math.floor(totalPages / 2)) {
-        addConsoleMessage('Strengthening encryption protocols against imperial countermeasures', 'info');
+
+      if (newProgress >= 100) {
+        clearInterval(scanInterval);
+        setIsScanning(false);
+        toast({
+          title: "Scan Complete",
+          description: `Found ${scanResults.length + 1} cameras in target region.`,
+          variant: "default",
+        });
+        // Add one final result
+        generateSimulatedResult();
       }
-    }
-    
-    // Complete the scan
-    setProgress(100);
-    setIsScanning(false);
-    
-    const timestamp = new Date().toISOString().replace(/[-:.]/g, '').substring(0, 15);
-    const filename = `imperial_spoils_${territoryCode}_${timestamp}.txt`;
-    
-    addConsoleMessage(`Voidwalker Protocol complete. ${results.length} strongholds captured.`, 'success');
-    addConsoleMessage(`Spoils secured in ${filename}`, 'success');
-    
-    toast({
-      title: "Scan Complete",
-      description: `Found ${results.length} cameras in ${countries[territoryCode]?.country || territoryCode}`,
-    });
+    }, 1000);
   };
 
-  const executeSearchCam = async () => {
+  // Generate simulated scan result
+  const generateSimulatedResult = () => {
+    const randomLocation = getRandomGeoLocation(selectedTerritory || 'US');
+    
+    const result = {
+      id: `cam-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+      ip: `${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}`,
+      port: [80, 8080, 554, 443, 8000][Math.floor(Math.random() * 5)],
+      brand: ['Hikvision', 'Dahua', 'Axis', 'Bosch', 'Sony'][Math.floor(Math.random() * 5)],
+      model: `Model-${Math.floor(Math.random() * 1000)}`,
+      accessLevel: ['admin', 'view', 'none'][Math.floor(Math.random() * 3)],
+      country: randomLocation ? randomLocation.country : 'Unknown',
+      city: randomLocation ? randomLocation.city : 'Unknown',
+      latitude: randomLocation ? randomLocation.lat : 0,
+      longitude: randomLocation ? randomLocation.lng : 0,
+      timestamp: new Date().toISOString()
+    };
+
+    setScanResults(prev => [...prev, result]);
+  };
+
+  // Run the search CAM query
+  const executeSearchCamQuery = () => {
     if (!searchQuery) {
       toast({
-        title: "Error",
-        description: "Please enter a search query",
+        title: "Command Error",
+        description: "Enter a search query to begin.",
         variant: "destructive",
       });
       return;
     }
-    
-    addConsoleMessage(`Executing SearchCAM for query: "${searchQuery}"`, 'info');
+
     setIsScanning(true);
-    
-    // Simulate search progress
-    for (let i = 0; i <= 5; i++) {
-      setProgress(i * 20);
-      addConsoleMessage(`Scouting page ${i+1} for query "${searchQuery}"`, 'info');
-      await new Promise(resolve => setTimeout(resolve, 300));
-    }
-    
-    // Generate some fake search results
-    const searchResults = [
-      `https://cam-portal.${searchQuery.toLowerCase().replace(/\s/g, '')}.com/stream`,
-      `http://surveillance.${searchQuery.toLowerCase().split(' ')[0]}.org/public`,
-      `https://cctv-${searchQuery.toLowerCase().replace(/\s/g, '-')}.net/view?id=1234`,
-      `http://webcam.${searchQuery.toLowerCase().split(' ')[0]}.io/live`,
-      `https://stream.${searchQuery.toLowerCase().replace(/[^a-z0-9]/g, '')}-cams.com/public`
-    ];
-    
-    addConsoleMessage(`SearchCAM Results for "${searchQuery}":`, 'success');
-    searchResults.forEach(url => {
-      addConsoleMessage(url, 'info');
-    });
-    
-    setProgress(100);
-    setIsScanning(false);
-    
+    setScanProgress(0);
     toast({
-      title: "SearchCAM Complete",
-      description: `Found ${searchResults.length} results for "${searchQuery}"`,
+      title: "SearchCAM Protocol Initiated",
+      description: `Searching for: ${searchQuery}`,
+      variant: "default",
     });
+
+    // Simulate search process
+    let progress = 0;
+    const searchInterval = setInterval(() => {
+      progress += 20;
+      setScanProgress(Math.min(100, progress));
+
+      if (progress >= 100) {
+        clearInterval(searchInterval);
+        setIsScanning(false);
+        setScanResults([
+          {
+            id: `search-${Date.now()}`,
+            url: `http://example.com/search?q=${encodeURIComponent(searchQuery)}`,
+            type: 'SearchCAM result',
+            query: searchQuery,
+            timestamp: new Date().toISOString()
+          },
+          {
+            id: `search-${Date.now() + 1}`,
+            url: `http://cameras.example.org/results?query=${encodeURIComponent(searchQuery)}`,
+            type: 'SearchCAM result',
+            query: searchQuery,
+            timestamp: new Date().toISOString()
+          },
+          {
+            id: `search-${Date.now() + 2}`,
+            url: `http://surveillance.example.net/find?term=${encodeURIComponent(searchQuery)}`,
+            type: 'SearchCAM result',
+            query: searchQuery,
+            timestamp: new Date().toISOString()
+          }
+        ]);
+        toast({
+          title: "SearchCAM Complete",
+          description: `Found 3 results for "${searchQuery}".`,
+          variant: "default",
+        });
+      }
+    }, 1000);
   };
 
-  const acceptMandate = () => {
-    addConsoleMessage("Imperial Mandate Accepted. Granting access to surveillance operations.", 'success');
-    setAcceptedMandate(true);
-  };
+  if (!commandAccepted) {
+    return (
+      <div className="min-h-screen bg-scanner-dark text-white p-6">
+        <Card className="max-w-4xl mx-auto bg-scanner-dark-alt border-gray-700">
+          <CardHeader className="border-b border-gray-700">
+            <CardTitle className="text-2xl text-center text-red-500">Imperial Network Protocol</CardTitle>
+            <CardDescription className="text-gray-400 text-center">
+              Surveillance System v2.5
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="pt-6">
+            <pre className="text-xs text-red-500 font-mono overflow-auto">{imperialBanner}</pre>
+            
+            <div className="mt-6 space-y-4 text-gray-300">
+              <p className="text-yellow-400 font-bold">WARNING: Imperial Network Protocol Active</p>
+              <p>By continuing, you swear fealty to the Imperial Network Charter.</p>
+              <p className="text-red-400">This tool reveals digital strongholds - use with imperial discretion.</p>
+            </div>
+          </CardContent>
+          <CardFooter className="flex justify-between border-t border-gray-700 pt-4">
+            <Button variant="secondary" onClick={() => window.history.back()}>
+              Retreat from Network
+            </Button>
+            <Button variant="destructive" onClick={acceptImperialMandate}>
+              Accept Imperial Mandate
+            </Button>
+          </CardFooter>
+        </Card>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-scanner-dark text-white">
-      <header className="bg-scanner-dark-alt border-b border-gray-800 py-4 px-6">
-        <div className="container mx-auto flex justify-between items-center">
-          <div className="flex items-center space-x-4">
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={() => navigate('/')}
-              className="text-gray-400 hover:text-white"
-            >
-              <ArrowLeft className="h-4 w-4 mr-2" /> 
-              Back to Scanner
-            </Button>
-            <h1 className="text-xl font-bold">Imperial Surveillance Network</h1>
-          </div>
-        </div>
-      </header>
-
-      <main className="container mx-auto py-6 px-4">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-1">
-            <Card className="bg-scanner-card border-gray-800 overflow-hidden">
-              <CardHeader className="pb-2 border-b border-gray-800 bg-scanner-dark-alt">
-                <CardTitle className="text-white text-lg flex items-center">
-                  <Terminal className="w-5 h-5 mr-2 text-scanner-primary" />
-                  Imperial Command
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="pt-4">
-                {!acceptedMandate ? (
-                  <div className="space-y-4">
-                    <div className="text-center py-4">
-                      <pre className="text-scanner-primary text-xs leading-tight overflow-hidden">
-                        {`
-    ██╗███╗   ███╗██████╗ ███████╗██████╗ ██╗ █████╗ ██╗     
-    ██║████╗ ████║██╔══██╗██╔════╝██╔══██╗██║██╔══██╗██║     
-    ██║██╔████╔██║██████╔╝█████╗  ██████╔╝██║███████║██║     
-    ██║██║╚██╔╝██║██╔═══╝ ██╔══╝  ██╔══██╗██║██╔══██║██║     
-    ██║██║ ╚═╝ ██║██║     ███████╗██║  ██║██║██║  ██║███████╗
-    ╚═╝╚═╝     ╚═╝╚═╝     ╚══════╝╚═╝  ╚═╝╚═╝╚═╝  ╚═╝╚══════╝
-                        `}
-                      </pre>
-                    </div>
-                    <div className="p-4 bg-scanner-dark-alt rounded-md border border-gray-800">
-                      <p className="text-yellow-400 mb-2 font-medium">By continuing, you swear fealty to the Imperial Network Charter</p>
-                      <p className="text-red-400 mb-4 text-sm flex items-center">
-                        <AlertTriangle className="h-4 w-4 mr-1" />
-                        This tool reveals digital strongholds - use with imperial discretion
-                      </p>
-                      <Button 
-                        className="w-full bg-scanner-primary hover:bg-scanner-primary/80"
-                        onClick={acceptMandate}
-                      >
-                        Accept Imperial Mandate
-                      </Button>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    <div className="p-4 bg-scanner-dark-alt rounded-md border border-gray-800">
-                      <h3 className="text-scanner-primary mb-2 font-medium">Territory Selection</h3>
-                      <p className="text-sm text-gray-400 mb-3">Select the territory code to begin surveillance operation</p>
-                      
-                      <div className="grid grid-cols-2 gap-2 mb-4">
-                        {Object.entries(countries).map(([code, data]) => (
-                          <Button 
-                            key={code}
-                            variant="outline"
-                            size="sm"
-                            className={`justify-between ${territoryCode === code ? 'border-scanner-primary bg-scanner-primary/20' : 'border-gray-700'}`}
-                            onClick={() => setTerritoryCode(code)}
-                          >
-                            <span>{code}</span>
-                            <Badge variant="outline" className="ml-2 bg-scanner-dark-alt">
-                              {data.count}
-                            </Badge>
-                          </Button>
-                        ))}
-                      </div>
-                      
-                      <Button 
-                        className="w-full bg-scanner-primary hover:bg-scanner-primary/80 mt-2"
-                        onClick={startScan}
-                        disabled={isScanning || !territoryCode}
-                      >
-                        {isScanning ? 'Scanning...' : 'Execute Voidwalker Protocol'}
-                      </Button>
-                    </div>
-                    
-                    <div className="p-4 bg-scanner-dark-alt rounded-md border border-gray-800">
-                      <h3 className="text-scanner-primary mb-2 font-medium">SearchCAM Module</h3>
-                      <p className="text-sm text-gray-400 mb-3">Scout additional intelligence through targeted queries</p>
-                      
-                      <div className="flex space-x-2 mb-2">
-                        <Input
-                          value={searchQuery}
-                          onChange={(e) => setSearchQuery(e.target.value)}
-                          placeholder="Enter search query"
-                          className="bg-scanner-dark border-gray-700"
-                        />
-                        <Button 
-                          onClick={executeSearchCam}
-                          disabled={isScanning || !searchQuery}
-                          size="icon"
-                          className="bg-scanner-primary hover:bg-scanner-primary/80"
-                        >
-                          <Search className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                )}
-                
-                {isScanning && (
-                  <div className="mt-4">
-                    <p className="text-sm text-gray-400 mb-2">Operation Progress</p>
-                    <Progress value={progress} className="h-2 bg-gray-800" />
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+    <div className="min-h-screen bg-scanner-dark text-white p-6">
+      <Card className="max-w-6xl mx-auto bg-scanner-dark-alt border-gray-700">
+        <CardHeader className="border-b border-gray-700">
+          <CardTitle className="text-2xl flex items-center">
+            <Shield className="mr-2 text-red-500" /> Imperial Surveillance Network
+          </CardTitle>
+          <CardDescription className="text-gray-400">
+            Select a territory for reconnaissance or use SearchCAM for targeted queries
+          </CardDescription>
+        </CardHeader>
+        
+        <CardContent className="pt-6 space-y-6">
+          {/* Territory selection */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-medium flex items-center">
+              <Globe className="mr-2 text-blue-400" /> Territory Selection
+            </h3>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Select 
+                  value={selectedTerritory} 
+                  onValueChange={setSelectedTerritory}
+                >
+                  <SelectTrigger className="bg-scanner-dark border-gray-700 text-white">
+                    <SelectValue placeholder="Select Territory" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-scanner-dark border-gray-700 text-white">
+                    <SelectGroup>
+                      <SelectLabel>Available Territories</SelectLabel>
+                      {IMPERIAL_TERRITORIES.map(territory => (
+                        <SelectItem key={territory.code} value={territory.code}>
+                          {territory.name} ({territory.count})
+                        </SelectItem>
+                      ))}
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div>
+                <Button 
+                  className="w-full" 
+                  onClick={startScan}
+                  disabled={isScanning || (!selectedTerritory && !searchQuery)}
+                >
+                  <ArrowRight className="mr-2 h-4 w-4" />
+                  {isScanning ? "Scanning..." : "Commence Reconnaissance"}
+                </Button>
+              </div>
+            </div>
           </div>
           
-          <div className="lg:col-span-2">
-            <Card className="bg-scanner-card border-gray-800 h-full">
-              <CardHeader className="pb-2 border-b border-gray-800 bg-scanner-dark-alt">
-                <CardTitle className="text-white text-lg flex items-center">
-                  <Camera className="w-5 h-5 mr-2 text-scanner-primary" />
-                  Imperial Findings
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="pt-4 h-full">
-                <div className="grid grid-cols-1 gap-4 h-full">
-                  <div className="bg-black/50 text-green-400 p-4 border border-gray-800 rounded-md font-mono text-sm h-60 overflow-y-auto">
-                    {consoleOutput.length === 0 ? (
-                      <p className="text-gray-500">Awaiting imperial command...</p>
-                    ) : (
-                      consoleOutput.map((line, i) => (
-                        <div key={i} className="mb-1">
-                          <span className="text-gray-500 mr-2">{'>>'}</span>
-                          <span dangerouslySetInnerHTML={{ 
-                            __html: line
-                              .replace(/\[red\]/g, '<span class="text-red-400">')
-                              .replace(/\[green\]/g, '<span class="text-green-400">')
-                              .replace(/\[cyan\]/g, '<span class="text-cyan-400">')
-                              .replace(/\[yellow\]/g, '<span class="text-yellow-400">')
-                              .replace(/\[\//g, '</span>') 
-                          }} />
-                        </div>
-                      ))
-                    )}
-                  </div>
-                  
-                  {results.length > 0 && (
-                    <div className="border border-gray-800 rounded-md overflow-hidden">
-                      <Table>
-                        <TableHeader className="bg-scanner-dark-alt">
-                          <TableRow>
-                            <TableHead className="text-scanner-primary">IP:Port</TableHead>
-                            <TableHead className="text-scanner-primary">Brand</TableHead>
-                            <TableHead className="text-scanner-primary">Status</TableHead>
-                            <TableHead className="text-scanner-primary">Location</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {results.map((camera) => (
-                            <TableRow key={camera.id} className="border-t border-gray-800">
-                              <TableCell className="font-mono">
-                                {camera.ip}:{camera.port}
-                              </TableCell>
-                              <TableCell>{camera.brand || 'Unknown'}</TableCell>
-                              <TableCell>
-                                <Badge 
-                                  className={
-                                    camera.status === 'vulnerable' ? 'bg-red-500' : 
-                                    camera.status === 'authenticated' ? 'bg-green-500' : 
-                                    'bg-blue-500'
-                                  }
-                                >
-                                  {camera.status}
-                                </Badge>
-                              </TableCell>
-                              <TableCell>
-                                {camera.location?.country}, {camera.location?.city}
-                              </TableCell>
-                            </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
-                    </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
+          {/* SearchCAM */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-medium flex items-center">
+              <Search className="mr-2 text-green-400" /> SearchCAM Protocol
+            </h3>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Input
+                  type="text"
+                  placeholder="Enter search query..."
+                  className="bg-scanner-dark border-gray-700 text-white"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </div>
+              
+              <div>
+                <Button 
+                  className="w-full" 
+                  variant="outline"
+                  onClick={executeSearchCamQuery}
+                  disabled={isScanning || !searchQuery}
+                >
+                  <Search className="mr-2 h-4 w-4" />
+                  {isScanning ? "Searching..." : "Execute SearchCAM Query"}
+                </Button>
+              </div>
+            </div>
           </div>
-        </div>
-      </main>
+          
+          {/* Progress indicator */}
+          {isScanning && (
+            <div className="space-y-2">
+              <div className="flex justify-between text-sm">
+                <span>Scanning in progress...</span>
+                <span>{scanProgress}%</span>
+              </div>
+              <Progress value={scanProgress} className="h-2" />
+            </div>
+          )}
+          
+          {/* Results */}
+          {scanResults.length > 0 && (
+            <div className="space-y-4">
+              <h3 className="text-lg font-medium border-b border-gray-700 pb-2">
+                Intelligence Gathered ({scanResults.length})
+              </h3>
+              
+              <div className="space-y-3 max-h-96 overflow-y-auto p-2">
+                {scanResults.map(result => (
+                  <Card key={result.id} className="bg-scanner-dark border-gray-700">
+                    <CardContent className="p-4 text-sm">
+                      {result.type === 'SearchCAM result' ? (
+                        <div>
+                          <p className="text-green-400 font-medium">SearchCAM Result</p>
+                          <p className="truncate text-blue-300 hover:underline">{result.url}</p>
+                          <p className="text-gray-400 text-xs mt-1">Query: {result.query}</p>
+                        </div>
+                      ) : (
+                        <div className="grid grid-cols-2 gap-2">
+                          <div>
+                            <p><span className="text-gray-400">IP:</span> {result.ip}:{result.port}</p>
+                            <p><span className="text-gray-400">Brand:</span> {result.brand}</p>
+                            <p><span className="text-gray-400">Model:</span> {result.model}</p>
+                          </div>
+                          <div>
+                            <p><span className="text-gray-400">Location:</span> {result.country}, {result.city}</p>
+                            <p><span className="text-gray-400">Coordinates:</span> {result.latitude.toFixed(4)}, {result.longitude.toFixed(4)}</p>
+                            <p><span className="text-gray-400">Access:</span> <span className={
+                              result.accessLevel === 'admin' ? 'text-red-400' : 
+                              result.accessLevel === 'view' ? 'text-yellow-400' : 'text-gray-400'
+                            }>{result.accessLevel}</span></p>
+                          </div>
+                        </div>
+                      )}
+                      <p className="text-xs text-gray-500 mt-2">
+                        Captured at: {new Date(result.timestamp).toLocaleString()}
+                      </p>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 };
