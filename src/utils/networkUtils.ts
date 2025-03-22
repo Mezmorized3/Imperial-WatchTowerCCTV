@@ -1,4 +1,3 @@
-
 /**
  * Network utilities for OSINT and security tools
  */
@@ -98,4 +97,70 @@ export const pingHost = async (host: string): Promise<number | null> => {
   }
   
   return null; // Host unreachable
+};
+
+/**
+ * Analyze a website for security information
+ * @param url The URL to analyze
+ * @returns Promise resolving to website analysis data
+ */
+export const analyzeWebsite = async (url: string): Promise<any> => {
+  console.log(`Analyzing website: ${url}`);
+  
+  // Simulate delay for API call
+  await simulateNetworkDelay(2500);
+  
+  // Extract domain from URL if a full URL was provided
+  let domain = url;
+  try {
+    if (url.startsWith('http')) {
+      domain = new URL(url).hostname;
+    } else if (url.includes('/')) {
+      domain = url.split('/')[0];
+    }
+  } catch (error) {
+    console.error('Error parsing URL:', error);
+  }
+  
+  // Generate simulated analysis results
+  const results = {
+    url: url,
+    domain: domain,
+    dns: [
+      { type: 'A', value: '192.168.1.1' },
+      { type: 'MX', value: 'mail.example.com' },
+      { type: 'TXT', value: 'v=spf1 include:_spf.example.com ~all' },
+      { type: 'NS', value: 'ns1.example.com' }
+    ],
+    securityHeaders: [
+      { header: 'Content-Security-Policy', value: "default-src 'self'", status: 'good' },
+      { header: 'X-XSS-Protection', value: '1; mode=block', status: 'good' },
+      { header: 'X-Frame-Options', value: 'SAMEORIGIN', status: 'good' },
+      { header: 'Strict-Transport-Security', value: '', status: 'warning' },
+      { header: 'X-Content-Type-Options', value: 'nosniff', status: 'good' },
+      { header: 'Referrer-Policy', value: '', status: 'warning' }
+    ],
+    technologies: [
+      'Nginx',
+      'React',
+      'Node.js',
+      'MongoDB',
+      'AWS'
+    ],
+    ports: [
+      { port: 80, state: 'open', service: 'HTTP' },
+      { port: 443, state: 'open', service: 'HTTPS' },
+      { port: 22, state: 'open', service: 'SSH' },
+      { port: 25, state: 'closed', service: 'SMTP' },
+      { port: 3306, state: 'filtered', service: 'MySQL' }
+    ],
+    certificates: {
+      issuer: 'Let\'s Encrypt Authority X3',
+      validFrom: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days ago
+      validTo: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000).toISOString(), // 60 days in future
+      daysRemaining: 60
+    }
+  };
+  
+  return results;
 };
