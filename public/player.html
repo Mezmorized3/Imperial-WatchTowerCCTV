@@ -1,0 +1,211 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HLS Player</title>
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+  <style>
+    body, html {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      background-color: #000;
+      overflow: hidden;
+      font-family: Arial, sans-serif;
+    }
+    
+    #videoContainer {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+    
+    #videoPlayer {
+      max-width: 100%;
+      max-height: 100%;
+    }
+    
+    .controls {
+      position: absolute;
+      bottom: 20px;
+      display: flex;
+      gap: 10px;
+      z-index: 100;
+    }
+    
+    button {
+      background: rgba(0, 0, 0, 0.7);
+      color: white;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      padding: 6px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    
+    button:hover {
+      background: rgba(0, 0, 0, 0.9);
+    }
+    
+    #errorMessage {
+      color: white;
+      background: rgba(255, 0, 0, 0.6);
+      padding: 10px 20px;
+      border-radius: 4px;
+      text-align: center;
+      max-width: 80%;
+    }
+    
+    #loadingIndicator {
+      color: white;
+      text-align: center;
+    }
+    
+    .loader {
+      border: 5px solid rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      border-top: 5px solid #fff;
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+      margin: 20px auto;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+  <div id="videoContainer">
+    <video id="videoPlayer" controls autoplay muted></video>
+    <div id="loadingIndicator">
+      <div class="loader"></div>
+      <p>Loading stream...</p>
+    </div>
+    <div id="errorMessage" style="display: none;"></div>
+    <div class="controls">
+      <button id="fullscreenButton">Fullscreen</button>
+      <button id="muteButton">Unmute</button>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const streamUrl = urlParams.get('url');
+      
+      const video = document.getElementById('videoPlayer');
+      const loadingIndicator = document.getElementById('loadingIndicator');
+      const errorMessage = document.getElementById('errorMessage');
+      const fullscreenButton = document.getElementById('fullscreenButton');
+      const muteButton = document.getElementById('muteButton');
+      
+      // Hide error message initially
+      errorMessage.style.display = 'none';
+      
+      // Show loading indicator
+      loadingIndicator.style.display = 'block';
+      
+      if (streamUrl) {
+        // Check if HLS.js is supported
+        if (Hls.isSupported()) {
+          const hls = new Hls({
+            debug: false,
+            enableWorker: true,
+            lowLatencyMode: true,
+            backBufferLength: 90
+          });
+          
+          hls.loadSource(streamUrl);
+          hls.attachMedia(video);
+          
+          hls.on(Hls.Events.MANIFEST_PARSED, function() {
+            console.log('Manifest loaded, found levels:', hls.levels.length);
+            loadingIndicator.style.display = 'none';
+            video.play().catch(e => {
+              console.warn('Autoplay not allowed:', e);
+            });
+          });
+          
+          hls.on(Hls.Events.ERROR, function(event, data) {
+            if (data.fatal) {
+              console.error('Fatal error:', data.type, data.details);
+              
+              loadingIndicator.style.display = 'none';
+              errorMessage.textContent = `Stream error: ${data.details}`;
+              errorMessage.style.display = 'block';
+              
+              switch (data.type) {
+                case Hls.ErrorTypes.NETWORK_ERROR:
+                  // Try to recover network error
+                  console.log('Trying to recover from network error...');
+                  hls.startLoad();
+                  break;
+                case Hls.ErrorTypes.MEDIA_ERROR:
+                  console.log('Trying to recover from media error...');
+                  hls.recoverMediaError();
+                  break;
+                default:
+                  // Cannot recover
+                  hls.destroy();
+                  break;
+              }
+            } else {
+              console.warn('Non-fatal error:', data.type, data.details);
+            }
+          });
+        } 
+        // For browsers with native HLS support
+        else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+          video.src = streamUrl;
+          video.addEventListener('loadedmetadata', function() {
+            loadingIndicator.style.display = 'none';
+            video.play().catch(e => {
+              console.warn('Autoplay not allowed:', e);
+            });
+          });
+          
+          video.addEventListener('error', function() {
+            loadingIndicator.style.display = 'none';
+            errorMessage.textContent = 'Error loading the stream';
+            errorMessage.style.display = 'block';
+          });
+        } else {
+          loadingIndicator.style.display = 'none';
+          errorMessage.textContent = 'HLS is not supported in your browser';
+          errorMessage.style.display = 'block';
+        }
+      } else {
+        loadingIndicator.style.display = 'none';
+        errorMessage.textContent = 'No stream URL provided';
+        errorMessage.style.display = 'block';
+      }
+      
+      // Fullscreen button
+      fullscreenButton.addEventListener('click', function() {
+        if (video.requestFullscreen) {
+          video.requestFullscreen();
+        } else if (video.webkitRequestFullscreen) {
+          video.webkitRequestFullscreen();
+        } else if (video.msRequestFullscreen) {
+          video.msRequestFullscreen();
+        }
+      });
+      
+      // Mute/unmute button
+      muteButton.addEventListener('click', function() {
+        video.muted = !video.muted;
+        muteButton.textContent = video.muted ? 'Unmute' : 'Mute';
+      });
+    });
+  </script>
+</body>
+</html>

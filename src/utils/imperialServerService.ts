@@ -1,248 +1,239 @@
 
+import { toast } from 'sonner';
+import { imperialAuthService } from './imperial/authService';
+
 /**
- * Service for interacting with the Imperial Server
+ * Imperial Server Service
+ * Provides a centralized service for interacting with the Imperial Server
  */
-import { toast } from "sonner";
-import { imperialShieldProtocol } from "./imperial/imperialShieldProtocol";
-
-interface ImperialServerConfig {
-  baseUrl: string;
-  port: number;
-  useHttps: boolean;
-}
-
-export class ImperialServerService {
-  private config: ImperialServerConfig = {
-    baseUrl: import.meta.env.VITE_IMPERIAL_SERVER_URL || 'localhost',
-    port: parseInt(import.meta.env.VITE_IMPERIAL_SERVER_PORT || '5001'),
-    useHttps: import.meta.env.VITE_IMPERIAL_SERVER_HTTPS === 'true'
-  };
-  
-  private authToken: string | null = null;
-  
-  /**
-   * Set the auth token for Imperial Server requests
-   */
-  setAuthToken(token: string) {
-    this.authToken = token;
-    localStorage.setItem('imperialServerToken', token);
-  }
-  
-  /**
-   * Get the current auth token
-   */
-  getAuthToken(): string | null {
-    if (!this.authToken) {
-      this.authToken = localStorage.getItem('imperialServerToken');
-    }
-    return this.authToken;
-  }
-  
-  /**
-   * Check if user is authenticated
-   */
-  isAuthenticated(): boolean {
-    return !!this.getAuthToken();
-  }
-  
-  /**
-   * Logout from Imperial Server
-   */
-  logout(): void {
-    this.authToken = null;
-    localStorage.removeItem('imperialServerToken');
-  }
-  
+class ImperialServerService {
   /**
    * Authenticate with the Imperial Server
+   * @param token Admin token for authentication
+   * @returns Promise resolving to authentication success
    */
   async authenticate(token: string): Promise<boolean> {
     try {
-      // In development mode, we'll allow direct authentication without server connection
-      if (import.meta.env.DEV) {
-        console.log('DEV mode authentication: simulating successful auth');
-        this.setAuthToken(token);
-        toast.success('Development authentication successful');
+      const response = await imperialAuthService.authenticate(token);
+      
+      if (response.success) {
+        console.log('Authentication successful');
         return true;
+      } else {
+        console.error('Authentication failed:', response.error);
+        toast.error('Authentication failed');
+        return false;
       }
-      
-      // Construct the full URL for authentication
-      const protocol = this.config.useHttps ? 'https' : 'http';
-      const url = `${this.config.baseUrl}/v1/api/auth`;
-      console.log(`Attempting to authenticate with URL: ${url}`);
-      
-      const result = await imperialShieldProtocol.request({
-        targetUrl: `${this.config.baseUrl}/v1/api/auth`,
-        port: this.config.port,
-        protocol: this.config.useHttps ? 'https' : 'http',
-        method: 'POST',
-        body: { token }
-      });
-      
-      if (result.success && result.data?.token) {
-        this.setAuthToken(result.data.token);
-        return true;
-      }
-      
-      return false;
     } catch (error) {
-      console.error('Imperial authentication error:', error);
-      
-      // For development, allow authentication even on error
-      if (import.meta.env.DEV) {
-        console.log('DEV mode authentication after error: simulating successful auth');
-        this.setAuthToken(token);
-        return true;
-      }
-      
+      console.error('Authentication error:', error);
+      toast.error('Failed to connect to Imperial Server');
       return false;
     }
   }
   
   /**
-   * Execute an OSINT tool via the Imperial Server
+   * Check if user is authenticated with the Imperial Server
+   * @returns Boolean indicating authentication status
    */
-  async executeOsintTool(toolName: string, params: Record<string, any>): Promise<any> {
-    const authToken = this.getAuthToken();
-    
-    if (!authToken) {
-      toast.error('Imperial authentication required');
-      return { success: false, error: 'Authentication required' };
-    }
-    
-    try {
-      // In development, simulate responses
-      if (import.meta.env.DEV) {
-        await new Promise(resolve => setTimeout(resolve, 1500));
-        
-        return {
-          success: true,
-          data: {
-            findings: [
-              `Simulated ${toolName} result 1`,
-              `Simulated ${toolName} result 2`,
-              `Simulated ${toolName} result 3`
-            ],
-            status: 'success'
-          }
-        };
-      }
-      
-      const result = await imperialShieldProtocol.request({
-        targetUrl: `${this.config.baseUrl}/v1/api/osint/${toolName}`,
-        port: this.config.port,
-        protocol: this.config.useHttps ? 'https' : 'http',
-        authToken
-      });
-      
-      if (!result.success) {
-        throw new Error(result.error || 'Unknown error');
-      }
-      
-      return result.data;
-    } catch (error) {
-      console.error(`Imperial OSINT tool error (${toolName}):`, error);
-      toast.error(`Failed to execute ${toolName}`);
-      return { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Unknown error' 
-      };
-    }
+  isAuthenticated(): boolean {
+    return imperialAuthService.isAuthenticated();
   }
-
+  
+  /**
+   * Log out from the Imperial Server
+   */
+  logout(): void {
+    imperialAuthService.clearAuthToken();
+  }
+  
   /**
    * Get Imperial Server status
-   */
-  async getImperialStatus(): Promise<any> {
-    try {
-      const result = await imperialShieldProtocol.request({
-        targetUrl: `${this.config.baseUrl}/v1/admin/status`,
-        port: this.config.port,
-        protocol: this.config.useHttps ? 'https' : 'http',
-        authToken: this.getAuthToken()
-      });
-      
-      return result.data;
-    } catch (error) {
-      console.error('Error fetching Imperial Server status:', error);
-      return null;
-    }
-  }
-  
-  /**
-   * Issue a decree to the Imperial Server
-   */
-  async issueDecree(port: number, command: string): Promise<any> {
-    try {
-      const result = await imperialShieldProtocol.request({
-        targetUrl: `${this.config.baseUrl}/v1/admin/decree/${port}`,
-        port: this.config.port,
-        protocol: this.config.useHttps ? 'https' : 'http',
-        authToken: this.getAuthToken(),
-        method: 'POST',
-        body: { command }
-      });
-      
-      return result.data;
-    } catch (error) {
-      console.error('Error issuing decree:', error);
-      return null;
-    }
-  }
-  
-  /**
-   * Initiate a camera scan
-   */
-  async initiateCameraScan(targetIP: string, scanType: string): Promise<any> {
-    return this.executeOsintTool('cameradar', {
-      target: targetIP,
-      scanType: scanType
-    });
-  }
-
-  /**
-   * Search for IP cameras
-   */
-  async searchIPCameras(subnet: string, protocols: string[]): Promise<any> {
-    return this.executeOsintTool('ipcamsearch', {
-      subnet: subnet,
-      protocols: protocols
-    });
-  }
-
-  /**
-   * Initiate a web check
-   */
-  async initiateWebCheck(url: string): Promise<any> {
-    return this.executeOsintTool('webcheck', {
-      url: url
-    });
-  }
-  
-  /**
-   * Get server status
+   * @returns Promise resolving to server status
    */
   async getServerStatus(): Promise<any> {
     try {
-      const result = await imperialShieldProtocol.request({
-        targetUrl: `${this.config.baseUrl}/v1/admin/status`,
-        port: this.config.port,
-        protocol: this.config.useHttps ? 'https' : 'http',
-        authToken: this.getAuthToken()
+      const authToken = imperialAuthService.getAuthToken();
+      
+      const headers: HeadersInit = {};
+      if (authToken) {
+        headers['Authorization'] = `Bearer ${authToken}`;
+      }
+      
+      const response = await fetch('http://localhost:5001/v1/api/status', {
+        method: 'GET',
+        headers
       });
       
-      return result.data;
+      if (!response.ok) {
+        throw new Error(`Server returned ${response.status}`);
+      }
+      
+      return await response.json();
     } catch (error) {
-      console.error('Error fetching Imperial Server status:', error);
-      return null;
+      console.error('Error getting server status:', error);
+      throw error;
     }
   }
-
+  
   /**
-   * Execute Imperial Shinobi
+   * Execute an OSINT tool
+   * @param toolName Name of the tool to execute
+   * @param params Parameters for the tool
+   * @returns Promise resolving to tool results
    */
-  async executeImperialShinobi(params: Record<string, any>): Promise<any> {
-    return this.executeOsintTool('imperial-shinobi', params);
+  async executeOsintTool(toolName: string, params: any): Promise<any> {
+    const authToken = imperialAuthService.getAuthToken();
+    
+    if (!authToken) {
+      toast.error('Not authenticated. Please log in first.');
+      throw new Error('Authentication required');
+    }
+    
+    const response = await fetch(`http://localhost:5001/v1/api/osint/${toolName}`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${authToken}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(params)
+    });
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Tool execution failed: ${errorText}`);
+    }
+    
+    return await response.json();
+  }
+  
+  /**
+   * Convert RTSP stream to HLS
+   * @param rtspUrl RTSP URL to convert
+   * @returns Promise resolving to conversion results
+   */
+  async convertRtspToHls(rtspUrl: string): Promise<any> {
+    const authToken = imperialAuthService.getAuthToken();
+    
+    if (!authToken) {
+      toast.error('Not authenticated. Please log in first.');
+      throw new Error('Authentication required');
+    }
+    
+    const response = await fetch('http://localhost:5001/v1/api/stream/convert', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${authToken}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ rtspUrl })
+    });
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Stream conversion failed: ${errorText}`);
+    }
+    
+    const result = await response.json();
+    
+    if (result.success) {
+      // Format the URL to point to the media server
+      result.fullUrl = `http://localhost:8000${result.accessUrl}`;
+    }
+    
+    return result;
+  }
+  
+  /**
+   * Start recording a stream
+   * @param streamUrl URL of the stream to record
+   * @param duration Optional duration in seconds
+   * @returns Promise resolving to recording info
+   */
+  async startRecording(streamUrl: string, duration?: number): Promise<any> {
+    const authToken = imperialAuthService.getAuthToken();
+    
+    if (!authToken) {
+      toast.error('Not authenticated. Please log in first.');
+      throw new Error('Authentication required');
+    }
+    
+    const params: any = { streamUrl };
+    if (duration) {
+      params.duration = duration;
+    }
+    
+    const response = await fetch('http://localhost:5001/v1/api/stream/record/start', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${authToken}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(params)
+    });
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Failed to start recording: ${errorText}`);
+    }
+    
+    return await response.json();
+  }
+  
+  /**
+   * Stop a recording in progress
+   * @param recordingId ID of the recording to stop
+   * @returns Promise resolving to recording results
+   */
+  async stopRecording(recordingId: string): Promise<any> {
+    const authToken = imperialAuthService.getAuthToken();
+    
+    if (!authToken) {
+      toast.error('Not authenticated. Please log in first.');
+      throw new Error('Authentication required');
+    }
+    
+    const response = await fetch('http://localhost:5001/v1/api/stream/record/stop', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${authToken}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ recordingId })
+    });
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Failed to stop recording: ${errorText}`);
+    }
+    
+    return await response.json();
+  }
+  
+  /**
+   * Get list of recordings
+   * @returns Promise resolving to recordings list
+   */
+  async getRecordings(): Promise<any> {
+    const authToken = imperialAuthService.getAuthToken();
+    
+    if (!authToken) {
+      toast.error('Not authenticated. Please log in first.');
+      throw new Error('Authentication required');
+    }
+    
+    const response = await fetch('http://localhost:5001/v1/api/stream/recordings', {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${authToken}`
+      }
+    });
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Failed to get recordings: ${errorText}`);
+    }
+    
+    return await response.json();
   }
 }
 
