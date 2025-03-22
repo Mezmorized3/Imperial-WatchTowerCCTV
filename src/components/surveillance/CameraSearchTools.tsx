@@ -16,6 +16,10 @@ import { BotExploitsTool } from './search-tools/BotExploitsTool';
 import { CamerattackTool } from './search-tools/CamerattackTool';
 import { BackHackTool } from './search-tools/BackHackTool';
 import ImperialOculusTool from './search-tools/ImperialOculusTool';
+import FFmpegTool from './search-tools/FFmpegTool';
+import RapidPayloadTool from './search-tools/RapidPayloadTool';
+import HackingToolTool from './search-tools/HackingToolTool';
+import SecurityAdminTool from './search-tools/SecurityAdminTool';
 
 export const CameraSearchTools = () => {
   const [activeTab, setActiveTab] = useState("cameradar");
@@ -33,6 +37,7 @@ export const CameraSearchTools = () => {
           <TabsTrigger value="cctv">CCTV</TabsTrigger>
           <TabsTrigger value="camerattack">Camerattack</TabsTrigger>
           <TabsTrigger value="imperial-oculus">Imperial Oculus</TabsTrigger>
+          <TabsTrigger value="ffmpeg">FFmpeg</TabsTrigger>
           <TabsTrigger value="username">Username Search</TabsTrigger>
           <TabsTrigger value="webcheck">Web Check</TabsTrigger>
           <TabsTrigger value="torbot">TorBot</TabsTrigger>
@@ -43,6 +48,9 @@ export const CameraSearchTools = () => {
           <TabsTrigger value="shield-ai">Shield AI</TabsTrigger>
           <TabsTrigger value="botexploits">Bot Exploits</TabsTrigger>
           <TabsTrigger value="backhack">BackHack</TabsTrigger>
+          <TabsTrigger value="security-admin">Security Admin</TabsTrigger>
+          <TabsTrigger value="rapid-payload">RapidPayload</TabsTrigger>
+          <TabsTrigger value="hacking-tool">Hacking Tool</TabsTrigger>
         </TabsList>
 
         <div className="p-0">
@@ -90,6 +98,20 @@ export const CameraSearchTools = () => {
           </TabsContent>
           <TabsContent value="imperial-oculus" className="mt-0">
             <ImperialOculusTool />
+          </TabsContent>
+          
+          {/* New tool tabs */}
+          <TabsContent value="ffmpeg" className="mt-0">
+            <FFmpegTool />
+          </TabsContent>
+          <TabsContent value="rapid-payload" className="mt-0">
+            <RapidPayloadTool />
+          </TabsContent>
+          <TabsContent value="hacking-tool" className="mt-0">
+            <HackingToolTool />
+          </TabsContent>
+          <TabsContent value="security-admin" className="mt-0">
+            <SecurityAdminTool />
           </TabsContent>
         </div>
       </Tabs>
