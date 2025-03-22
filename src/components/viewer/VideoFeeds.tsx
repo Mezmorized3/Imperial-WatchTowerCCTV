@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Camera, Video, Eye, Film, Play, Square, Clock } from 'lucide-react';
@@ -90,7 +89,8 @@ const VideoFeeds: React.FC<VideoFeedsProps> = ({ cameras }) => {
     try {
       setIsConverting(true);
       
-      const streamUrl = selectedCamera?.rtspUrl || customRtspUrl;
+      // Fix for rtspUrl property not existing, use url instead
+      const streamUrl = selectedCamera?.url || customRtspUrl;
       setCurrentStreamUrl(streamUrl);
       
       if (!streamUrl) {
@@ -139,7 +139,8 @@ const VideoFeeds: React.FC<VideoFeedsProps> = ({ cameras }) => {
     try {
       setIsRecording(true);
       
-      const streamUrl = selectedCamera?.rtspUrl || customRtspUrl || currentStreamUrl;
+      // Fix for rtspUrl property not existing, use url instead
+      const streamUrl = selectedCamera?.url || customRtspUrl || currentStreamUrl;
       
       if (!streamUrl) {
         toast({

@@ -1,6 +1,8 @@
 
 import { toast } from 'sonner';
 import { imperialAuthService } from './imperial/authService';
+import { imperialStatusService } from './imperial/statusService';
+import { imperialOsintService } from './imperial/osintService';
 
 /**
  * Imperial Server Service
@@ -73,6 +75,53 @@ class ImperialServerService {
       console.error('Error getting server status:', error);
       throw error;
     }
+  }
+  
+  /**
+   * Get the current status of all Imperial Legions
+   * @returns Promise resolving to legion status
+   */
+  async getImperialStatus(): Promise<any> {
+    return imperialStatusService.getImperialStatus();
+  }
+
+  /**
+   * Issue a decree to mobilize or stand down a legion
+   * @param port Port number of the legion
+   * @param command Command to issue (MOBILIZE or STAND_DOWN)
+   * @returns Promise resolving to decree result
+   */
+  async issueDecree(port: number, command: 'MOBILIZE' | 'STAND_DOWN'): Promise<any> {
+    return imperialStatusService.issueDecree(port, command);
+  }
+
+  /**
+   * Initiate a camera scan using specified parameters
+   * @param targetIP Target IP address to scan
+   * @param scanType Type of scan to perform
+   * @returns Promise resolving to scan results
+   */
+  async initiateCameraScan(targetIP: string, scanType: string): Promise<any> {
+    return imperialOsintService.initiateCameraScan(targetIP, scanType);
+  }
+
+  /**
+   * Search for IP cameras in a subnet using specified protocols
+   * @param subnet Subnet to search
+   * @param protocols Array of protocols to search for
+   * @returns Promise resolving to search results
+   */
+  async searchIPCameras(subnet: string, protocols: string[]): Promise<any> {
+    return imperialOsintService.searchIPCameras(subnet, protocols);
+  }
+
+  /**
+   * Initiate a web check on a specified URL
+   * @param url URL to check
+   * @returns Promise resolving to check results
+   */
+  async initiateWebCheck(url: string): Promise<any> {
+    return imperialOsintService.initiateWebCheck(url);
   }
   
   /**
