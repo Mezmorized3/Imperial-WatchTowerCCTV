@@ -344,6 +344,13 @@ const ImperialControl = () => {
           <CardDescription className="text-gray-400">
             Command and control interface for Imperial operations
           </CardDescription>
+          
+          {/* Imperial Control ASCII Banner */}
+          <div className="mt-4 overflow-x-auto">
+            <pre className="text-xs md:text-sm text-red-500 font-mono">
+              {imperialBanner}
+            </pre>
+          </div>
         </CardHeader>
         
         <CardContent className="pt-6">
