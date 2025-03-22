@@ -1,21 +1,21 @@
 
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import UsernameSearchTool from './search-tools/UsernameSearchTool';
-import CameradarTool from './search-tools/CameradarTool';
-import IPCamSearchTool from './search-tools/IPCamSearchTool';
-import WebCheckTool from './search-tools/WebCheckTool';
-import CCTVTool from './search-tools/CCTVTool';
-import TorBotTool from './search-tools/TorBotTool';
-import WebHackTool from './search-tools/WebHackTool';
-import PhotonTool from './search-tools/PhotonTool';
-import TwintTool from './search-tools/TwintTool';
-import OSINTTool from './search-tools/OSINTTool';
-import ShieldAITool from './search-tools/ShieldAITool';
-import BotExploitsTool from './search-tools/BotExploitsTool';
-import CamerattackTool from './search-tools/CamerattackTool';
-import BackHackTool from './search-tools/BackHackTool';
-import ImperialOculusTool from './search-tools/ImperialOculusTool';
+import { UsernameSearchTool } from './search-tools/UsernameSearchTool';
+import { CameradarTool } from './search-tools/CameradarTool';
+import { IPCamSearchTool } from './search-tools/IPCamSearchTool';
+import { WebCheckTool } from './search-tools/WebCheckTool';
+import { CCTVTool } from './search-tools/CCTVTool';
+import { TorBotTool } from './search-tools/TorBotTool';
+import { WebHackTool } from './search-tools/WebHackTool';
+import { PhotonTool } from './search-tools/PhotonTool';
+import { TwintTool } from './search-tools/TwintTool';
+import { OSINTTool } from './search-tools/OSINTTool';
+import { ShieldAITool } from './search-tools/ShieldAITool';
+import { BotExploitsTool } from './search-tools/BotExploitsTool';
+import { CamerattackTool } from './search-tools/CamerattackTool';
+import { BackHackTool } from './search-tools/BackHackTool';
+import { ImperialOculusTool } from './search-tools/ImperialOculusTool';
 
 export const CameraSearchTools = () => {
   const [activeTab, setActiveTab] = useState("cameradar");

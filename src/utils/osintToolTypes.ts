@@ -1,6 +1,45 @@
+
 /**
  * Types for OSINT tools and their parameters
  */
+
+// General result type for all OSINT tools
+export interface ToolResult {
+  success: boolean;
+  data?: any;
+  error?: string;
+  simulatedData?: boolean;
+}
+
+// Common type for all OSINT tool parameters
+export interface ToolParams {
+  [key: string]: any;
+}
+
+// Specific result types
+export interface ScanResult {
+  success: boolean;
+  findings: string[];
+  target: string;
+}
+
+export interface UsernameResult {
+  platform: string;
+  url: string;
+  username: string;
+  found: boolean;
+  profileData?: any;
+}
+
+export interface CameraResult {
+  ip: string;
+  port: number;
+  type: string;
+  accessible: boolean;
+  stream_url?: string;
+  protocol?: string;
+  manufacturer?: string;
+}
 
 // OSINT tool parameters
 
@@ -71,6 +110,7 @@ export interface WebHackParams {
   url: string;
   scanType?: string;
   findVulnerabilities?: boolean;
+  checkHeaders?: boolean; // Added checkHeaders parameter
 }
 
 export interface SpeedCameraParams {
@@ -93,45 +133,6 @@ export interface ImperialOculusParams {
   timeout?: number;
 }
 
-// OSINT tool result types
-
-// General result type for all OSINT tools
-export interface ToolResult {
-  success: boolean;
-  data?: any;
-  error?: string;
-  simulatedData?: boolean;
-}
-
-// Common type for all OSINT tool parameters
-export interface ToolParams {
-  [key: string]: any;
-}
-
-// Specific result types
-export interface ScanResult {
-  success: boolean;
-  findings: string[];
-  target: string;
-}
-
-export interface UsernameResult {
-  platform: string;
-  url: string;
-  username: string;
-  found: boolean;
-  profileData?: any;
-}
-
-export interface CameraResult {
-  ip: string;
-  port: number;
-  type: string;
-  accessible: boolean;
-  stream_url?: string;
-  protocol?: string;
-}
-
 // OSINT parameters
 export interface OSINTParams {
   target: string;
@@ -144,6 +145,7 @@ export interface ShieldAIParams {
   target: string;
   mode?: string;
   depth?: string;
+  aiModel?: string; // Added aiModel parameter
 }
 
 // Imperial Shield parameters
