@@ -39,6 +39,7 @@ export interface CameraResult {
   stream_url?: string;
   protocol?: string;
   manufacturer?: string;
+  model?: string;
 }
 
 // OSINT tool parameters
@@ -62,13 +63,13 @@ export interface SherlockParams {
 export interface TorBotParams {
   url: string;
   depth?: number;
-  mode?: string; // Added mode parameter
+  mode?: string;
 }
 
 export interface PhotonParams {
   url: string;
   depth?: number;
-  timeout?: number; // Added timeout parameter
+  timeout?: number;
 }
 
 export interface TwintParams {
@@ -77,7 +78,7 @@ export interface TwintParams {
   since?: string;
   until?: string;
   limit?: number;
-  verified?: boolean; // Added verified parameter
+  verified?: boolean;
 }
 
 export interface IPCamSearchParams {
@@ -89,16 +90,16 @@ export interface IPCamSearchParams {
 export interface BotExploitsParams {
   target: string;
   botType?: string;
-  scanType?: string; // Added scanType parameter
-  timeout?: number; // Added timeout parameter
+  scanType?: string;
+  timeout?: number;
 }
 
 export interface CamerattackParams {
   target: string;
   method?: string;
-  mode?: string; // Added mode parameter
-  duration?: number; // Added duration parameter
-  rate?: number; // Added rate parameter
+  mode?: string;
+  duration?: number;
+  rate?: number;
 }
 
 export interface BackHackParams {
@@ -110,20 +111,22 @@ export interface WebHackParams {
   url: string;
   scanType?: string;
   findVulnerabilities?: boolean;
-  checkHeaders?: boolean; // Added checkHeaders parameter
+  checkHeaders?: boolean;
+  testXss?: boolean;
+  testSql?: boolean;
 }
 
 export interface SpeedCameraParams {
   location?: string;
   threshold?: number;
-  source?: string; // Added source parameter
+  source?: string;
 }
 
 export interface CCTVParams {
   region?: string;
   type?: string;
-  country?: string; // Added country parameter
-  limit?: number; // Added limit parameter
+  country?: string;
+  limit?: number;
 }
 
 export interface ImperialOculusParams {
@@ -145,7 +148,7 @@ export interface ShieldAIParams {
   target: string;
   mode?: string;
   depth?: string;
-  aiModel?: string; // Added aiModel parameter
+  aiModel?: string;
 }
 
 // Imperial Shield parameters

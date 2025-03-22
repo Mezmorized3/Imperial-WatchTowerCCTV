@@ -15,7 +15,7 @@ import { ShieldAITool } from './search-tools/ShieldAITool';
 import { BotExploitsTool } from './search-tools/BotExploitsTool';
 import { CamerattackTool } from './search-tools/CamerattackTool';
 import { BackHackTool } from './search-tools/BackHackTool';
-import { ImperialOculusTool } from './search-tools/ImperialOculusTool';
+import ImperialOculusTool from './search-tools/ImperialOculusTool';
 
 export const CameraSearchTools = () => {
   const [activeTab, setActiveTab] = useState("cameradar");

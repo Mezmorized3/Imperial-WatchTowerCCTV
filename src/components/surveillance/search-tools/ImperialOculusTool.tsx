@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { executeImperialOculus } from '@/utils/osintTools';
+import { executeImperialOculus } from '@/utils/osintImplementations';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
@@ -12,7 +12,7 @@ import { ArrowRight, Server, AlertCircle, Shield, Wifi } from 'lucide-react';
 import { toast } from 'sonner';
 import { Progress } from '@/components/ui/progress';
 
-const ImperialOculusTool = () => {
+export const ImperialOculusTool = () => {
   const [target, setTarget] = useState('');
   const [scanType, setScanType] = useState<'basic' | 'full' | 'stealth'>('basic');
   const [isScanning, setIsScanning] = useState(false);
