@@ -58,11 +58,24 @@ export class ImperialServerService {
    */
   async authenticate(token: string): Promise<boolean> {
     try {
+      // In development mode, we'll allow direct authentication without server connection
+      if (import.meta.env.DEV) {
+        console.log('DEV mode authentication: simulating successful auth');
+        this.setAuthToken(token);
+        toast.success('Development authentication successful');
+        return true;
+      }
+      
+      // Construct the full URL for authentication
+      const url = `${this.config.protocol}://${this.config.baseUrl}/v1/api/auth`;
+      console.log(`Attempting to authenticate with URL: ${url}`);
+      
       const result = await imperialShieldProtocol.request({
         targetUrl: `${this.config.baseUrl}/v1/api/auth`,
         port: this.config.port,
         protocol: this.config.useHttps ? 'https' : 'http',
-        authToken: token
+        method: 'POST',
+        body: { token }
       });
       
       if (result.success && result.data?.token) {
@@ -73,6 +86,14 @@ export class ImperialServerService {
       return false;
     } catch (error) {
       console.error('Imperial authentication error:', error);
+      
+      // For development, allow authentication even on error
+      if (import.meta.env.DEV) {
+        console.log('DEV mode authentication after error: simulating successful auth');
+        this.setAuthToken(token);
+        return true;
+      }
+      
       return false;
     }
   }

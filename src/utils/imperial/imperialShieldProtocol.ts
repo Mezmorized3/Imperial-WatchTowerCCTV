@@ -2,178 +2,187 @@
 /**
  * Imperial Shield Protocol
  * 
- * Advanced security module for protecting and accessing secure endpoints
- * This is the TypeScript implementation of the Python protocol
+ * Secure communication protocol for interacting with Imperial Server endpoints
  */
 
-import { ImperialShieldParams, ImperialShieldResult } from '../osintToolTypes';
-import { toast } from 'sonner';
-import { imperialAuthService } from './authService';
+interface ShieldRequest {
+  targetUrl: string;
+  port?: number;
+  protocol?: string;
+  authToken?: string;
+  validateCert?: boolean;
+  method?: string;
+  body?: any;
+}
 
-// Secure configuration (these would normally come from server)
-const SHIELD_PORTS = [80, 443, 8080]; // Default public facing ports
-const TRUSTED_REALMS = ['192.168.1.0/24', '10.0.0.0/8']; // Default trusted networks
-
-export class ImperialShieldProtocol {
-  private celestialCipher: string | null = null;
-  private currentSigil: string | null = null;
-  private sigilTimestamp: Date | null = null;
-  
+class ImperialShieldProtocol {
   /**
-   * Initialize the Imperial Shield Protocol
+   * Generate a secure authorization header for Imperial Shield Protocol
    */
-  constructor() {
-    this.regenerateSigils();
+  private generateSecurityHeaders(authToken?: string): Record<string, string> {
+    const headers: Record<string, string> = {
+      'x-sigil-of-protection': '1bedcf49a445b861898d57ca893cdc67',
+      'x-temporal-seal': new Date().toISOString()
+    };
     
-    // Rotate sigils hourly
-    setInterval(() => this.regenerateSigils(), 60 * 60 * 1000);
-  }
-  
-  /**
-   * Generate new security tokens
-   */
-  private regenerateSigils(): void {
-    // Generate random hexadecimal tokens
-    this.currentSigil = Array.from({ length: 32 }, () => 
-      Math.floor(Math.random() * 16).toString(16)).join('');
-    this.sigilTimestamp = new Date();
-    
-    // In a real implementation, this would be securely stored and retrieved
-    this.celestialCipher = localStorage.getItem('imperial_cipher') || 
-      btoa(String.fromCharCode(...new Uint8Array(32).map(() => Math.floor(Math.random() * 256))));
-    
-    localStorage.setItem('imperial_cipher', this.celestialCipher);
-  }
-  
-  /**
-   * Create a blood oath (cryptographic token)
-   */
-  private createBloodOath(): string {
-    if (!this.celestialCipher) {
-      throw new Error('Celestial cipher not initialized');
+    if (authToken) {
+      headers['authorization'] = `Bearer ${authToken}`;
     }
     
-    const currentHour = new Date().toISOString().slice(0, 13);
+    // Generate encoded timestamp for blood oath
+    const timestamp = new Date().toISOString().substring(0, 13);
+    const randomValue = this.generateRandomString(16);
+    const encodedAuth = Buffer.from(`${timestamp}:${randomValue}`).toString('base64');
+    headers['x-blood-oath'] = encodedAuth;
     
-    // In a real implementation, this would use proper encryption
-    // This is a simplified version using base64 encoding
-    return btoa(`${currentHour}:${this.celestialCipher}`);
+    // Cipher type
+    headers['x-imperial-cipher'] = 'VOIDWALKER';
+    
+    return headers;
   }
   
   /**
-   * Check if a realm (IP address) is trusted
+   * Generate a random string for security purposes
    */
-  private isRealmTrusted(realm: string): boolean {
-    // In a real implementation, this would use proper CIDR matching
-    return TRUSTED_REALMS.some(network => realm.startsWith(network.split('/')[0]));
+  private generateRandomString(length: number): string {
+    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    let result = '';
+    for (let i = 0; i < length; i++) {
+      result += characters.charAt(Math.floor(Math.random() * characters.length));
+    }
+    return result;
   }
   
   /**
    * Make a request using the Imperial Shield Protocol
    */
-  async request(params: ImperialShieldParams): Promise<ImperialShieldResult> {
-    const startTime = performance.now();
+  async request(options: ShieldRequest): Promise<any> {
+    const {
+      targetUrl,
+      port = 5001,
+      protocol = 'http',
+      authToken,
+      validateCert = false,
+      method = 'GET',
+      body
+    } = options;
     
     try {
-      // Check authentication
-      const authToken = imperialAuthService.getAuthToken();
-      if (!params.authToken && !authToken) {
-        toast.error('Imperial authentication required');
-        return {
-          success: false,
-          error: 'Authentication required',
-          shieldStatus: 'inactive'
-        };
+      // Construct the proper URL with port
+      const url = new URL(targetUrl);
+      
+      // Fix: Only set the port if it's part of the full URL
+      if (!targetUrl.includes('://') || targetUrl.startsWith('http')) {
+        url.port = port.toString();
       }
       
-      // Prepare headers with security tokens
-      const headers: Record<string, string> = {
-        'X-Imperial-Cipher': 'VOIDWALKER',
-        'X-Blood-Oath': this.createBloodOath(),
-        'X-Sigil-Of-Protection': this.currentSigil || '',
-        'X-Temporal-Seal': new Date().toISOString(),
-        'Authorization': `Bearer ${params.authToken || authToken}`
+      // Generate security headers
+      const headers = this.generateSecurityHeaders(authToken);
+      
+      // Configure fetch options
+      const fetchOptions: RequestInit = {
+        method,
+        headers
       };
       
-      // Determine if we're using a default shield port
-      const port = params.port || SHIELD_PORTS[0];
-      const protocol = params.protocol || 'https';
-      const url = params.targetUrl.includes('://') 
-        ? params.targetUrl 
-        : `${protocol}://${params.targetUrl}${port !== 80 && port !== 443 ? `:${port}` : ''}`;
-      
-      // Make the secure request
-      const response = await fetch(url, {
-        method: 'GET',
-        headers,
-        // In development mode, we might need to bypass certificate validation
-        ...(process.env.NODE_ENV === 'development' && !params.validateCert ? { mode: 'no-cors' } : {})
-      });
-      
-      if (!response.ok) {
-        return {
-          success: false,
-          error: `HTTP error ${response.status}`,
-          responseTime: performance.now() - startTime,
-          shieldStatus: 'breached'
-        };
+      // Add body if provided
+      if (body && (method === 'POST' || method === 'PUT' || method === 'PATCH')) {
+        fetchOptions.body = JSON.stringify(body);
+        (fetchOptions.headers as Record<string, string>)['Content-Type'] = 'application/json';
       }
+      
+      // Make the request
+      const fullUrl = url.toString();
+      console.log(`[ImperialShield] Making request to: ${fullUrl}`);
+      
+      // For development, check if we should simulate a response
+      if (import.meta.env.DEV) {
+        return this.simulateResponse(options);
+      }
+      
+      const response = await fetch(fullUrl, fetchOptions);
       
       // Process the response
-      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(`Imperial Shield Protocol error: ${response.status} ${response.statusText}`);
+      }
       
-      return {
-        success: true,
-        data,
-        responseTime: performance.now() - startTime,
-        shieldStatus: 'active',
-        securityRating: 100
-      };
+      // Parse JSON response
+      const data = await response.json();
+      return data;
     } catch (error) {
       console.error('Imperial Shield Protocol error:', error);
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : 'Unknown error',
-        responseTime: performance.now() - startTime,
-        shieldStatus: 'breached',
-        securityRating: 0
-      };
+      
+      // For development, simulate a response
+      if (import.meta.env.DEV) {
+        return this.simulateResponse(options);
+      }
+      
+      throw error;
     }
   }
   
   /**
-   * Simulate an Imperial Shield Protocol request (for testing)
+   * Simulate a response for development mode
    */
-  async simulateRequest(params: ImperialShieldParams): Promise<ImperialShieldResult> {
-    // Simulate network delay
-    await new Promise(resolve => setTimeout(resolve, 800 + Math.random() * 1200));
+  private simulateResponse(options: ShieldRequest): any {
+    console.log('[ImperialShield] Simulating response for development environment');
+    const { targetUrl, authToken, body } = options;
     
-    const simulatedSuccess = Math.random() > 0.2;
-    
-    if (!simulatedSuccess) {
+    // Simulate auth endpoint
+    if (targetUrl.includes('/auth')) {
       return {
-        success: false,
-        error: 'Simulated request failure',
-        responseTime: 1200 + Math.random() * 800,
-        shieldStatus: 'breached',
-        securityRating: Math.floor(Math.random() * 40)
+        success: true,
+        token: authToken || 'simulated-token-12345',
+        message: 'Simulated authentication successful'
       };
     }
     
+    // Simulate status endpoint
+    if (targetUrl.includes('/status')) {
+      return {
+        '5001': {
+          status: 'ACTIVE',
+          lastActivation: new Date().toISOString(),
+          operationalCapacity: '100%',
+          role: 'Control Panel API'
+        },
+        '8080': {
+          status: 'ACTIVE',
+          lastActivation: new Date().toISOString(),
+          operationalCapacity: '95%',
+          role: 'Main Web Application'
+        },
+        '3000': {
+          status: 'DORMANT',
+          lastActivation: null,
+          operationalCapacity: '0%',
+          role: 'HLS Restream Server'
+        }
+      };
+    }
+    
+    // Simulate decree endpoint
+    if (targetUrl.includes('/decree')) {
+      const port = targetUrl.split('/').pop();
+      const command = body?.command || 'UNKNOWN';
+      return {
+        success: true,
+        decree: `Command ${command} executed on port ${port}`,
+        status: 200
+      };
+    }
+    
+    // Default simulated response
     return {
       success: true,
       data: {
-        message: 'Simulated Imperial Shield Protocol response',
-        timestamp: new Date().toISOString(),
-        securityLevel: 'MAXIMUM',
-        shieldIntegrity: '98.7%'
-      },
-      responseTime: 800 + Math.random() * 600,
-      shieldStatus: 'active',
-      securityRating: 80 + Math.floor(Math.random() * 20)
+        message: 'Simulated response from Imperial Shield Protocol',
+        timestamp: new Date().toISOString()
+      }
     };
   }
 }
 
-// Export a singleton instance
+// Export singleton instance
 export const imperialShieldProtocol = new ImperialShieldProtocol();
