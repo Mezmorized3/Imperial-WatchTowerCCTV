@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
 import Index from './pages/Index';
@@ -6,9 +7,8 @@ import Settings from './pages/Settings';
 import Help from './pages/Help';
 import NotFound from './pages/NotFound';
 import ImperialScanner from './pages/ImperialScanner';
-
-// Import the new ImperialControl page
 import ImperialControl from './pages/ImperialControl';
+import ImperialShinobi from './pages/ImperialShinobi';
 
 function App() {
   return (
@@ -20,6 +20,7 @@ function App() {
         <Route path="/help" element={<Help />} />
         <Route path="/imperial" element={<ImperialScanner />} />
         <Route path="/imperial-control" element={<ImperialControl />} />
+        <Route path="/imperial-shinobi" element={<ImperialShinobi />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </div>

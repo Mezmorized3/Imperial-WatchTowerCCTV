@@ -67,7 +67,8 @@ export class ImperialServerService {
       }
       
       // Construct the full URL for authentication
-      const url = `${this.config.protocol}://${this.config.baseUrl}/v1/api/auth`;
+      const protocol = this.config.useHttps ? 'https' : 'http';
+      const url = `${this.config.baseUrl}/v1/api/auth`;
       console.log(`Attempting to authenticate with URL: ${url}`);
       
       const result = await imperialShieldProtocol.request({

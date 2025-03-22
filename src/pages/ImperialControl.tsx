@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/components/ui/use-toast';
 import { imperialServerService } from '@/utils/imperialServerService';
+import { Link } from 'react-router-dom';
 
 // Import refactored components
 import ImperialAuth from '@/components/imperial-control/ImperialAuth';
@@ -13,7 +14,7 @@ import ImperialRegistry from '@/components/imperial-control/ImperialRegistry';
 import ImperialCompliance from '@/components/imperial-control/ImperialCompliance';
 import ImperialSiege from '@/components/imperial-control/ImperialSiege';
 import ImperialLoot from '@/components/imperial-control/ImperialLoot';
-import ImperialShinobi from '@/components/imperial-control/ImperialShinobi';
+import ImperialModulesPanel from '@/components/imperial-control/ImperialModulesPanel';
 
 // Types
 interface LegionStatus {
@@ -328,9 +329,17 @@ const ImperialControl = () => {
             <CardTitle className="text-2xl flex items-center">
               <Shield className="mr-2 text-red-500" /> Imperial Control
             </CardTitle>
-            <Button variant="outline" size="sm" onClick={handleLogout}>
-              Terminate Session
-            </Button>
+            <div className="flex space-x-4">
+              <Button variant="outline" size="sm" asChild>
+                <Link to="/imperial-shinobi" className="flex items-center">
+                  <Eye className="h-4 w-4 mr-2" />
+                  Imperial Shinobi
+                </Link>
+              </Button>
+              <Button variant="outline" size="sm" onClick={handleLogout}>
+                Terminate Session
+              </Button>
+            </div>
           </div>
           <CardDescription className="text-gray-400">
             Command and control interface for Imperial operations
@@ -356,9 +365,9 @@ const ImperialControl = () => {
                 <Lock className="h-4 w-4 mr-2" />
                 Secure Loot
               </TabsTrigger>
-              <TabsTrigger value="shinobi" className="flex items-center">
-                <Eye className="h-4 w-4 mr-2" />
-                Imperial Shinobi
+              <TabsTrigger value="modules" className="flex items-center">
+                <Server className="h-4 w-4 mr-2" />
+                Modules
               </TabsTrigger>
             </TabsList>
             
@@ -409,9 +418,9 @@ const ImperialControl = () => {
               />
             </TabsContent>
             
-            {/* Imperial Shinobi */}
-            <TabsContent value="shinobi">
-              <ImperialShinobi />
+            {/* Imperial Modules */}
+            <TabsContent value="modules">
+              <ImperialModulesPanel />
             </TabsContent>
           </Tabs>
         </CardContent>

@@ -11,7 +11,7 @@ import {
   NavigationMenuTrigger,
   navigationMenuTriggerStyle,
 } from "@/components/ui/navigation-menu";
-import { Camera, User, Shield, Cctv, Globe, Server, Bot, Database } from 'lucide-react';
+import { Camera, User, Shield, Cctv, Globe, Server, Bot, Database, Eye } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const DashboardHeader = () => {
@@ -89,12 +89,12 @@ const DashboardHeader = () => {
                     <li>
                       <NavigationMenuLink asChild>
                         <Link
-                          to="/imperial-control?module=shinobi"
+                          to="/imperial-shinobi"
                           className="flex h-full w-full select-none flex-col justify-end rounded-md bg-scanner-dark p-6 no-underline outline-none focus:shadow-md hover:bg-scanner-dark-alt"
                         >
-                          <Cctv className="h-6 w-6 text-red-500 mb-2" />
+                          <Eye className="h-6 w-6 text-red-500 mb-2" />
                           <div className="mb-2 mt-4 text-lg font-medium text-white">
-                            Shinobi CCTV
+                            Imperial Shinobi
                           </div>
                           <p className="text-sm leading-tight text-gray-400">
                             Advanced CCTV monitoring and camera exploitation
