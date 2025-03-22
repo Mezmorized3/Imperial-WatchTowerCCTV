@@ -1,8 +1,9 @@
 
 import React from 'react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Camera, Map, BarChart, Globe, Shield } from 'lucide-react';
+import { Camera, Map, BarChart, Globe, Shield, Video } from 'lucide-react';
 import ViewerOverview from './ViewerOverview';
+import VideoFeeds from './VideoFeeds';
 import CameraMap from '@/components/CameraMap';
 import ResultsTable from '@/components/ResultsTable';
 import CameraSearchTools from '@/components/surveillance/CameraSearchTools';
@@ -26,6 +27,10 @@ const ViewerTabs: React.FC<ViewerTabsProps> = ({
           <Camera className="h-4 w-4 mr-2" />
           Overview
         </TabsTrigger>
+        <TabsTrigger value="feeds" className="data-[state=active]:bg-scanner-info/20">
+          <Video className="h-4 w-4 mr-2" />
+          Video Feeds
+        </TabsTrigger>
         <TabsTrigger value="map" className="data-[state=active]:bg-scanner-info/20">
           <Map className="h-4 w-4 mr-2" />
           Location Map
@@ -46,6 +51,12 @@ const ViewerTabs: React.FC<ViewerTabsProps> = ({
       
       <TabsContent value="overview">
         <ViewerOverview cameras={cameras} />
+      </TabsContent>
+      
+      <TabsContent value="feeds">
+        {activeTab === 'feeds' && (
+          <VideoFeeds cameras={cameras} />
+        )}
       </TabsContent>
       
       <TabsContent value="map">
