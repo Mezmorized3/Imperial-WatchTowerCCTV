@@ -47,15 +47,15 @@ const DashboardHeader = () => {
                     <li>
                       <NavigationMenuLink asChild>
                         <Link
-                          to="/imperial"
+                          to="/osint-tools"
                           className="flex h-full w-full select-none flex-col justify-end rounded-md bg-scanner-dark p-6 no-underline outline-none focus:shadow-md hover:bg-scanner-dark-alt"
                         >
-                          <Shield className="h-6 w-6 text-scanner-primary mb-2" />
+                          <Globe className="h-6 w-6 text-blue-500 mb-2" />
                           <div className="mb-2 mt-4 text-lg font-medium text-white">
-                            Imperial Scanner
+                            OSINT Tools
                           </div>
                           <p className="text-sm leading-tight text-gray-400">
-                            Advanced scanning and reconnaissance tools
+                            Open source intelligence gathering and analysis
                           </p>
                         </Link>
                       </NavigationMenuLink>
@@ -89,15 +89,15 @@ const DashboardHeader = () => {
                     <li>
                       <NavigationMenuLink asChild>
                         <Link
-                          to="/imperial-shinobi"
+                          to="/imperial-shield"
                           className="flex h-full w-full select-none flex-col justify-end rounded-md bg-scanner-dark p-6 no-underline outline-none focus:shadow-md hover:bg-scanner-dark-alt"
                         >
-                          <Eye className="h-6 w-6 text-red-500 mb-2" />
+                          <Shield className="h-6 w-6 text-yellow-500 mb-2" />
                           <div className="mb-2 mt-4 text-lg font-medium text-white">
-                            Imperial Shinobi
+                            Imperial Shield
                           </div>
                           <p className="text-sm leading-tight text-gray-400">
-                            Advanced CCTV monitoring and camera exploitation
+                            Security modules and vulnerability assessment
                           </p>
                         </Link>
                       </NavigationMenuLink>
@@ -115,6 +115,22 @@ const DashboardHeader = () => {
                     <li>
                       <NavigationMenuLink asChild>
                         <Link
+                          to="/imperial-shinobi"
+                          className="flex h-full w-full select-none flex-col justify-end rounded-md bg-scanner-dark p-6 no-underline outline-none focus:shadow-md hover:bg-scanner-dark-alt"
+                        >
+                          <Eye className="h-6 w-6 text-red-500 mb-2" />
+                          <div className="mb-2 mt-4 text-lg font-medium text-white">
+                            Imperial Shinobi
+                          </div>
+                          <p className="text-sm leading-tight text-gray-400">
+                            Advanced CCTV monitoring and camera exploitation
+                          </p>
+                        </Link>
+                      </NavigationMenuLink>
+                    </li>
+                    <li>
+                      <NavigationMenuLink asChild>
+                        <Link
                           to="/settings"
                           className="flex h-full w-full select-none flex-col justify-end rounded-md bg-scanner-dark p-6 no-underline outline-none focus:shadow-md hover:bg-scanner-dark-alt"
                         >
@@ -124,22 +140,6 @@ const DashboardHeader = () => {
                           </div>
                           <p className="text-sm leading-tight text-gray-400">
                             Configure application settings and preferences
-                          </p>
-                        </Link>
-                      </NavigationMenuLink>
-                    </li>
-                    <li>
-                      <NavigationMenuLink asChild>
-                        <Link
-                          to="/help"
-                          className="flex h-full w-full select-none flex-col justify-end rounded-md bg-scanner-dark p-6 no-underline outline-none focus:shadow-md hover:bg-scanner-dark-alt"
-                        >
-                          <Database className="h-6 w-6 text-scanner-info mb-2" />
-                          <div className="mb-2 mt-4 text-lg font-medium text-white">
-                            Help & Documentation
-                          </div>
-                          <p className="text-sm leading-tight text-gray-400">
-                            Access guides, tutorials and support resources
                           </p>
                         </Link>
                       </NavigationMenuLink>
@@ -159,9 +159,9 @@ const DashboardHeader = () => {
               </Link>
             </Button>
             <Button variant="outline" size="sm" className="text-gray-400 hover:text-white">
-              <Link to="/imperial" className="flex items-center">
+              <Link to="/imperial-shield" className="flex items-center">
                 <Shield className="h-4 w-4 mr-2" />
-                Imperial
+                Shield
               </Link>
             </Button>
           </div>

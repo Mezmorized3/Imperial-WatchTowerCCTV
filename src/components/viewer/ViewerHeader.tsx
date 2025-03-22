@@ -50,11 +50,21 @@ const ViewerHeader: React.FC = () => {
           <Button 
             variant="ghost" 
             size="sm"
-            onClick={() => navigate('/imperial')}
+            onClick={() => navigate('/imperial-shield')}
             className="text-gray-400 hover:text-white flex items-center"
           >
             <Shield className="h-4 w-4 mr-1" />
-            Imperial
+            Shield
+          </Button>
+          
+          <Button 
+            variant="ghost" 
+            size="sm"
+            onClick={() => navigate('/osint-tools')}
+            className="text-gray-400 hover:text-white flex items-center"
+          >
+            <Globe className="h-4 w-4 mr-1" />
+            OSINT
           </Button>
           
           <Button 
