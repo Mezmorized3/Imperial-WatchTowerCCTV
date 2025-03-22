@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Camera, Globe, Shield } from 'lucide-react';
+import { ArrowLeft, Camera, Globe, Shield, Eye } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
@@ -55,6 +55,16 @@ const ViewerHeader: React.FC = () => {
           >
             <Shield className="h-4 w-4 mr-1" />
             Imperial
+          </Button>
+          
+          <Button 
+            variant="ghost" 
+            size="sm"
+            onClick={() => navigate('/imperial-shinobi')}
+            className="text-gray-400 hover:text-white flex items-center"
+          >
+            <Eye className="h-4 w-4 mr-1" />
+            Shinobi
           </Button>
         </div>
       </div>

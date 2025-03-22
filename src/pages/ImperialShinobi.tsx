@@ -8,6 +8,7 @@ import { useToast } from '@/components/ui/use-toast';
 import { imperialServerService } from '@/utils/imperialServerService';
 import ImperialShinobiContent from '@/components/imperial-control/ImperialShinobi';
 import ImperialAuth from '@/components/imperial-control/ImperialAuth';
+import { imperialProtocolBanner } from '@/components/settings/ImperialBanner';
 
 const ImperialShinobi = () => {
   const { toast } = useToast();
@@ -54,7 +55,7 @@ const ImperialShinobi = () => {
     });
   };
 
-  const imperialBanner = `
+  const shinobiBanner = `
     ██╗███╗   ███╗██████╗ ███████╗██████╗ ██╗ █████╗ ██╗          ███████╗██╗  ██╗██╗███╗   ██╗ ██████╗ ██████╗ ██╗
     ██║████╗ ████║██╔══██╗██╔════╝██╔══██╗██║██╔══██╗██║          ██╔════╝██║  ██║██║████╗  ██║██╔═══██╗██╔══██╗██║
     ██║██╔████╔██║██████╔╝█████╗  ██████╔╝██║███████║██║          ███████╗███████║██║██╔██╗ ██║██║   ██║██████╔╝██║
@@ -70,7 +71,7 @@ const ImperialShinobi = () => {
         setAdminToken={setAdminToken}
         handleLogin={handleLogin}
         isLoading={isLoading}
-        imperialBanner={imperialBanner}
+        imperialBanner={shinobiBanner}
       />
     );
   }
@@ -95,6 +96,9 @@ const ImperialShinobi = () => {
               </Button>
             </div>
           </div>
+          <pre className="text-xs md:text-sm text-red-500 font-mono overflow-auto mt-2">
+            {shinobiBanner}
+          </pre>
           <CardDescription className="text-gray-400">
             Advanced offensive security module for camera systems and web applications surveillance
           </CardDescription>
