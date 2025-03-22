@@ -213,6 +213,6 @@ export const applyMotionDetection = async (
   }
 };
 
-// Export additional aliases for compatibility
+// Add these export aliases
 export const convertRtspToHls = ffmpegConvertRtspToHls;
 export const recordStream = ffmpegRecordStream;

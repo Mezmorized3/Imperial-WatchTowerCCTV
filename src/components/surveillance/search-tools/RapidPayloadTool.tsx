@@ -38,6 +38,7 @@ const RapidPayloadTool: React.FC = () => {
       setResults(null);
       
       const params: RapidPayloadParams = {
+        targetOS: payloadType, // Add targetOS and set it equal to payloadType
         payloadType,
         format,
         lhost,

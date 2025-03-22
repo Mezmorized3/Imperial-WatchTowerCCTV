@@ -1,4 +1,3 @@
-
 /**
  * Web-based OSINT tools implementations
  * These will later be replaced with real implementations from the GitHub repos:
@@ -79,7 +78,13 @@ export const executeWebhack = async (params: WebHackParams): Promise<ToolResult>
  * Execute Photon web crawler
  * Real implementation will use github.com/s0md3v/Photon
  */
-export const executePhoton = async (params: { url: string, depth?: number }): Promise<ToolResult> => {
+export interface PhotonParams {
+  url: string;
+  depth?: number;
+  timeout?: number;
+}
+
+export const executePhoton = async (params: PhotonParams): Promise<ToolResult> => {
   await simulateNetworkDelay(2800);
   console.log('Executing Photon:', params);
 

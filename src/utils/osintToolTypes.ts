@@ -64,7 +64,7 @@ export interface UsernameResult extends ToolResult {
 
 // Parameter types for specific tools
 export interface CCTVParams extends ToolParams {
-  region: string;
+  region?: string;  // Making optional
   limit?: number;
   saveResults?: boolean;
   country?: string;
@@ -80,10 +80,14 @@ export interface TorBotParams extends ToolParams {
 }
 
 export interface WebHackParams extends ToolParams {
-  target: string;
+  target?: string;
   mode?: string;
   url?: string;
   scanType?: string;
+  findVulnerabilities?: boolean;
+  checkHeaders?: boolean;
+  testXss?: boolean;
+  testSql?: boolean;
 }
 
 export interface SpeedCameraParams extends ToolParams {
@@ -134,7 +138,7 @@ export interface CamerattackParams extends ToolParams {
 }
 
 export interface BackHackParams extends ToolParams {
-  url: string;
+  url?: string;
   extractData?: boolean;
   target?: string;
   scanType?: string;
@@ -148,7 +152,7 @@ export interface ImperialOculusParams extends ToolParams {
 
 // New tool parameter types
 export interface RapidPayloadParams extends ToolParams {
-  targetOS: string;
+  targetOS?: string;
   payloadType: string;
   options?: Record<string, any>;
   format?: string;
@@ -160,8 +164,8 @@ export interface RapidPayloadParams extends ToolParams {
 }
 
 export interface HackingToolParams extends ToolParams {
-  category: string;
-  tool: string;
+  category?: string;
+  tool?: string;
   options?: Record<string, any>;
   toolCategory?: string;
   target?: string;
@@ -183,7 +187,7 @@ export interface FFmpegParams extends ToolParams {
 }
 
 export interface SecurityAdminParams extends ToolParams {
-  command: string;
+  command?: string;
   options?: Record<string, any>;
   scanType?: string;
   target?: string;

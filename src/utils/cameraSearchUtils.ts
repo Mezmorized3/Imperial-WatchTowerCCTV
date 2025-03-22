@@ -128,6 +128,7 @@ export const searchCameras = async (
     
     // Create the camera result
     const camera: CameraResult = {
+      id: `cam-${Date.now()}-${i}`, // Add unique id
       ip,
       port,
       type: searchType || ['Public', 'Traffic', 'Indoor', 'Outdoor'][Math.floor(Math.random() * 4)],

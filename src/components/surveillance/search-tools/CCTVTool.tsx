@@ -32,6 +32,7 @@ export const CCTVTool: React.FC = () => {
     
     try {
       const scanResults = await executeCCTV({
+        region: country, // Include region and set it to country value
         country: country,
         type: cameraType,
         limit: parseInt(limit)

@@ -35,7 +35,7 @@ export const BackHackTool: React.FC = () => {
 
     try {
       const scanResults = await executeBackHack({
-        target: target,
+        url: target, // Change target to url to match BackHackParams
         scanType: scanType as 'basic' | 'full',
       });
 

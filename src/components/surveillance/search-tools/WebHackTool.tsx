@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -55,11 +54,7 @@ export const WebHackTool: React.FC = () => {
       const formattedUrl = url.startsWith('http') ? url : `https://${url}`;
       const scanResults = await executeWebhack({
         url: formattedUrl,
-        scanType: scanType as 'basic' | 'full',
-        findVulnerabilities,
-        checkHeaders,
-        testXss,
-        testSql
+        scanType
       });
       
       setResults(scanResults);

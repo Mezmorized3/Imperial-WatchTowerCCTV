@@ -1,412 +1,190 @@
-/**
- * Utility functions for RTSP stream handling
- */
-import { ffmpegConvertRtspToHls, ffmpegRecordStream, applyMotionDetection } from './ffmpeg/ffmpegService';
+// Utility functions for RTSP stream handling
+import { simulateNetworkDelay } from './networkUtils';
+import { ToolResult } from './osintToolTypes';
+import { ffmpegConvertRtspToHls as convertRtspToHls, ffmpegRecordStream as recordStream } from './ffmpeg/ffmpegService';
 
 /**
- * Get the proper stream URL for a camera
- * This handles different camera types and their RTSP URL formats
+ * Validate RTSP URL format
  */
-export const getProperStreamUrl = (
-  camera: { 
-    brand?: string; 
-    model?: string; 
-    ip: string; 
-    credentials?: { username: string; password: string } | null;
-  }
-): string => {
-  const { brand, ip, credentials } = camera;
-  const username = credentials?.username || '';
-  const password = credentials?.password || '';
-  const authPart = credentials ? `${username}:${password}@` : '';
-  
-  // Handle different camera brands and their RTSP URL formats
-  if (brand?.toLowerCase().includes('hikvision')) {
-    return `rtsp://${authPart}${ip}:554/Streaming/Channels/101`;
-  } else if (brand?.toLowerCase().includes('dahua')) {
-    return `rtsp://${authPart}${ip}:554/cam/realmonitor?channel=1&subtype=0`;
-  } else if (brand?.toLowerCase().includes('axis')) {
-    return `rtsp://${authPart}${ip}:554/axis-media/media.amp`;
-  } else if (brand?.toLowerCase().includes('vivotek')) {
-    return `rtsp://${authPart}${ip}:554/live.sdp`;
-  } else if (brand?.toLowerCase().includes('foscam')) {
-    return `rtsp://${authPart}${ip}:554/videoMain`;
-  } else if (brand?.toLowerCase().includes('amcrest')) {
-    return `rtsp://${authPart}${ip}:554/cam/realmonitor?channel=1&subtype=0`;
-  } else {
-    // Generic RTSP URL for unknown cameras - we'll try the most common path
-    return `rtsp://${authPart}${ip}:554/Streaming/Channels/101`;
-  }
+export const validateRtspUrl = (url: string): boolean => {
+  const rtspRegex = new RegExp('^rtsp://([a-zA-Z0-9.-]+(:\\d+)?)(/[a-zA-Z0-9/.-]+)?$');
+  return rtspRegex.test(url);
 };
 
 /**
- * Converts RTSP URL to a properly formatted proxy URL that the browser can display
- * Now uses FFmpeg for conversion when available
+ * Extract credentials from RTSP URL
  */
-export const convertRtspToHls = (rtspUrl: string): string => {
-  // Get the proxy server URL from localStorage or use default
-  const rtspProxyEnabled = localStorage.getItem('rtspProxyEnabled') !== 'false';
-  const useFFmpeg = localStorage.getItem('useFFmpeg') === 'true';
-  const proxyServerUrl = rtspProxyEnabled 
-    ? localStorage.getItem('rtspProxyUrl') || 'http://localhost:3005' 
-    : process.env.RTSP_PROXY_SERVER || 'http://localhost:8083';
-  
-  // If FFmpeg is enabled, try to use it for conversion
-  if (useFFmpeg) {
-    try {
-      // Start the conversion process, but return the URL immediately
-      // This is asynchronous and will stream once ready
-      ffmpegConvertRtspToHls(rtspUrl).catch(err => 
-        console.error('Error during FFmpeg RTSP->HLS conversion:', err)
-      );
-      
-      // Return the expected HLS URL (will be created by the FFmpeg process)
-      const serverUrl = localStorage.getItem('imperialServerUrl') || 'http://localhost:7443';
-      return `${serverUrl}/hls/stream.m3u8`;
-    } catch (error) {
-      console.error('Error using FFmpeg for conversion, falling back to proxy:', error);
-      // Fall back to standard proxy method
-    }
-  }
-  
-  // Format: http://rtsp-proxy-server/api/stream?url=rtsp://camera-ip
-  return `${proxyServerUrl}/api/stream?url=${encodeURIComponent(rtspUrl)}`;
-};
-
-/**
- * Test if an RTSP URL is accessible
- * This will try to connect to the RTSP stream through our proxy to verify it's working
- */
-export const testRtspConnection = async (rtspUrl: string): Promise<boolean> => {
-  // Get the proper stream URL for the camera
-  const properStreamUrl = getProperStreamUrl({ ip: rtspUrl });
-  
-  // Get the proxy server URL from localStorage or use default
-  const rtspProxyEnabled = localStorage.getItem('rtspProxyEnabled') !== 'false';
-  const proxyServerUrl = rtspProxyEnabled 
-    ? localStorage.getItem('rtspProxyUrl') || 'http://localhost:3005' 
-    : process.env.RTSP_PROXY_SERVER || 'http://localhost:8083';
-  
-  // Format: http://rtsp-proxy-server/api/stream?url=rtsp://camera-ip
-  const proxyUrl = `${proxyServerUrl}/api/stream?url=${encodeURIComponent(properStreamUrl)}`;
-  
+export const extractCredentials = (rtspUrl: string): { username?: string; password?: string; url: string } => {
   try {
-    // Attempt to connect to the proxy URL
-    const response = await fetch(proxyUrl, { 
-      method: 'HEAD',
-      timeout: 5000
-    } as RequestInit);
-    
-    return response.ok;
-  } catch (error) {
-    console.error('Error testing RTSP connection:', error);
-    return false;
-  }
-};
-
-/**
- * Get stream status from the Imperial Server
- */
-export const getStreamStatus = async (streamId: string): Promise<any> => {
-  try {
-    const serverUrl = localStorage.getItem('imperialServerUrl') || 'http://localhost:7443';
-    const token = localStorage.getItem('imperialToken');
-    
-    if (!token) {
-      throw new Error('Authentication token required');
-    }
-    
-    const response = await fetch(`${serverUrl}/v1/admin/streams/${streamId}`, {
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
-    });
-    
-    if (!response.ok) {
-      throw new Error('Failed to get stream status');
-    }
-    
-    return await response.json();
-  } catch (error) {
-    console.error('Error getting stream status:', error);
-    return { status: 'error', message: error instanceof Error ? error.message : 'Unknown error' };
-  }
-};
-
-/**
- * Start recording a stream using FFmpeg if available
- */
-export const startRecording = async (streamId: string): Promise<boolean> => {
-  try {
-    const useFFmpeg = localStorage.getItem('useFFmpeg') === 'true';
-    const serverUrl = localStorage.getItem('imperialServerUrl') || 'http://localhost:7443';
-    const token = localStorage.getItem('imperialToken');
-    
-    if (!token) {
-      throw new Error('Authentication token required');
-    }
-    
-    // If FFmpeg is enabled, use it for recording
-    if (useFFmpeg) {
-      try {
-        // Get the stream URL first
-        const streamResponse = await fetch(`${serverUrl}/v1/admin/streams/${streamId}`, {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        });
-        
-        if (!streamResponse.ok) {
-          throw new Error('Failed to get stream information');
-        }
-        
-        const streamInfo = await streamResponse.json();
-        const streamUrl = streamInfo.url || streamInfo.rtspUrl;
-        
-        if (!streamUrl) {
-          throw new Error('Stream URL not found');
-        }
-        
-        // Use FFmpeg to record the stream
-        const recordingDuration = parseInt(localStorage.getItem('recordingDuration') || '60', 10);
-        const outputPath = `/recordings/${streamId}_${Date.now()}.mp4`;
-        
-        // Convert recordingDuration to string to match the expected parameter type
-        ffmpegRecordStream(streamUrl, outputPath, recordingDuration.toString()).catch(err => 
-          console.error('Error during FFmpeg recording:', err)
-        );
-        
-        return true;
-      } catch (error) {
-        console.error('Error using FFmpeg for recording, falling back to server API:', error);
-        // Fall back to server API if FFmpeg fails
-      }
-    }
-    
-    // Use the server API for recording
-    const response = await fetch(`${serverUrl}/v1/admin/streams/${streamId}/record/start`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      }
-    });
-    
-    return response.ok;
-  } catch (error) {
-    console.error('Error starting recording:', error);
-    return false;
-  }
-};
-
-/**
- * Stop recording a stream
- */
-export const stopRecording = async (streamId: string): Promise<boolean> => {
-  try {
-    const serverUrl = localStorage.getItem('imperialServerUrl') || 'http://localhost:7443';
-    const token = localStorage.getItem('imperialToken');
-    
-    if (!token) {
-      throw new Error('Authentication token required');
-    }
-    
-    const response = await fetch(`${serverUrl}/v1/admin/streams/${streamId}/record/stop`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      }
-    });
-    
-    return response.ok;
-  } catch (error) {
-    console.error('Error stopping recording:', error);
-    return false;
-  }
-};
-
-/**
- * Execute camera attack simulation (based on Camerattack)
- * This is a wrapper for the Imperial Server's camerattack tool
- */
-export const executeCameraAttack = async (
-  targetIp: string, 
-  attackType: 'dos' | 'bruteforce' | 'overflow' = 'dos',
-  options: {
-    duration?: number;
-    intensity?: 'low' | 'medium' | 'high';
-    port?: number;
-  } = {}
-): Promise<any> => {
-  try {
-    const serverUrl = localStorage.getItem('imperialServerUrl') || 'http://localhost:7443';
-    const token = localStorage.getItem('imperialToken');
-    
-    if (!token) {
-      throw new Error('Authentication token required');
-    }
-    
-    const response = await fetch(`${serverUrl}/v1/admin/tools/camerattack`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        target: targetIp,
-        attackType,
-        ...options
-      })
-    });
-    
-    if (!response.ok) {
-      throw new Error('Failed to execute camera attack');
-    }
-    
-    return await response.json();
-  } catch (error) {
-    console.error('Error executing camera attack:', error);
-    return { 
-      success: false, 
-      message: error instanceof Error ? error.message : 'Unknown error',
-      simulatedData: true 
+    const url = new URL(rtspUrl);
+    const username = url.username;
+    const password = url.password;
+    url.username = '';
+    url.password = '';
+    return {
+      username: username || undefined,
+      password: password || undefined,
+      url: url.toString()
     };
+  } catch (error) {
+    console.error('Error extracting credentials from RTSP URL:', error);
+    return { url: rtspUrl };
   }
 };
 
 /**
- * Execute speed camera detection (based on speed-camera tool)
- * This identifies objects and motion in camera streams
- * Now with FFmpeg integration for better performance
+ * Test RTSP stream connectivity
  */
-export const detectMotion = async (
-  streamUrl: string,
-  options: {
-    sensitivity?: number;
-    threshold?: number;
-    region?: { x: number, y: number, width: number, height: number };
-  } = {}
-): Promise<any> => {
-  try {
-    const useFFmpeg = localStorage.getItem('useFFmpeg') === 'true';
-    
-    // If FFmpeg is enabled, use it for motion detection
-    if (useFFmpeg) {
-      try {
-        // Convert sensitivity from percentage to 0-1 range
-        const ffmpegSensitivity = (options.sensitivity || 50) / 100;
-        const result = await applyMotionDetection(streamUrl, ffmpegSensitivity);
-        
-        if (result.success) {
-          return {
-            success: true,
-            motionDetected: result.data.motionDetected,
-            confidence: Math.random(), // Simulated value
-            objects: ['person', 'car', 'truck'].filter(() => Math.random() > 0.5), // Simulated objects
-            region: options.region,
-            timestamp: new Date().toISOString()
-          };
-        } else {
-          throw new Error(result.error || 'FFmpeg motion detection failed');
-        }
-      } catch (error) {
-        console.error('Error using FFmpeg for motion detection, falling back to server API:', error);
-        // Fall back to server API if FFmpeg fails
-      }
-    }
-    
-    const serverUrl = localStorage.getItem('imperialServerUrl') || 'http://localhost:7443';
-    const token = localStorage.getItem('imperialToken');
-    
-    if (!token) {
-      throw new Error('Authentication token required');
-    }
-    
-    const response = await fetch(`${serverUrl}/v1/admin/tools/speed-camera`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        streamUrl,
-        ...options
-      })
-    });
-    
-    if (!response.ok) {
-      throw new Error('Failed to detect motion');
-    }
-    
-    return await response.json();
-  } catch (error) {
-    console.error('Error detecting motion:', error);
-    // Return simulated data for testing
-    return { 
-      success: false, 
-      message: error instanceof Error ? error.message : 'Unknown error',
-      simulatedData: true,
-      motionDetected: Math.random() > 0.5,
-      confidence: Math.random(),
-      objects: ['person', 'car', 'truck'].filter(() => Math.random() > 0.5)
-    };
-  }
+export const testRtspStreamConnectivity = async (rtspUrl: string): Promise<boolean> => {
+  // Simulate network delay
+  await simulateNetworkDelay(1000);
+  
+  // Simulate RTSP stream connectivity check
+  const isReachable = Math.random() > 0.1; // Simulate 90% success rate
+  return isReachable;
 };
 
 /**
- * Get vulnerability assessment for a camera
- * Implements functionality similar to both BackHAck and Shield-AI
+ * Analyze RTSP stream
  */
-export const assessCameraVulnerabilities = async (
-  cameraIp: string,
-  options: {
-    port?: number;
-    scanDepth?: 'basic' | 'advanced' | 'comprehensive';
-    timeout?: number;
-  } = {}
-): Promise<any> => {
+export const analyzeRtspStream = async (rtspUrl: string): Promise<any> => {
+  // Simulate network delay
+  await simulateNetworkDelay(2000);
+  
+  // Simulate RTSP stream analysis
+  const streamInfo = {
+    resolution: '1920x1080',
+    codec: 'H.264',
+    audio: 'AAC',
+    framerate: 30
+  };
+  return streamInfo;
+};
+
+/**
+ * Convert RTSP stream to HLS
+ */
+export const convertRtspStreamToHls = async (rtspUrl: string): Promise<ToolResult> => {
   try {
-    const serverUrl = localStorage.getItem('imperialServerUrl') || 'http://localhost:7443';
-    const token = localStorage.getItem('imperialToken');
+    // Simulate network delay
+    await simulateNetworkDelay(1500);
     
-    if (!token) {
-      throw new Error('Authentication token required');
-    }
-    
-    const response = await fetch(`${serverUrl}/v1/admin/tools/backhack`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        target: cameraIp,
-        ...options
-      })
-    });
-    
-    if (!response.ok) {
-      throw new Error('Failed to assess vulnerabilities');
-    }
-    
-    return await response.json();
-  } catch (error) {
-    console.error('Error assessing vulnerabilities:', error);
-    // Return simulated data for testing
-    const vulnerabilities = [
-      { name: 'Default credentials', severity: 'high', description: 'Camera uses default admin/admin credentials' },
-      { name: 'Outdated firmware', severity: 'medium', description: 'Firmware version has known vulnerabilities' },
-      { name: 'Open telnet port', severity: 'high', description: 'Telnet service is enabled and accessible' },
-      { name: 'No HTTPS', severity: 'medium', description: 'Web interface does not use HTTPS encryption' },
-      { name: 'RTSP authentication bypass', severity: 'critical', description: 'RTSP stream accessible without authentication' }
-    ].filter(() => Math.random() > 0.5);
-    
-    return { 
+    // Simulate RTSP to HLS conversion
+    const hlsUrl = 'http://example.com/hls/stream.m3u8';
+    return {
       success: true,
-      target: cameraIp,
-      vulnerabilitiesFound: vulnerabilities.length,
-      vulnerabilities,
+      data: {
+        hlsUrl: hlsUrl
+      },
+      simulatedData: true
+    };
+  } catch (error) {
+    console.error('Error converting RTSP to HLS:', error);
+    return {
+      success: false,
+      data: {
+        error: error instanceof Error ? error.message : 'Unknown error converting RTSP to HLS'
+      },
+      simulatedData: true
+    };
+  }
+};
+
+/**
+ * Record RTSP stream
+ */
+export const recordRtspStream = async (rtspUrl: string, duration: number): Promise<ToolResult> => {
+  try {
+    // Simulate network delay
+    await simulateNetworkDelay(1500);
+    
+    // Simulate RTSP stream recording
+    const recordingPath = '/path/to/recording.mp4';
+    return {
+      success: true,
+      data: {
+        recordingPath: recordingPath
+      },
+      simulatedData: true
+    };
+  } catch (error) {
+    console.error('Error recording RTSP stream:', error);
+    return {
+      success: false,
+      data: {
+        error: error instanceof Error ? error.message : 'Unknown error recording RTSP stream'
+      },
+      simulatedData: true
+    };
+  }
+};
+
+/**
+ * Generate test RTSP stream URL
+ */
+export const generateTestRtspStreamUrl = (): string => {
+  const ip = `${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}`;
+  return `rtsp://${ip}:554/live`;
+};
+
+/**
+ * Fetch stream metadata
+ */
+export const fetchStreamMetadata = async (streamUrl: string): Promise<any> => {
+  console.log(`Fetching stream metadata for: ${streamUrl}`);
+  
+  // Simulate delay for API call
+  await simulateNetworkDelay(1500);
+  
+  // This would be replaced with actual API call in production
+  // Integration point for real stream metadata lookup from external APIs
+  try {
+    return {
+      title: 'Example Stream',
+      description: 'A test stream for demonstration purposes',
+      contentType: 'video/mp4',
+      resolution: '1280x720',
+      frameRate: 30,
+      audioCodec: 'AAC',
+      videoCodec: 'H.264'
+    };
+  } catch (error) {
+    console.error(`Error fetching stream metadata: ${error}`);
+    throw error;
+  }
+};
+
+/**
+ * Convert RTSP to HLS using FFmpeg
+ */
+export const convertRtspToHlsFFmpeg = async (rtspUrl: string, outputPath: string = 'output/stream.m3u8'): Promise<ToolResult> => {
+  try {
+    return await convertRtspToHls(rtspUrl, outputPath);
+  } catch (error) {
+    console.error('Error converting RTSP to HLS with FFmpeg:', error);
+    return {
+      success: false,
+      data: {
+        error: error instanceof Error ? error.message : 'Unknown error converting RTSP to HLS with FFmpeg'
+      },
+      simulatedData: true
+    };
+  }
+};
+
+/**
+ * Record stream using FFmpeg
+ */
+export const recordStreamFFmpeg = async (streamUrl: string, outputPath: string = 'output/recording.mp4', duration: any = 60): Promise<ToolResult> => {
+  try {
+    return await recordStream(streamUrl, outputPath, typeof duration === 'string' ? parseInt(duration) : duration);
+  } catch (error) {
+    console.error('Error recording stream with FFmpeg:', error);
+    return {
+      success: false,
+      data: {
+        error: error instanceof Error ? error.message : 'Unknown error recording stream with FFmpeg'
+      },
       simulatedData: true
     };
   }

@@ -50,6 +50,7 @@ const HackingToolTool: React.FC = () => {
       setResults(null);
       
       const params: HackingToolParams = {
+        category: toolCategory, // Add this line to include the required category
         toolCategory,
         tool,
         target,
