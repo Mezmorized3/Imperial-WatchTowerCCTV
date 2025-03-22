@@ -152,7 +152,7 @@ export const ffmpegConvertRtspToHls = async (
 export const ffmpegRecordStream = async (
   streamUrl: string,
   outputPath: string = 'output/recording.mp4',
-  duration: number = 60
+  duration: number | string = 60
 ): Promise<ToolResult> => {
   try {
     const params: FFmpegParams = {
