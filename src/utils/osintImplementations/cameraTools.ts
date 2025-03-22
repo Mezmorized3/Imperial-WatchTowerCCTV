@@ -8,7 +8,8 @@ import {
   CCTVParams,
   SpeedCameraParams, 
   CamerattackParams,
-  ToolResult
+  ToolResult,
+  CameraResult
 } from '../osintToolTypes';
 
 /**

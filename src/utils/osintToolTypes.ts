@@ -35,11 +35,26 @@ export interface CameraResult {
   ip: string;
   port: number;
   type: string;
-  accessible: boolean;
+  accessible?: boolean;
   stream_url?: string;
+  rtspUrl?: string;
   protocol?: string;
   manufacturer?: string;
   model?: string;
+  credentials?: {
+    username: string;
+    password: string;
+  } | null;
+  vulnerabilities?: {
+    name: string;
+    severity: 'low' | 'medium' | 'high' | 'critical';
+    description: string;
+  }[];
+  geolocation?: {
+    country: string;
+    city?: string;
+    coordinates: [number, number];
+  };
 }
 
 // OSINT tool parameters

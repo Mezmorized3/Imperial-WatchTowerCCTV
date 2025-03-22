@@ -3,7 +3,7 @@
  * Utilities for camera search functions
  */
 import { simulateNetworkDelay } from './networkUtils';
-import { CameraResult } from '@/utils/osintTools';
+import { CameraResult } from '@/utils/osintToolTypes';
 
 /**
  * Search for cameras based on Google dorks and other techniques
@@ -141,7 +141,8 @@ export const searchCameras = async (
         country: selectedCountry.name,
         city,
         coordinates: [lat, lon]
-      }
+      },
+      accessible: Math.random() > 0.3
     };
     
     results.push(camera);
