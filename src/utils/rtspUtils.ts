@@ -93,8 +93,11 @@ export const convertRtspStreamToHls = async (rtspUrl: string): Promise<ToolResul
 /**
  * Record RTSP stream
  */
-export const recordRtspStream = async (rtspUrl: string, duration: number): Promise<ToolResult> => {
+export const recordRtspStream = async (rtspUrl: string, duration: number | string = 60): Promise<ToolResult> => {
   try {
+    // Convert duration to string if it's a number
+    const durationStr = typeof duration === 'number' ? duration.toString() : duration;
+    
     // Simulate network delay
     await simulateNetworkDelay(1500);
     
@@ -175,9 +178,11 @@ export const convertRtspToHlsFFmpeg = async (rtspUrl: string, outputPath: string
 /**
  * Record stream using FFmpeg
  */
-export const recordStreamFFmpeg = async (streamUrl: string, outputPath: string = 'output/recording.mp4', duration: number = 60): Promise<ToolResult> => {
+export const recordStreamFFmpeg = async (streamUrl: string, outputPath: string = 'output/recording.mp4', duration: number | string = 60): Promise<ToolResult> => {
   try {
-    return await ffmpegRecordStream(streamUrl, outputPath, duration.toString());
+    // Convert duration to string if it's a number
+    const durationStr = typeof duration === 'number' ? duration.toString() : duration;
+    return await ffmpegRecordStream(streamUrl, outputPath, durationStr);
   } catch (error) {
     console.error('Error recording stream with FFmpeg:', error);
     return {

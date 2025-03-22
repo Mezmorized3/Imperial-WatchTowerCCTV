@@ -34,13 +34,13 @@ const RtspPlayer: React.FC<RtspPlayerProps> = ({
   // Generate a stable stream ID from the RTSP URL
   const streamId = btoa(rtspUrl).replace(/[/+=]/g, '').substring(0, 12);
   
-  const initializeStream = () => {
+  const initializeStream = async () => {
     setIsLoading(true);
     setError(null);
     
     try {
-      // Convert RTSP to HLS using our utility
-      const hlsUrl = convertRtspToHls(rtspUrl);
+      // Fix: We need to await the Promise before setting it to state
+      const hlsUrl = await convertRtspToHls(rtspUrl);
       setStreamUrl(hlsUrl);
       setIsLoading(false);
     } catch (err) {
