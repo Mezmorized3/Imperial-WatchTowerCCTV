@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import ViewerHeader from '@/components/viewer/ViewerHeader';
@@ -56,7 +55,7 @@ const OsintTools = () => {
         </div>
         
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="bg-scanner-dark-alt w-full justify-start overflow-x-auto">
+          <TabsList className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-1 mb-4 bg-scanner-dark-alt w-full">
             <TabsTrigger value="camera-tools" className="data-[state=active]:bg-scanner-info/20">
               <Search className="h-4 w-4 mr-2" />
               Camera OSINT

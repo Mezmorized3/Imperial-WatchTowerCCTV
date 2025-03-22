@@ -20,6 +20,7 @@ import FFmpegTool from './search-tools/FFmpegTool';
 import RapidPayloadTool from './search-tools/RapidPayloadTool';
 import HackingToolTool from './search-tools/HackingToolTool';
 import SecurityAdminTool from './search-tools/SecurityAdminTool';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 export const CameraSearchTools = () => {
   const [activeTab, setActiveTab] = useState("cameradar");
@@ -28,32 +29,61 @@ export const CameraSearchTools = () => {
     setActiveTab(newTab);
   };
 
+  // Define our tool groups for better organization
+  const toolGroups = [
+    // Row 1: Camera tools
+    [
+      { id: "cameradar", label: "Cameradar" },
+      { id: "ipcam", label: "IP Cam Search" },
+      { id: "cctv", label: "CCTV" },
+      { id: "camerattack", label: "Camerattack" },
+      { id: "imperial-oculus", label: "Imperial Oculus" },
+    ],
+    // Row 2: Media & Web tools
+    [
+      { id: "ffmpeg", label: "FFmpeg" },
+      { id: "webcheck", label: "Web Check" },
+      { id: "webhack", label: "WebHack" },
+      { id: "photon", label: "Photon" },
+      { id: "torbot", label: "TorBot" },
+    ],
+    // Row 3: Social & OSINT tools
+    [
+      { id: "username", label: "Username Search" },
+      { id: "twint", label: "Twint" },
+      { id: "osint", label: "OSINT" },
+      { id: "shield-ai", label: "Shield AI" },
+      { id: "botexploits", label: "Bot Exploits" },
+    ],
+    // Row 4: Hacking tools
+    [
+      { id: "backhack", label: "BackHack" },
+      { id: "security-admin", label: "Security Admin" },
+      { id: "rapid-payload", label: "RapidPayload" },
+      { id: "hacking-tool", label: "Hacking Tool" },
+    ]
+  ];
+
   return (
     <div className="p-4">
       <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
-        <TabsList className="grid grid-cols-5 gap-2 mb-4 overflow-x-auto">
-          <TabsTrigger value="cameradar">Cameradar</TabsTrigger>
-          <TabsTrigger value="ipcam">IP Cam Search</TabsTrigger>
-          <TabsTrigger value="cctv">CCTV</TabsTrigger>
-          <TabsTrigger value="camerattack">Camerattack</TabsTrigger>
-          <TabsTrigger value="imperial-oculus">Imperial Oculus</TabsTrigger>
-          <TabsTrigger value="ffmpeg">FFmpeg</TabsTrigger>
-          <TabsTrigger value="username">Username Search</TabsTrigger>
-          <TabsTrigger value="webcheck">Web Check</TabsTrigger>
-          <TabsTrigger value="torbot">TorBot</TabsTrigger>
-          <TabsTrigger value="webhack">WebHack</TabsTrigger>
-          <TabsTrigger value="photon">Photon</TabsTrigger>
-          <TabsTrigger value="twint">Twint</TabsTrigger>
-          <TabsTrigger value="osint">OSINT</TabsTrigger>
-          <TabsTrigger value="shield-ai">Shield AI</TabsTrigger>
-          <TabsTrigger value="botexploits">Bot Exploits</TabsTrigger>
-          <TabsTrigger value="backhack">BackHack</TabsTrigger>
-          <TabsTrigger value="security-admin">Security Admin</TabsTrigger>
-          <TabsTrigger value="rapid-payload">RapidPayload</TabsTrigger>
-          <TabsTrigger value="hacking-tool">Hacking Tool</TabsTrigger>
-        </TabsList>
+        <div className="space-y-2">
+          {toolGroups.map((group, index) => (
+            <TabsList key={index} className="w-full flex flex-wrap justify-start mb-1">
+              {group.map((tool) => (
+                <TabsTrigger 
+                  key={tool.id} 
+                  value={tool.id}
+                  className="flex-grow max-w-[180px]"
+                >
+                  {tool.label}
+                </TabsTrigger>
+              ))}
+            </TabsList>
+          ))}
+        </div>
 
-        <div className="p-0">
+        <ScrollArea className="h-[calc(100vh-280px)] mt-4">
           <TabsContent value="cameradar" className="mt-0">
             <CameradarTool />
           </TabsContent>
@@ -113,7 +143,7 @@ export const CameraSearchTools = () => {
           <TabsContent value="security-admin" className="mt-0">
             <SecurityAdminTool />
           </TabsContent>
-        </div>
+        </ScrollArea>
       </Tabs>
     </div>
   );
