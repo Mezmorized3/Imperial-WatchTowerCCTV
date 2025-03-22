@@ -39,7 +39,7 @@ const RtspPlayer: React.FC<RtspPlayerProps> = ({
     setError(null);
     
     try {
-      // Fix: We need to await the Promise before setting it to state
+      // Need to await the Promise before setting to state
       const hlsUrl = await convertRtspToHls(rtspUrl);
       setStreamUrl(hlsUrl);
       setIsLoading(false);

@@ -6,8 +6,9 @@
   "main": "imperialServer.js",
   "scripts": {
     "start": "node imperialServer.js",
-    "start:dev": "node imperialServer.js --security-level=normal",
-    "start:secure": "node imperialServer.js --security-level=max --encryption=military"
+    "start:dev": "node imperialServer.js --security-level=normal --log-level=debug",
+    "start:secure": "node imperialServer.js --security-level=max --encryption=military",
+    "start:production": "NODE_ENV=production node imperialServer.js --security-level=max"
   },
   "dependencies": {
     "express": "^4.18.2",
@@ -22,6 +23,21 @@
     "jaeger-client": "^3.19.0",
     "cors": "^2.8.5",
     "fluent-ffmpeg": "^2.1.2",
-    "node-media-server": "^2.6.1"
+    "node-media-server": "^2.6.1",
+    "body-parser": "^1.20.2",
+    "compression": "^1.7.4",
+    "cookie-parser": "^1.4.6",
+    "dotenv": "^16.3.1",
+    "express-validator": "^7.0.1",
+    "morgan": "^1.10.0",
+    "multer": "^1.4.5-lts.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1",
+    "jest": "^29.7.0",
+    "supertest": "^6.3.3"
+  },
+  "engines": {
+    "node": ">=16.0.0"
   }
 }

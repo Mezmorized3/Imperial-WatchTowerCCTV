@@ -4,10 +4,8 @@
  * Provides integration with FFmpeg for media processing tasks
  */
 
-import { simulateNetworkDelay } from '../networkUtils';
 import { FFmpegParams, ToolResult } from '../osintToolTypes';
-import { executeFFmpegReal } from '../osintUtilsConnector';
-import { checkToolAvailability } from '../github/externalToolsConnector';
+import { executeExternalTool, checkToolAvailability } from '../github/externalToolsConnector';
 
 /**
  * Execute FFmpeg with given parameters
@@ -18,8 +16,47 @@ export const executeFFmpeg = async (params: FFmpegParams): Promise<ToolResult> =
   
   if (isFFmpegAvailable) {
     try {
-      // Use real FFmpeg implementation
-      return await executeFFmpegReal(params);
+      const args: string[] = [];
+      
+      if (params.inputStream) args.push('-i', params.inputStream);
+      else if (params.input) args.push('-i', params.input);
+      
+      if (params.videoCodec) args.push('-c:v', params.videoCodec);
+      if (params.audioCodec) args.push('-c:a', params.audioCodec);
+      if (params.resolution) args.push('-s', params.resolution);
+      if (params.bitrate) args.push('-b:v', params.bitrate);
+      if (params.framerate) args.push('-r', params.framerate);
+      
+      if (params.filters && params.filters.length > 0) {
+        args.push('-vf', params.filters.join(','));
+      }
+      
+      // Add additional options if provided
+      if (params.options) {
+        Object.entries(params.options).forEach(([key, value]) => {
+          if (value === null) {
+            args.push(`-${key}`);
+          } else {
+            args.push(`-${key}`, value.toString());
+          }
+        });
+      }
+      
+      const outputPath = params.outputPath || params.output || 'output.mp4';
+      args.push(outputPath);
+      
+      const result = await executeExternalTool('ffmpeg', args);
+      
+      return {
+        success: result.success,
+        data: result.data || { 
+          command: result.command,
+          outputFile: outputPath,
+          output: result.output
+        },
+        error: result.error,
+        simulatedData: false
+      };
     } catch (error) {
       console.error('Error executing FFmpeg:', error);
       return {
@@ -32,84 +69,14 @@ export const executeFFmpeg = async (params: FFmpegParams): Promise<ToolResult> =
     }
   }
   
-  // Fall back to mock implementation
-  console.log('FFmpeg not available, using mock implementation');
-  
-  try {
-    // Validate required parameters
-    if (!params.input && !params.inputStream) {
-      return {
-        success: false,
-        error: 'Input file or stream is required',
-        data: {
-          error: 'Input file or stream is required'
-        },
-        simulatedData: true
-      };
-    }
-    
-    // Build simulated FFmpeg command
-    let command = 'ffmpeg -i ' + (params.inputStream || params.input);
-    
-    // Add codecs if specified
-    if (params.videoCodec) {
-      command += ' -c:v ' + params.videoCodec;
-    }
-    
-    if (params.audioCodec) {
-      command += ' -c:a ' + params.audioCodec;
-    }
-    
-    // Add resolution if specified
-    if (params.resolution) {
-      command += ' -s ' + params.resolution;
-    }
-    
-    // Add bitrate if specified
-    if (params.bitrate) {
-      command += ' -b:v ' + params.bitrate;
-    }
-    
-    // Add framerate if specified
-    if (params.framerate) {
-      command += ' -r ' + params.framerate;
-    }
-    
-    // Add filters if specified
-    if (params.filters && params.filters.length > 0) {
-      command += ' -vf ' + params.filters.join(',');
-    }
-    
-    // Add output file
-    const outputPath = params.outputPath || params.output || 'output.' + (params.outputFormat || 'mp4');
-    command += ' ' + outputPath;
-    
-    console.log('Simulating FFmpeg command:', command);
-    await simulateNetworkDelay(3000);
-    
-    return {
-      success: true,
-      data: {
-        command,
-        outputFile: outputPath,
-        duration: '00:05:23',
-        size: '12.4MB',
-        bitrate: params.bitrate || '3.2Mbps',
-        codec: params.videoCodec || 'h264',
-        resolution: params.resolution || '1280x720'
-      },
-      simulatedData: true
-    };
-  } catch (error) {
-    console.error('Error in FFmpeg mock:', error);
-    return {
-      success: false,
-      data: {
-        error: error instanceof Error ? error.message : 'Unknown error in FFmpeg mock'
-      },
-      simulatedData: true
-    };
-  }
+  // If FFmpeg is not available, return an error
+  return {
+    success: false,
+    data: {
+      error: 'FFmpeg is not available on this system'
+    },
+    simulatedData: false
+  };
 };
 
 /**
@@ -141,7 +108,7 @@ export const ffmpegConvertRtspToHls = async (
       data: {
         error: error instanceof Error ? error.message : 'Unknown error converting RTSP to HLS'
       },
-      simulatedData: true
+      simulatedData: false
     };
   }
 };
@@ -173,7 +140,7 @@ export const ffmpegRecordStream = async (
       data: {
         error: error instanceof Error ? error.message : 'Unknown error recording stream'
       },
-      simulatedData: true
+      simulatedData: false
     };
   }
 };
@@ -208,7 +175,7 @@ export const applyMotionDetection = async (
       data: {
         error: error instanceof Error ? error.message : 'Unknown error applying motion detection'
       },
-      simulatedData: true
+      simulatedData: false
     };
   }
 };

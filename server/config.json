@@ -2,12 +2,13 @@
 {
   "ports": {
     "8080": "Main web application (React app)",
-    "8000": "Ticker HTML server",
+    "8000": "HLS server for streaming",
     "5000": "SocketIO/ticker server",
     "5001": "Control panel API server",
-    "3000": "HLS Restream Server"
+    "3000": "HLS Restream Server",
+    "1935": "RTMP Server"
   },
-  "adminToken": "imperial-scanner-admin-token",
+  "adminToken": "REPLACE_WITH_SECURE_TOKEN_IN_PRODUCTION",
   "royalCourtPort": 7443,
   "useHttps": false,
   "sslOptions": {
@@ -39,5 +40,32 @@
       "authAttempts": 5
     },
     "tokenExpiration": "24h"
+  },
+  "logConfig": {
+    "level": "info",
+    "format": "json",
+    "directory": "./logs"
+  },
+  "mediaServerSettings": {
+    "rtmpPort": 1935,
+    "httpPort": 8000,
+    "ffmpegPath": "/usr/bin/ffmpeg",
+    "enableTrans": true,
+    "enableAuth": false,
+    "mediaRoot": "./media"
+  },
+  "externalTools": {
+    "github": {
+      "cloneDirectory": "./tools",
+      "updateInterval": 86400000
+    },
+    "cameradar": {
+      "mode": "release",
+      "windowsSupport": true
+    },
+    "ffmpeg": {
+      "threads": 4,
+      "logLevel": "error"
+    }
   }
 }

@@ -1,7 +1,7 @@
 // Utility functions for RTSP stream handling
-import { simulateNetworkDelay } from './networkUtils';
 import { ToolResult } from './osintToolTypes';
 import { ffmpegConvertRtspToHls, ffmpegRecordStream } from './ffmpeg/ffmpegService';
+import { executeExternalTool } from './github/externalToolsConnector';
 
 /**
  * Validate RTSP URL format
@@ -36,123 +36,60 @@ export const extractCredentials = (rtspUrl: string): { username?: string; passwo
  * Test RTSP stream connectivity
  */
 export const testRtspStreamConnectivity = async (rtspUrl: string): Promise<boolean> => {
-  // Simulate network delay
-  await simulateNetworkDelay(1000);
-  
-  // Simulate RTSP stream connectivity check
-  const isReachable = Math.random() > 0.1; // Simulate 90% success rate
-  return isReachable;
+  try {
+    // Use ffprobe to check RTSP stream connectivity
+    const result = await executeExternalTool('ffprobe', [
+      '-v', 'error',
+      '-show_entries', 'stream=codec_type',
+      '-of', 'default=noprint_wrappers=1:nokey=1',
+      '-select_streams', 'v:0',
+      '-timeout', '5',
+      rtspUrl
+    ]);
+    
+    return result.success;
+  } catch (error) {
+    console.error('Error testing RTSP connectivity:', error);
+    return false;
+  }
 };
 
 /**
  * Analyze RTSP stream
  */
 export const analyzeRtspStream = async (rtspUrl: string): Promise<any> => {
-  // Simulate network delay
-  await simulateNetworkDelay(2000);
-  
-  // Simulate RTSP stream analysis
-  const streamInfo = {
-    resolution: '1920x1080',
-    codec: 'H.264',
-    audio: 'AAC',
-    framerate: 30
-  };
-  return streamInfo;
-};
-
-/**
- * Convert RTSP stream to HLS
- */
-export const convertRtspStreamToHls = async (rtspUrl: string): Promise<ToolResult> => {
   try {
-    // Simulate network delay
-    await simulateNetworkDelay(1500);
+    // Use ffprobe to analyze RTSP stream
+    const result = await executeExternalTool('ffprobe', [
+      '-v', 'quiet',
+      '-print_format', 'json',
+      '-show_format',
+      '-show_streams',
+      '-timeout', '5',
+      rtspUrl
+    ]);
     
-    // Simulate RTSP to HLS conversion
-    const hlsUrl = 'http://example.com/hls/stream.m3u8';
-    return {
-      success: true,
-      data: {
-        hlsUrl: hlsUrl
-      },
-      simulatedData: true
-    };
-  } catch (error) {
-    console.error('Error converting RTSP to HLS:', error);
-    return {
-      success: false,
-      data: {
-        error: error instanceof Error ? error.message : 'Unknown error converting RTSP to HLS'
-      },
-      simulatedData: true
-    };
-  }
-};
-
-/**
- * Record RTSP stream
- */
-export const recordRtspStream = async (rtspUrl: string, duration: number | string = 60): Promise<ToolResult> => {
-  try {
-    // Convert duration to string if it's a number
-    const durationStr = typeof duration === 'number' ? duration.toString() : duration;
+    if (result.success && result.output) {
+      try {
+        const data = JSON.parse(result.output);
+        const videoStream = data.streams?.find((s: any) => s.codec_type === 'video');
+        
+        if (videoStream) {
+          return {
+            resolution: `${videoStream.width}x${videoStream.height}`,
+            codec: videoStream.codec_name,
+            audio: data.streams?.find((s: any) => s.codec_type === 'audio')?.codec_name || 'none',
+            framerate: eval(videoStream.r_frame_rate) // Evaluates "30/1" to 30
+          };
+        }
+      } catch (parseError) {
+        console.error('Error parsing ffprobe output:', parseError);
+      }
+    }
     
-    // Simulate network delay
-    await simulateNetworkDelay(1500);
-    
-    // Simulate RTSP stream recording
-    const recordingPath = '/path/to/recording.mp4';
-    return {
-      success: true,
-      data: {
-        recordingPath: recordingPath
-      },
-      simulatedData: true
-    };
+    throw new Error('Failed to analyze RTSP stream');
   } catch (error) {
-    console.error('Error recording RTSP stream:', error);
-    return {
-      success: false,
-      data: {
-        error: error instanceof Error ? error.message : 'Unknown error recording RTSP stream'
-      },
-      simulatedData: true
-    };
-  }
-};
-
-/**
- * Generate test RTSP stream URL
- */
-export const generateTestRtspStreamUrl = (): string => {
-  const ip = `${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}`;
-  return `rtsp://${ip}:554/live`;
-};
-
-/**
- * Fetch stream metadata
- */
-export const fetchStreamMetadata = async (streamUrl: string): Promise<any> => {
-  console.log(`Fetching stream metadata for: ${streamUrl}`);
-  
-  // Simulate delay for API call
-  await simulateNetworkDelay(1500);
-  
-  // This would be replaced with actual API call in production
-  // Integration point for real stream metadata lookup from external APIs
-  try {
-    return {
-      title: 'Example Stream',
-      description: 'A test stream for demonstration purposes',
-      contentType: 'video/mp4',
-      resolution: '1280x720',
-      frameRate: 30,
-      audioCodec: 'AAC',
-      videoCodec: 'H.264'
-    };
-  } catch (error) {
-    console.error(`Error fetching stream metadata: ${error}`);
+    console.error('Error analyzing RTSP stream:', error);
     throw error;
   }
 };
@@ -170,7 +107,7 @@ export const convertRtspToHlsFFmpeg = async (rtspUrl: string, outputPath: string
       data: {
         error: error instanceof Error ? error.message : 'Unknown error converting RTSP to HLS with FFmpeg'
       },
-      simulatedData: true
+      simulatedData: false
     };
   }
 };
@@ -180,7 +117,7 @@ export const convertRtspToHlsFFmpeg = async (rtspUrl: string, outputPath: string
  */
 export const recordStreamFFmpeg = async (streamUrl: string, outputPath: string = 'output/recording.mp4', duration: number | string = 60): Promise<ToolResult> => {
   try {
-    // Convert duration to string if it's a number
+    // Ensure duration is a string
     const durationStr = typeof duration === 'number' ? duration.toString() : duration;
     return await ffmpegRecordStream(streamUrl, outputPath, durationStr);
   } catch (error) {
@@ -190,7 +127,7 @@ export const recordStreamFFmpeg = async (streamUrl: string, outputPath: string =
       data: {
         error: error instanceof Error ? error.message : 'Unknown error recording stream with FFmpeg'
       },
-      simulatedData: true
+      simulatedData: false
     };
   }
 };
@@ -200,10 +137,19 @@ export const recordStreamFFmpeg = async (streamUrl: string, outputPath: string =
  */
 export const convertRtspToHls = async (rtspUrl: string): Promise<string> => {
   try {
-    const result = await convertRtspStreamToHls(rtspUrl);
-    if (result.success && result.data.hlsUrl) {
-      return result.data.hlsUrl;
+    // Generate a unique output path
+    const outputDir = `output/streams/${Date.now()}`;
+    const outputPath = `${outputDir}/stream.m3u8`;
+    
+    const result = await ffmpegConvertRtspToHls(rtspUrl, outputPath);
+    
+    if (result.success) {
+      // In a real-world scenario, you'd return a URL to access this stream
+      // This could be served by the HLS server from the output directory
+      // For now, we're returning the local file path that would be exposed by the server
+      return `/streams/${outputPath.split('/').pop()}`;
     }
+    
     throw new Error('Failed to convert RTSP to HLS');
   } catch (error) {
     console.error('Error in convertRtspToHls:', error);
@@ -265,8 +211,17 @@ export const getProperStreamUrl = (camera: any): string => {
 export const startRecording = async (streamId: string): Promise<boolean> => {
   try {
     console.log(`Starting recording for stream: ${streamId}`);
-    await simulateNetworkDelay(1000);
-    return true;
+    
+    // In a real implementation, identify the stream URL from the streamId
+    // and start a recording process
+    const streamUrl = `rtsp://example.com/streams/${streamId}`;
+    const outputPath = `recordings/${streamId}_${Date.now()}.mp4`;
+    
+    // Start recording for 3600 seconds (1 hour)
+    // This would typically be managed by a background process
+    const result = await recordStreamFFmpeg(streamUrl, outputPath, 3600);
+    
+    return result.success;
   } catch (error) {
     console.error('Error starting recording:', error);
     return false;
@@ -279,7 +234,13 @@ export const startRecording = async (streamId: string): Promise<boolean> => {
 export const stopRecording = async (streamId: string): Promise<boolean> => {
   try {
     console.log(`Stopping recording for stream: ${streamId}`);
-    await simulateNetworkDelay(1000);
+    
+    // In a real implementation, this would identify the recording process
+    // for the given streamId and stop it
+    
+    // For example, send a signal to the recording process to stop
+    // This could involve sending a request to a recording manager service
+    
     return true;
   } catch (error) {
     console.error('Error stopping recording:', error);
@@ -309,27 +270,23 @@ export const detectMotion = async (
   confidence?: number;
   objects?: string[];
 }> => {
-  await simulateNetworkDelay(1000);
-  
-  // Simulate motion detection with random results
-  const motionDetected = Math.random() > 0.5;
-  const confidence = Math.random();
-  
-  // Simulate object detection
-  let objects: string[] = [];
-  if (motionDetected) {
-    const possibleObjects = ['person', 'car', 'bicycle', 'truck', 'motorcycle', 'dog', 'cat'];
-    const numObjects = Math.floor(Math.random() * 3) + 1;
+  try {
+    // This would typically use real-time video analysis or computer vision
+    // For implementation with real-world tools, you could use:
+    // 1. OpenCV for motion detection
+    // 2. A pre-built motion detection service
     
-    for (let i = 0; i < numObjects; i++) {
-      const randomIndex = Math.floor(Math.random() * possibleObjects.length);
-      objects.push(possibleObjects[randomIndex]);
-    }
+    // For now, we'll return a placeholder implementation
+    // that would be replaced with real implementation
+    return {
+      motionDetected: false,
+      confidence: 0,
+      objects: []
+    };
+  } catch (error) {
+    console.error('Error detecting motion:', error);
+    return {
+      motionDetected: false
+    };
   }
-  
-  return {
-    motionDetected,
-    confidence,
-    objects: objects.length > 0 ? objects : undefined
-  };
 };
