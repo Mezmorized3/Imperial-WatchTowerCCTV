@@ -20,6 +20,8 @@
     "minimist": "^1.2.8",
     "jsonwebtoken": "^9.0.2",
     "jaeger-client": "^3.19.0",
-    "cors": "^2.8.5"
+    "cors": "^2.8.5",
+    "fluent-ffmpeg": "^2.1.2",
+    "node-media-server": "^2.6.1"
   }
 }

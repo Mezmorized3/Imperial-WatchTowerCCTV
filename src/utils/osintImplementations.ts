@@ -39,3 +39,18 @@ export {
 export {
   executeShieldAI
 } from './osintImplementations/securityTools';
+
+// Export the new advanced tools
+export {
+  executeRapidPayload,
+  executeHackingTool,
+  executeSecurityAdmin
+} from './osintImplementations/advancedTools';
+
+// Export FFmpeg-related tools
+export {
+  executeFFmpeg,
+  convertRtspToHls as ffmpegConvertRtspToHls,
+  recordStream as ffmpegRecordStream,
+  applyMotionDetection
+} from './ffmpeg/ffmpegService';

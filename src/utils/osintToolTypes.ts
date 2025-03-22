@@ -1,4 +1,3 @@
-
 /**
  * Types for OSINT tools and their parameters
  */
@@ -184,4 +183,44 @@ export interface ImperialShieldResult {
   responseTime?: number;
   shieldStatus?: 'active' | 'breached' | 'inactive';
   securityRating?: number;
+}
+
+// RapidPayload tool parameters
+export interface RapidPayloadParams {
+  payloadType: 'windows' | 'android' | 'linux' | 'macos' | 'web';
+  format?: string;
+  lhost?: string;
+  lport?: number;
+  encode?: boolean;
+  encryption?: string;
+  outputPath?: string;
+}
+
+// hackingtool parameters
+export interface HackingToolParams {
+  toolCategory: string;
+  tool?: string;
+  target?: string;
+  options?: Record<string, any>;
+}
+
+// FFmpeg parameters for video processing
+export interface FFmpegParams {
+  inputStream: string;
+  outputFormat?: string;
+  videoCodec?: string;
+  audioCodec?: string;
+  resolution?: string;
+  bitrate?: string;
+  framerate?: number;
+  filters?: string[];
+  outputPath?: string;
+}
+
+// Security-Admin parameters
+export interface SecurityAdminParams {
+  scanType: 'permissions' | 'users' | 'services' | 'full';
+  target?: string;
+  fixVulnerabilities?: boolean;
+  reportFormat?: 'json' | 'html' | 'text';
 }

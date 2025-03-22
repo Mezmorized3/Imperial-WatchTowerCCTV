@@ -22,7 +22,12 @@ export type {
   BotExploitsParams,
   CamerattackParams,
   BackHackParams,
-  ImperialOculusParams
+  ImperialOculusParams,
+  // New tool parameter types
+  RapidPayloadParams,
+  HackingToolParams,
+  FFmpegParams,
+  SecurityAdminParams
 } from './osintToolTypes';
 
 // Import function implementations from specific modules
@@ -42,7 +47,15 @@ import {
   executeBotExploits, 
   executeCamerattack, 
   executeBackHack,
-  executeImperialOculus
+  executeImperialOculus,
+  // New tools
+  executeRapidPayload,
+  executeHackingTool,
+  executeSecurityAdmin,
+  executeFFmpeg,
+  ffmpegConvertRtspToHls,
+  ffmpegRecordStream,
+  applyMotionDetection
 } from './osintImplementations';
 
 // Export the functions directly
@@ -62,7 +75,15 @@ export {
   executeBotExploits, 
   executeCamerattack, 
   executeBackHack,
-  executeImperialOculus
+  executeImperialOculus,
+  // New tools
+  executeRapidPayload,
+  executeHackingTool,
+  executeSecurityAdmin,
+  executeFFmpeg,
+  ffmpegConvertRtspToHls,
+  ffmpegRecordStream,
+  applyMotionDetection
 };
 
 // Export utility functions from other modules
