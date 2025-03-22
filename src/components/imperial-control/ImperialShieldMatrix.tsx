@@ -1,274 +1,242 @@
 
 import React, { useState, useEffect } from 'react';
-import { Progress } from '@/components/ui/progress';
-import { Shield, AlertTriangle, CheckCircle, Lock, Server } from 'lucide-react';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { useToast } from '@/hooks/use-toast';
+import { Progress } from '@/components/ui/progress';
+import { Shield, Lock, AlertTriangle, Settings, RefreshCw } from 'lucide-react';
+import { configureImperialShield, testImperialShieldConnection } from '@/utils/imperial/imperialShieldUtils';
+import { useToast } from '@/components/ui/use-toast';
 
-const ImperialShieldMatrix = () => {
-  const [securityScore, setSecurityScore] = useState(0);
-  const [threatLevel, setThreatLevel] = useState(0);
-  const [vulnerabilities, setVulnerabilities] = useState(0);
-  const [isLoading, setIsLoading] = useState(true);
-  const [lastUpdate, setLastUpdate] = useState('');
+export const ImperialShieldMatrix: React.FC = () => {
   const { toast } = useToast();
+  const [status, setStatus] = useState<'inactive' | 'active' | 'breached'>('inactive');
+  const [securityRating, setSecurityRating] = useState(0);
+  const [isInitializing, setIsInitializing] = useState(false);
+  const [initProgress, setInitProgress] = useState(0);
+  const [lastChecked, setLastChecked] = useState<Date | null>(null);
 
   useEffect(() => {
-    // Simulate loading security data
-    const loadData = async () => {
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      setSecurityScore(Math.floor(Math.random() * 30) + 65); // 65-95
-      setThreatLevel(Math.floor(Math.random() * 15) + 5); // 5-20
-      setVulnerabilities(Math.floor(Math.random() * 5) + 1); // 1-5
-      setLastUpdate(new Date().toLocaleString());
-      setIsLoading(false);
-    };
-    
-    loadData();
+    checkShieldStatus();
   }, []);
 
-  const refreshData = async () => {
-    setIsLoading(true);
+  const checkShieldStatus = async () => {
+    setIsInitializing(true);
+    setInitProgress(0);
+
+    // Simulate initialization
+    const interval = setInterval(() => {
+      setInitProgress(prev => {
+        if (prev >= 95) {
+          clearInterval(interval);
+          return 95;
+        }
+        return prev + 5;
+      });
+    }, 100);
+
+    try {
+      // In real implementation, this would check Imperial Shield Protocol status
+      const result = await testImperialShieldConnection('https://shield.example.com');
+      
+      setStatus(result.shieldStatus);
+      setSecurityRating(result.securityRating);
+      setLastChecked(new Date());
+      
+      if (result.success) {
+        toast({
+          title: 'Imperial Shield Active',
+          description: 'The shield matrix is operational.',
+        });
+      } else {
+        toast({
+          title: 'Imperial Shield Warning',
+          description: result.error || 'Shield status compromised.',
+          variant: 'destructive',
+        });
+      }
+    } catch (error) {
+      console.error('Error checking shield status:', error);
+      setStatus('inactive');
+      setSecurityRating(0);
+      
+      toast({
+        title: 'Imperial Shield Offline',
+        description: 'Unable to connect to the shield matrix.',
+        variant: 'destructive',
+      });
+    } finally {
+      clearInterval(interval);
+      setInitProgress(100);
+      setTimeout(() => setIsInitializing(false), 500);
+    }
+  };
+
+  const activateShield = async () => {
+    setIsInitializing(true);
+    setInitProgress(0);
     
-    toast({
-      title: "Refreshing Security Matrix",
-      description: "Scanning surveillance network for threats...",
-    });
+    // Simulate activation
+    const interval = setInterval(() => {
+      setInitProgress(prev => Math.min(prev + 2, 95));
+    }, 50);
     
-    // Simulate loading
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    // Update values
-    setSecurityScore(Math.floor(Math.random() * 30) + 65);
-    setThreatLevel(Math.floor(Math.random() * 15) + 5);
-    setVulnerabilities(Math.floor(Math.random() * 5) + 1);
-    setLastUpdate(new Date().toLocaleString());
-    setIsLoading(false);
-    
-    toast({
-      title: "Security Matrix Updated",
-      description: "Security assessment complete",
-    });
+    try {
+      // In real implementation, this would activate the Imperial Shield Protocol
+      const success = configureImperialShield(
+        true,                       // enabled
+        '9000',                     // emperorPort
+        '8080,443,8443',            // shieldPorts
+        '10.0.0.0/8,192.168.0.0/16', // trustedNetworks
+        Math.random().toString(36).substring(2) // Random cipher key
+      );
+      
+      if (success) {
+        setStatus('active');
+        setSecurityRating(85);
+        toast({
+          title: 'Imperial Shield Activated',
+          description: 'Shield matrix is now protecting your system.',
+        });
+      } else {
+        throw new Error('Failed to configure Imperial Shield');
+      }
+    } catch (error) {
+      console.error('Error activating shield:', error);
+      toast({
+        title: 'Activation Failed',
+        description: 'Failed to activate Imperial Shield matrix.',
+        variant: 'destructive',
+      });
+    } finally {
+      clearInterval(interval);
+      setInitProgress(100);
+      setTimeout(() => setIsInitializing(false), 500);
+    }
+  };
+
+  const getStatusColor = () => {
+    switch (status) {
+      case 'active': return 'text-green-500';
+      case 'breached': return 'text-red-500';
+      default: return 'text-gray-500';
+    }
+  };
+
+  const getSecurityRatingColor = () => {
+    if (securityRating >= 75) return 'text-green-500';
+    if (securityRating >= 50) return 'text-yellow-500';
+    if (securityRating >= 25) return 'text-orange-500';
+    return 'text-red-500';
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div>
-          <h2 className="text-xl font-bold flex items-center">
-            <Shield className="mr-2 text-red-500" />
-            Imperial Shield Matrix
-          </h2>
-          <p className="text-gray-400">
-            Real-time security status of your surveillance systems
-          </p>
+    <Card className="border-2 border-gray-300 dark:border-gray-700">
+      <CardHeader>
+        <CardTitle className="flex items-center">
+          <Shield className={`mr-2 h-6 w-6 ${getStatusColor()}`} />
+          Imperial Shield Matrix
+        </CardTitle>
+        <CardDescription>
+          Advanced security protocol for the Imperial network
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-6">
+          <div className="flex flex-col md:flex-row justify-between items-center gap-4 p-4 rounded-lg border border-gray-200 dark:border-gray-800">
+            <div className="flex items-center">
+              {status === 'active' ? (
+                <Lock className="h-8 w-8 text-green-500 mr-3" />
+              ) : status === 'breached' ? (
+                <AlertTriangle className="h-8 w-8 text-red-500 mr-3" />
+              ) : (
+                <Shield className="h-8 w-8 text-gray-400 mr-3" />
+              )}
+              <div>
+                <h3 className="text-lg font-semibold">Shield Status: <span className={getStatusColor()}>
+                  {status === 'active' ? 'ACTIVE' : status === 'breached' ? 'BREACHED' : 'INACTIVE'}
+                </span></h3>
+                <p className="text-sm text-gray-500">
+                  {lastChecked ? `Last checked: ${lastChecked.toLocaleTimeString()}` : 'Not checked yet'}
+                </p>
+              </div>
+            </div>
+            <div className="flex space-x-2">
+              <Button
+                variant={status === 'active' ? 'outline' : 'default'}
+                onClick={status === 'active' ? checkShieldStatus : activateShield}
+                disabled={isInitializing}
+              >
+                {status === 'active' ? 'Refresh Status' : 'Activate Shield'}
+              </Button>
+              <Button variant="outline" disabled={isInitializing}>
+                <Settings className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+
+          {isInitializing && (
+            <div>
+              <div className="flex justify-between text-sm mb-1">
+                <span>
+                  {status === 'inactive' ? 'Initializing Imperial Shield...' : 'Updating shield status...'}
+                </span>
+                <span>{initProgress}%</span>
+              </div>
+              <Progress value={initProgress} className="h-2" />
+            </div>
+          )}
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="p-4 rounded-lg border border-gray-200 dark:border-gray-800">
+              <h3 className="text-sm font-medium mb-2">Security Rating</h3>
+              <div className="flex items-center">
+                <span className={`text-2xl font-bold mr-2 ${getSecurityRatingColor()}`}>
+                  {securityRating}/100
+                </span>
+                <div className="flex-1 mx-2">
+                  <Progress value={securityRating} className="h-2" />
+                </div>
+              </div>
+              <p className="text-sm text-gray-500 mt-2">
+                {securityRating >= 75 ? 'Excellent protection' :
+                 securityRating >= 50 ? 'Good protection' :
+                 securityRating >= 25 ? 'Moderate vulnerabilities' :
+                 'Critical vulnerabilities'}
+              </p>
+            </div>
+
+            <div className="p-4 rounded-lg border border-gray-200 dark:border-gray-800">
+              <h3 className="text-sm font-medium mb-2">Shield Components</h3>
+              <ul className="space-y-2 text-sm">
+                <li className="flex justify-between">
+                  <span>Quantum Firewall</span>
+                  <span className="font-semibold text-green-500">Active</span>
+                </li>
+                <li className="flex justify-between">
+                  <span>Neural Intrusion Detection</span>
+                  <span className="font-semibold text-green-500">Active</span>
+                </li>
+                <li className="flex justify-between">
+                  <span>Temporal Shield Generator</span>
+                  <span className="font-semibold text-yellow-500">Partial</span>
+                </li>
+                <li className="flex justify-between">
+                  <span>Blood Oath Authenticator</span>
+                  <span className="font-semibold text-gray-500">Inactive</span>
+                </li>
+              </ul>
+            </div>
+          </div>
         </div>
-        
-        <Button 
-          onClick={refreshData} 
-          disabled={isLoading}
-          variant="outline"
-        >
-          {isLoading ? "Updating..." : "Refresh Status"}
+      </CardContent>
+      <CardFooter className="justify-between border-t border-gray-200 dark:border-gray-800 pt-4">
+        <p className="text-sm text-gray-500">Imperial Shield v1.0</p>
+        <Button variant="outline" size="sm" className="flex items-center" onClick={checkShieldStatus}>
+          <RefreshCw className="h-4 w-4 mr-2" />
+          Refresh Status
         </Button>
-      </div>
-      
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-scanner-dark p-4 rounded-md border border-gray-700">
-          <div className="flex justify-between items-center mb-2">
-            <h3 className="text-lg font-medium">Security Score</h3>
-            <Shield className="h-5 w-5 text-blue-500" />
-          </div>
-          
-          <div className="space-y-2">
-            <div className="flex justify-between text-sm">
-              <span>Overall Security</span>
-              <span className={`${
-                securityScore > 80 ? 'text-green-500' :
-                securityScore > 60 ? 'text-yellow-500' :
-                'text-red-500'
-              }`}>
-                {securityScore}%
-              </span>
-            </div>
-            
-            <Progress 
-              value={securityScore} 
-              className="h-2"
-              indicatorClassName={`${
-                securityScore > 80 ? 'bg-green-500' :
-                securityScore > 60 ? 'bg-yellow-500' :
-                'bg-red-500'
-              }`} 
-            />
-            
-            <p className="text-xs text-gray-400 mt-2">
-              {securityScore > 80 ? 'Good security posture with minimal issues' :
-               securityScore > 60 ? 'Moderate security with some vulnerabilities' :
-               'Poor security posture - immediate action recommended'}
-            </p>
-          </div>
-        </div>
-        
-        <div className="bg-scanner-dark p-4 rounded-md border border-gray-700">
-          <div className="flex justify-between items-center mb-2">
-            <h3 className="text-lg font-medium">Threat Level</h3>
-            <AlertTriangle className="h-5 w-5 text-yellow-500" />
-          </div>
-          
-          <div className="space-y-2">
-            <div className="flex justify-between text-sm">
-              <span>Current Threats</span>
-              <span className={`${
-                threatLevel < 10 ? 'text-green-500' :
-                threatLevel < 20 ? 'text-yellow-500' :
-                'text-red-500'
-              }`}>
-                {threatLevel}%
-              </span>
-            </div>
-            
-            <Progress 
-              value={threatLevel} 
-              className="h-2"
-              indicatorClassName={`${
-                threatLevel < 10 ? 'bg-green-500' :
-                threatLevel < 20 ? 'bg-yellow-500' :
-                'bg-red-500'
-              }`} 
-            />
-            
-            <p className="text-xs text-gray-400 mt-2">
-              {threatLevel < 10 ? 'Minimal active threats detected' :
-               threatLevel < 20 ? 'Moderate threat activity detected' :
-               'High threat activity - action required'}
-            </p>
-          </div>
-        </div>
-        
-        <div className="bg-scanner-dark p-4 rounded-md border border-gray-700">
-          <div className="flex justify-between items-center mb-2">
-            <h3 className="text-lg font-medium">Vulnerabilities</h3>
-            <Lock className="h-5 w-5 text-red-500" />
-          </div>
-          
-          <div className="space-y-4">
-            <div className="text-center">
-              <span className="text-3xl font-bold">{vulnerabilities}</span>
-              <span className="text-sm ml-1">detected</span>
-            </div>
-            
-            <div className="grid grid-cols-2 gap-2 text-xs">
-              <div className="flex items-center">
-                <div className={`w-2 h-2 rounded-full mr-1 ${vulnerabilities > 0 ? 'bg-red-500' : 'bg-gray-500'}`}></div>
-                <span>Critical</span>
-              </div>
-              
-              <div className="flex items-center">
-                <div className={`w-2 h-2 rounded-full mr-1 ${vulnerabilities > 1 ? 'bg-orange-500' : 'bg-gray-500'}`}></div>
-                <span>High</span>
-              </div>
-              
-              <div className="flex items-center">
-                <div className={`w-2 h-2 rounded-full mr-1 ${vulnerabilities > 2 ? 'bg-yellow-500' : 'bg-gray-500'}`}></div>
-                <span>Medium</span>
-              </div>
-              
-              <div className="flex items-center">
-                <div className={`w-2 h-2 rounded-full mr-1 ${vulnerabilities > 3 ? 'bg-blue-500' : 'bg-gray-500'}`}></div>
-                <span>Low</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-      
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-scanner-dark p-4 rounded-md border border-gray-700">
-          <h3 className="text-lg font-medium mb-4">Security Alerts</h3>
-          
-          <div className="space-y-3 max-h-60 overflow-y-auto">
-            {/* Alert items */}
-            <div className="flex items-start space-x-3 p-2 border-b border-gray-700">
-              <AlertTriangle className="h-5 w-5 text-red-500 mt-0.5" />
-              <div>
-                <p className="font-medium">Default Credentials Detected</p>
-                <p className="text-xs text-gray-400">Multiple cameras using default credentials</p>
-                <p className="text-xs text-gray-500 mt-1">10 minutes ago</p>
-              </div>
-            </div>
-            
-            <div className="flex items-start space-x-3 p-2 border-b border-gray-700">
-              <AlertTriangle className="h-5 w-5 text-yellow-500 mt-0.5" />
-              <div>
-                <p className="font-medium">Firmware Updates Available</p>
-                <p className="text-xs text-gray-400">3 cameras have outdated firmware</p>
-                <p className="text-xs text-gray-500 mt-1">2 hours ago</p>
-              </div>
-            </div>
-            
-            <div className="flex items-start space-x-3 p-2">
-              <AlertTriangle className="h-5 w-5 text-blue-500 mt-0.5" />
-              <div>
-                <p className="font-medium">Network Scan Detected</p>
-                <p className="text-xs text-gray-400">External port scanning attempt</p>
-                <p className="text-xs text-gray-500 mt-1">Yesterday</p>
-              </div>
-            </div>
-          </div>
-        </div>
-        
-        <div className="bg-scanner-dark p-4 rounded-md border border-gray-700">
-          <h3 className="text-lg font-medium mb-4">System Status</h3>
-          
-          <div className="space-y-3">
-            <div className="flex justify-between items-center">
-              <div className="flex items-center">
-                <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
-                <span>Firewall</span>
-              </div>
-              <span className="text-xs text-green-500">Active</span>
-            </div>
-            
-            <div className="flex justify-between items-center">
-              <div className="flex items-center">
-                <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
-                <span>Intrusion Detection</span>
-              </div>
-              <span className="text-xs text-green-500">Active</span>
-            </div>
-            
-            <div className="flex justify-between items-center">
-              <div className="flex items-center">
-                <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
-                <span>VPN</span>
-              </div>
-              <span className="text-xs text-green-500">Active</span>
-            </div>
-            
-            <div className="flex justify-between items-center">
-              <div className="flex items-center">
-                <AlertTriangle className="h-4 w-4 text-yellow-500 mr-2" />
-                <span>Threat Intelligence Feed</span>
-              </div>
-              <span className="text-xs text-yellow-500">Updating</span>
-            </div>
-            
-            <div className="flex justify-between items-center">
-              <div className="flex items-center">
-                <Server className="h-4 w-4 text-blue-500 mr-2" />
-                <span>Security Database</span>
-              </div>
-              <span className="text-xs text-blue-500">Synced</span>
-            </div>
-          </div>
-          
-          <p className="text-xs text-gray-400 mt-4">
-            Last system scan: {lastUpdate}
-          </p>
-        </div>
-      </div>
-    </div>
+      </CardFooter>
+    </Card>
   );
 };
 

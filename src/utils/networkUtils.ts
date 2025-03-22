@@ -1,3 +1,4 @@
+
 /**
  * Network utilities for OSINT and security tools
  */
@@ -163,4 +164,86 @@ export const analyzeWebsite = async (url: string): Promise<any> => {
   };
   
   return results;
+};
+
+/**
+ * Fetch WHOIS data for a domain or IP
+ * @param target Domain or IP to query
+ * @returns Promise resolving to WHOIS data
+ */
+export const fetchWhoisData = async (target: string): Promise<any> => {
+  console.log(`Fetching WHOIS data for: ${target}`);
+  
+  // In a real implementation, this would call a WHOIS API service
+  // For integration with external tools, this could use a local whois command
+  // Example: exec('whois ' + target)
+  
+  // Prepare for real-world integration
+  try {
+    // Simulate delay for API call
+    await simulateNetworkDelay(1500);
+    
+    // This would be replaced with actual API call in production
+    // Integration point for real WHOIS lookup from external APIs
+    return {
+      domain: target,
+      registrar: 'Example Registrar, LLC',
+      registeredOn: '2020-01-01',
+      expiresOn: '2025-01-01',
+      status: ['clientTransferProhibited'],
+      nameservers: ['ns1.example.com', 'ns2.example.com'],
+      registrant: {
+        organization: 'Example Organization',
+        country: 'US'
+      }
+    };
+  } catch (error) {
+    console.error(`Error fetching WHOIS data: ${error}`);
+    throw error;
+  }
+};
+
+/**
+ * Fetch DNS records for a domain
+ * @param domain Domain to query
+ * @returns Promise resolving to DNS records
+ */
+export const fetchDnsRecords = async (domain: string): Promise<any> => {
+  console.log(`Fetching DNS records for: ${domain}`);
+  
+  // In a real implementation, this would use DNS resolution API or command
+  // This is an integration point for real DNS tools
+  
+  try {
+    // Simulate delay for API call
+    await simulateNetworkDelay(1000);
+    
+    // This would be replaced with actual DNS lookup in production
+    // Integration point for real DNS lookup from external APIs or local dns lookup
+    return {
+      a: ['192.0.2.1', '192.0.2.2'],
+      aaaa: ['2001:db8::1'],
+      mx: [
+        { priority: 10, exchange: 'mail.example.com' },
+        { priority: 20, exchange: 'mail2.example.com' }
+      ],
+      ns: ['ns1.example.com', 'ns2.example.com'],
+      txt: [
+        'v=spf1 include:_spf.example.com ~all',
+        'google-site-verification=example'
+      ],
+      soa: {
+        mname: 'ns1.example.com',
+        rname: 'hostmaster.example.com',
+        serial: 1234567890,
+        refresh: 3600,
+        retry: 600,
+        expire: 604800,
+        minimum: 86400
+      }
+    };
+  } catch (error) {
+    console.error(`Error fetching DNS records: ${error}`);
+    throw error;
+  }
 };

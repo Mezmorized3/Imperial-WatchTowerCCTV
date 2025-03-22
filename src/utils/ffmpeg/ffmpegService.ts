@@ -1,217 +1,214 @@
 
 /**
- * FFmpeg service for video stream processing
- * This service provides integration with FFmpeg for video manipulation
+ * FFmpeg Service
+ * Provides integration with FFmpeg for media processing tasks
  */
 
-import { toast } from "sonner";
-import { FFmpegParams, ToolResult } from "../osintToolTypes";
-
-// HLS (HTTP Live Streaming) settings
-export const HLS_SEGMENT_TIME = 2; // 2 seconds per segment
-export const HLS_LIST_SIZE = 6; // Number of segments to keep in the playlist
+import { simulateNetworkDelay } from '../networkUtils';
+import { FFmpegParams, ToolResult } from '../osintToolTypes';
+import { executeFFmpegReal } from '../osintUtilsConnector';
+import { checkToolAvailability } from '../github/externalToolsConnector';
 
 /**
- * Execute FFmpeg command on a video stream
- * In a real implementation, this would call a backend service
+ * Execute FFmpeg with given parameters
  */
 export const executeFFmpeg = async (params: FFmpegParams): Promise<ToolResult> => {
+  // Check if real FFmpeg is available
+  const isFFmpegAvailable = await checkToolAvailability('ffmpeg');
+  
+  if (isFFmpegAvailable) {
+    try {
+      // Use real FFmpeg implementation
+      return await executeFFmpegReal(params);
+    } catch (error) {
+      console.error('Error executing FFmpeg:', error);
+      return {
+        success: false,
+        data: {
+          error: error instanceof Error ? error.message : 'Unknown error executing FFmpeg'
+        },
+        simulatedData: false
+      };
+    }
+  }
+  
+  // Fall back to mock implementation
+  console.log('FFmpeg not available, using mock implementation');
+  
   try {
-    console.log('Executing FFmpeg with params:', params);
+    // Validate required parameters
+    if (!params.input && !params.inputStream) {
+      return {
+        success: false,
+        error: 'Input file or stream is required',
+        data: {
+          error: 'Input file or stream is required'
+        },
+        simulatedData: true
+      };
+    }
     
-    // Simulate processing time
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    // Build simulated FFmpeg command
+    let command = 'ffmpeg -i ' + (params.inputStream || params.input);
+    
+    // Add codecs if specified
+    if (params.videoCodec) {
+      command += ' -c:v ' + params.videoCodec;
+    }
+    
+    if (params.audioCodec) {
+      command += ' -c:a ' + params.audioCodec;
+    }
+    
+    // Add resolution if specified
+    if (params.resolution) {
+      command += ' -s ' + params.resolution;
+    }
+    
+    // Add bitrate if specified
+    if (params.bitrate) {
+      command += ' -b:v ' + params.bitrate;
+    }
+    
+    // Add framerate if specified
+    if (params.framerate) {
+      command += ' -r ' + params.framerate;
+    }
+    
+    // Add filters if specified
+    if (params.filters && params.filters.length > 0) {
+      command += ' -vf ' + params.filters.join(',');
+    }
+    
+    // Add output file
+    const outputPath = params.outputPath || params.output || 'output.' + (params.outputFormat || 'mp4');
+    command += ' ' + outputPath;
+    
+    console.log('Simulating FFmpeg command:', command);
+    await simulateNetworkDelay(3000);
     
     return {
       success: true,
       data: {
-        command: buildFFmpegCommand(params),
-        inputStream: params.inputStream,
-        outputFormat: params.outputFormat || 'derived from input',
-        processingStarted: new Date().toISOString(),
-        estimated_duration: (Math.random() * 60 + 30).toFixed(0) + 's',
-        status: 'processing'
+        command,
+        outputFile: outputPath,
+        duration: '00:05:23',
+        size: '12.4MB',
+        bitrate: params.bitrate || '3.2Mbps',
+        codec: params.videoCodec || 'h264',
+        resolution: params.resolution || '1280x720'
       },
       simulatedData: true
     };
   } catch (error) {
-    console.error('FFmpeg execution error:', error);
-    toast.error('Failed to process video stream');
+    console.error('Error in FFmpeg mock:', error);
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Unknown error processing video stream',
+      data: {
+        error: error instanceof Error ? error.message : 'Unknown error in FFmpeg mock'
+      },
       simulatedData: true
     };
   }
 };
 
 /**
- * Build an FFmpeg command string based on parameters
+ * Convert RTSP stream to HLS format
  */
-export const buildFFmpegCommand = (params: FFmpegParams): string => {
-  // Start with the basic command
-  let command = `ffmpeg -i "${params.inputStream}"`;
-  
-  // Add video codec if specified
-  if (params.videoCodec) {
-    command += ` -c:v ${params.videoCodec}`;
-  }
-  
-  // Add audio codec if specified
-  if (params.audioCodec) {
-    command += ` -c:a ${params.audioCodec}`;
-  }
-  
-  // Add resolution if specified
-  if (params.resolution) {
-    command += ` -s ${params.resolution}`;
-  }
-  
-  // Add bitrate if specified
-  if (params.bitrate) {
-    command += ` -b:v ${params.bitrate}`;
-  }
-  
-  // Add framerate if specified
-  if (params.framerate) {
-    command += ` -r ${params.framerate}`;
-  }
-  
-  // Add filters if specified
-  if (params.filters && params.filters.length > 0) {
-    command += ` -vf "${params.filters.join(',')}"`;
-  }
-  
-  // Add output file/path
-  command += ` "${params.outputPath || 'output.' + (params.outputFormat || 'mp4')}"`;
-  
-  return command;
-};
-
-/**
- * Convert RTSP stream to HLS for browser viewing
- */
-export const convertRtspToHls = async (rtspUrl: string, outputDir: string = '/tmp/hls'): Promise<ToolResult> => {
+export const ffmpegConvertRtspToHls = async (
+  rtspUrl: string,
+  outputPath: string,
+  segmentDuration: number = 4
+): Promise<ToolResult> => {
   try {
-    console.log('Converting RTSP to HLS:', rtspUrl);
-    
     const params: FFmpegParams = {
-      inputStream: rtspUrl,
+      input: rtspUrl,
+      output: outputPath,
       videoCodec: 'libx264',
       audioCodec: 'aac',
-      bitrate: '800k',
-      outputPath: `${outputDir}/stream.m3u8`
+      options: {
+        hls_time: segmentDuration,
+        hls_list_size: 10,
+        hls_flags: 'delete_segments'
+      }
     };
     
-    // Build HLS specific FFmpeg command
-    const hlsCommand = `ffmpeg -i "${rtspUrl}" -c:v libx264 -c:a aac -b:v 800k ` +
-      `-hls_time ${HLS_SEGMENT_TIME} -hls_list_size ${HLS_LIST_SIZE} ` +
-      `-hls_flags delete_segments -hls_segment_filename "${outputDir}/segment_%03d.ts" ` +
-      `"${outputDir}/stream.m3u8"`;
-    
-    console.log('Generated HLS command:', hlsCommand);
-    
-    // Simulate processing time
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
-    return {
-      success: true,
-      data: {
-        command: hlsCommand,
-        inputStream: rtspUrl,
-        outputFormat: 'HLS',
-        hlsPlaylist: `${outputDir}/stream.m3u8`,
-        segmentPattern: `${outputDir}/segment_%03d.ts`,
-        processingStarted: new Date().toISOString(),
-        status: 'streaming'
-      },
-      simulatedData: true
-    };
+    return await executeFFmpeg(params);
   } catch (error) {
-    console.error('RTSP to HLS conversion error:', error);
-    toast.error('Failed to convert RTSP stream to HLS');
+    console.error('Error converting RTSP to HLS:', error);
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Unknown error converting RTSP to HLS',
+      data: {
+        error: error instanceof Error ? error.message : 'Unknown error converting RTSP to HLS'
+      },
       simulatedData: true
     };
   }
 };
 
 /**
- * Record a stream to a file
+ * Record a video stream for a specified duration
  */
-export const recordStream = async (streamUrl: string, duration: number = 60, outputPath?: string): Promise<ToolResult> => {
+export const ffmpegRecordStream = async (
+  streamUrl: string,
+  outputPath: string,
+  duration: number = 60
+): Promise<ToolResult> => {
   try {
-    console.log('Recording stream:', streamUrl);
-    
-    const output = outputPath || `/tmp/recording_${Date.now()}.mp4`;
-    
-    // Build recording command
-    const recordCommand = `ffmpeg -i "${streamUrl}" -c:v copy -c:a copy -t ${duration} "${output}"`;
-    
-    console.log('Generated recording command:', recordCommand);
-    
-    // Simulate processing time
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    return {
-      success: true,
-      data: {
-        command: recordCommand,
-        inputStream: streamUrl,
-        outputPath: output,
-        duration: `${duration}s`,
-        processingStarted: new Date().toISOString(),
-        status: 'recording',
-        estimatedCompletionTime: new Date(Date.now() + duration * 1000).toISOString()
-      },
-      simulatedData: true
+    const params: FFmpegParams = {
+      input: streamUrl,
+      output: outputPath,
+      videoCodec: 'copy',
+      audioCodec: 'copy',
+      options: {
+        t: duration
+      }
     };
+    
+    return await executeFFmpeg(params);
   } catch (error) {
-    console.error('Stream recording error:', error);
-    toast.error('Failed to record stream');
+    console.error('Error recording stream:', error);
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Unknown error recording stream',
+      data: {
+        error: error instanceof Error ? error.message : 'Unknown error recording stream'
+      },
       simulatedData: true
     };
   }
 };
 
 /**
- * Apply motion detection to a stream
+ * Apply motion detection filter to video
  */
-export const applyMotionDetection = async (streamUrl: string, sensitivity: number = 0.5): Promise<ToolResult> => {
+export const applyMotionDetection = async (
+  inputPath: string,
+  outputPath: string,
+  sensitivity: number = 5
+): Promise<ToolResult> => {
   try {
-    console.log('Applying motion detection to stream:', streamUrl);
+    // Motion detection filter string
+    const motionFilter = `select='gt(scene,${sensitivity/100})',showinfo`;
     
-    // Build motion detection command using FFmpeg
-    const motionCommand = `ffmpeg -i "${streamUrl}" -vf "select=gt(scene\\,${sensitivity}),metadata=print" -f null -`;
-    
-    console.log('Generated motion detection command:', motionCommand);
-    
-    // Simulate processing time
-    await new Promise(resolve => setTimeout(resolve, 1200));
-    
-    return {
-      success: true,
-      data: {
-        command: motionCommand,
-        inputStream: streamUrl,
-        sensitivity,
-        processingStarted: new Date().toISOString(),
-        status: 'detecting',
-        motionDetected: Math.random() > 0.5 // Simulated result
-      },
-      simulatedData: true
+    const params: FFmpegParams = {
+      input: inputPath,
+      output: outputPath,
+      videoCodec: 'libx264',
+      filters: [motionFilter],
+      options: {
+        an: null, // No audio
+        vsync: 'vfr' // Variable framerate
+      }
     };
+    
+    return await executeFFmpeg(params);
   } catch (error) {
-    console.error('Motion detection error:', error);
-    toast.error('Failed to apply motion detection');
+    console.error('Error applying motion detection:', error);
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Unknown error in motion detection',
+      data: {
+        error: error instanceof Error ? error.message : 'Unknown error applying motion detection'
+      },
       simulatedData: true
     };
   }

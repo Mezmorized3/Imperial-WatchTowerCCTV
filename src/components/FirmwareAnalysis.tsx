@@ -1,231 +1,236 @@
 
 import React, { useState } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Progress } from '@/components/ui/progress';
-import { Lock, FileWarning, CheckCircle, XCircle } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
-import { analyzeFirmware } from '@/utils/threat/firmwareAnalyzer';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Badge } from '@/components/ui/badge';
+import { AlertTriangle, CheckCircle, Shield, Download, Upload, Search } from 'lucide-react';
+import { analyzeFirmware } from '@/utils/threatIntelligence';
+import { useToast } from '@/components/ui/use-toast';
 
-const FirmwareAnalysis = () => {
+interface FirmwareAnalysisProps {
+  // Add any props if needed
+}
+
+export const FirmwareAnalysis: React.FC<FirmwareAnalysisProps> = () => {
+  const { toast } = useToast();
   const [manufacturer, setManufacturer] = useState('');
   const [model, setModel] = useState('');
   const [firmwareVersion, setFirmwareVersion] = useState('');
-  const [analyzing, setAnalyzing] = useState(false);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [progress, setProgress] = useState(0);
-  const [analysisResult, setAnalysisResult] = useState<any>(null);
-  const { toast } = useToast();
+  const [analyzeResult, setAnalyzeResult] = useState<any>(null);
 
-  const commonManufacturers = [
+  const manufacturers = [
     'Hikvision', 'Dahua', 'Axis', 'Bosch', 'Hanwha', 
-    'Uniview', 'Vivotek', 'Panasonic', 'Sony', 'IDIS'
+    'Uniview', 'Vivotek', 'IDIS', 'Panasonic', 'Sony'
   ];
 
   const handleAnalyze = async () => {
     if (!manufacturer || !model || !firmwareVersion) {
       toast({
-        title: "Missing Information",
-        description: "Please provide manufacturer, model, and firmware version",
-        variant: "destructive"
+        title: 'Missing Information',
+        description: 'Please provide manufacturer, model, and firmware version.',
+        variant: 'destructive',
       });
       return;
     }
 
-    setAnalyzing(true);
+    setIsAnalyzing(true);
     setProgress(0);
-    setAnalysisResult(null);
-
-    toast({
-      title: "Analysis Started",
-      description: "Analyzing firmware vulnerabilities and security..."
-    });
+    
+    // Simulate analysis progress
+    const interval = setInterval(() => {
+      setProgress(prev => {
+        if (prev >= 95) {
+          clearInterval(interval);
+          return 95;
+        }
+        return prev + 5;
+      });
+    }, 150);
 
     try {
-      // Simulate progress
-      const progressInterval = setInterval(() => {
-        setProgress(prev => {
-          if (prev >= 90) {
-            clearInterval(progressInterval);
-            return 90;
-          }
-          return prev + 5;
-        });
-      }, 200);
-
-      // In a real implementation, this would use one of the GitHub tools
-      // For now, we'll use our utility that will be replaced with real implementation
       const result = await analyzeFirmware(manufacturer, model, firmwareVersion);
-      
-      clearInterval(progressInterval);
-      setProgress(100);
-      setAnalysisResult(result);
-      
+      setAnalyzeResult(result);
       toast({
-        title: "Analysis Complete",
-        description: result.outdated 
-          ? `Firmware is outdated with ${result.knownVulnerabilities.length} vulnerabilities found` 
-          : "Firmware analysis complete"
+        title: 'Analysis Complete',
+        description: 'Firmware analysis completed successfully.',
       });
     } catch (error) {
+      console.error('Error analyzing firmware:', error);
       toast({
-        title: "Analysis Failed",
-        description: error instanceof Error ? error.message : "Unknown error occurred",
-        variant: "destructive"
+        title: 'Analysis Failed',
+        description: 'Failed to analyze firmware. Please try again.',
+        variant: 'destructive',
       });
     } finally {
-      setAnalyzing(false);
+      clearInterval(interval);
+      setProgress(100);
+      setTimeout(() => setIsAnalyzing(false), 500);
     }
   };
 
+  const getSeverityColor = (score: number) => {
+    if (score >= 75) return 'bg-green-500';
+    if (score >= 50) return 'bg-yellow-500';
+    if (score >= 25) return 'bg-orange-500';
+    return 'bg-red-500';
+  };
+
   return (
-    <Card className="bg-scanner-dark-alt border-gray-700">
-      <CardContent className="pt-6">
-        <div className="space-y-6">
-          <h2 className="text-xl font-bold flex items-center">
-            <Lock className="mr-2 text-blue-500" />
-            Firmware Analysis
-          </h2>
-          <p className="text-gray-400">
+    <div className="grid gap-6">
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center text-xl">
+            <Shield className="mr-2 h-6 w-6" />
+            Firmware Analysis Tool
+          </CardTitle>
+          <CardDescription>
             Analyze camera firmware for vulnerabilities and security issues
-          </p>
-          
-          <div className="space-y-4">
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-4">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <label className="text-sm text-gray-400 mb-1 block">Manufacturer</label>
-                <Select onValueChange={(value) => setManufacturer(value)}>
-                  <SelectTrigger className="bg-scanner-dark border-gray-700">
-                    <SelectValue placeholder="Select manufacturer" />
+                <label className="text-sm font-medium mb-1 block">Manufacturer</label>
+                <Select 
+                  value={manufacturer} 
+                  onValueChange={setManufacturer}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select Manufacturer" />
                   </SelectTrigger>
                   <SelectContent>
-                    {commonManufacturers.map((m) => (
+                    {manufacturers.map(m => (
                       <SelectItem key={m} value={m}>{m}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
-              
               <div>
-                <label className="text-sm text-gray-400 mb-1 block">Model</label>
+                <label className="text-sm font-medium mb-1 block">Model</label>
                 <Input
-                  placeholder="Camera model"
+                  placeholder="e.g. DS-2CD2142FWD-I"
                   value={model}
                   onChange={(e) => setModel(e.target.value)}
-                  className="bg-scanner-dark border-gray-700"
                 />
               </div>
-              
               <div>
-                <label className="text-sm text-gray-400 mb-1 block">Firmware Version</label>
+                <label className="text-sm font-medium mb-1 block">Firmware Version</label>
                 <Input
-                  placeholder="e.g. 1.2.3"
+                  placeholder="e.g. 5.4.5"
                   value={firmwareVersion}
                   onChange={(e) => setFirmwareVersion(e.target.value)}
-                  className="bg-scanner-dark border-gray-700"
                 />
               </div>
             </div>
-            
-            <Button 
-              onClick={handleAnalyze} 
-              disabled={analyzing}
-              className="w-full"
-            >
-              {analyzing ? "Analyzing..." : "Analyze Firmware"}
-            </Button>
-          </div>
-          
-          {analyzing && (
-            <div className="space-y-2">
-              <div className="flex justify-between text-sm">
-                <span>Analyzing firmware...</span>
-                <span>{progress}%</span>
+
+            {isAnalyzing && (
+              <div className="my-4">
+                <div className="flex justify-between text-sm mb-1">
+                  <span>Analyzing firmware...</span>
+                  <span>{progress}%</span>
+                </div>
+                <Progress value={progress} className="h-2" />
               </div>
-              <Progress value={progress} className="w-full" />
+            )}
+
+            <div className="flex flex-col md:flex-row space-y-2 md:space-y-0 md:space-x-2">
+              <Button onClick={handleAnalyze} disabled={isAnalyzing} className="flex-1">
+                <Search className="mr-2 h-4 w-4" />
+                Analyze Firmware
+              </Button>
+              <Button variant="outline" disabled={isAnalyzing} className="flex-1">
+                <Upload className="mr-2 h-4 w-4" />
+                Upload Firmware File
+              </Button>
             </div>
-          )}
-          
-          {analysisResult && (
-            <div className="space-y-4 p-4 bg-scanner-dark rounded-md border border-gray-700">
-              <div className="flex justify-between items-start">
-                <h3 className="text-lg font-semibold">Analysis Results</h3>
-                <div className={`flex items-center ${
-                  analysisResult.outdated ? 'text-red-500' : 'text-green-500'
-                }`}>
-                  {analysisResult.outdated ? (
-                    <>
-                      <XCircle className="h-5 w-5 mr-1" />
-                      <span>Outdated</span>
-                    </>
-                  ) : (
-                    <>
-                      <CheckCircle className="h-5 w-5 mr-1" />
-                      <span>Current</span>
-                    </>
+          </div>
+        </CardContent>
+      </Card>
+
+      {analyzeResult && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              {analyzeResult.outdated ? (
+                <AlertTriangle className="mr-2 h-5 w-5 text-amber-500" />
+              ) : (
+                <CheckCircle className="mr-2 h-5 w-5 text-green-500" />
+              )}
+              Firmware Analysis Results
+            </CardTitle>
+            <CardDescription>
+              {manufacturer} {model} - Version {firmwareVersion}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-6">
+              <div>
+                <h3 className="text-lg font-medium mb-2">Security Score</h3>
+                <div className="flex items-center mb-2">
+                  <span className="text-2xl font-bold mr-2">{analyzeResult.securityScore}/100</span>
+                  <div className="flex-1 mx-2">
+                    <Progress 
+                      value={analyzeResult.securityScore} 
+                      className="h-2.5"
+                    />
+                  </div>
+                </div>
+                <div className="flex space-x-1">
+                  {analyzeResult.outdated && (
+                    <Badge variant="destructive">Outdated</Badge>
+                  )}
+                  {analyzeResult.knownVulnerabilities.length > 0 && (
+                    <Badge variant="destructive">{analyzeResult.knownVulnerabilities.length} Vulnerabilities</Badge>
+                  )}
+                  {analyzeResult.outdated && analyzeResult.recommendedVersion && (
+                    <Badge variant="outline">Recommended: v{analyzeResult.recommendedVersion}</Badge>
                   )}
                 </div>
               </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+              {analyzeResult.knownVulnerabilities.length > 0 && (
                 <div>
-                  <p className="text-sm text-gray-400">Security Score</p>
-                  <div className="flex items-center">
-                    <Progress 
-                      value={analysisResult.securityScore} 
-                      className="w-full mr-2"
-                      indicatorClassName={`${
-                        analysisResult.securityScore > 70 ? 'bg-green-500' :
-                        analysisResult.securityScore > 40 ? 'bg-yellow-500' : 'bg-red-500'
-                      }`}
-                    />
-                    <span className="text-sm">{analysisResult.securityScore}%</span>
-                  </div>
-                </div>
-                
-                <div>
-                  <p className="text-sm text-gray-400">Last Update</p>
-                  <p>{new Date(analysisResult.lastUpdate).toLocaleDateString()}</p>
-                </div>
-              </div>
-              
-              {analysisResult.outdated && (
-                <div>
-                  <p className="text-sm text-gray-400">Recommended Version</p>
-                  <p className="text-green-500">{analysisResult.recommendedVersion}</p>
-                </div>
-              )}
-              
-              {analysisResult.knownVulnerabilities && analysisResult.knownVulnerabilities.length > 0 && (
-                <div>
-                  <p className="text-sm text-gray-400">Known Vulnerabilities</p>
-                  <div className="space-y-1 mt-1">
-                    {analysisResult.knownVulnerabilities.map((vuln: string, index: number) => (
-                      <div key={index} className="flex items-center">
-                        <FileWarning className="h-4 w-4 mr-2 text-red-500" />
-                        <span>{vuln}</span>
+                  <h3 className="text-lg font-medium mb-2">Known Vulnerabilities</h3>
+                  <div className="space-y-2">
+                    {analyzeResult.knownVulnerabilities.map((cve: string, i: number) => (
+                      <div key={i} className="p-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded">
+                        <span className="font-mono">{cve}</span>
                       </div>
                     ))}
                   </div>
                 </div>
               )}
-              
-              {analysisResult.recommendations && (
+
+              {analyzeResult.recommendations && (
                 <div>
-                  <p className="text-sm text-gray-400">Recommendations</p>
-                  <ul className="list-disc list-inside space-y-1 mt-1">
-                    {analysisResult.recommendations.map((rec: string, index: number) => (
-                      <li key={index}>{rec}</li>
+                  <h3 className="text-lg font-medium mb-2">Recommendations</h3>
+                  <ul className="list-disc pl-5 space-y-1">
+                    {analyzeResult.recommendations.map((rec: string, i: number) => (
+                      <li key={i}>{rec}</li>
                     ))}
                   </ul>
                 </div>
               )}
             </div>
-          )}
-        </div>
-      </CardContent>
-    </Card>
+          </CardContent>
+          <CardFooter className="justify-between">
+            <div className="text-sm text-gray-500">
+              Last Update: {new Date(analyzeResult.lastUpdate).toLocaleDateString()}
+            </div>
+            <Button variant="outline" size="sm">
+              <Download className="mr-2 h-4 w-4" />
+              Download Full Report
+            </Button>
+          </CardFooter>
+        </Card>
+      )}
+    </div>
   );
 };
 
