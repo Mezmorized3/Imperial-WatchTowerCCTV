@@ -5,9 +5,9 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Shield, Lock, Key, Eye, AlertTriangle } from 'lucide-react';
 import ViewerHeader from '@/components/viewer/ViewerHeader';
 import ImperialShieldMatrix from '@/components/imperial-control/ImperialShieldMatrix';
-import { VulnerabilityAssessment } from '@/components/VulnerabilityAssessment';
-import { FirmwareAnalysis } from '@/components/FirmwareAnalysis';
-import { ThreatIntelligence } from '@/components/ThreatIntelligence';
+import VulnerabilityAssessment from '@/components/VulnerabilityAssessment';
+import FirmwareAnalysis from '@/components/FirmwareAnalysis';
+import ThreatIntelligence from '@/components/ThreatIntelligence';
 import { useToast } from '@/hooks/use-toast';
 
 const ImperialShield = () => {

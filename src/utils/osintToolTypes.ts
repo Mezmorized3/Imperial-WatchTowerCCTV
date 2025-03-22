@@ -1,226 +1,139 @@
+
 /**
- * Types for OSINT tools and their parameters
+ * Type definitions for OSINT and security tools
  */
 
-// General result type for all OSINT tools
+// Base types
+export interface ToolParams {}
 export interface ToolResult {
   success: boolean;
-  data?: any;
+  data: any;
   error?: string;
   simulatedData?: boolean;
 }
 
-// Common type for all OSINT tool parameters
-export interface ToolParams {
-  [key: string]: any;
-}
-
-// Specific result types
-export interface ScanResult {
-  success: boolean;
-  findings: string[];
-  target: string;
-}
-
-export interface UsernameResult {
-  platform: string;
-  url: string;
-  username: string;
-  found: boolean;
-  profileData?: any;
-}
-
+// Camera discovery tools
 export interface CameraResult {
+  id: string;
   ip: string;
-  port: number;
-  type: string;
-  accessible?: boolean;
-  stream_url?: string;
-  rtspUrl?: string;
-  protocol?: string;
-  manufacturer?: string;
   model?: string;
-  credentials?: {
-    username: string;
-    password: string;
-  } | null;
-  vulnerabilities?: {
-    name: string;
-    severity: 'low' | 'medium' | 'high' | 'critical';
-    description: string;
-  }[];
-  geolocation?: {
-    country: string;
-    city?: string;
-    coordinates: [number, number];
+  manufacturer?: string;
+  location?: string;
+  port?: number;
+  status?: string;
+}
+
+export interface ScanResult extends ToolResult {
+  data: {
+    cameras?: CameraResult[];
+    total?: number;
+    vulnerabilities?: any[];
   };
 }
 
-// OSINT tool parameters
+// Username OSINT tools
+export interface UsernameResult extends ToolResult {
+  data: {
+    sites: Array<{
+      name: string;
+      url: string;
+      found: boolean;
+      accountUrl?: string;
+    }>;
+    totalFound: number;
+  };
+}
 
-export interface CameradarParams {
+// Parameter types for specific tools
+export interface CCTVParams extends ToolParams {
+  region: string;
+  limit?: number;
+  saveResults?: boolean;
+}
+
+export interface TorBotParams extends ToolParams {
+  url: string;
+  level?: number;
+  dumpData?: boolean;
+}
+
+export interface WebHackParams extends ToolParams {
   target: string;
-  ports?: string;
-  scanType?: 'standard' | 'deep' | 'quick'; 
-}
-
-export interface WebCheckParams {
-  url: string;
-  followRedirects?: boolean;
-}
-
-export interface SherlockParams {
-  username: string;
-  platforms?: string[];
-}
-
-export interface TorBotParams {
-  url: string;
-  depth?: number;
   mode?: string;
 }
 
-export interface PhotonParams {
-  url: string;
-  depth?: number;
-  timeout?: number;
+export interface SpeedCameraParams extends ToolParams {
+  sensitivity?: number;
+  resolution?: string;
+  threshold?: number;
 }
 
-export interface TwintParams {
+export interface WebCheckParams extends ToolParams {
+  domain: string;
+  checks?: string[];
+}
+
+export interface TwintParams extends ToolParams {
   username?: string;
   search?: string;
-  since?: string;
-  until?: string;
-  limit?: number;
-  verified?: boolean;
-}
-
-export interface IPCamSearchParams {
-  subnet: string;
-  protocols?: string[];
-  timeout?: number;
-}
-
-export interface BotExploitsParams {
-  target: string;
-  botType?: string;
-  scanType?: string;
-  timeout?: number;
-}
-
-export interface CamerattackParams {
-  target: string;
-  method?: string;
-  mode?: string;
-  duration?: number;
-  rate?: number;
-}
-
-export interface BackHackParams {
-  target: string;
-  scanType?: string;
-}
-
-export interface WebHackParams {
-  url: string;
-  scanType?: string;
-  findVulnerabilities?: boolean;
-  checkHeaders?: boolean;
-  testXss?: boolean;
-  testSql?: boolean;
-}
-
-export interface SpeedCameraParams {
-  location?: string;
-  threshold?: number;
-  source?: string;
-}
-
-export interface CCTVParams {
-  region?: string;
-  type?: string;
-  country?: string;
   limit?: number;
 }
 
-export interface ImperialOculusParams {
-  target: string;
-  scanType?: 'basic' | 'full' | 'stealth';
-  ports?: string;
-  timeout?: number;
-}
-
-// OSINT parameters
-export interface OSINTParams {
+export interface OSINTParams extends ToolParams {
   target: string;
   type?: string;
   depth?: string;
 }
 
-// Shield AI parameters
-export interface ShieldAIParams {
+export interface ShieldAIParams extends ToolParams {
   target: string;
   mode?: string;
   depth?: string;
   aiModel?: string;
 }
 
-// Imperial Shield parameters
-export interface ImperialShieldParams {
-  targetUrl: string;
+export interface BotExploitsParams extends ToolParams {
+  target: string;
   port?: number;
-  protocol?: string;
-  authToken?: string;
-  validateCert?: boolean;
-  method?: string;
-  body?: any;
+  attackType?: string;
 }
 
-export interface ImperialShieldResult {
-  success: boolean;
-  data?: any;
-  error?: string;
-  responseTime?: number;
-  shieldStatus?: 'active' | 'breached' | 'inactive';
-  securityRating?: number;
+export interface CamerattackParams extends ToolParams {
+  target: string;
+  sessions?: number;
+  timeout?: number;
 }
 
-// RapidPayload tool parameters
-export interface RapidPayloadParams {
-  payloadType: 'windows' | 'android' | 'linux' | 'macos' | 'web';
-  format?: string;
-  lhost?: string;
-  lport?: number;
-  encode?: boolean;
-  encryption?: string;
-  outputPath?: string;
+export interface BackHackParams extends ToolParams {
+  url: string;
+  extractData?: boolean;
 }
 
-// hackingtool parameters
-export interface HackingToolParams {
-  toolCategory: string;
-  tool?: string;
-  target?: string;
+export interface ImperialOculusParams extends ToolParams {
+  target: string;
+  ports?: string;
+}
+
+// New tool parameter types
+export interface RapidPayloadParams extends ToolParams {
+  targetOS: string;
+  payloadType: string;
   options?: Record<string, any>;
 }
 
-// FFmpeg parameters for video processing
-export interface FFmpegParams {
-  inputStream: string;
-  outputFormat?: string;
-  videoCodec?: string;
-  audioCodec?: string;
-  resolution?: string;
-  bitrate?: string;
-  framerate?: number;
-  filters?: string[];
-  outputPath?: string;
+export interface HackingToolParams extends ToolParams {
+  category: string;
+  tool: string;
+  options?: Record<string, any>;
 }
 
-// Security-Admin parameters
-export interface SecurityAdminParams {
-  scanType: 'permissions' | 'users' | 'services' | 'full';
-  target?: string;
-  fixVulnerabilities?: boolean;
-  reportFormat?: 'json' | 'html' | 'text';
+export interface FFmpegParams extends ToolParams {
+  input: string;
+  output?: string;
+  options?: Record<string, any>;
+}
+
+export interface SecurityAdminParams extends ToolParams {
+  command: string;
+  options?: Record<string, any>;
 }
