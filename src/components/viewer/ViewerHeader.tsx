@@ -1,12 +1,9 @@
 
 import React from 'react';
-import { Button } from '@/components/ui/button';
-import { ArrowLeft } from 'lucide-react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import ImperialNavigation from '@/components/common/ImperialNavigation';
 
 const ViewerHeader: React.FC = () => {
-  const navigate = useNavigate();
   const location = useLocation();
   
   // Determine which ASCII banner to show based on the current route
@@ -55,17 +52,7 @@ const ViewerHeader: React.FC = () => {
       <ImperialNavigation />
       
       <div className="container mx-auto flex flex-col py-4 px-6">
-        <div className="flex items-center space-x-4 w-full">
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            onClick={() => navigate('/')}
-            className="text-gray-400 hover:text-white"
-          >
-            <ArrowLeft className="h-4 w-4 mr-2" /> 
-            Back to Scanner
-          </Button>
-          
+        <div className="flex items-center w-full">
           <div className="w-full">
             <pre className="text-xs md:text-sm text-red-500 font-mono">
 {getASCIIBanner()}

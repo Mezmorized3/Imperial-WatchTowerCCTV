@@ -3,20 +3,43 @@ import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent } from '@/components/ui/card';
 import { Shield, Lock, Key, Eye, AlertTriangle } from 'lucide-react';
-import ViewerHeader from '@/components/viewer/ViewerHeader';
+import ImperialNavigation from '@/components/common/ImperialNavigation';
 import ImperialShieldMatrix from '@/components/imperial-control/ImperialShieldMatrix';
 import VulnerabilityAssessment from '@/components/VulnerabilityAssessment';
 import FirmwareAnalysis from '@/components/FirmwareAnalysis';
 import ThreatIntelligence from '@/components/ThreatIntelligence';
 import { useToast } from '@/hooks/use-toast';
+import { useLocation } from 'react-router-dom';
 
 const ImperialShield = () => {
   const [activeTab, setActiveTab] = useState('shield-matrix');
   const { toast } = useToast();
+  const location = useLocation();
+  
+  const shieldBanner = `
+██╗███╗   ███╗██████╗ ███████╗██████╗ ██╗ █████╗ ██╗         ███████╗██╗  ██╗██╗███████╗██╗     ██████╗ 
+██║████╗ ████║██╔══██╗██╔════╝██╔══██╗██║██╔══██╗██║         ██╔════╝██║  ██║██║██╔════╝██║     ██╔══██╗
+██║██╔████╔██║██████╔╝█████╗  ██████╔╝██║███████║██║         ███████╗███████║██║█████╗  ██║     ██║  ██║
+██║██║╚██╔╝██║██╔═══╝ ██╔══╝  ██╔══██╗██║██╔══██║██║         ╚════██║██╔══██║██║██╔══╝  ██║     ██║  ██║
+██║██║ ╚═╝ ██║██║     ███████╗██║  ██║██║██║  ██║███████╗    ███████║██║  ██║██║███████╗███████╗██████╔╝
+╚═╝╚═╝     ╚═╝╚═╝     ╚══════╝╚═╝  ╚═╝╚═╝╚═╝  ╚═╝╚══════╝    ╚══════╝╚═╝  ╚═╝╚═╝╚══════╝╚══════╝╚═════╝ 
+  `;
 
   return (
     <div className="min-h-screen bg-scanner-dark text-white">
-      <ViewerHeader />
+      <header className="bg-scanner-dark-alt border-b border-gray-800">
+        <ImperialNavigation />
+        
+        <div className="container mx-auto flex flex-col py-4 px-6">
+          <div className="flex items-center w-full">
+            <div className="w-full">
+              <pre className="text-xs md:text-sm text-red-500 font-mono">
+                {shieldBanner}
+              </pre>
+            </div>
+          </div>
+        </div>
+      </header>
       
       <main className="container mx-auto py-6 px-4">
         <div className="mb-6">

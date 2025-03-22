@@ -1,8 +1,6 @@
 
 import React from 'react';
-import { Settings as SettingsIcon, Home } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Link } from 'react-router-dom';
+import { Settings as SettingsIcon } from 'lucide-react';
 
 interface SettingsHeaderProps {
   imperialProtocolBanner: string;
@@ -24,17 +22,11 @@ export const SettingsHeader: React.FC<SettingsHeaderProps> = ({ imperialProtocol
 
 export const SettingsTitle: React.FC = () => {
   return (
-    <div className="flex items-center justify-between mb-8">
+    <div className="flex items-center mb-8">
       <div className="flex items-center">
         <SettingsIcon className="h-8 w-8 mr-3 text-scanner-primary" />
         <h1 className="text-3xl font-bold">Imperial Protocol</h1>
       </div>
-      <Link to="/">
-        <Button variant="outline" className="flex items-center gap-2">
-          <Home className="h-4 w-4" />
-          Back to Dashboard
-        </Button>
-      </Link>
     </div>
   );
 };
