@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -11,6 +10,7 @@ import { CameraResult } from '@/types/scanner';
 import { getProperStreamUrl, testRtspConnection, startRecording, stopRecording, detectMotion } from '@/utils/rtspUtils';
 import { useToast } from '@/hooks/use-toast';
 import { executeCameradar, executeIPCamSearch, executeCCTV } from '@/utils/osintImplementations';
+import { CCTVParams } from '@/utils/osintToolTypes';
 
 interface VideoFeedsProps {
   cameras: CameraResult[];
@@ -29,7 +29,6 @@ const VideoFeeds: React.FC<VideoFeedsProps> = ({ cameras }) => {
   const [searchInput, setSearchInput] = useState<string>('');
   const { toast } = useToast();
 
-  // Load saved feeds from localStorage on component mount
   useEffect(() => {
     const savedFeedsData = localStorage.getItem('savedVideoFeeds');
     if (savedFeedsData) {
@@ -41,7 +40,6 @@ const VideoFeeds: React.FC<VideoFeedsProps> = ({ cameras }) => {
     }
   }, []);
 
-  // Function to generate proper RTSP URL for the camera
   const getCameraStreamUrl = (camera: CameraResult): string => {
     return getProperStreamUrl({
       brand: camera.brand,
@@ -108,19 +106,29 @@ const VideoFeeds: React.FC<VideoFeedsProps> = ({ cameras }) => {
     try {
       let results: any;
       
-      // Use the appropriate search function based on the selected type
       switch (searchType) {
         case 'cameradar':
-          results = await executeCameradar(searchInput);
+          results = await executeCameradar({
+            target: searchInput
+          });
           break;
         case 'ipcamsearch':
-          results = await executeIPCamSearch(searchInput);
+          results = await executeIPCamSearch({
+            subnet: searchInput,
+            protocols: []
+          });
           break;
         case 'cctv':
-          results = await executeCCTV(searchInput);
+          const cctvParams: CCTVParams = {
+            region: searchInput,
+            limit: 10
+          };
+          results = await executeCCTV(cctvParams);
           break;
         default:
-          results = await executeCameradar(searchInput);
+          results = await executeCameradar({
+            target: searchInput
+          });
       }
       
       if (results && results.cameras) {
