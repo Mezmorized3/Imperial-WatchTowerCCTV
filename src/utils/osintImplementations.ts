@@ -50,7 +50,7 @@ export {
 // Export FFmpeg-related tools
 export {
   executeFFmpeg,
-  convertRtspToHls as ffmpegConvertRtspToHls,
-  recordStream as ffmpegRecordStream,
+  ffmpegConvertRtspToHls,
+  ffmpegRecordStream,
   applyMotionDetection
 } from './ffmpeg/ffmpegService';

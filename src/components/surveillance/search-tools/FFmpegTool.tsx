@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -26,7 +25,7 @@ const FFmpegTool: React.FC = () => {
       setIsConverting(true);
       setResults(null);
       
-      const result = await ffmpegConvertRtspToHls(inputStream);
+      const result = await ffmpegConvertRtspToHls(inputStream, `output_${Date.now()}.m3u8`);
       
       if (result.success) {
         toast({
@@ -123,7 +122,7 @@ const FFmpegTool: React.FC = () => {
       setResults(null);
       
       const params: FFmpegParams = {
-        inputStream,
+        input: inputStream,
         outputFormat,
         videoCodec: enableHighQuality ? 'libx264' : 'h264_nvenc',
         bitrate: enableHighQuality ? '2000k' : '800k',

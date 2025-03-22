@@ -22,6 +22,23 @@ export interface CameraResult {
   port?: number;
   status?: string;
   type?: string;
+  protocol?: string;
+  rtspUrl?: string;
+  credentials?: {
+    username: string;
+    password: string;
+  } | null;
+  geolocation?: {
+    country: string;
+    city?: string;
+    coordinates?: [number, number];
+  };
+  vulnerabilities?: Array<{
+    name: string;
+    severity: string;
+    description: string;
+  }>;
+  accessible?: boolean;
 }
 
 export interface ScanResult extends ToolResult {
@@ -51,6 +68,7 @@ export interface CCTVParams extends ToolParams {
   limit?: number;
   saveResults?: boolean;
   country?: string;
+  type?: string;
 }
 
 export interface TorBotParams extends ToolParams {
@@ -58,12 +76,14 @@ export interface TorBotParams extends ToolParams {
   level?: number;
   dumpData?: boolean;
   mode?: string;
+  depth?: number;
 }
 
 export interface WebHackParams extends ToolParams {
   target: string;
   mode?: string;
   url?: string;
+  scanType?: string;
 }
 
 export interface SpeedCameraParams extends ToolParams {
@@ -101,6 +121,7 @@ export interface BotExploitsParams extends ToolParams {
   port?: number;
   attackType?: string;
   scanType?: string;
+  timeout?: number;
 }
 
 export interface CamerattackParams extends ToolParams {
@@ -108,12 +129,15 @@ export interface CamerattackParams extends ToolParams {
   sessions?: number;
   timeout?: number;
   mode?: string;
+  duration?: number;
+  rate?: number;
 }
 
 export interface BackHackParams extends ToolParams {
   url: string;
   extractData?: boolean;
   target?: string;
+  scanType?: string;
 }
 
 export interface ImperialOculusParams extends ToolParams {
@@ -128,6 +152,11 @@ export interface RapidPayloadParams extends ToolParams {
   payloadType: string;
   options?: Record<string, any>;
   format?: string;
+  lhost?: string;
+  lport?: number;
+  encode?: boolean;
+  encryption?: string;
+  outputPath?: string;
 }
 
 export interface HackingToolParams extends ToolParams {
@@ -135,10 +164,11 @@ export interface HackingToolParams extends ToolParams {
   tool: string;
   options?: Record<string, any>;
   toolCategory?: string;
+  target?: string;
 }
 
 export interface FFmpegParams extends ToolParams {
-  input: string;
+  input?: string;
   output?: string;
   options?: Record<string, any>;
   inputStream?: string;
@@ -156,6 +186,9 @@ export interface SecurityAdminParams extends ToolParams {
   command: string;
   options?: Record<string, any>;
   scanType?: string;
+  target?: string;
+  fixVulnerabilities?: boolean;
+  reportFormat?: string;
 }
 
 // Imperial Shield Protocol types

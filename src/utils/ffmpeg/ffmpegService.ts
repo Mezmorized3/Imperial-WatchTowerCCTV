@@ -117,7 +117,7 @@ export const executeFFmpeg = async (params: FFmpegParams): Promise<ToolResult> =
  */
 export const ffmpegConvertRtspToHls = async (
   rtspUrl: string,
-  outputPath: string,
+  outputPath: string = 'output/stream.m3u8',
   segmentDuration: number = 4
 ): Promise<ToolResult> => {
   try {
@@ -151,7 +151,7 @@ export const ffmpegConvertRtspToHls = async (
  */
 export const ffmpegRecordStream = async (
   streamUrl: string,
-  outputPath: string,
+  outputPath: string = 'output/recording.mp4',
   duration: number = 60
 ): Promise<ToolResult> => {
   try {
@@ -161,7 +161,7 @@ export const ffmpegRecordStream = async (
       videoCodec: 'copy',
       audioCodec: 'copy',
       options: {
-        t: duration
+        t: duration.toString()
       }
     };
     
@@ -183,16 +183,15 @@ export const ffmpegRecordStream = async (
  */
 export const applyMotionDetection = async (
   inputPath: string,
-  outputPath: string,
-  sensitivity: number = 5
+  sensitivity: number = 0.05
 ): Promise<ToolResult> => {
   try {
     // Motion detection filter string
-    const motionFilter = `select='gt(scene,${sensitivity/100})',showinfo`;
+    const motionFilter = `select='gt(scene,${sensitivity})',showinfo`;
     
     const params: FFmpegParams = {
       input: inputPath,
-      output: outputPath,
+      output: `output/motion_${Date.now()}.mp4`,
       videoCodec: 'libx264',
       filters: [motionFilter],
       options: {
@@ -213,3 +212,7 @@ export const applyMotionDetection = async (
     };
   }
 };
+
+// Export additional aliases for compatibility
+export const convertRtspToHls = ffmpegConvertRtspToHls;
+export const recordStream = ffmpegRecordStream;

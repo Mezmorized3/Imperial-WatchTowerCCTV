@@ -1,7 +1,7 @@
 /**
  * Utility functions for RTSP stream handling
  */
-import { convertRtspToHls as ffmpegConvertRtspToHls, recordStream as ffmpegRecordStream, applyMotionDetection } from './ffmpeg/ffmpegService';
+import { ffmpegConvertRtspToHls, ffmpegRecordStream, applyMotionDetection } from './ffmpeg/ffmpegService';
 
 /**
  * Get the proper stream URL for a camera
@@ -171,7 +171,8 @@ export const startRecording = async (streamId: string): Promise<boolean> => {
         const recordingDuration = parseInt(localStorage.getItem('recordingDuration') || '60', 10);
         const outputPath = `/recordings/${streamId}_${Date.now()}.mp4`;
         
-        ffmpegRecordStream(streamUrl, recordingDuration, outputPath).catch(err => 
+        // Convert recordingDuration to string to match the expected parameter type
+        ffmpegRecordStream(streamUrl, outputPath, recordingDuration.toString()).catch(err => 
           console.error('Error during FFmpeg recording:', err)
         );
         
