@@ -3,6 +3,9 @@ import React, { useState, useEffect } from 'react';
 import { ScanProgress, CameraResult } from '@/types/scanner';
 import { Toaster } from '@/components/ui/toaster';
 import DashboardHeader from '@/components/DashboardHeader';
+import { Button } from '@/components/ui/button';
+import { Play } from 'lucide-react';
+import CommandPalette from '@/components/CommandPalette';
 
 // Import refactored components
 import ScanController from '@/components/dashboard/ScanController';
@@ -21,6 +24,7 @@ const Index = () => {
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<string>('map');
   const [showAscii, setShowAscii] = useState(true);
+  const [commandOpen, setCommandOpen] = useState(false);
   
   const imperialArmyBanner = `
     ██╗███╗   ███╗██████╗ ███████╗██████╗ ██╗ █████╗ ██╗          █████╗ ██████╗ ███╗   ███╗██╗   ██╗
@@ -51,6 +55,19 @@ const Index = () => {
     setShowAscii(!showAscii);
   };
 
+  // Handle keyboard shortcut
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        setCommandOpen((open) => !open);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
   return (
     <div className="min-h-screen bg-scanner-dark text-white">
       <main className="container mx-auto py-6 px-4">
@@ -65,6 +82,18 @@ const Index = () => {
         
         {/* Navigation Menu moved under the ASCII banner */}
         <DashboardHeader />
+        
+        {/* Startup Button */}
+        <div className="flex justify-center mt-4 mb-6">
+          <Button 
+            onClick={() => setCommandOpen(true)}
+            className="bg-scanner-primary hover:bg-scanner-primary/80 text-white py-3 px-6 rounded-md flex items-center gap-2 shadow-lg hover:shadow-red-900/20 transition-all animate-pulse"
+            size="lg"
+          >
+            <Play className="h-5 w-5" />
+            <span className="font-bold">IMPERIAL STARTUP</span>
+          </Button>
+        </div>
         
         <ScanNotifications error={error} />
         
@@ -88,6 +117,7 @@ const Index = () => {
         </div>
       </main>
       
+      <CommandPalette open={commandOpen} setOpen={setCommandOpen} />
       <Toaster />
     </div>
   );
