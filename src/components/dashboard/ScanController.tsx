@@ -1,8 +1,8 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { useToast } from '@/components/ui/use-toast';
-import { scanNetwork } from '@/utils/networkScanner';
-import { ScanTarget, ScanSettings, ScanProgress, CameraResult } from '@/types/scanner';
+import { scanNetwork, ScanSettings } from '@/utils/networkScanner';
+import { ScanTarget, ScanProgress, CameraResult } from '@/types/scanner';
 import { getRandomGeoLocation } from '@/utils/osintUtils';
 import { ProxyConfig } from '@/utils/osintToolTypes';
 
@@ -22,6 +22,13 @@ const ScanController = ({
   const { toast } = useToast();
   const cleanupFunctionRef = useRef<(() => void) | null>(null);
   const scanInProgressRef = useRef<boolean>(false);
+  const [results, setResults] = useState<CameraResult[]>([]);
+  const [scanProgress, setScanProgress] = useState<ScanProgress>({
+    status: 'idle',
+    targetsTotal: 0,
+    targetsScanned: 0,
+    camerasFound: 0
+  });
 
   useEffect(() => {
     return () => {
@@ -66,6 +73,7 @@ const ScanController = ({
       });
     }
 
+    setResults([]);
     onResultsUpdate([]);
     onErrorOccurred(null);
     scanInProgressRef.current = true;
@@ -95,7 +103,7 @@ const ScanController = ({
     const targetCountry = getTargetCountry(target.value);
     
     const initialProgress: ScanProgress = {
-      status: 'running', // Ensuring status is not optional
+      status: 'running',
       targetsTotal,
       targetsScanned: 0,
       camerasFound: 0,
@@ -107,6 +115,7 @@ const ScanController = ({
     };
     
     onScanProgressUpdate(initialProgress);
+    setScanProgress(initialProgress);
     
     toast({
       title: "Scan Started",
@@ -138,7 +147,7 @@ const ScanController = ({
         scanInProgressRef.current = false;
       };
       
-      await scanNetwork(
+      const scanResult = await scanNetwork(
         ipRange,
         settings,
         (progress) => {
@@ -147,25 +156,28 @@ const ScanController = ({
           // Create a new object that includes all previous state and the new progress data
           const updatedProgress: ScanProgress = {
             ...progress,
-            status: progress.status || 'running', // Ensure status is always defined
+            status: progress.status || 'running',
             targetCountry
           };
           onScanProgressUpdate(updatedProgress);
+          setScanProgress(updatedProgress);
         },
         (camera) => {
           if (abortController.signal.aborted) return;
           
           // Get current results and add the new camera
           const newResults = [...results, camera];
+          setResults(newResults);
           onResultsUpdate(newResults);
           
           // Update scan progress with new camera count
           const updatedProgress: ScanProgress = {
             ...scanProgress,
-            status: scanProgress.status, // Ensure status is copied
+            status: scanProgress.status,
             camerasFound: scanProgress.camerasFound + 1
           };
           onScanProgressUpdate(updatedProgress);
+          setScanProgress(updatedProgress);
         },
         target.type,
         abortController.signal,
@@ -182,6 +194,9 @@ const ScanController = ({
         };
         
         onScanProgressUpdate(completedProgress);
+        setScanProgress(completedProgress);
+        setResults(scanResult.data.cameras);
+        onResultsUpdate(scanResult.data.cameras);
         
         const elapsedTime = calculateElapsedTime(completedProgress.startTime!);
         
@@ -210,6 +225,7 @@ const ScanController = ({
         };
         
         onScanProgressUpdate(errorProgress);
+        setScanProgress(errorProgress);
         
         toast({
           title: "Scan Failed",
@@ -221,15 +237,6 @@ const ScanController = ({
       }
     }
   };
-
-  // These state variables were missing but are used in the code
-  const [results, setResults] = useState<CameraResult[]>([]);
-  const [scanProgress, setScanProgress] = useState<ScanProgress>({
-    status: 'idle',
-    targetsTotal: 0,
-    targetsScanned: 0,
-    camerasFound: 0
-  });
 
   return { handleStartScan };
 };

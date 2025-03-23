@@ -1,3 +1,4 @@
+
 /**
  * Type definitions for OSINT and security tools
  */
@@ -23,6 +24,7 @@ export interface ProxyConfig {
   rotationEnabled?: boolean;
   rotationInterval?: number;
   proxyList?: string[];
+  // Adding missing properties
   autoReconnect?: boolean;
   dnsProtection?: boolean;
   forceTls?: boolean;
@@ -58,6 +60,10 @@ export interface CameraResult {
     description: string;
   }>;
   accessible?: boolean;
+  // Add missing properties
+  threatIntelligence?: any;
+  firmware?: any;
+  brand?: string;
 }
 
 export interface ScanResult extends ToolResult {

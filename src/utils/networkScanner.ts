@@ -1,6 +1,16 @@
 
 import { nanoid } from 'nanoid';
-import { ScanSettings, CameraResult, ScanResult } from '@/utils/osintToolTypes';
+import { CameraResult } from '@/utils/osintToolTypes';
+import { ScanProgress } from '@/types/scanner';
+
+// Add missing ScanSettings interface from osintToolTypes
+export interface ScanSettings {
+  detailed?: boolean;
+  aggressive?: boolean;
+  targetSubnet?: string;
+  portRange?: string;
+  timeout?: number;
+}
 
 // Local functions to fix build errors
 const generateVulnerabilities = (cameraType: string) => {
@@ -45,10 +55,40 @@ const getThreatIntelligence = (ipAddress: string) => {
   };
 };
 
+// Add missing proxy utility functions
+export const testProxyConnection = async (proxyConfig: any): Promise<boolean> => {
+  console.log("Testing proxy connection:", proxyConfig);
+  await new Promise(resolve => setTimeout(resolve, 1000));
+  return Math.random() > 0.2; // Simulate 80% success rate
+};
+
+export const rotateProxy = async (proxyConfig: any): Promise<boolean> => {
+  console.log("Rotating proxy:", proxyConfig);
+  await new Promise(resolve => setTimeout(resolve, 1000));
+  return Math.random() > 0.1; // Simulate 90% success rate
+};
+
+// Declare ScanResult interface
+export interface ScanResult {
+  success: boolean;
+  data: {
+    cameras: CameraResult[];
+    total: number;
+  };
+}
+
 /**
  * Simulates a network scan for CCTV cameras
  */
-export const scanNetwork = async (settings: ScanSettings): Promise<ScanResult> => {
+export const scanNetwork = async (
+  targetSubnet: string,
+  settings: ScanSettings,
+  onProgress?: (progress: ScanProgress) => void,
+  onCameraFound?: (camera: CameraResult) => void,
+  scanType?: string,
+  abortSignal?: AbortSignal,
+  proxyConfig?: any
+): Promise<ScanResult> => {
   console.log("Starting network scan with settings:", settings);
   
   return new Promise((resolve) => {
@@ -105,6 +145,23 @@ export const scanNetwork = async (settings: ScanSettings): Promise<ScanResult> =
         }
         
         cameras.push(camera);
+        
+        // Call onCameraFound callback if provided
+        if (onCameraFound) {
+          onCameraFound(camera);
+        }
+      }
+      
+      // Update progress if callback provided
+      if (onProgress) {
+        onProgress({
+          status: 'completed',
+          targetsTotal: 100,
+          targetsScanned: 100,
+          camerasFound: cameras.length,
+          startTime: new Date(),
+          endTime: new Date()
+        });
       }
       
       // Return the scan results
