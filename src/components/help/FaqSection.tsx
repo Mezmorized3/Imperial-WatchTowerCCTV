@@ -1,14 +1,35 @@
-
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Link } from 'react-router-dom';
+import { toast } from '@/components/ui/use-toast';
+import { Badge } from '@/components/ui/badge';
 
 const FaqSection = () => {
+  const handleFaqClick = (faqTitle: string) => {
+    console.log(`FAQ accessed: ${faqTitle}`);
+    // This can be enhanced to track popular FAQs
+  };
+
+  const navigateWithNotification = (path: string, title: string) => {
+    toast({
+      title: "Navigation",
+      description: `Opening ${title}...`,
+    });
+    
+    // Return the path for the Link component
+    return path;
+  };
+
   return (
     <Card className="bg-scanner-card border-gray-700">
       <CardHeader>
-        <CardTitle>Frequently Asked Questions</CardTitle>
+        <CardTitle className="flex items-center justify-between">
+          Frequently Asked Questions
+          <Badge variant="outline" className="bg-scanner-primary/10 text-scanner-primary border-scanner-primary/30">
+            Updated
+          </Badge>
+        </CardTitle>
         <CardDescription className="text-gray-400">
           Common questions and answers about using Imperial Scanner
         </CardDescription>
@@ -28,6 +49,12 @@ const FaqSection = () => {
                   </AccordionTrigger>
                   <AccordionContent className="text-gray-400">
                     Imperial Scanner is designed for ethical security professionals and researchers. Always ensure you have proper authorization before scanning any networks or systems. The tool is meant for defensive security purposes, and users are responsible for complying with all applicable laws and regulations in their jurisdiction.
+                    <div className="mt-2">
+                      <Link to="/imperial-shield?panel=legal" 
+                          onClick={() => handleFaqClick("Legal Usage Guidelines")}>
+                        <span className="text-scanner-primary hover:underline">View legal usage guidelines</span>
+                      </Link>
+                    </div>
                   </AccordionContent>
                 </AccordionItem>
                 
@@ -36,7 +63,13 @@ const FaqSection = () => {
                     How does Imperial Scanner discover CCTV cameras?
                   </AccordionTrigger>
                   <AccordionContent className="text-gray-400">
-                    Imperial Scanner uses a combination of network scanning techniques, device fingerprinting, and protocol detection to identify CCTV cameras. It looks for common RTSP streams, web interfaces, and manufacturer-specific signatures to locate and classify surveillance devices on networks. The <Link to="/imperial-scanner?section=scan-setup" className="text-scanner-primary">scan configuration</Link> allows you to customize discovery methods.
+                    Imperial Scanner uses a combination of network scanning techniques, device fingerprinting, and protocol detection to identify CCTV cameras. It looks for common RTSP streams, web interfaces, and manufacturer-specific signatures to locate and classify surveillance devices on networks. 
+                    <div className="mt-2">
+                      <Link to="/imperial-scanner?section=scan-setup" 
+                          onClick={() => handleFaqClick("Camera Discovery Methods")}>
+                        <span className="text-scanner-primary hover:underline">See scan configuration options</span>
+                      </Link>
+                    </div>
                   </AccordionContent>
                 </AccordionItem>
                 
@@ -45,7 +78,13 @@ const FaqSection = () => {
                     Is my scan data kept private?
                   </AccordionTrigger>
                   <AccordionContent className="text-gray-400">
-                    Yes, all scan data is processed locally and remains private. Imperial Scanner does not send your scan results to any external servers unless you explicitly enable the threat intelligence integration feature, which shares only anonymized data needed for analysis. You can verify and configure these settings in the <Link to="/settings?section=security" className="text-scanner-primary">Security Settings</Link> panel.
+                    Yes, all scan data is processed locally and remains private. Imperial Scanner does not send your scan results to any external servers unless you explicitly enable the threat intelligence integration feature, which shares only anonymized data needed for analysis. 
+                    <div className="mt-2">
+                      <Link to="/settings?section=security" 
+                          onClick={() => handleFaqClick("Data Privacy Settings")}>
+                        <span className="text-scanner-primary hover:underline">View security settings</span>
+                      </Link>
+                    </div>
                   </AccordionContent>
                 </AccordionItem>
                 
@@ -54,7 +93,13 @@ const FaqSection = () => {
                     How often should I scan my surveillance systems?
                   </AccordionTrigger>
                   <AccordionContent className="text-gray-400">
-                    For optimal security, we recommend scanning your surveillance systems at least monthly, after any system changes, and whenever new security advisories are published for your equipment. You can also set up automated periodic scanning in the <Link to="/settings?section=general" className="text-scanner-primary">settings panel</Link>.
+                    For optimal security, we recommend scanning your surveillance systems at least monthly, after any system changes, and whenever new security advisories are published for your equipment. You can also set up automated periodic scanning in the settings panel.
+                    <div className="mt-2">
+                      <Link to="/settings?section=general" 
+                          onClick={() => handleFaqClick("Scan Frequency")}>
+                        <span className="text-scanner-primary hover:underline">Configure automated scanning</span>
+                      </Link>
+                    </div>
                   </AccordionContent>
                 </AccordionItem>
                 
@@ -63,7 +108,13 @@ const FaqSection = () => {
                     What is the difference between Imperial Scanner and Imperial Shield?
                   </AccordionTrigger>
                   <AccordionContent className="text-gray-400">
-                    Imperial Scanner is the core reconnaissance tool for discovering and analyzing camera systems. Imperial Shield is the defensive module that provides threat intelligence, vulnerability assessment, and security monitoring for discovered cameras. Together they form a complete surveillance security solution. Access Imperial Shield through the <Link to="/imperial-shield" className="text-scanner-primary">Imperial Shield</Link> page.
+                    Imperial Scanner is the core reconnaissance tool for discovering and analyzing camera systems. Imperial Shield is the defensive module that provides threat intelligence, vulnerability assessment, and security monitoring for discovered cameras. Together they form a complete surveillance security solution.
+                    <div className="mt-2">
+                      <Link to="/imperial-shield" 
+                          onClick={() => handleFaqClick("Imperial Shield Features")}>
+                        <span className="text-scanner-primary hover:underline">Explore Imperial Shield</span>
+                      </Link>
+                    </div>
                   </AccordionContent>
                 </AccordionItem>
                 
@@ -72,7 +123,13 @@ const FaqSection = () => {
                     Can I export my discovered camera data?
                   </AccordionTrigger>
                   <AccordionContent className="text-gray-400">
-                    Yes, Imperial Scanner supports exporting discovered camera data in multiple formats including JSON, CSV, and PDF reports. You can access export options from the results dashboard after completing a scan. For detailed reports, visit the <Link to="/imperial-scanner?section=reports" className="text-scanner-primary">Reports section</Link>.
+                    Yes, Imperial Scanner supports exporting discovered camera data in multiple formats including JSON, CSV, and PDF reports. You can access export options from the results dashboard after completing a scan.
+                    <div className="mt-2">
+                      <Link to="/imperial-scanner?section=reports" 
+                          onClick={() => handleFaqClick("Data Export Options")}>
+                        <span className="text-scanner-primary hover:underline">View report options</span>
+                      </Link>
+                    </div>
                   </AccordionContent>
                 </AccordionItem>
               </Accordion>
@@ -91,7 +148,13 @@ const FaqSection = () => {
                     Can Imperial Scanner detect all vulnerabilities?
                   </AccordionTrigger>
                   <AccordionContent className="text-gray-400">
-                    While Imperial Scanner is designed to identify common vulnerabilities in CCTV systems, no security tool can detect 100% of all possible vulnerabilities. The scanner focuses on known security issues, default credentials, outdated firmware, and misconfiguration. Regular updates help ensure the detection capabilities remain current. Visit <Link to="/imperial-shield?panel=vulnerability" className="text-scanner-primary">Vulnerability Assessment</Link> for detailed information.
+                    While Imperial Scanner is designed to identify common vulnerabilities in CCTV systems, no security tool can detect 100% of all possible vulnerabilities. The scanner focuses on known security issues, default credentials, outdated firmware, and misconfiguration. Regular updates help ensure the detection capabilities remain current.
+                    <div className="mt-2">
+                      <Link to="/imperial-shield?panel=vulnerability" 
+                          onClick={() => handleFaqClick("Vulnerability Assessment Capabilities")}>
+                        <span className="text-scanner-primary hover:underline">Review vulnerability assessment details</span>
+                      </Link>
+                    </div>
                   </AccordionContent>
                 </AccordionItem>
                 
@@ -100,7 +163,13 @@ const FaqSection = () => {
                     Can Imperial Scanner help secure my cameras?
                   </AccordionTrigger>
                   <AccordionContent className="text-gray-400">
-                    Yes, Imperial Scanner not only identifies vulnerabilities but also provides remediation guidance. For each issue detected, the platform offers specific recommendations to address the security concern, such as firmware update links, configuration changes, or best practices documentation. Check the <Link to="/imperial-shield?panel=remediation" className="text-scanner-primary">Remediation Recommendations</Link> section after scanning.
+                    Yes, Imperial Scanner not only identifies vulnerabilities but also provides remediation guidance. For each issue detected, the platform offers specific recommendations to address the security concern, such as firmware update links, configuration changes, or best practices documentation.
+                    <div className="mt-2">
+                      <Link to="/imperial-shield?panel=remediation" 
+                          onClick={() => handleFaqClick("Remediation Recommendations")}>
+                        <span className="text-scanner-primary hover:underline">Explore remediation options</span>
+                      </Link>
+                    </div>
                   </AccordionContent>
                 </AccordionItem>
                 
@@ -109,7 +178,13 @@ const FaqSection = () => {
                     What types of vulnerabilities can be detected?
                   </AccordionTrigger>
                   <AccordionContent className="text-gray-400">
-                    Imperial Scanner can detect numerous vulnerability types including default credentials, outdated firmware, open telnet/SSH ports, insecure web interfaces, unencrypted RTSP streams, buffer overflow vulnerabilities, command injection flaws, and more depending on the camera model and firmware version. The <Link to="/imperial-shield?panel=threat-database" className="text-scanner-primary">Threat Database</Link> contains comprehensive information about detectable vulnerabilities.
+                    Imperial Scanner can detect numerous vulnerability types including default credentials, outdated firmware, open telnet/SSH ports, insecure web interfaces, unencrypted RTSP streams, buffer overflow vulnerabilities, command injection flaws, and more depending on the camera model and firmware version.
+                    <div className="mt-2">
+                      <Link to="/imperial-shield?panel=threat-database" 
+                          onClick={() => handleFaqClick("Vulnerability Types")}>
+                        <span className="text-scanner-primary hover:underline">View the vulnerability database</span>
+                      </Link>
+                    </div>
                   </AccordionContent>
                 </AccordionItem>
                 
@@ -118,7 +193,13 @@ const FaqSection = () => {
                     How accurate is the vulnerability assessment?
                   </AccordionTrigger>
                   <AccordionContent className="text-gray-400">
-                    Imperial Scanner's vulnerability assessment employs multiple validation techniques to minimize false positives. However, some assessments are based on fingerprinting and version detection, which may occasionally result in false positives or negatives. Critical vulnerabilities are verified when possible to ensure accuracy. You can adjust verification settings in <Link to="/settings?section=scanning" className="text-scanner-primary">Scan Settings</Link>.
+                    Imperial Scanner's vulnerability assessment employs multiple validation techniques to minimize false positives. However, some assessments are based on fingerprinting and version detection, which may occasionally result in false positives or negatives. Critical vulnerabilities are verified when possible to ensure accuracy.
+                    <div className="mt-2">
+                      <Link to="/settings?section=scanning" 
+                          onClick={() => handleFaqClick("Vulnerability Assessment Accuracy")}>
+                        <span className="text-scanner-primary hover:underline">Adjust verification settings</span>
+                      </Link>
+                    </div>
                   </AccordionContent>
                 </AccordionItem>
                 
@@ -127,7 +208,13 @@ const FaqSection = () => {
                     How does the Anomaly Detection System work?
                   </AccordionTrigger>
                   <AccordionContent className="text-gray-400">
-                    The Anomaly Detection System uses machine learning algorithms to identify unusual patterns in camera behavior, network traffic, and access patterns. It establishes baseline behavior and flags deviations that might indicate compromise or misuse. You can configure sensitivity and monitoring parameters in the <Link to="/imperial-shield?panel=anomaly" className="text-scanner-primary">Anomaly Detection</Link> section.
+                    The Anomaly Detection System uses machine learning algorithms to identify unusual patterns in camera behavior, network traffic, and access patterns. It establishes baseline behavior and flags deviations that might indicate compromise or misuse.
+                    <div className="mt-2">
+                      <Link to="/imperial-shield?panel=anomaly" 
+                          onClick={() => handleFaqClick("Anomaly Detection System")}>
+                        <span className="text-scanner-primary hover:underline">Configure anomaly detection</span>
+                      </Link>
+                    </div>
                   </AccordionContent>
                 </AccordionItem>
                 
@@ -136,7 +223,13 @@ const FaqSection = () => {
                     What's included in the firmware analysis?
                   </AccordionTrigger>
                   <AccordionContent className="text-gray-400">
-                    Imperial Scanner's firmware analysis includes version identification, known vulnerability matching, binary analysis for suspicious code patterns, and configuration assessment. For supported camera models, it can also verify firmware integrity and detect unauthorized modifications. Access the <Link to="/imperial-shield?panel=firmware" className="text-scanner-primary">Firmware Analysis</Link> tools for detailed reports.
+                    Imperial Scanner's firmware analysis includes version identification, known vulnerability matching, binary analysis for suspicious code patterns, and configuration assessment. For supported camera models, it can also verify firmware integrity and detect unauthorized modifications.
+                    <div className="mt-2">
+                      <Link to="/imperial-shield?panel=firmware" 
+                          onClick={() => handleFaqClick("Firmware Analysis Tools")}>
+                        <span className="text-scanner-primary hover:underline">View firmware analysis tools</span>
+                      </Link>
+                    </div>
                   </AccordionContent>
                 </AccordionItem>
               </Accordion>
@@ -155,7 +248,13 @@ const FaqSection = () => {
                     What OSINT tools are included in Imperial Scanner?
                   </AccordionTrigger>
                   <AccordionContent className="text-gray-400">
-                    Imperial Scanner integrates multiple OSINT tools including Sherlock for username searches, Cameradar for RTSP stream discovery, WebCheck for website analysis, Photon for web crawling, TorBot for darkweb scanning, Scrapy for structured data extraction, and custom tools for camera discovery and social media analysis. Access these tools from the <Link to="/osint-tools" className="text-scanner-primary">OSINT Tools</Link> page.
+                    Imperial Scanner integrates multiple OSINT tools including Sherlock for username searches, Cameradar for RTSP stream discovery, WebCheck for website analysis, Photon for web crawling, TorBot for darkweb scanning, Scrapy for structured data extraction, and custom tools for camera discovery and social media analysis.
+                    <div className="mt-2">
+                      <Link to="/osint-tools" 
+                          onClick={() => handleFaqClick("OSINT Tools")}>
+                        <span className="text-scanner-primary hover:underline">Explore OSINT tools</span>
+                      </Link>
+                    </div>
                   </AccordionContent>
                 </AccordionItem>
                 
@@ -164,7 +263,13 @@ const FaqSection = () => {
                     Are the OSINT results saved locally?
                   </AccordionTrigger>
                   <AccordionContent className="text-gray-400">
-                    Yes, all OSINT results are saved locally by default. You can find your saved results in the Reports section. The application does not share your search queries or results unless you explicitly configure external integrations. Manage data storage settings in <Link to="/settings?section=data" className="text-scanner-primary">Data Management</Link>.
+                    Yes, all OSINT results are saved locally by default. You can find your saved results in the Reports section. The application does not share your search queries or results unless you explicitly configure external integrations.
+                    <div className="mt-2">
+                      <Link to="/settings?section=data" 
+                          onClick={() => handleFaqClick("OSINT Data Storage")}>
+                        <span className="text-scanner-primary hover:underline">Manage data storage settings</span>
+                      </Link>
+                    </div>
                   </AccordionContent>
                 </AccordionItem>
                 
@@ -173,7 +278,13 @@ const FaqSection = () => {
                     How do I interpret the OSINT results?
                   </AccordionTrigger>
                   <AccordionContent className="text-gray-400">
-                    Each OSINT tool provides results in a structured format with clear indicators of relevance and confidence. The system uses color coding to highlight potential security concerns, and detailed explanations are provided for each finding. For more complex analyses, consult the specific <Link to="/osint-tools?section=guides" className="text-scanner-primary">tool documentation</Link> in the OSINT Tools section.
+                    Each OSINT tool provides results in a structured format with clear indicators of relevance and confidence. The system uses color coding to highlight potential security concerns, and detailed explanations are provided for each finding.
+                    <div className="mt-2">
+                      <Link to="/osint-tools?section=guides" 
+                          onClick={() => handleFaqClick("OSINT Result Interpretation")}>
+                        <span className="text-scanner-primary hover:underline">View OSINT interpretation guide</span>
+                      </Link>
+                    </div>
                   </AccordionContent>
                 </AccordionItem>
                 
@@ -182,7 +293,13 @@ const FaqSection = () => {
                     Can I use OSINT tools with proxies for anonymity?
                   </AccordionTrigger>
                   <AccordionContent className="text-gray-400">
-                    Yes, all OSINT tools in Imperial Scanner can be configured to use proxy connections for enhanced anonymity. Set up proxy configurations in the <Link to="/settings?section=proxy" className="text-scanner-primary">Proxy Settings</Link> panel, and then enable them when running OSINT operations. Each tool respects the global proxy settings with tool-specific overrides available.
+                    Yes, all OSINT tools in Imperial Scanner can be configured to use proxy connections for enhanced anonymity. Set up proxy configurations in the Proxy Settings panel, and then enable them when running OSINT operations. Each tool respects the global proxy settings with tool-specific overrides available.
+                    <div className="mt-2">
+                      <Link to="/settings?section=proxy" 
+                          onClick={() => handleFaqClick("OSINT Proxy Settings")}>
+                        <span className="text-scanner-primary hover:underline">Configure proxy settings</span>
+                      </Link>
+                    </div>
                   </AccordionContent>
                 </AccordionItem>
                 
@@ -191,7 +308,13 @@ const FaqSection = () => {
                     What is the Imperial Shinobi module?
                   </AccordionTrigger>
                   <AccordionContent className="text-gray-400">
-                    Imperial Shinobi is the advanced OSINT module that combines multiple intelligence gathering tools into unified workflows. It can correlate data from various sources, create intelligence maps, and identify connections between different entities. Access this module from the <Link to="/imperial-shinobi" className="text-scanner-primary">Imperial Shinobi</Link> page.
+                    Imperial Shinobi is the advanced OSINT module that combines multiple intelligence gathering tools into unified workflows. It can correlate data from various sources, create intelligence maps, and identify connections between different entities.
+                    <div className="mt-2">
+                      <Link to="/imperial-shinobi" 
+                          onClick={() => handleFaqClick("Imperial Shinobi")}>
+                        <span className="text-scanner-primary hover:underline">Access Imperial Shinobi</span>
+                      </Link>
+                    </div>
                   </AccordionContent>
                 </AccordionItem>
                 
@@ -200,7 +323,13 @@ const FaqSection = () => {
                     Can I integrate custom OSINT tools?
                   </AccordionTrigger>
                   <AccordionContent className="text-gray-400">
-                    Yes, Imperial Scanner supports plugin architecture for custom OSINT tools and data sources. Advanced users can integrate additional tools by following the developer documentation and using the tool integration framework. Configure custom tools in the <Link to="/settings?section=integrations" className="text-scanner-primary">Integrations Panel</Link>.
+                    Yes, Imperial Scanner supports plugin architecture for custom OSINT tools and data sources. Advanced users can integrate additional tools by following the developer documentation and using the tool integration framework.
+                    <div className="mt-2">
+                      <Link to="/settings?section=integrations" 
+                          onClick={() => handleFaqClick("Custom OSINT Integration")}>
+                        <span className="text-scanner-primary hover:underline">Configure custom integrations</span>
+                      </Link>
+                    </div>
                   </AccordionContent>
                 </AccordionItem>
               </Accordion>

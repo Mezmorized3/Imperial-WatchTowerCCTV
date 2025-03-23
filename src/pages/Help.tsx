@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { HelpCircle } from 'lucide-react';
+import { HelpCircle, Book, HelpingHand } from 'lucide-react';
 import SearchBar from '@/components/help/SearchBar';
 import GuidesSection from '@/components/help/GuidesSection';
 import FaqSection from '@/components/help/FaqSection';
@@ -39,9 +39,15 @@ const Help = () => {
         </div>
 
         <Tabs defaultValue="guides" className="space-y-6">
-          <TabsList className="bg-gray-800">
-            <TabsTrigger value="guides">User Guides</TabsTrigger>
-            <TabsTrigger value="faq">FAQ</TabsTrigger>
+          <TabsList className="bg-gray-800 space-x-2">
+            <TabsTrigger value="guides" className="flex items-center">
+              <Book className="h-4 w-4 mr-2" />
+              User Guides
+            </TabsTrigger>
+            <TabsTrigger value="faq" className="flex items-center">
+              <HelpingHand className="h-4 w-4 mr-2" />
+              FAQ
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="guides" className="space-y-6">
