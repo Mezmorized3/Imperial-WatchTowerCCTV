@@ -30,7 +30,9 @@ export type {
   SecurityAdminParams,
   // Scrapy tool types
   ScrapyParams,
-  ScrapyResult
+  ScrapyResult,
+  // Proxy configuration
+  ProxyConfig
 } from './osintToolTypes';
 
 // Import function implementations from specific modules

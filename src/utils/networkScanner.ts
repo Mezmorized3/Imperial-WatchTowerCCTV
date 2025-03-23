@@ -1,34 +1,100 @@
+import { ScanTarget, ScanSettings, CameraResult, ScanProgress } from '@/types/scanner';
+import { simulateNetworkDelay } from './networkUtils';
+import { getRandomGeoLocation } from './osintUtils';
+import { ProxyConfig } from './osintToolTypes';
 
-import { CameraResult, ScanProgress, ScanSettings, ScanTarget } from '@/types/scanner';
-import { analyzeFirmware, getComprehensiveThreatIntel } from './threatIntelligence';
-
-/**
- * IMPORTANT: Real network scanning cannot be performed directly from a browser
- * due to security restrictions. This implementation uses simulation to demonstrate
- * how the scanner would work in a real environment (like an Electron app or backend server).
- */
-export const scanNetwork = async (
+// Generate a random number of simulated camera results
+const generateSimulatedResults = (
   ipRange: string,
+  count: number = Math.floor(Math.random() * 5) + 1
+): CameraResult[] => {
+  const results = [];
+  
+  const vendors = ['Hikvision', 'Dahua', 'Axis', 'Vivotek', 'Bosch', 'Samsung', 'Sony'];
+  
+  // Generate simulated search results
+  for (let i = 0; i < count; i++) {
+    // Generate a random IPv4 address
+    const ipParts = [];
+    for (let j = 0; j < 4; j++) {
+      ipParts.push(Math.floor(Math.random() * 255));
+    }
+    const ip = ipParts.join('.');
+    
+    // Pick a random port from common camera ports
+    const ports = [80, 8080, 554, 443, 8000, 8081, 8181, 9000];
+    const port = ports[Math.floor(Math.random() * ports.length)];
+    
+    // Pick a random vendor
+    const vendor = vendors[Math.floor(Math.random() * vendors.length)];
+    
+    // Generate a device model based on vendor
+    const device = `${vendor} Camera ${Math.floor(Math.random() * 1000)}`;
+    
+    // Generate a firmware version
+    const version = `${Math.floor(Math.random() * 10)}.${Math.floor(Math.random() * 10)}.${Math.floor(Math.random() * 100)}`;
+    
+    // Determine if vulnerable (30% chance)
+    const vulnerable = Math.random() < 0.3;
+    
+    // Add location data for some results (65% chance)
+    let location = undefined;
+    if (Math.random() < 0.65) {
+      // Extract country from query if possible
+      let country = 'Unknown';
+      if (query.toLowerCase().includes('country:')) {
+        const countryMatch = query.match(/country:([a-zA-Z]{2})/i);
+        if (countryMatch && countryMatch[1]) {
+          country = getCountryName(countryMatch[1].toUpperCase());
+        }
+      }
+      
+      location = {
+        country,
+        city: generateRandomCity(country),
+        latitude: Math.random() * 180 - 90,
+        longitude: Math.random() * 360 - 180
+      };
+    }
+    
+    results.push({
+      ip,
+      port,
+      vendor,
+      device,
+      version,
+      vulnerable,
+      location
+    });
+  }
+  
+  return results;
+};
+
+// Simulate a network scan with progress updates
+export const scanNetwork = async (
+  target: string,
   settings: ScanSettings,
   onProgress: (progress: ScanProgress) => void,
   onCameraFound: (camera: CameraResult) => void,
-  scanType?: string,
-  abortSignal?: AbortSignal
+  scanType: string = 'ip',
+  abortSignal?: AbortSignal,
+  proxyConfig?: ProxyConfig
 ): Promise<void> => {
   // Check if scan has been aborted
   if (abortSignal?.aborted) {
     throw new Error('Scan was aborted');
   }
 
-  console.log(`Starting scan of ${ipRange} with type: ${scanType || 'ip/range'}`);
+  console.log(`Starting scan of ${target} with type: ${scanType || 'ip/range'}`);
   
   // If we're using a search engine query, handle it differently
   if (scanType && ['shodan', 'zoomeye', 'censys'].includes(scanType)) {
-    return await handleSearchEngineQuery(ipRange, scanType, settings, onProgress, onCameraFound, abortSignal);
+    return await handleSearchEngineQuery(target, scanType, settings, onProgress, onCameraFound, abortSignal);
   }
   
   // Parse the CIDR notation to get start and end IPs
-  const [baseIp, cidrMask] = ipRange.split('/');
+  const [baseIp, cidrMask] = target.split('/');
   if (!baseIp || !cidrMask) {
     throw new Error('Invalid IP range format. Expected CIDR notation (e.g., 192.168.1.0/24)');
   }

@@ -92,7 +92,7 @@ const ScanController = ({
     const targetCountry = getTargetCountry(target.value);
     
     const initialProgress: ScanProgress = {
-      status: 'running',
+      status: 'running', // Ensuring status is not optional
       targetsTotal,
       targetsScanned: 0,
       camerasFound: 0,
@@ -135,6 +135,7 @@ const ScanController = ({
           // Create a new object that includes all previous state and the new progress data
           const updatedProgress: ScanProgress = {
             ...progress,
+            status: progress.status || 'running', // Ensure status is always defined
             targetCountry
           };
           onScanProgressUpdate(updatedProgress);
@@ -149,6 +150,7 @@ const ScanController = ({
           // Update scan progress with new camera count
           const updatedProgress: ScanProgress = {
             ...scanProgress,
+            status: scanProgress.status, // Ensure status is copied
             camerasFound: scanProgress.camerasFound + 1
           };
           onScanProgressUpdate(updatedProgress);

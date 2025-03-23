@@ -12,6 +12,20 @@ export interface ToolResult {
   simulatedData?: boolean;
 }
 
+// Proxy configuration type
+export interface ProxyConfig {
+  enabled: boolean;
+  type: 'http' | 'https' | 'socks4' | 'socks5';
+  host: string;
+  port: number;
+  username?: string;
+  password?: string;
+  useAuthentication?: boolean;
+  rotationEnabled?: boolean;
+  rotationInterval?: number;
+  proxyList?: string[];
+}
+
 // Camera discovery tools
 export interface CameraResult {
   id: string;
