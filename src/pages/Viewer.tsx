@@ -8,7 +8,7 @@ import QuickStreamPlayer from '@/components/QuickStreamPlayer';
 import { mockCameras } from '@/data/mockCameras';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Camera, Search, Settings } from 'lucide-react';
+import { Camera, Search, Settings, Video, Play, Save } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
@@ -21,6 +21,7 @@ const Viewer = () => {
   const [cameras, setCameras] = useState(mockCameras);
   const [toolsMode, setToolsMode] = useState<string>('viewer');
   const [optimizedStreaming, setOptimizedStreaming] = useState<boolean>(true);
+  const [imperialIntegration, setImperialIntegration] = useState<boolean>(true);
   const { toast } = useToast();
 
   // Parse URL params to determine if we should show quick play mode
@@ -35,6 +36,7 @@ const Viewer = () => {
   useEffect(() => {
     const rtspProxyEnabled = localStorage.getItem('rtspProxyEnabled') !== 'false';
     const rtspProxyUrl = localStorage.getItem('rtspProxyUrl');
+    const imperialEnabled = localStorage.getItem('imperialIntegration') !== 'false';
     
     // If not configured, show a notice
     if (!rtspProxyUrl && toolsMode === 'viewer') {
@@ -46,6 +48,7 @@ const Viewer = () => {
     }
     
     setOptimizedStreaming(!!rtspProxyUrl && rtspProxyEnabled);
+    setImperialIntegration(imperialEnabled);
   }, [toolsMode]);
 
   // Debug logs for monitoring component lifecycle
@@ -69,6 +72,19 @@ const Viewer = () => {
       duration: 3000,
     });
   };
+  
+  const handleImperialIntegrationToggle = (checked: boolean) => {
+    setImperialIntegration(checked);
+    localStorage.setItem('imperialIntegration', checked.toString());
+    
+    toast({
+      title: checked ? "Imperial Integration Enabled" : "Imperial Integration Disabled",
+      description: checked 
+        ? "All streams and recordings will be saved to Imperial chest" 
+        : "Streams will be processed locally only",
+      duration: 3000,
+    });
+  };
 
   return (
     <div className="min-h-screen bg-scanner-dark text-white">
@@ -82,7 +98,7 @@ const Viewer = () => {
                 <Camera className="mr-2 h-4 w-4" /> Camera Viewer
               </TabsTrigger>
               <TabsTrigger value="quick" className="flex items-center">
-                <Camera className="mr-2 h-4 w-4" /> Quick Stream
+                <Play className="mr-2 h-4 w-4" /> Quick Stream
               </TabsTrigger>
               <TabsTrigger value="search" className="flex items-center">
                 <Search className="mr-2 h-4 w-4" /> Search Tools
@@ -90,21 +106,39 @@ const Viewer = () => {
             </TabsList>
             
             {toolsMode === 'viewer' && (
-              <Card className="bg-scanner-card border-gray-700 w-full sm:w-auto">
-                <CardContent className="p-3">
-                  <div className="flex items-center justify-between space-x-4">
-                    <div className="flex flex-col">
-                      <Label htmlFor="optimized-streaming" className="text-sm">Optimized Streaming</Label>
-                      <p className="text-xs text-gray-400">Uses Imperial Server for better performance</p>
+              <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+                <Card className="bg-scanner-card border-gray-700 w-full sm:w-auto">
+                  <CardContent className="p-3">
+                    <div className="flex items-center justify-between space-x-4">
+                      <div className="flex flex-col">
+                        <Label htmlFor="optimized-streaming" className="text-sm">Optimized Streaming</Label>
+                        <p className="text-xs text-gray-400">Uses Imperial Server for better performance</p>
+                      </div>
+                      <Switch 
+                        id="optimized-streaming" 
+                        checked={optimizedStreaming}
+                        onCheckedChange={handleOptimizedStreamingToggle}
+                      />
                     </div>
-                    <Switch 
-                      id="optimized-streaming" 
-                      checked={optimizedStreaming}
-                      onCheckedChange={handleOptimizedStreamingToggle}
-                    />
-                  </div>
-                </CardContent>
-              </Card>
+                  </CardContent>
+                </Card>
+                
+                <Card className="bg-scanner-card border-gray-700 w-full sm:w-auto">
+                  <CardContent className="p-3">
+                    <div className="flex items-center justify-between space-x-4">
+                      <div className="flex flex-col">
+                        <Label htmlFor="imperial-integration" className="text-sm">Imperial Chest</Label>
+                        <p className="text-xs text-gray-400">Save streams to Imperial storage</p>
+                      </div>
+                      <Switch 
+                        id="imperial-integration" 
+                        checked={imperialIntegration}
+                        onCheckedChange={handleImperialIntegrationToggle}
+                      />
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
             )}
           </div>
           

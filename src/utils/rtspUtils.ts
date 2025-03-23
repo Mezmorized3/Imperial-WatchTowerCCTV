@@ -137,6 +137,16 @@ export const recordStreamFFmpeg = async (streamUrl: string, outputPath: string =
  */
 export const convertRtspToHls = async (rtspUrl: string): Promise<string> => {
   try {
+    // Check if Imperial proxy is enabled
+    const useImperialProxy = localStorage.getItem('rtspProxyEnabled') !== 'false';
+    const imperialProxyUrl = localStorage.getItem('rtspProxyUrl');
+    
+    if (useImperialProxy && imperialProxyUrl) {
+      // Use Imperial proxy for better performance
+      const streamId = btoa(rtspUrl).replace(/[/+=]/g, '').substring(0, 12);
+      return `${imperialProxyUrl}/stream/${streamId}/index.m3u8`;
+    }
+    
     // Generate a unique output path
     const outputDir = `output/streams/${Date.now()}`;
     const outputPath = `${outputDir}/stream.m3u8`;
@@ -146,7 +156,6 @@ export const convertRtspToHls = async (rtspUrl: string): Promise<string> => {
     if (result.success) {
       // In a real-world scenario, you'd return a URL to access this stream
       // This could be served by the HLS server from the output directory
-      // For now, we're returning the local file path that would be exposed by the server
       return `/streams/${outputPath.split('/').pop()}`;
     }
     
@@ -165,6 +174,7 @@ export const getProperStreamUrl = (camera: any): string => {
   
   // If camera object has an rtspUrl property, use it
   if (camera.rtspUrl) return camera.rtspUrl;
+  if (camera.url) return camera.url;
   
   // Otherwise build a URL based on available properties
   let url = 'rtsp://';
@@ -212,16 +222,32 @@ export const startRecording = async (streamId: string): Promise<boolean> => {
   try {
     console.log(`Starting recording for stream: ${streamId}`);
     
-    // In a real implementation, identify the stream URL from the streamId
-    // and start a recording process
-    const streamUrl = `rtsp://example.com/streams/${streamId}`;
-    const outputPath = `recordings/${streamId}_${Date.now()}.mp4`;
+    // Check if Imperial integration is enabled
+    const useImperial = localStorage.getItem('imperialIntegration') !== 'false';
     
-    // Start recording for 3600 seconds (1 hour)
-    // This would typically be managed by a background process
-    const result = await recordStreamFFmpeg(streamUrl, outputPath, 3600);
-    
-    return result.success;
+    if (useImperial) {
+      // Use Imperial chest for storage
+      const result = await fetch('/api/imperial/recording/start', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ streamId, duration: 3600 })
+      });
+      
+      const data = await result.json();
+      return data.success;
+    } else {
+      // Local fallback recording logic
+      const streamUrl = `rtsp://example.com/streams/${streamId}`;
+      const outputPath = `recordings/${streamId}_${Date.now()}.mp4`;
+      
+      // Start recording for 3600 seconds (1 hour)
+      // This would typically be managed by a background process
+      const result = await recordStreamFFmpeg(streamUrl, outputPath, 3600);
+      
+      return result.success;
+    }
   } catch (error) {
     console.error('Error starting recording:', error);
     return false;
@@ -235,8 +261,22 @@ export const stopRecording = async (streamId: string): Promise<boolean> => {
   try {
     console.log(`Stopping recording for stream: ${streamId}`);
     
-    // In a real implementation, this would identify the recording process
-    // for the given streamId and stop it
+    // Check if Imperial integration is enabled
+    const useImperial = localStorage.getItem('imperialIntegration') !== 'false';
+    
+    if (useImperial) {
+      // Use Imperial chest for storage
+      const result = await fetch('/api/imperial/recording/stop', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ recordingId: streamId })
+      });
+      
+      const data = await result.json();
+      return data.success;
+    }
     
     // For example, send a signal to the recording process to stop
     // This could involve sending a request to a recording manager service
@@ -253,6 +293,65 @@ export const stopRecording = async (streamId: string): Promise<boolean> => {
  */
 export const testRtspConnection = async (rtspUrl: string): Promise<boolean> => {
   return testRtspStreamConnectivity(rtspUrl);
+};
+
+/**
+ * Save stream to Imperial chest
+ */
+export const saveStreamToImperialChest = async (streamUrl: string, metadata: any = {}): Promise<boolean> => {
+  try {
+    // This would connect to the Imperial chest storage system
+    const response = await fetch('/api/imperial/streams/save', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        streamUrl,
+        metadata: {
+          ...metadata,
+          savedAt: new Date().toISOString(),
+          source: 'imperial-scanner'
+        }
+      })
+    });
+    
+    const data = await response.json();
+    return data.success;
+  } catch (error) {
+    console.error('Error saving stream to Imperial chest:', error);
+    return false;
+  }
+};
+
+// Additional Imperial chest integration functions
+
+/**
+ * Get all streams from Imperial chest
+ */
+export const getImperialChestStreams = async (): Promise<any[]> => {
+  try {
+    const response = await fetch('/api/imperial/streams');
+    const data = await response.json();
+    return data.streams || [];
+  } catch (error) {
+    console.error('Error getting streams from Imperial chest:', error);
+    return [];
+  }
+};
+
+/**
+ * Get all recordings from Imperial chest
+ */
+export const getImperialChestRecordings = async (): Promise<any[]> => {
+  try {
+    const response = await fetch('/api/imperial/recordings');
+    const data = await response.json();
+    return data.recordings || [];
+  } catch (error) {
+    console.error('Error getting recordings from Imperial chest:', error);
+    return [];
+  }
 };
 
 /**

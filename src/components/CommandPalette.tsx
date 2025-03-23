@@ -22,6 +22,7 @@ import {
   Database,
   Wrench,
   Video,
+  Save,
 } from 'lucide-react';
 
 type CommandOption = {
@@ -80,10 +81,17 @@ const CommandPalette = ({ open, setOpen }: { open: boolean; setOpen: (open: bool
     },
     {
       label: "Quick Stream",
-      icon: <Video className="mr-2 h-4 w-4" />,
+      icon: <Play className="mr-2 h-4 w-4" />,
       path: "/viewer?mode=quick",
-      description: "Quickly play a video stream",
+      description: "Quickly play and record a video stream",
       shortcut: "Q S"
+    },
+    {
+      label: "Imperial Chest",
+      icon: <Save className="mr-2 h-4 w-4" />,
+      path: "/viewer?mode=chest",
+      description: "Access all saved streams and recordings",
+      shortcut: "I F"
     },
     {
       label: "Settings",
