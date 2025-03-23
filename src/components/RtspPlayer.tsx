@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { AlertCircle, RefreshCw, Maximize2, Volume2, VolumeX, VideoOff, Video, DownloadCloud } from 'lucide-react';
@@ -27,27 +26,37 @@ const RtspPlayer: React.FC<RtspPlayerProps> = ({
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
   const [isRecording, setIsRecording] = useState(false);
-  const [videoType, setVideoType] = useState<'hls' | 'dash' | 'direct' | 'iframe'>('direct');
+  const [videoType, setVideoType] = useState<'hls' | 'dash' | 'direct' | 'iframe' | 'youtube' | 'rtsp'>('direct');
   const playerRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
   
-  // Generate a stable stream ID from the URL
   const streamId = btoa(rtspUrl).replace(/[/+=]/g, '').substring(0, 12);
   
-  const detectStreamType = (url: string): 'hls' | 'dash' | 'direct' | 'iframe' => {
+  const extractYouTubeId = (url: string): string | null => {
+    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+    const match = url.match(regExp);
+    return (match && match[2].length === 11) ? match[2] : null;
+  };
+  
+  const detectStreamType = (url: string): 'hls' | 'dash' | 'direct' | 'iframe' | 'youtube' | 'rtsp' => {
     const lowerUrl = url.toLowerCase();
+    
+    if (lowerUrl.includes('youtube.com/watch') || 
+        lowerUrl.includes('youtu.be/') ||
+        lowerUrl.includes('youtube.com/embed')) {
+      return 'youtube';
+    }
     
     if (lowerUrl.includes('.m3u8')) {
       return 'hls';
     } else if (lowerUrl.includes('.mpd')) {
       return 'dash';
     } else if (lowerUrl.startsWith('rtsp://')) {
-      return 'iframe'; // RTSP needs conversion or iframe
+      return 'rtsp'; // RTSP needs conversion or iframe
     } else if (/\.(mp4|webm|ogg|mov)$/i.test(lowerUrl)) {
       return 'direct'; // Direct video files
     } else if (lowerUrl.startsWith('http') || lowerUrl.startsWith('https')) {
-      // For HTTP URLs, check if they point to known video formats
       if (/\.(mp4|webm|ogg|mov|m3u8|mpd)$/i.test(lowerUrl)) {
         if (lowerUrl.includes('.m3u8')) return 'hls';
         if (lowerUrl.includes('.mpd')) return 'dash';
@@ -67,18 +76,25 @@ const RtspPlayer: React.FC<RtspPlayerProps> = ({
       const type = detectStreamType(rtspUrl);
       setVideoType(type);
       
-      if (type === 'hls' || type === 'direct') {
-        // For HLS or direct video, use the URL directly
+      if (type === 'youtube') {
+        const videoId = extractYouTubeId(rtspUrl);
+        if (videoId) {
+          setStreamUrl(`https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1`);
+        } else {
+          throw new Error('Invalid YouTube URL');
+        }
+      } else if (type === 'hls' || type === 'direct') {
         setStreamUrl(rtspUrl);
+      } else if (type === 'rtsp') {
+        const hlsUrl = await convertRtspToHls(rtspUrl);
+        setStreamUrl(hlsUrl);
+        setVideoType('hls');
       } else if (type === 'iframe') {
-        // For RTSP or unknown formats that need conversion
         if (rtspUrl.startsWith('rtsp://')) {
-          // Convert RTSP to HLS if needed
           const hlsUrl = await convertRtspToHls(rtspUrl);
           setStreamUrl(hlsUrl);
           setVideoType('hls');
         } else {
-          // Use iframe for other formats
           setStreamUrl(rtspUrl);
         }
       }
@@ -158,7 +174,6 @@ const RtspPlayer: React.FC<RtspPlayerProps> = ({
   useEffect(() => {
     initializeStream();
     
-    // Handle fullscreen change
     const handleFullscreenChange = () => {
       setIsFullscreen(!!document.fullscreenElement);
     };
@@ -170,7 +185,6 @@ const RtspPlayer: React.FC<RtspPlayerProps> = ({
     };
   }, [rtspUrl]);
   
-  // Handle video events
   const handleVideoError = () => {
     const errorMsg = 'Failed to load video stream.';
     setError(errorMsg);
@@ -219,9 +233,20 @@ const RtspPlayer: React.FC<RtspPlayerProps> = ({
     );
   }
   
-  // Render the appropriate player based on video type
   const renderPlayer = () => {
-    if (videoType === 'hls') {
+    if (videoType === 'youtube') {
+      return (
+        <iframe 
+          src={streamUrl}
+          width="100%" 
+          height="100%" 
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowFullScreen
+          style={{ border: 'none' }}
+          title="YouTube Video"
+        />
+      );
+    } else if (videoType === 'hls') {
       return (
         <ReactHlsPlayer
           src={streamUrl}
@@ -242,7 +267,6 @@ const RtspPlayer: React.FC<RtspPlayerProps> = ({
         />
       );
     } else if (videoType === 'direct') {
-      // For direct video files (MP4, WebM, etc.)
       return (
         <video 
           ref={playerRef}
@@ -257,7 +281,6 @@ const RtspPlayer: React.FC<RtspPlayerProps> = ({
         />
       );
     } else {
-      // Fallback to iframe for other formats
       return (
         <iframe 
           src={streamUrl}
@@ -283,27 +306,31 @@ const RtspPlayer: React.FC<RtspPlayerProps> = ({
           <span>{rtspUrl}</span>
         </div>
         <div className="flex gap-2">
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className="h-8 w-8 rounded-full bg-black/50 hover:bg-black/70"
-            onClick={toggleRecording}
-            title={isRecording ? "Stop Recording" : "Start Recording"}
-          >
-            {isRecording ? 
-              <VideoOff className="h-4 w-4 text-red-500" /> : 
-              <Video className="h-4 w-4" />
-            }
-          </Button>
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className="h-8 w-8 rounded-full bg-black/50 hover:bg-black/70"
-            onClick={toggleMute}
-            title={isMuted ? "Unmute" : "Mute"}
-          >
-            {isMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
-          </Button>
+          {videoType !== 'youtube' && (
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="h-8 w-8 rounded-full bg-black/50 hover:bg-black/70"
+              onClick={toggleRecording}
+              title={isRecording ? "Stop Recording" : "Start Recording"}
+            >
+              {isRecording ? 
+                <VideoOff className="h-4 w-4 text-red-500" /> : 
+                <Video className="h-4 w-4" />
+              }
+            </Button>
+          )}
+          {videoType !== 'youtube' && (
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="h-8 w-8 rounded-full bg-black/50 hover:bg-black/70"
+              onClick={toggleMute}
+              title={isMuted ? "Unmute" : "Mute"}
+            >
+              {isMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
+            </Button>
+          )}
           <Button 
             variant="ghost" 
             size="icon" 

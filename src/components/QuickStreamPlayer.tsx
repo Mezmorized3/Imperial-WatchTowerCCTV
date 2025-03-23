@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -35,6 +34,14 @@ const QuickStreamPlayer: React.FC<QuickStreamPlayerProps> = ({ className }) => {
     // Check if it's a valid URL format
     try {
       new URL(url);
+      
+      // Special case for YouTube URLs
+      if (url.includes('youtube.com/watch') || 
+          url.includes('youtu.be/') ||
+          url.includes('youtube.com/embed')) {
+        return true;
+      }
+      
       return true;
     } catch (e) {
       // If not a valid URL, check if it might be a local video file path
