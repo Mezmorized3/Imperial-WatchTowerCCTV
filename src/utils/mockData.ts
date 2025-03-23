@@ -36,6 +36,78 @@ export const REGIONS = [
   { code: 'jo', name: 'Jordan' }
 ];
 
+// Add more detailed country IP ranges based on research
+export const DETAILED_COUNTRY_IP_RANGES = {
+  ge: [ // Georgia
+    { 
+      range: "5.152.0.0/17", 
+      description: "32,768 IPs, JSC 'Silknet'", 
+      assignDate: "2012-07-18" 
+    },
+    { 
+      range: "31.146.0.0/16", 
+      description: "65,536 IPs, JSC 'Silknet'", 
+      assignDate: "2011-02-10" 
+    },
+    { 
+      range: "37.110.160.0/19", 
+      description: "8,192 IPs, JSC 'Silknet'", 
+      assignDate: "2012-02-08" 
+    },
+  ],
+  ro: [ // Romania
+    { 
+      range: "5.2.128.0/17", 
+      description: "32,768 IPs, RCS & RDS SA", 
+      assignDate: "2012-04-27" 
+    },
+    { 
+      range: "5.12.0.0/14", 
+      description: "262,144 IPs, RCS & RDS SA", 
+      assignDate: "2012-04-27" 
+    },
+    { 
+      range: "31.5.0.0/16", 
+      description: "65,536 IPs, Vodafone Romania S.A.", 
+      assignDate: "2011-04-08" 
+    },
+  ],
+  ua: [ // Ukraine
+    { 
+      range: "5.1.0.0/19", 
+      description: "8,192 IPs, PRIVATE JOINT STOCK COMPANY 'DATAGROUP'", 
+      assignDate: "2012-04-24" 
+    },
+    { 
+      range: "5.58.0.0/16", 
+      description: "65,536 IPs, Lanet Network Ltd", 
+      assignDate: "2012-06-01" 
+    },
+    { 
+      range: "5.105.0.0/16", 
+      description: "65,536 IPs, TRINITY TELECOM LLC", 
+      assignDate: "2012-06-28" 
+    },
+  ],
+  ru: [ // Russia (sample - would be expanded in real implementation)
+    { 
+      range: "5.3.0.0/16", 
+      description: "65,536 IPs, JSC Rostelecom", 
+      assignDate: "2012-04-30" 
+    },
+    { 
+      range: "5.8.0.0/14", 
+      description: "262,144 IPs, PJSC MegaFon", 
+      assignDate: "2012-04-26" 
+    },
+    { 
+      range: "5.16.0.0/14", 
+      description: "262,144 IPs, PJSC MTS", 
+      assignDate: "2012-04-27" 
+    },
+  ],
+};
+
 // Real IP ranges by country
 export const COUNTRY_IP_RANGES: Record<string, Array<{label: string, value: string}>> = {
   us: [

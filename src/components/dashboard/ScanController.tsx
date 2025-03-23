@@ -5,6 +5,7 @@ import { ScanTarget, ScanProgress, CameraResult, ScanSettings } from '@/types/sc
 import { getRandomGeoLocation } from '@/utils/osintUtils';
 import { ProxyConfig } from '@/utils/osintToolTypes';
 import { CameraResult as OsintCameraResult } from '@/utils/osintToolTypes';
+import { getCountryIpRanges, getRandomIpInRange } from '@/utils/ipRangeUtils';
 
 interface ScanControllerProps {
   onScanProgressUpdate: (progress: ScanProgress) => void;
@@ -13,9 +14,7 @@ interface ScanControllerProps {
   proxyConfig?: ProxyConfig;
 }
 
-// Helper function to convert between camera result types
 const convertCameraResult = (camera: OsintCameraResult): CameraResult => {
-  // Map severity strings to the allowed enum values
   const mapSeverity = (sev: string): 'low' | 'medium' | 'high' | 'critical' => {
     switch (sev.toLowerCase()) {
       case 'critical': return 'critical';
@@ -25,7 +24,6 @@ const convertCameraResult = (camera: OsintCameraResult): CameraResult => {
     }
   };
 
-  // Map accessLevel to allowed values
   const mapAccessLevel = (level?: string): 'none' | 'view' | 'control' | 'admin' => {
     switch (level?.toLowerCase()) {
       case 'admin': return 'admin';
@@ -38,7 +36,7 @@ const convertCameraResult = (camera: OsintCameraResult): CameraResult => {
   return {
     id: camera.id,
     ip: camera.ip,
-    port: camera.port || 0, // Ensure port is not optional
+    port: camera.port || 0,
     brand: camera.manufacturer,
     model: camera.model,
     url: camera.rtspUrl,
@@ -104,10 +102,21 @@ const ScanController = ({
       }
     }
     
+    if (value.includes('5.152.') || value.includes('31.146.') || value.includes('37.110.16')) {
+      return 'Georgia';
+    } else if (value.includes('5.2.') || value.includes('5.12.') || value.includes('31.5.')) {
+      return 'Romania';
+    } else if (value.includes('5.1.0.') || value.includes('5.58.') || value.includes('5.105.')) {
+      return 'Ukraine';
+    } else if (value.includes('5.3.') || value.includes('5.8.') || value.includes('5.16.')) {
+      return 'Russia';
+    }
+    
     const countries = [
       'United States', 'Germany', 'France', 'Netherlands', 
       'United Kingdom', 'Japan', 'Singapore', 'Australia',
-      'Brazil', 'Canada', 'Italy', 'Spain'
+      'Brazil', 'Canada', 'Italy', 'Spain',
+      'Georgia', 'Romania', 'Ukraine', 'Russia'
     ];
     
     return countries[Math.floor(Math.random() * countries.length)];
@@ -128,10 +137,35 @@ const ScanController = ({
     scanInProgressRef.current = true;
     
     let ipRange = target.value;
+    let countryCode = '';
+    
+    const lowerValue = target.value.toLowerCase();
+    if (lowerValue.includes('georgia') || lowerValue.includes('ge:')) {
+      countryCode = 'ge';
+    } else if (lowerValue.includes('romania') || lowerValue.includes('ro:')) {
+      countryCode = 'ro';
+    } else if (lowerValue.includes('ukraine') || lowerValue.includes('ua:')) {
+      countryCode = 'ua';
+    } else if (lowerValue.includes('russia') || lowerValue.includes('ru:')) {
+      countryCode = 'ru';
+    }
+    
+    if (countryCode && !ipRange.includes('/')) {
+      const countryRanges = getCountryIpRanges(countryCode);
+      if (countryRanges.length > 0) {
+        const randomRangeIndex = Math.floor(Math.random() * countryRanges.length);
+        ipRange = countryRanges[randomRangeIndex].range;
+        
+        toast({
+          title: `Selected IP Range for ${countryCode.toUpperCase()}`,
+          description: `Using range: ${ipRange} - ${countryRanges[randomRangeIndex].description}`,
+        });
+      }
+    }
     
     let targetsTotal = 1;
     if (target.type === 'range') {
-      const cidrMatch = target.value.match(/\/(\d+)$/);
+      const cidrMatch = ipRange.match(/\/(\d+)$/);
       if (cidrMatch) {
         const cidrPrefix = parseInt(cidrMatch[1]);
         if (cidrPrefix <= 32) {
@@ -149,7 +183,7 @@ const ScanController = ({
       });
     }
     
-    const targetCountry = getTargetCountry(target.value);
+    const targetCountry = getTargetCountry(ipRange);
     
     const initialProgress: ScanProgress = {
       status: 'running',
@@ -159,19 +193,24 @@ const ScanController = ({
       startTime: new Date(),
       scanTarget: target,
       scanSettings: settings,
-      currentTarget: target.value,
+      currentTarget: ipRange,
       targetCountry
     };
     
     onScanProgressUpdate(initialProgress);
     setScanProgress(initialProgress);
     
+    let scanDescription = `Starting scan of ${ipRange}`;
+    if (countryCode) {
+      scanDescription += ` in ${targetCountry}`;
+    }
+    scanDescription += ` with ${settings.aggressive ? 'aggressive' : 'standard'} settings`;
+    
     toast({
       title: "Scan Started",
-      description: `Starting scan of ${target.value} with ${settings.aggressive ? 'aggressive' : 'standard'} settings`,
+      description: scanDescription,
     });
     
-    // Show proxy notification if active
     if (proxyConfig?.enabled) {
       toast({
         title: "Proxy Active",
@@ -196,10 +235,10 @@ const ScanController = ({
         scanInProgressRef.current = false;
       };
       
-      // Convert ScanSettings to NetworkScanSettings
       const networkSettings: NetworkScanSettings = {
         ...settings,
-        regionFilter: Array.isArray(settings.regionFilter) ? settings.regionFilter.join(',') : settings.regionFilter
+        regionFilter: Array.isArray(settings.regionFilter) ? settings.regionFilter.join(',') : settings.regionFilter,
+        targetSubnet: ipRange
       };
       
       const scanResult = await scanNetwork(
@@ -208,7 +247,6 @@ const ScanController = ({
         (progress) => {
           if (abortController.signal.aborted) return;
           
-          // Create a new object that includes all previous state and the new progress data
           const updatedProgress: ScanProgress = {
             ...progress,
             status: progress.status || 'running',
@@ -220,15 +258,12 @@ const ScanController = ({
         (camera) => {
           if (abortController.signal.aborted) return;
           
-          // Convert the camera to the proper type
           const convertedCamera = convertCameraResult(camera);
           
-          // Get current results and add the new camera
           const newResults = [...results, convertedCamera];
           setResults(newResults);
           onResultsUpdate(newResults);
           
-          // Update scan progress with new camera count
           const updatedProgress: ScanProgress = {
             ...scanProgress,
             status: scanProgress.status,
@@ -243,7 +278,6 @@ const ScanController = ({
       );
       
       if (!abortController.signal.aborted) {
-        // Create final progress state for completed scan
         const completedProgress: ScanProgress = {
           ...scanProgress,
           status: 'completed',
@@ -254,7 +288,6 @@ const ScanController = ({
         onScanProgressUpdate(completedProgress);
         setScanProgress(completedProgress);
         
-        // Convert all cameras to the proper type
         const convertedCameras = scanResult.data.cameras.map(convertCameraResult);
         
         setResults(convertedCameras);
@@ -278,7 +311,6 @@ const ScanController = ({
         const errorMessage = err instanceof Error ? err.message : 'Unknown error during scan';
         onErrorOccurred(errorMessage);
         
-        // Create error progress state
         const errorProgress: ScanProgress = {
           ...scanProgress,
           status: 'failed',
