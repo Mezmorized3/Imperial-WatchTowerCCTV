@@ -149,7 +149,7 @@ const HackingToolTool: React.FC = () => {
   };
 
   return (
-    <Card className="border-gray-700 bg-scanner-dark-alt">
+    <Card className="border-gray-700">
       <CardHeader>
         <CardTitle className="text-scanner-primary flex items-center">
           <Cpu className="mr-2 h-5 w-5" />

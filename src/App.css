@@ -25,6 +25,7 @@ body {
   --scanner-warning: #ffc107;
   --scanner-danger: #ff3d00;
   --scanner-dark: #151b26;
+  --scanner-dark-alt: #1c2333;
   --scanner-card: #1c2333;
   --scanner-card-hover: #232b3d;
 }
@@ -51,6 +52,10 @@ body {
 
 .bg-scanner-dark {
   background-color: var(--scanner-dark);
+}
+
+.bg-scanner-dark-alt {
+  background-color: var(--scanner-dark-alt);
 }
 
 .bg-scanner-card {
