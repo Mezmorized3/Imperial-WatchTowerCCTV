@@ -70,7 +70,11 @@ export const CustomCommandTab: React.FC<CustomCommandTabProps> = ({
     } catch (error) {
       console.error("Error executing custom command:", error);
       const errorMessage = error instanceof Error ? error.message : "An unexpected error occurred";
-      handleToolExecution({} as HackingToolParams, "").onError(errorMessage);
+      toast({
+        title: "Execution Error",
+        description: errorMessage,
+        variant: "destructive",
+      });
     }
   };
 
@@ -99,6 +103,44 @@ export const CustomCommandTab: React.FC<CustomCommandTabProps> = ({
       </div>
 
       <FormatSelector outputFormat={outputFormat} setOutputFormat={setOutputFormat} />
+      
+      <div className="space-y-2">
+        <Label className="text-white font-semibold">Example Commands</Label>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+          <Button 
+            variant="outline" 
+            size="sm"
+            className="bg-scanner-dark-alt border-gray-700 text-white hover:bg-scanner-dark justify-start"
+            onClick={() => setCustomCommand('nmap -sV -p 1-1000 192.168.1.1')}
+          >
+            Nmap Port Scan
+          </Button>
+          <Button 
+            variant="outline" 
+            size="sm"
+            className="bg-scanner-dark-alt border-gray-700 text-white hover:bg-scanner-dark justify-start"
+            onClick={() => setCustomCommand('sqlmap --url="http://example.com/page.php?id=1" --dbs')}
+          >
+            SQLMap Database Scan
+          </Button>
+          <Button 
+            variant="outline" 
+            size="sm"
+            className="bg-scanner-dark-alt border-gray-700 text-white hover:bg-scanner-dark justify-start"
+            onClick={() => setCustomCommand('dirb http://example.com /usr/share/wordlists/dirb/common.txt')}
+          >
+            Directory Brute Force
+          </Button>
+          <Button 
+            variant="outline" 
+            size="sm"
+            className="bg-scanner-dark-alt border-gray-700 text-white hover:bg-scanner-dark justify-start"
+            onClick={() => setCustomCommand('hydra -l admin -P passwords.txt example.com http-post-form "/login:username=^USER^&password=^PASS^:F=Login failed"')}
+          >
+            Hydra Password Crack
+          </Button>
+        </div>
+      </div>
       
       <Button
         onClick={handleExecuteCustom}

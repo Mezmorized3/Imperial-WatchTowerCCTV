@@ -1,31 +1,38 @@
 
 import React from 'react';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 
 interface FormatSelectorProps {
   outputFormat: string;
   setOutputFormat: (format: string) => void;
 }
 
-export const FormatSelector: React.FC<FormatSelectorProps> = ({ outputFormat, setOutputFormat }) => {
-  const formatOptions = ['json', 'text', 'xml', 'csv', 'yaml'];
-
+export const FormatSelector: React.FC<FormatSelectorProps> = ({
+  outputFormat,
+  setOutputFormat
+}) => {
   return (
     <div className="space-y-2">
-      <Label htmlFor="outputFormat" className="text-white font-semibold">Output Format</Label>
-      <Select value={outputFormat} onValueChange={setOutputFormat}>
-        <SelectTrigger id="outputFormat" className="w-full bg-scanner-dark border-gray-700 text-white focus:ring-scanner-primary focus:border-scanner-primary">
-          <SelectValue placeholder="Select output format" />
-        </SelectTrigger>
-        <SelectContent className="bg-scanner-dark text-white border-gray-700">
-          {formatOptions.map((format) => (
-            <SelectItem key={format} value={format} className="text-white hover:bg-scanner-primary/30 focus:bg-scanner-primary/30">
-              {format.toUpperCase()}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+      <Label className="text-white font-semibold">Output Format</Label>
+      <RadioGroup 
+        value={outputFormat} 
+        onValueChange={setOutputFormat}
+        className="flex space-x-4"
+      >
+        <div className="flex items-center space-x-2">
+          <RadioGroupItem value="json" id="json" className="border-gray-500 text-scanner-primary" />
+          <Label htmlFor="json" className="text-white cursor-pointer">JSON</Label>
+        </div>
+        <div className="flex items-center space-x-2">
+          <RadioGroupItem value="text" id="text" className="border-gray-500 text-scanner-primary" />
+          <Label htmlFor="text" className="text-white cursor-pointer">Text</Label>
+        </div>
+        <div className="flex items-center space-x-2">
+          <RadioGroupItem value="table" id="table" className="border-gray-500 text-scanner-primary" />
+          <Label htmlFor="table" className="text-white cursor-pointer">Table</Label>
+        </div>
+      </RadioGroup>
     </div>
   );
 };

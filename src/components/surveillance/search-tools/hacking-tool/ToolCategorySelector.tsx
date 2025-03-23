@@ -12,7 +12,7 @@ export const ToolCategorySelector: React.FC<ToolCategorySelectorProps> = ({
   toolCategory,
   setToolCategory
 }) => {
-  const toolCategories = [
+  const categories = [
     'Information Gathering',
     'Vulnerability Scanner',
     'Exploitation Tools',
@@ -22,25 +22,22 @@ export const ToolCategorySelector: React.FC<ToolCategorySelectorProps> = ({
     'Stress Testing',
     'Password Hacking',
     'IP Tracking',
-    'Programming Languages'
+    'Programming Languages',
+    'Payload Creation'
   ];
 
   return (
     <div className="space-y-2">
-      <Label htmlFor="toolCategory">Tool Category</Label>
-      <Select 
-        value={toolCategory} 
-        onValueChange={(value: string) => {
-          setToolCategory(value);
-          // Reset tool selection will happen in parent component
-        }}
-      >
+      <Label htmlFor="toolCategory" className="text-white font-semibold">Tool Category</Label>
+      <Select value={toolCategory} onValueChange={setToolCategory}>
         <SelectTrigger id="toolCategory" className="w-full bg-scanner-dark border-gray-700 text-white">
           <SelectValue placeholder="Select category" />
         </SelectTrigger>
-        <SelectContent className="bg-scanner-dark text-white border-gray-700">
-          {toolCategories.map((category) => (
-            <SelectItem key={category} value={category} className="text-white">{category}</SelectItem>
+        <SelectContent className="bg-scanner-dark text-white border-gray-700 max-h-80">
+          {categories.map((category) => (
+            <SelectItem key={category} value={category}>
+              {category}
+            </SelectItem>
           ))}
         </SelectContent>
       </Select>

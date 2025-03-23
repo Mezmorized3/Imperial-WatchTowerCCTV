@@ -1,7 +1,7 @@
 
 import React from 'react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Terminal, Folder } from 'lucide-react';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { Terminal, Tools } from 'lucide-react';
 
 interface HackingTabsProps {
   selectedTab: string;
@@ -17,29 +17,34 @@ export const HackingTabs: React.FC<HackingTabsProps> = ({
   customTabContent
 }) => {
   return (
-    <Tabs value={selectedTab} onValueChange={setSelectedTab} className="w-full">
-      <TabsList className="grid grid-cols-2 mb-4 bg-scanner-dark border border-gray-700">
+    <Tabs
+      defaultValue={selectedTab}
+      value={selectedTab}
+      onValueChange={setSelectedTab}
+      className="w-full"
+    >
+      <TabsList className="grid w-full grid-cols-2 bg-scanner-dark-alt">
         <TabsTrigger 
-          value="tools" 
-          className="data-[state=active]:bg-scanner-primary/30 data-[state=active]:text-white text-gray-300 hover:text-white transition-colors"
+          value="tools"
+          className="flex items-center justify-center gap-2 data-[state=active]:bg-scanner-primary data-[state=active]:text-black"
         >
-          <Folder className="h-4 w-4 mr-2" />
+          <Tools className="h-4 w-4" />
           Tool Selection
         </TabsTrigger>
         <TabsTrigger 
-          value="custom" 
-          className="data-[state=active]:bg-scanner-primary/30 data-[state=active]:text-white text-gray-300 hover:text-white transition-colors"
+          value="custom"
+          className="flex items-center justify-center gap-2 data-[state=active]:bg-scanner-primary data-[state=active]:text-black"
         >
-          <Terminal className="h-4 w-4 mr-2" />
+          <Terminal className="h-4 w-4" />
           Custom Command
         </TabsTrigger>
       </TabsList>
       
-      <TabsContent value="tools" className="space-y-4 text-white animate-in fade-in">
+      <TabsContent value="tools" className="mt-4 space-y-4">
         {toolsTabContent}
       </TabsContent>
       
-      <TabsContent value="custom" className="space-y-4 text-white animate-in fade-in">
+      <TabsContent value="custom" className="mt-4 space-y-4">
         {customTabContent}
       </TabsContent>
     </Tabs>
