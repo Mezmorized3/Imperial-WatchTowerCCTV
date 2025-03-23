@@ -13,14 +13,16 @@ export const FormatSelector: React.FC<FormatSelectorProps> = ({ outputFormat, se
 
   return (
     <div className="space-y-2">
-      <Label htmlFor="outputFormat" className="text-white">Output Format</Label>
+      <Label htmlFor="outputFormat" className="text-white font-semibold">Output Format</Label>
       <Select value={outputFormat} onValueChange={setOutputFormat}>
-        <SelectTrigger id="outputFormat" className="w-full bg-scanner-dark border-gray-700 text-white">
+        <SelectTrigger id="outputFormat" className="w-full bg-scanner-dark border-gray-700 text-white focus:ring-scanner-primary focus:border-scanner-primary">
           <SelectValue placeholder="Select output format" />
         </SelectTrigger>
         <SelectContent className="bg-scanner-dark text-white border-gray-700">
           {formatOptions.map((format) => (
-            <SelectItem key={format} value={format} className="text-white hover:bg-scanner-primary/20">{format.toUpperCase()}</SelectItem>
+            <SelectItem key={format} value={format} className="text-white hover:bg-scanner-primary/30 focus:bg-scanner-primary/30">
+              {format.toUpperCase()}
+            </SelectItem>
           ))}
         </SelectContent>
       </Select>

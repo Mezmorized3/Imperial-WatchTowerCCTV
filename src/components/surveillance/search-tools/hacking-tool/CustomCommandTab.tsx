@@ -77,22 +77,22 @@ export const CustomCommandTab: React.FC<CustomCommandTabProps> = ({
   return (
     <>
       <div className="space-y-2">
-        <Label htmlFor="customCommand">Custom Command</Label>
+        <Label htmlFor="customCommand" className="text-white font-semibold">Custom Command</Label>
         <Input
           id="customCommand"
           placeholder="Enter custom command (e.g., nmap -sV 192.168.1.1)"
-          className="bg-scanner-dark border-gray-700"
+          className="bg-scanner-dark border-gray-700 text-white placeholder:text-gray-500"
           value={customCommand}
           onChange={(e) => setCustomCommand(e.target.value)}
         />
       </div>
       
       <div className="space-y-2">
-        <Label htmlFor="target">Target (Optional, if not in command)</Label>
+        <Label htmlFor="target" className="text-white font-semibold">Target (Optional, if not in command)</Label>
         <Input
           id="target"
           placeholder="Enter target IP, domain, or file path"
-          className="bg-scanner-dark border-gray-700"
+          className="bg-scanner-dark border-gray-700 text-white placeholder:text-gray-500"
           value={target}
           onChange={(e) => setTarget(e.target.value)}
         />
@@ -103,7 +103,7 @@ export const CustomCommandTab: React.FC<CustomCommandTabProps> = ({
       <Button
         onClick={handleExecuteCustom}
         disabled={isExecuting || !customCommand}
-        className="w-full bg-scanner-warning hover:bg-scanner-warning/90 text-black"
+        className="w-full bg-scanner-warning hover:bg-scanner-warning/90 text-black font-medium"
       >
         {isExecuting ? (
           <Loader2 className="h-4 w-4 mr-2 animate-spin" />

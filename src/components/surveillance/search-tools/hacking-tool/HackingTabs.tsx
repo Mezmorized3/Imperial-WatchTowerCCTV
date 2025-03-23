@@ -21,25 +21,25 @@ export const HackingTabs: React.FC<HackingTabsProps> = ({
       <TabsList className="grid grid-cols-2 mb-4 bg-scanner-dark border border-gray-700">
         <TabsTrigger 
           value="tools" 
-          className="data-[state=active]:bg-scanner-primary/30 data-[state=active]:text-white text-gray-300"
+          className="data-[state=active]:bg-scanner-primary/30 data-[state=active]:text-white text-gray-300 hover:text-white transition-colors"
         >
           <Folder className="h-4 w-4 mr-2" />
           Tool Selection
         </TabsTrigger>
         <TabsTrigger 
           value="custom" 
-          className="data-[state=active]:bg-scanner-primary/30 data-[state=active]:text-white text-gray-300"
+          className="data-[state=active]:bg-scanner-primary/30 data-[state=active]:text-white text-gray-300 hover:text-white transition-colors"
         >
           <Terminal className="h-4 w-4 mr-2" />
           Custom Command
         </TabsTrigger>
       </TabsList>
       
-      <TabsContent value="tools" className="space-y-4 text-white">
+      <TabsContent value="tools" className="space-y-4 text-white animate-in fade-in">
         {toolsTabContent}
       </TabsContent>
       
-      <TabsContent value="custom" className="space-y-4 text-white">
+      <TabsContent value="custom" className="space-y-4 text-white animate-in fade-in">
         {customTabContent}
       </TabsContent>
     </Tabs>
