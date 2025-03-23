@@ -162,7 +162,7 @@ const QuickStreamPlayer: React.FC<QuickStreamPlayerProps> = ({ className }) => {
             id="imperial-save" 
             checked={saveToImperial}
             onCheckedChange={setSaveToImperial}
-            size="sm"
+            className="data-[state=checked]:bg-scanner-primary"
           />
         </div>
       </div>

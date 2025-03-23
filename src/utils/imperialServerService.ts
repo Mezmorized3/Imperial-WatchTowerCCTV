@@ -96,6 +96,42 @@ class ImperialServerService {
   }
 
   /**
+   * Log stream access to the Imperial chest
+   * @param streamData Data about the stream access
+   * @returns Promise resolving to the log result
+   */
+  async logStreamAccess(streamData: { url: string; timestamp: string; source: string }): Promise<any> {
+    const authToken = imperialAuthService.getAuthToken();
+    
+    if (!authToken) {
+      console.warn('Cannot log stream access: Not authenticated');
+      return { success: false, error: 'Not authenticated' };
+    }
+    
+    try {
+      const response = await fetch('http://localhost:5001/v1/api/stream/log', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${authToken}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(streamData)
+      });
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Stream logging error:', errorText);
+        return { success: false, error: errorText };
+      }
+      
+      return await response.json();
+    } catch (error) {
+      console.error('Error logging stream access:', error);
+      return { success: false, error: String(error) };
+    }
+  }
+
+  /**
    * Initiate a camera scan using specified parameters
    * @param targetIP Target IP address to scan
    * @param scanType Type of scan to perform
