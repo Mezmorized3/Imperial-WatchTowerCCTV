@@ -1,3 +1,4 @@
+
 import { nanoid } from 'nanoid';
 import { CameraResult } from '@/utils/osintToolTypes';
 import { ScanProgress, ScanSettings as AppScanSettings } from '@/types/scanner';
@@ -164,7 +165,7 @@ export const scanNetwork = async (
           vulnerabilities: generateVulnerabilities(randomType),
           // Add properties to fix type errors
           lastSeen: new Date(),
-          accessLevel: Math.random() > 0.5 ? 'admin' : 'guest'
+          accessLevel: Math.random() > 0.5 ? 'admin' : 'view' // Changed 'guest' to 'view' to match allowed values
         };
         
         // Add additional data for detailed scans
