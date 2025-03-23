@@ -1,8 +1,10 @@
 
 import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import ViewerHeader from '@/components/viewer/ViewerHeader';
 import ViewerTabs from '@/components/viewer/ViewerTabs';
 import CameraSearchTools from '@/components/surveillance/CameraSearchTools';
+import QuickStreamPlayer from '@/components/QuickStreamPlayer';
 import { mockCameras } from '@/data/mockCameras';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -13,12 +15,21 @@ import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
 
 const Viewer = () => {
+  const location = useLocation();
   const isMobile = useIsMobile();
   const [activeTab, setActiveTab] = useState<string>('overview');
   const [cameras, setCameras] = useState(mockCameras);
   const [toolsMode, setToolsMode] = useState<string>('viewer');
   const [optimizedStreaming, setOptimizedStreaming] = useState<boolean>(true);
   const { toast } = useToast();
+
+  // Parse URL params to determine if we should show quick play mode
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    if (params.get('mode') === 'quick') {
+      setToolsMode('quick');
+    }
+  }, [location]);
 
   // Check if Imperial Server streaming is configured
   useEffect(() => {
@@ -70,6 +81,9 @@ const Viewer = () => {
               <TabsTrigger value="viewer" className="flex items-center">
                 <Camera className="mr-2 h-4 w-4" /> Camera Viewer
               </TabsTrigger>
+              <TabsTrigger value="quick" className="flex items-center">
+                <Camera className="mr-2 h-4 w-4" /> Quick Stream
+              </TabsTrigger>
               <TabsTrigger value="search" className="flex items-center">
                 <Search className="mr-2 h-4 w-4" /> Search Tools
               </TabsTrigger>
@@ -100,6 +114,16 @@ const Viewer = () => {
               setActiveTab={setActiveTab} 
               cameras={cameras} 
             />
+          </TabsContent>
+          
+          <TabsContent value="quick">
+            <div className="flex justify-center">
+              <Card className="border-gray-700 bg-scanner-dark-alt w-full max-w-2xl">
+                <CardContent className="p-6">
+                  <QuickStreamPlayer />
+                </CardContent>
+              </Card>
+            </div>
           </TabsContent>
           
           <TabsContent value="search">

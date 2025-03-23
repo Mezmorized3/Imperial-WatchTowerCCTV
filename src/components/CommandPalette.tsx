@@ -20,7 +20,8 @@ import {
   Play,
   MonitorPlay,
   Database,
-  Wrench // Replace Tool with Wrench, which is a valid icon in lucide-react
+  Wrench,
+  Video,
 } from 'lucide-react';
 
 type CommandOption = {
@@ -65,7 +66,7 @@ const CommandPalette = ({ open, setOpen }: { open: boolean; setOpen: (open: bool
     },
     {
       label: "OSINT Tools",
-      icon: <Wrench className="mr-2 h-4 w-4" />, // Changed from Tool to Wrench
+      icon: <Wrench className="mr-2 h-4 w-4" />,
       path: "/osint-tools",
       description: "Open-source intelligence gathering tools",
       shortcut: "O T"
@@ -76,6 +77,13 @@ const CommandPalette = ({ open, setOpen }: { open: boolean; setOpen: (open: bool
       path: "/viewer",
       description: "Live camera feed viewer",
       shortcut: "C V"
+    },
+    {
+      label: "Quick Stream",
+      icon: <Video className="mr-2 h-4 w-4" />,
+      path: "/viewer?mode=quick",
+      description: "Quickly play a video stream",
+      shortcut: "Q S"
     },
     {
       label: "Settings",
