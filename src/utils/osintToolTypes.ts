@@ -12,18 +12,6 @@ export interface ToolResult {
   simulatedData?: boolean;
 }
 
-// Proxy configuration for network tools
-export interface ProxyConfig {
-  enabled: boolean;
-  type: 'http' | 'https' | 'socks4' | 'socks5';
-  host: string;
-  port: number;
-  username?: string;
-  password?: string;
-  rotation?: boolean;
-  rotationInterval?: number;
-}
-
 // Camera discovery tools
 export interface CameraResult {
   id: string;
@@ -81,7 +69,6 @@ export interface CCTVParams extends ToolParams {
   saveResults?: boolean;
   country?: string;
   type?: string;
-  proxy?: ProxyConfig;
 }
 
 export interface TorBotParams extends ToolParams {
@@ -90,7 +77,6 @@ export interface TorBotParams extends ToolParams {
   dumpData?: boolean;
   mode?: string;
   depth?: number;
-  proxy?: ProxyConfig;
 }
 
 export interface WebHackParams extends ToolParams {
@@ -102,7 +88,6 @@ export interface WebHackParams extends ToolParams {
   checkHeaders?: boolean;
   testXss?: boolean;
   testSql?: boolean;
-  proxy?: ProxyConfig;
 }
 
 export interface SpeedCameraParams extends ToolParams {
@@ -114,21 +99,18 @@ export interface SpeedCameraParams extends ToolParams {
 export interface WebCheckParams extends ToolParams {
   domain: string;
   checks?: string[];
-  proxy?: ProxyConfig;
 }
 
 export interface TwintParams extends ToolParams {
   username?: string;
   search?: string;
   limit?: number;
-  proxy?: ProxyConfig;
 }
 
 export interface OSINTParams extends ToolParams {
   target: string;
   type?: string;
   depth?: string;
-  proxy?: ProxyConfig;
 }
 
 export interface ShieldAIParams extends ToolParams {
@@ -136,7 +118,6 @@ export interface ShieldAIParams extends ToolParams {
   mode?: string;
   depth?: string;
   aiModel?: string;
-  proxy?: ProxyConfig;
 }
 
 export interface BotExploitsParams extends ToolParams {
@@ -145,7 +126,6 @@ export interface BotExploitsParams extends ToolParams {
   attackType?: string;
   scanType?: string;
   timeout?: number;
-  proxy?: ProxyConfig;
 }
 
 export interface CamerattackParams extends ToolParams {
@@ -155,7 +135,6 @@ export interface CamerattackParams extends ToolParams {
   mode?: string;
   duration?: number;
   rate?: number;
-  proxy?: ProxyConfig;
 }
 
 export interface BackHackParams extends ToolParams {
@@ -163,14 +142,12 @@ export interface BackHackParams extends ToolParams {
   extractData?: boolean;
   target?: string;
   scanType?: string;
-  proxy?: ProxyConfig;
 }
 
 export interface ImperialOculusParams extends ToolParams {
   target: string;
   ports?: string;
   scanType?: string;
-  proxy?: ProxyConfig;
 }
 
 // New tool parameter types
@@ -184,7 +161,6 @@ export interface RapidPayloadParams extends ToolParams {
   encode?: boolean;
   encryption?: string;
   outputPath?: string;
-  proxy?: ProxyConfig;
 }
 
 export interface HackingToolParams extends ToolParams {
@@ -194,7 +170,6 @@ export interface HackingToolParams extends ToolParams {
   toolCategory?: string;
   target?: string;
   customCommand?: string;  // Added this property for custom commands
-  proxy?: ProxyConfig;
 }
 
 export interface FFmpegParams extends ToolParams {
@@ -219,7 +194,6 @@ export interface SecurityAdminParams extends ToolParams {
   target?: string;
   fixVulnerabilities?: boolean;
   reportFormat?: string;
-  proxy?: ProxyConfig;
 }
 
 // Imperial Shield Protocol types
@@ -227,7 +201,6 @@ export interface ImperialShieldParams extends ToolParams {
   targetUrl: string;
   protocol: string;
   validateCert: boolean;
-  proxy?: ProxyConfig;
 }
 
 export interface ImperialShieldResult {
@@ -248,7 +221,6 @@ export interface ScrapyParams extends ToolParams {
   customCode?: string;
   followLinks?: boolean;
   respectRobotsTxt?: boolean;
-  proxy?: ProxyConfig;
 }
 
 export interface ScrapyResult extends ToolResult {
@@ -265,35 +237,4 @@ export interface ScrapyResult extends ToolResult {
   urls?: string[];
   items?: any[];
   errors?: string[];
-}
-
-// New tool types
-export interface HackToolsParams extends ToolParams {
-  tool: string;
-  payload?: string;
-  target?: string;
-  options?: Record<string, any>;
-  customPayload?: string;
-  proxy?: ProxyConfig;
-}
-
-export interface HackCCTVParams extends ToolParams {
-  target: string;
-  mode?: 'scan' | 'exploit' | 'bruteforce';
-  timeout?: number;
-  credentials?: boolean;
-  defaultCredentials?: boolean;
-  proxy?: ProxyConfig;
-}
-
-export interface WebhackAdvancedParams extends ToolParams {
-  target: string;
-  scanType?: string;
-  bruteforce?: boolean;
-  exploitVulnerabilities?: boolean;
-  testXSS?: boolean;
-  testSQLi?: boolean;
-  testRFI?: boolean;
-  outputFormat?: string;
-  proxy?: ProxyConfig;
 }
