@@ -1,3 +1,4 @@
+
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # AEGIS SHIELD: ADVANCED SYSTEM DEFENSE PROTOCOL © 2025
@@ -698,7 +699,6 @@ class PrometheusNetworkSentry:
                     'count': 1
                 }
             else:
-                self.connection_history[conn_key]['last_seen'] = current_
                 self.connection_history[conn_key]['last_seen'] = current_time
                 self.connection_history[conn_key]['count'] += 1
                 
@@ -1402,4 +1402,152 @@ class AegisShield:
                     if console.input("Attempt to quarantine high-risk threats? (y/n): ").lower() == 'y':
                         neutralized = 0
                         for threat in critical_threats + high_threats:
-                            if
+                            if 'path' in threat:
+                                if console.input(f"Quarantine {threat['path']}? (y/n): ").lower() == 'y':
+                                    if self.file_scanner.quarantine_file(threat['path']):
+                                        neutralized += 1
+                                        console.print(f"[green]Quarantined {threat['path']}[/]")
+                        
+                        if neutralized > 0:
+                            self.metrics['threats_neutralized'] += neutralized
+                            console.print(f"[green]Successfully quarantined {neutralized} threats[/]")
+            else:
+                console.print("[green]No threats detected in file scan[/]")
+    
+    def run_security_audit(self):
+        """Run a comprehensive security audit"""
+        console.print("[bold cyan]Starting Comprehensive Security Audit...[/]")
+        
+        with Progress() as progress:
+            audit_task = progress.add_task("[cyan]Auditing system security...", total=100)
+            
+            # Run the audit
+            issues = self.system_hardener.audit_security()
+            progress.update(audit_task, completed=100)
+        
+        # Display audit results
+        console.print(f"\n[bold]Security Audit Results - Score: {self.system_hardener.hardening_results['score']}%[/]")
+        
+        if not issues:
+            console.print("[green]No security issues detected[/]")
+            return
+            
+        # Group issues by severity
+        issues_by_severity = {'High': [], 'Medium': [], 'Low': [], 'Info': []}
+        for issue in issues:
+            issues_by_severity[issue.get('severity', 'Info')].append(issue)
+            
+        # Display issues by severity
+        for severity in ['High', 'Medium', 'Low', 'Info']:
+            if issues_by_severity[severity]:
+                if severity == 'High':
+                    console.print(f"\n[bold red]{severity} Severity Issues:[/] {len(issues_by_severity[severity])}")
+                elif severity == 'Medium':
+                    console.print(f"\n[bold yellow]{severity} Severity Issues:[/] {len(issues_by_severity[severity])}")
+                else:
+                    console.print(f"\n[bold]{severity} Severity Issues:[/] {len(issues_by_severity[severity])}")
+                    
+                for i, issue in enumerate(issues_by_severity[severity]):
+                    console.print(f"  {i+1}. [bold]{issue['type']}:[/] {issue['description']}")
+                    console.print(f"     Recommendation: {issue['recommendation']}")
+                    if 'fix_command' in issue:
+                        console.print(f"     [green]Automatic fix available[/]")
+        
+        # Ask if user wants to apply fixes
+        if console.input("\nApply automatic fixes for high and medium severity issues? (y/n): ").lower() == 'y':
+            fixed_count = self.system_hardener.apply_basic_hardening()
+            console.print(f"[green]Applied {fixed_count} security fixes[/]")
+    
+    def run_interactive_mode(self):
+        """Run the AEGIS Shield in interactive mode"""
+        # Perform initial safety check
+        safety_check()
+        
+        # Display banner and initial dashboard
+        self.display_dashboard()
+        
+        # Main interaction loop
+        while True:
+            console.print("\n[bold cyan]AEGIS Shield Command Menu:[/]")
+            console.print("1. Start Defense Protocol (continuous monitoring)")
+            console.print("2. Run System Security Audit")
+            console.print("3. Scan System for Threats")
+            console.print("4. Display Defense Dashboard")
+            console.print("5. Exit")
+            
+            choice = console.input("\nEnter choice (1-5): ")
+            
+            if choice == '1':
+                if not self.monitoring_active:
+                    self.start_defense_protocol()
+                else:
+                    console.print("[yellow]Defense protocol is already active[/]")
+                    
+            elif choice == '2':
+                self.run_security_audit()
+                
+            elif choice == '3':
+                quick = console.input("Run quick scan (y) or full scan (n)? ").lower() == 'y'
+                memory = console.input("Include memory scan for fileless malware? (y/n): ").lower() == 'y'
+                
+                with Progress() as progress:
+                    scan_task = progress.add_task("[cyan]Scanning system...", total=100)
+                    scan_results = self.file_scanner.scan(quick=quick, memory_scan=memory)
+                    progress.update(scan_task, completed=100)
+                
+                self.metrics['scan_count'] += 1
+                
+                # Display scan results
+                if scan_results:
+                    console.print(f"[yellow]Found {len(scan_results)} potential threats[/]")
+                    self.metrics['threats_detected'] += len(scan_results)
+                    
+                    # Group and display by risk level
+                    grouped_results = {}
+                    for threat in scan_results:
+                        risk = threat.get('risk', 'Medium')
+                        if risk not in grouped_results:
+                            grouped_results[risk] = []
+                        grouped_results[risk].append(threat)
+                    
+                    for risk in ['Critical', 'High', 'Medium', 'Low']:
+                        if risk in grouped_results:
+                            console.print(f"[bold]{risk} Risk Threats:[/] {len(grouped_results[risk])}")
+                            
+                            for i, threat in enumerate(grouped_results[risk]):
+                                if 'path' in threat:
+                                    console.print(f"  - {threat.get('threat', 'Unknown')}: {threat['path']}")
+                                else:
+                                    console.print(f"  - {threat.get('threat', 'Unknown threat')}")
+                else:
+                    console.print("[green]No threats detected in scan[/]")
+                    
+            elif choice == '4':
+                self.display_dashboard()
+                
+            elif choice == '5':
+                # Clean shutdown of monitoring threads
+                if self.monitoring_active:
+                    self.monitoring_active = False
+                    for thread in self.monitoring_threads:
+                        thread.join(timeout=1.0)
+                        
+                console.print("[bold green]AEGIS Shield Defense System Deactivated[/]")
+                break
+                
+            else:
+                console.print("[red]Invalid choice, please enter a number between 1-5[/]")
+
+# ========================
+# MAIN ENTRY POINT
+# ========================
+if __name__ == "__main__":
+    try:
+        # Initialize and run AEGIS Shield
+        aegis = AegisShield()
+        aegis.run_interactive_mode()
+    except KeyboardInterrupt:
+        console.print("\n[yellow]AEGIS Shield operation interrupted by user[/]")
+    except Exception as e:
+        console.print(f"[bold red]Critical error: {str(e)}[/]")
+        logger.critical(f"Critical error in main execution: {str(e)}", exc_info=True)
