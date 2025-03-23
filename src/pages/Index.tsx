@@ -6,6 +6,7 @@ import DashboardHeader from '@/components/DashboardHeader';
 import { Button } from '@/components/ui/button';
 import { Play } from 'lucide-react';
 import CommandPalette from '@/components/CommandPalette';
+import { toast } from '@/components/ui/use-toast';
 
 // Import refactored components
 import ScanController from '@/components/dashboard/ScanController';
@@ -25,6 +26,7 @@ const Index = () => {
   const [activeTab, setActiveTab] = useState<string>('map');
   const [showAscii, setShowAscii] = useState(true);
   const [commandOpen, setCommandOpen] = useState(false);
+  const [serverStarted, setServerStarted] = useState(false);
   
   const imperialArmyBanner = `
     ██╗███╗   ███╗██████╗ ███████╗██████╗ ██╗ █████╗ ██╗          █████╗ ██████╗ ███╗   ███╗██╗   ██╗
@@ -68,6 +70,27 @@ const Index = () => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
+  // Function to start Imperial Server
+  const handleServerStart = () => {
+    if (window.startImperialServer) {
+      const success = window.startImperialServer();
+      setServerStarted(true);
+      toast({
+        title: success ? "Imperial Server Started" : "Server Start Failed",
+        description: success 
+          ? "All systems initialized and operational" 
+          : "Please launch the server manually",
+        variant: success ? "default" : "destructive"
+      });
+    } else {
+      toast({
+        title: "Desktop App Required",
+        description: "Auto-start requires the desktop application",
+        variant: "destructive"
+      });
+    }
+  };
+
   return (
     <div className="min-h-screen bg-scanner-dark text-white">
       <main className="container mx-auto py-6 px-4">
@@ -86,8 +109,8 @@ const Index = () => {
         {/* Startup Button */}
         <div className="flex justify-center mt-4 mb-6">
           <Button 
-            onClick={() => setCommandOpen(true)}
-            className="bg-scanner-primary hover:bg-scanner-primary/80 text-white py-3 px-6 rounded-md flex items-center gap-2 shadow-lg hover:shadow-red-900/20 transition-all animate-pulse"
+            onClick={handleServerStart}
+            className="bg-scanner-primary hover:bg-scanner-primary/80 text-white py-3 px-6 rounded-md flex items-center gap-2 shadow-lg hover:shadow-red-900/20 transition-all"
             size="lg"
           >
             <Play className="h-5 w-5" />
