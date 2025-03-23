@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import ViewerHeader from '@/components/viewer/ViewerHeader';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Cpu, Terminal, Download, ExternalLink, Code, Shield, AlertTriangle, Wrench, Copy, Check, Send, Bug, Settings2 } from 'lucide-react';
+import { Cpu, Terminal, Download, ExternalLink, Code, Shield, AlertTriangle, Wrench, Copy, Check, Send, Bug, Settings2, Lock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/components/ui/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -16,6 +16,7 @@ import XssPayloadsTab from '@/components/hacking-tools/XssPayloadsTab';
 import SqliPayloadsTab from '@/components/hacking-tools/SqliPayloadsTab';
 import PayloadGeneratorTab from '@/components/hacking-tools/PayloadGeneratorTab';
 import EncoderDecoderTab from '@/components/hacking-tools/EncoderDecoderTab';
+import PasswordCrackerTab from '@/components/hacking-tools/PasswordCrackerTab';
 import AdditionalTools from '@/components/hacking-tools/AdditionalTools';
 import FileCentipede from '@/components/hacking-tools/FileCentipede';
 
@@ -90,12 +91,13 @@ const HackingToolPage: React.FC = () => {
               </CardHeader>
               <CardContent>
                 <Tabs defaultValue="reverse-shell" className="w-full" onValueChange={setActiveTab}>
-                  <TabsList className="grid grid-cols-5 mb-4">
+                  <TabsList className="grid grid-cols-6 mb-4">
                     <TabsTrigger value="reverse-shell">Reverse Shell</TabsTrigger>
                     <TabsTrigger value="xss-payloads">XSS Payloads</TabsTrigger>
                     <TabsTrigger value="sqli-payloads">SQLi Payloads</TabsTrigger>
                     <TabsTrigger value="payload-gen">Payload Gen</TabsTrigger>
                     <TabsTrigger value="encode-decode">Encode/Decode</TabsTrigger>
+                    <TabsTrigger value="password-cracker">Password Cracker</TabsTrigger>
                   </TabsList>
                   
                   <TabsContent value="reverse-shell">
@@ -138,7 +140,39 @@ const HackingToolPage: React.FC = () => {
                   <TabsContent value="encode-decode">
                     <EncoderDecoderTab />
                   </TabsContent>
+                  
+                  <TabsContent value="password-cracker">
+                    <PasswordCrackerTab 
+                      isRealmode={isRealmode}
+                      isExecuting={isExecuting}
+                      setIsExecuting={setIsExecuting}
+                      setToolOutput={setToolOutput}
+                    />
+                  </TabsContent>
                 </Tabs>
+                
+                {toolOutput && (
+                  <div className="mt-6 p-4 bg-scanner-dark-alt rounded-md border border-gray-700">
+                    <div className="flex justify-between items-center mb-2">
+                      <h3 className="text-sm font-semibold">Tool Output</h3>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-7 px-2 border-gray-700"
+                        onClick={() => handleCopyToClipboard(toolOutput, 'output')}
+                      >
+                        {copySuccess === 'output' ? (
+                          <Check className="h-3.5 w-3.5" />
+                        ) : (
+                          <Copy className="h-3.5 w-3.5" />
+                        )}
+                      </Button>
+                    </div>
+                    <pre className="bg-gray-900 p-3 rounded text-xs overflow-x-auto whitespace-pre-wrap">
+                      {toolOutput}
+                    </pre>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>
@@ -153,6 +187,16 @@ const HackingToolPage: React.FC = () => {
       </main>
     </div>
   );
+};
+
+// Handle copy to clipboard functionality
+const handleCopyToClipboard = (text: string, type: string) => {
+  navigator.clipboard.writeText(text).then(() => {
+    toast({
+      title: "Copied to clipboard!",
+      description: `The ${type} has been copied to your clipboard.`,
+    });
+  });
 };
 
 export default HackingToolPage;
