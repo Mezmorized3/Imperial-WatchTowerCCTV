@@ -26,19 +26,21 @@ const CameraSearchTools: React.FC = () => {
       </CardHeader>
       <CardContent>
         <Tabs defaultValue="cameradar" className="w-full">
-          <TabsList className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 mb-6">
-            <TabsTrigger value="cameradar">Cameradar</TabsTrigger>
-            <TabsTrigger value="ipcamsearch">IPCam Search</TabsTrigger>
-            <TabsTrigger value="cctv">CCTV Explorer</TabsTrigger>
-            <TabsTrigger value="hackcctv">HackCCTV</TabsTrigger>
-            <TabsTrigger value="speedcamera">Speed Camera</TabsTrigger>
-            <TabsTrigger value="camerattack">Camerattack</TabsTrigger>
-            <TabsTrigger value="insecam">Insecam</TabsTrigger>
-            <TabsTrigger value="webhack">Web Hack</TabsTrigger>
-            <TabsTrigger value="securitytools">Security Tools</TabsTrigger>
-            <TabsTrigger value="payload">Payload Gen</TabsTrigger>
-            <TabsTrigger value="hackingtools">Hacking Tools</TabsTrigger>
-          </TabsList>
+          <div className="overflow-x-auto pb-2">
+            <TabsList className="flex min-w-max w-full mb-6">
+              <TabsTrigger value="cameradar" className="flex-1 whitespace-nowrap">Cameradar</TabsTrigger>
+              <TabsTrigger value="ipcamsearch" className="flex-1 whitespace-nowrap">IPCam Search</TabsTrigger>
+              <TabsTrigger value="cctv" className="flex-1 whitespace-nowrap">CCTV Explorer</TabsTrigger>
+              <TabsTrigger value="hackcctv" className="flex-1 whitespace-nowrap">HackCCTV</TabsTrigger>
+              <TabsTrigger value="speedcamera" className="flex-1 whitespace-nowrap">Speed Camera</TabsTrigger>
+              <TabsTrigger value="camerattack" className="flex-1 whitespace-nowrap">Camerattack</TabsTrigger>
+              <TabsTrigger value="insecam" className="flex-1 whitespace-nowrap">Insecam</TabsTrigger>
+              <TabsTrigger value="webhack" className="flex-1 whitespace-nowrap">Web Hack</TabsTrigger>
+              <TabsTrigger value="securitytools" className="flex-1 whitespace-nowrap">Security Tools</TabsTrigger>
+              <TabsTrigger value="payload" className="flex-1 whitespace-nowrap">Payload Gen</TabsTrigger>
+              <TabsTrigger value="hackingtools" className="flex-1 whitespace-nowrap">Hacking Tools</TabsTrigger>
+            </TabsList>
+          </div>
           
           <TabsContent value="cameradar">
             <CameradarTool />
