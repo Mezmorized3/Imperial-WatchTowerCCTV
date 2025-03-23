@@ -61,9 +61,7 @@ const HackingToolPage: React.FC = () => {
         </div>
         
         <div className="grid grid-cols-1 gap-6">
-          <Card className="bg-scanner-dark-alt border-gray-700">
-            <HackingToolTool />
-          </Card>
+          <HackingToolTool />
         </div>
       </main>
     </div>
