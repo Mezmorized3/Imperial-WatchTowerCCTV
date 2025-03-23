@@ -1,4 +1,3 @@
-
 /**
  * External Tools Connector
  * This module provides interfaces for connecting to external GitHub repositories and tools.
@@ -66,6 +65,12 @@ export const EXTERNAL_TOOLS: Record<string, ExternalToolConfig> = {
     platform: 'all',
     setupCommand: 'go build'
   },
+  'hackcctv': {
+    githubRepo: 'https://github.com/mohammadmahdi-termux/hackCCTV',
+    executable: 'hackcctv.py',
+    platform: 'all',
+    setupCommand: 'pip install -r requirements.txt'
+  },
   
   // Web analysis tools
   'web-check': {
@@ -78,6 +83,12 @@ export const EXTERNAL_TOOLS: Record<string, ExternalToolConfig> = {
     githubRepo: 'https://github.com/yan4ikyt/webhack',
     executable: 'webhack.py',
     platform: 'all'
+  },
+  'webhack-advanced': {
+    githubRepo: 'https://github.com/yan4ikyt/webhack',
+    executable: 'webhack.py',
+    platform: 'all',
+    setupCommand: 'pip install -r requirements.txt'
   },
   'photon': {
     githubRepo: 'https://github.com/s0md3v/Photon',
@@ -140,6 +151,13 @@ export const EXTERNAL_TOOLS: Record<string, ExternalToolConfig> = {
     executable: 'security-admin.py',
     platform: 'all'
   },
+  'hacktools': {
+    githubRepo: 'https://github.com/LasCC/HackTools',
+    executable: 'npm start',
+    platform: 'all',
+    setupCommand: 'npm install',
+    workingDirectory: 'src'
+  },
   
   // Multimedia tools
   'ffmpeg': {
@@ -152,6 +170,14 @@ export const EXTERNAL_TOOLS: Record<string, ExternalToolConfig> = {
     githubRepo: 'https://github.com/FFmpeg/FFmpeg',
     executable: 'ffprobe',
     platform: 'all'
+  },
+  
+  // Web scraping tools
+  'scrapy': {
+    githubRepo: 'https://github.com/scrapy/scrapy',
+    executable: 'scrapy',
+    platform: 'all',
+    setupCommand: 'pip install scrapy'
   },
   
   // Surveillance systems
@@ -381,4 +407,49 @@ export const connectExternalTools = async (): Promise<{
   console.log('Unavailable tools:', unavailable);
   
   return { available, unavailable };
+};
+
+/**
+ * Setup all external tools from their GitHub repositories
+ * @returns Promise resolving to setup results
+ */
+export const setupAllTools = async (): Promise<{
+  success: boolean;
+  results: Record<string, boolean>;
+}> => {
+  console.log('Setting up all external tools...');
+  
+  const results: Record<string, boolean> = {};
+  let allSuccess = true;
+  
+  try {
+    // Set up each tool
+    for (const toolName of [
+      'cameradar', 'ipcam_search', 'speed-camera', 'cctv', 'camerattack', 'hackcctv',
+      'web-check', 'webhack', 'webhack-advanced', 'photon', 'backhack',
+      'torbot', 'botexploits',
+      'sherlock', 'twint', 'osint',
+      'shield-ai', 'hackingtool', 'security-admin', 'hacktools',
+      'ffmpeg', 'shinobi', 'scrapy'
+    ]) {
+      console.log(`Setting up ${toolName}...`);
+      const success = await setupTool(toolName);
+      results[toolName] = success;
+      
+      if (!success) {
+        allSuccess = false;
+      }
+    }
+    
+    return {
+      success: allSuccess,
+      results
+    };
+  } catch (error) {
+    console.error('Error setting up tools:', error);
+    return {
+      success: false,
+      results
+    };
+  }
 };

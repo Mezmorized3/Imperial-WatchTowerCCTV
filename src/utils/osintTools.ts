@@ -30,7 +30,11 @@ export type {
   SecurityAdminParams,
   // Scrapy tool types
   ScrapyParams,
-  ScrapyResult
+  ScrapyResult,
+  // Additional new tool types
+  HackToolsParams,
+  HackCCTVParams,
+  WebhackAdvancedParams
 } from './osintToolTypes';
 
 // Import function implementations from specific modules

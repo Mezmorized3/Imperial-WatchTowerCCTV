@@ -238,3 +238,32 @@ export interface ScrapyResult extends ToolResult {
   items?: any[];
   errors?: string[];
 }
+
+// New tool types
+export interface HackToolsParams extends ToolParams {
+  tool: string;
+  payload?: string;
+  target?: string;
+  options?: Record<string, any>;
+  customPayload?: string;
+}
+
+export interface HackCCTVParams extends ToolParams {
+  target: string;
+  mode?: 'scan' | 'exploit' | 'bruteforce';
+  timeout?: number;
+  credentials?: boolean;
+  defaultCredentials?: boolean;
+}
+
+export interface WebhackAdvancedParams extends ToolParams {
+  target: string;
+  scanType?: string;
+  bruteforce?: boolean;
+  exploitVulnerabilities?: boolean;
+  testXSS?: boolean;
+  testSQLi?: boolean;
+  testRFI?: boolean;
+  outputFormat?: string;
+}
+

@@ -21,6 +21,9 @@ import RapidPayloadTool from './search-tools/RapidPayloadTool';
 import HackingToolTool from './search-tools/HackingToolTool';
 import SecurityAdminTool from './search-tools/SecurityAdminTool';
 import ScrapyTool from './search-tools/ScrapyTool';
+import WebhackAdvancedTool from './search-tools/WebhackAdvancedTool';
+import HackToolsTool from './search-tools/HackToolsTool';
+import HackCCTVTool from './search-tools/HackCCTVTool';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
 export const CameraSearchTools = () => {
@@ -39,12 +42,14 @@ export const CameraSearchTools = () => {
       { id: "cctv", label: "CCTV" },
       { id: "camerattack", label: "Camerattack" },
       { id: "imperial-oculus", label: "Imperial Oculus" },
+      { id: "hack-cctv", label: "HackCCTV" },
     ],
     // Row 2: Media & Web tools
     [
       { id: "ffmpeg", label: "FFmpeg" },
       { id: "webcheck", label: "Web Check" },
       { id: "webhack", label: "WebHack" },
+      { id: "webhack-adv", label: "WebHack Adv" },
       { id: "photon", label: "Photon" },
       { id: "torbot", label: "TorBot" },
     ],
@@ -55,6 +60,7 @@ export const CameraSearchTools = () => {
       { id: "osint", label: "OSINT" },
       { id: "shield-ai", label: "Shield AI" },
       { id: "botexploits", label: "Bot Exploits" },
+      { id: "scrapy", label: "Scrapy" },
     ],
     // Row 4: Hacking tools
     [
@@ -62,7 +68,7 @@ export const CameraSearchTools = () => {
       { id: "security-admin", label: "Security Admin" },
       { id: "rapid-payload", label: "RapidPayload" },
       { id: "hacking-tool", label: "Hacking Tool" },
-      { id: "scrapy", label: "Scrapy" },
+      { id: "hack-tools", label: "HackTools" },
     ]
   ];
 
@@ -146,9 +152,20 @@ export const CameraSearchTools = () => {
             <SecurityAdminTool />
           </TabsContent>
           
-          {/* New Scrapy tool tab */}
+          {/* Scrapy tool tab */}
           <TabsContent value="scrapy" className="mt-0">
             <ScrapyTool />
+          </TabsContent>
+          
+          {/* New tool tabs */}
+          <TabsContent value="webhack-adv" className="mt-0">
+            <WebhackAdvancedTool />
+          </TabsContent>
+          <TabsContent value="hack-tools" className="mt-0">
+            <HackToolsTool />
+          </TabsContent>
+          <TabsContent value="hack-cctv" className="mt-0">
+            <HackCCTVTool />
           </TabsContent>
         </ScrollArea>
       </Tabs>
