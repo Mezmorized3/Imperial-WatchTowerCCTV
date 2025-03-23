@@ -1,14 +1,26 @@
 import React, { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Play, Volume2, Maximize2, Download, Save, RotateCcw } from 'lucide-react';
+import { Play, Volume2, Maximize2, Download, Save, RotateCcw, Settings } from 'lucide-react';
 import RtspPlayer from '@/components/RtspPlayer';
 import { useToast } from '@/hooks/use-toast';
 import { imperialServerService } from '@/utils/imperialServerService';
 import { Card, CardContent } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
+import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { getProperStreamUrl, testRtspConnection } from '@/utils/rtspUtils';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
 
 interface QuickStreamPlayerProps {
   className?: string;
@@ -25,17 +37,20 @@ const QuickStreamPlayer: React.FC<QuickStreamPlayerProps> = ({ className }) => {
     const saved = localStorage.getItem('recentStreams');
     return saved ? JSON.parse(saved) : [];
   });
+  const [go2rtcUrl, setGo2rtcUrl] = useState<string>(() => localStorage.getItem('go2rtcUrl') || '');
+  const [preferredEngine, setPreferredEngine] = useState<'native' | 'hlsjs' | 'videojs' | 'go2rtc'>(() => 
+    localStorage.getItem('preferredStreamEngine') as any || 'hlsjs'
+  );
+  
   const { toast } = useToast();
   const playerRef = useRef<HTMLDivElement>(null);
 
   const isValidUrl = (url: string): boolean => {
     if (!url) return false;
     
-    // Check if it's a valid URL format
     try {
       new URL(url);
       
-      // Special case for YouTube URLs
       if (url.includes('youtube.com/watch') || 
           url.includes('youtu.be/') ||
           url.includes('youtube.com/embed')) {
@@ -44,8 +59,6 @@ const QuickStreamPlayer: React.FC<QuickStreamPlayerProps> = ({ className }) => {
       
       return true;
     } catch (e) {
-      // If not a valid URL, check if it might be a local video file path
-      // or another format that could be played
       return url.match(/\.(mp4|webm|ogg|mov|avi|flv|wmv|m3u8|mpd)$/i) !== null || 
              url.startsWith('rtsp://') || 
              url.startsWith('rtmp://') ||
@@ -57,7 +70,6 @@ const QuickStreamPlayer: React.FC<QuickStreamPlayerProps> = ({ className }) => {
     if (streamUrl && isValidUrl(streamUrl)) {
       setIsPlaying(true);
       
-      // Add to recent streams if not already there
       if (!recentStreams.includes(streamUrl)) {
         const updatedStreams = [streamUrl, ...recentStreams].slice(0, 5);
         setRecentStreams(updatedStreams);
@@ -65,7 +77,6 @@ const QuickStreamPlayer: React.FC<QuickStreamPlayerProps> = ({ className }) => {
       }
       
       if (saveToImperial) {
-        // Log the stream to Imperial chest
         imperialServerService.logStreamAccess({
           url: streamUrl,
           timestamp: new Date().toISOString(),
@@ -183,6 +194,35 @@ const QuickStreamPlayer: React.FC<QuickStreamPlayerProps> = ({ className }) => {
     setIsPlaying(true);
   };
 
+  const handleEngineChange = (engine: 'native' | 'hlsjs' | 'videojs' | 'go2rtc') => {
+    setPreferredEngine(engine);
+    localStorage.setItem('preferredStreamEngine', engine);
+    
+    toast({
+      title: "Stream Engine Changed",
+      description: `Using ${engine.toUpperCase()} for stream playback`,
+    });
+    
+    if (isPlaying) {
+      setIsPlaying(false);
+      setTimeout(() => setIsPlaying(true), 100);
+    }
+  };
+
+  const saveGo2rtcSettings = () => {
+    localStorage.setItem('go2rtcUrl', go2rtcUrl);
+    
+    toast({
+      title: "Settings Saved",
+      description: "go2rtc server settings have been saved",
+    });
+    
+    if (isPlaying && preferredEngine === 'go2rtc') {
+      setIsPlaying(false);
+      setTimeout(() => setIsPlaying(true), 100);
+    }
+  };
+
   return (
     <div className={`flex flex-col w-full ${className}`}>
       <div className="text-sm text-gray-400 mb-2 flex justify-between items-center">
@@ -195,6 +235,60 @@ const QuickStreamPlayer: React.FC<QuickStreamPlayerProps> = ({ className }) => {
             onCheckedChange={setSaveToImperial}
             className="data-[state=checked]:bg-scanner-primary"
           />
+          
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" size="icon" className="h-8 w-8">
+                <Settings className="h-4 w-4" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-80">
+              <div className="space-y-4">
+                <h4 className="font-medium">Stream Settings</h4>
+                <div className="space-y-2">
+                  <Label htmlFor="engine-select">Preferred Engine</Label>
+                  <Select 
+                    value={preferredEngine} 
+                    onValueChange={(val) => handleEngineChange(val as any)}
+                  >
+                    <SelectTrigger id="engine-select">
+                      <SelectValue placeholder="Select an engine" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="native">Native (Browser)</SelectItem>
+                      <SelectItem value="hlsjs">HLS.js</SelectItem>
+                      <SelectItem value="videojs">Video.js</SelectItem>
+                      <SelectItem value="go2rtc">go2rtc</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                {preferredEngine === 'go2rtc' && (
+                  <div className="space-y-2">
+                    <Label htmlFor="go2rtc-url">go2rtc Server URL</Label>
+                    <div className="flex gap-2">
+                      <Input 
+                        id="go2rtc-url"
+                        placeholder="http://localhost:8554" 
+                        value={go2rtcUrl}
+                        onChange={(e) => setGo2rtcUrl(e.target.value)}
+                      />
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={saveGo2rtcSettings}
+                      >
+                        Save
+                      </Button>
+                    </div>
+                    <p className="text-xs text-gray-400">
+                      Address of your go2rtc server for efficient stream conversion
+                    </p>
+                  </div>
+                )}
+              </div>
+            </PopoverContent>
+          </Popover>
         </div>
       </div>
       
@@ -203,6 +297,7 @@ const QuickStreamPlayer: React.FC<QuickStreamPlayerProps> = ({ className }) => {
           <RtspPlayer 
             rtspUrl={streamUrl} 
             autoPlay={true}
+            preferredEngine={preferredEngine}
             onError={() => {
               setIsPlaying(false);
               toast({

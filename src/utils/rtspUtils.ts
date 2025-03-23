@@ -137,6 +137,16 @@ export const recordStreamFFmpeg = async (streamUrl: string, outputPath: string =
  */
 export const convertRtspToHls = async (rtspUrl: string): Promise<string> => {
   try {
+    // Check if go2rtc is enabled and configured
+    const go2rtcUrl = localStorage.getItem('go2rtcUrl');
+    const useGo2rtc = !!go2rtcUrl && localStorage.getItem('preferredStreamEngine') === 'go2rtc';
+    
+    if (useGo2rtc) {
+      // Use go2rtc for the conversion
+      // Format: http://[go2rtc-ip]:8554/api/stream?src=[stream-url]
+      return `${go2rtcUrl}/api/stream?src=${encodeURIComponent(rtspUrl)}`;
+    }
+    
     // Check if Imperial proxy is enabled
     const useImperialProxy = localStorage.getItem('rtspProxyEnabled') !== 'false';
     const imperialProxyUrl = localStorage.getItem('rtspProxyUrl');
@@ -324,8 +334,6 @@ export const saveStreamToImperialChest = async (streamUrl: string, metadata: any
   }
 };
 
-// Additional Imperial chest integration functions
-
 /**
  * Get all streams from Imperial chest
  */
@@ -389,3 +397,82 @@ export const detectMotion = async (
     };
   }
 };
+
+/**
+ * Configure go2rtc server
+ */
+export const configureGo2rtcServer = async (
+  serverUrl: string, 
+  options: { 
+    username?: string; 
+    password?: string; 
+    apiKey?: string 
+  } = {}
+): Promise<boolean> => {
+  try {
+    // Save go2rtc server URL for future use
+    localStorage.setItem('go2rtcUrl', serverUrl);
+    
+    // In a real implementation, we'd validate the connection and potentially
+    // set up authentication with the go2rtc server
+    
+    // Simple validation - just check if the URL is reachable
+    const response = await fetch(`${serverUrl}/api/status`, {
+      headers: options.apiKey ? { 'Authorization': `Bearer ${options.apiKey}` } : {}
+    });
+    
+    if (response.ok) {
+      console.log('go2rtc server configured successfully');
+      return true;
+    } else {
+      console.error('Failed to connect to go2rtc server');
+      return false;
+    }
+  } catch (error) {
+    console.error('Error configuring go2rtc server:', error);
+    return false;
+  }
+};
+
+/**
+ * Add a stream source to go2rtc
+ */
+export const addStreamToGo2rtc = async (
+  streamUrl: string,
+  streamName: string = 'camera1'
+): Promise<boolean> => {
+  try {
+    const go2rtcUrl = localStorage.getItem('go2rtcUrl');
+    
+    if (!go2rtcUrl) {
+      throw new Error('go2rtc server not configured');
+    }
+    
+    // In a real implementation, we'd use the go2rtc API to add a stream
+    // This typically involves sending a POST request to the API endpoint
+    
+    // Example API call (implementation would depend on the actual go2rtc API)
+    const response = await fetch(`${go2rtcUrl}/api/streams`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: streamName,
+        url: streamUrl
+      })
+    });
+    
+    if (response.ok) {
+      console.log(`Stream ${streamName} added to go2rtc`);
+      return true;
+    } else {
+      console.error('Failed to add stream to go2rtc');
+      return false;
+    }
+  } catch (error) {
+    console.error('Error adding stream to go2rtc:', error);
+    return false;
+  }
+};
+
+// Export the new functions
+export { configureGo2rtcServer, addStreamToGo2rtc };

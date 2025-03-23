@@ -4,8 +4,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>HLS Player</title>
+  <title>Advanced Stream Player</title>
+  <!-- HLS.js for HLS playback -->
   <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+  <!-- Video.js for advanced playback features -->
+  <link href="https://vjs.zencdn.net/7.20.3/video-js.css" rel="stylesheet" />
+  <script src="https://vjs.zencdn.net/7.20.3/video.min.js"></script>
   <style>
     body, html {
       margin: 0;
@@ -29,6 +33,11 @@
     #videoPlayer {
       max-width: 100%;
       max-height: 100%;
+    }
+    
+    .video-js {
+      width: 100% !important;
+      height: 100% !important;
     }
     
     .controls {
@@ -81,11 +90,21 @@
       0% { transform: rotate(0deg); }
       100% { transform: rotate(360deg); }
     }
+    
+    /* Control visibility with mouse movement */
+    .hide-controls .vjs-control-bar {
+      opacity: 0;
+      transition: opacity 0.5s;
+    }
+    
+    .hide-controls:hover .vjs-control-bar {
+      opacity: 1;
+    }
   </style>
 </head>
 <body>
   <div id="videoContainer">
-    <video id="videoPlayer" controls autoplay muted></video>
+    <video id="videoPlayer" class="video-js vjs-default-skin vjs-big-play-centered" controls autoplay muted></video>
     <div id="loadingIndicator">
       <div class="loader"></div>
       <p>Loading stream...</p>
@@ -94,6 +113,7 @@
     <div class="controls">
       <button id="fullscreenButton">Fullscreen</button>
       <button id="muteButton">Unmute</button>
+      <button id="engineButton">Switch Engine</button>
     </div>
   </div>
 
@@ -101,12 +121,14 @@
     document.addEventListener('DOMContentLoaded', function() {
       const urlParams = new URLSearchParams(window.location.search);
       const streamUrl = urlParams.get('url');
+      const preferredEngine = urlParams.get('engine') || 'hlsjs'; // hlsjs, videojs, native
       
-      const video = document.getElementById('videoPlayer');
+      const videoEl = document.getElementById('videoPlayer');
       const loadingIndicator = document.getElementById('loadingIndicator');
       const errorMessage = document.getElementById('errorMessage');
       const fullscreenButton = document.getElementById('fullscreenButton');
       const muteButton = document.getElementById('muteButton');
+      const engineButton = document.getElementById('engineButton');
       
       // Hide error message initially
       errorMessage.style.display = 'none';
@@ -114,97 +136,181 @@
       // Show loading indicator
       loadingIndicator.style.display = 'block';
       
-      if (streamUrl) {
-        // Check if HLS.js is supported
-        if (Hls.isSupported()) {
-          const hls = new Hls({
-            debug: false,
-            enableWorker: true,
-            lowLatencyMode: true,
-            backBufferLength: 90
-          });
-          
-          hls.loadSource(streamUrl);
-          hls.attachMedia(video);
-          
-          hls.on(Hls.Events.MANIFEST_PARSED, function() {
-            console.log('Manifest loaded, found levels:', hls.levels.length);
-            loadingIndicator.style.display = 'none';
-            video.play().catch(e => {
-              console.warn('Autoplay not allowed:', e);
+      let currentPlayer = null; // To keep track of the video.js player instance
+      
+      const initializePlayer = (engine) => {
+        // Clean up any existing player
+        if (currentPlayer && typeof currentPlayer.dispose === 'function') {
+          currentPlayer.dispose();
+          currentPlayer = null;
+        }
+        
+        if (streamUrl) {
+          // Use Video.js player
+          if (engine === 'videojs' && typeof videojs !== 'undefined') {
+            // Create a new video element for videojs
+            const oldVideo = videoEl;
+            const newVideo = document.createElement('video');
+            newVideo.id = 'videoPlayer';
+            newVideo.className = 'video-js vjs-default-skin vjs-big-play-centered';
+            newVideo.controls = true;
+            newVideo.autoplay = true;
+            newVideo.muted = true;
+            oldVideo.parentNode.replaceChild(newVideo, oldVideo);
+            
+            // Initialize video.js
+            currentPlayer = videojs('videoPlayer', {
+              autoplay: true,
+              controls: true,
+              muted: true,
+              playsinline: true,
+              fluid: true,
+              liveui: true,
+              sources: [{
+                src: streamUrl,
+                type: streamUrl.includes('.m3u8') ? 'application/x-mpegURL' : 
+                     streamUrl.includes('.mpd') ? 'application/dash+xml' : 'video/mp4'
+              }]
             });
-          });
-          
-          hls.on(Hls.Events.ERROR, function(event, data) {
-            if (data.fatal) {
-              console.error('Fatal error:', data.type, data.details);
-              
+            
+            currentPlayer.on('error', function() {
               loadingIndicator.style.display = 'none';
-              errorMessage.textContent = `Stream error: ${data.details}`;
+              errorMessage.textContent = 'Error loading the stream with Video.js';
               errorMessage.style.display = 'block';
-              
-              switch (data.type) {
-                case Hls.ErrorTypes.NETWORK_ERROR:
-                  // Try to recover network error
-                  console.log('Trying to recover from network error...');
-                  hls.startLoad();
-                  break;
-                case Hls.ErrorTypes.MEDIA_ERROR:
-                  console.log('Trying to recover from media error...');
-                  hls.recoverMediaError();
-                  break;
-                default:
-                  // Cannot recover
-                  hls.destroy();
-                  break;
+            });
+            
+            currentPlayer.on('loadedmetadata', function() {
+              loadingIndicator.style.display = 'none';
+            });
+            
+            engineButton.textContent = 'Switch to HLS.js';
+            engineButton.onclick = () => initializePlayer('hlsjs');
+          }
+          // Use HLS.js for HLS streams
+          else if ((engine === 'hlsjs' || engine === 'default') && Hls.isSupported() && streamUrl.includes('.m3u8')) {
+            // Create a new video element for HLS.js
+            const oldVideo = document.getElementById('videoPlayer');
+            const newVideo = document.createElement('video');
+            newVideo.id = 'videoPlayer';
+            newVideo.controls = true;
+            newVideo.autoplay = true;
+            newVideo.muted = true;
+            newVideo.width = '100%';
+            newVideo.height = '100%';
+            oldVideo.parentNode.replaceChild(newVideo, oldVideo);
+            
+            const hls = new Hls({
+              debug: false,
+              enableWorker: true,
+              lowLatencyMode: true,
+              backBufferLength: 90
+            });
+            
+            hls.loadSource(streamUrl);
+            hls.attachMedia(newVideo);
+            
+            hls.on(Hls.Events.MANIFEST_PARSED, function() {
+              console.log('Manifest loaded, found levels:', hls.levels.length);
+              loadingIndicator.style.display = 'none';
+              newVideo.play().catch(e => {
+                console.warn('Autoplay not allowed:', e);
+              });
+            });
+            
+            hls.on(Hls.Events.ERROR, function(event, data) {
+              if (data.fatal) {
+                console.error('Fatal error:', data.type, data.details);
+                
+                loadingIndicator.style.display = 'none';
+                errorMessage.textContent = `Stream error: ${data.details}`;
+                errorMessage.style.display = 'block';
+                
+                switch (data.type) {
+                  case Hls.ErrorTypes.NETWORK_ERROR:
+                    // Try to recover network error
+                    console.log('Trying to recover from network error...');
+                    hls.startLoad();
+                    break;
+                  case Hls.ErrorTypes.MEDIA_ERROR:
+                    console.log('Trying to recover from media error...');
+                    hls.recoverMediaError();
+                    break;
+                  default:
+                    // Cannot recover
+                    hls.destroy();
+                    break;
+                }
+              } else {
+                console.warn('Non-fatal error:', data.type, data.details);
               }
-            } else {
-              console.warn('Non-fatal error:', data.type, data.details);
+            });
+            
+            engineButton.textContent = 'Switch to Native';
+            engineButton.onclick = () => initializePlayer('native');
+          }
+          // Use native player for other streams or fallback
+          else {
+            // Create a new video element for native playback
+            const oldVideo = document.getElementById('videoPlayer');
+            const newVideo = document.createElement('video');
+            newVideo.id = 'videoPlayer';
+            newVideo.controls = true;
+            newVideo.autoplay = true;
+            newVideo.muted = true;
+            newVideo.src = streamUrl;
+            oldVideo.parentNode.replaceChild(newVideo, oldVideo);
+            
+            newVideo.addEventListener('loadedmetadata', function() {
+              loadingIndicator.style.display = 'none';
+              newVideo.play().catch(e => {
+                console.warn('Autoplay not allowed:', e);
+              });
+            });
+            
+            newVideo.addEventListener('error', function() {
+              loadingIndicator.style.display = 'none';
+              errorMessage.textContent = 'Error loading the stream with native player';
+              errorMessage.style.display = 'block';
+            });
+            
+            engineButton.textContent = 'Switch to Video.js';
+            engineButton.onclick = () => initializePlayer('videojs');
+          }
+          
+          // Update the video reference
+          videoEl = document.getElementById('videoPlayer');
+          
+          // Fullscreen button
+          fullscreenButton.addEventListener('click', function() {
+            if (videoEl.requestFullscreen) {
+              videoEl.requestFullscreen();
+            } else if (videoEl.webkitRequestFullscreen) {
+              videoEl.webkitRequestFullscreen();
+            } else if (videoEl.msRequestFullscreen) {
+              videoEl.msRequestFullscreen();
             }
           });
-        } 
-        // For browsers with native HLS support
-        else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-          video.src = streamUrl;
-          video.addEventListener('loadedmetadata', function() {
-            loadingIndicator.style.display = 'none';
-            video.play().catch(e => {
-              console.warn('Autoplay not allowed:', e);
-            });
-          });
           
-          video.addEventListener('error', function() {
-            loadingIndicator.style.display = 'none';
-            errorMessage.textContent = 'Error loading the stream';
-            errorMessage.style.display = 'block';
+          // Mute/unmute button
+          muteButton.addEventListener('click', function() {
+            if (currentPlayer && typeof currentPlayer.muted === 'function') {
+              const isMuted = currentPlayer.muted();
+              currentPlayer.muted(!isMuted);
+              muteButton.textContent = !isMuted ? 'Unmute' : 'Mute';
+            } else {
+              videoEl.muted = !videoEl.muted;
+              muteButton.textContent = videoEl.muted ? 'Unmute' : 'Mute';
+            }
           });
         } else {
           loadingIndicator.style.display = 'none';
-          errorMessage.textContent = 'HLS is not supported in your browser';
+          errorMessage.textContent = 'No stream URL provided';
           errorMessage.style.display = 'block';
         }
-      } else {
-        loadingIndicator.style.display = 'none';
-        errorMessage.textContent = 'No stream URL provided';
-        errorMessage.style.display = 'block';
-      }
+      };
       
-      // Fullscreen button
-      fullscreenButton.addEventListener('click', function() {
-        if (video.requestFullscreen) {
-          video.requestFullscreen();
-        } else if (video.webkitRequestFullscreen) {
-          video.webkitRequestFullscreen();
-        } else if (video.msRequestFullscreen) {
-          video.msRequestFullscreen();
-        }
-      });
-      
-      // Mute/unmute button
-      muteButton.addEventListener('click', function() {
-        video.muted = !video.muted;
-        muteButton.textContent = video.muted ? 'Unmute' : 'Mute';
-      });
+      // Initialize with the preferred engine
+      initializePlayer(preferredEngine);
     });
   </script>
 </body>

@@ -11,13 +11,15 @@ interface RtspPlayerProps {
   autoPlay?: boolean;
   onError?: (error: string) => void;
   onStreamReady?: () => void;
+  preferredEngine?: 'native' | 'hlsjs' | 'videojs' | 'go2rtc';
 }
 
 const RtspPlayer: React.FC<RtspPlayerProps> = ({ 
   rtspUrl, 
   autoPlay = true,
   onError,
-  onStreamReady
+  onStreamReady,
+  preferredEngine = 'hlsjs'
 }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -84,11 +86,36 @@ const RtspPlayer: React.FC<RtspPlayerProps> = ({
           throw new Error('Invalid YouTube URL');
         }
       } else if (type === 'hls' || type === 'direct') {
-        setStreamUrl(rtspUrl);
+        // For HLS, check if go2rtc is enabled as the preferred engine
+        if (type === 'hls' && preferredEngine === 'go2rtc') {
+          // Try to use go2rtc gateway if available
+          const go2rtcUrl = localStorage.getItem('go2rtcUrl');
+          if (go2rtcUrl) {
+            // Format: http://[go2rtc-ip]:8554/api/stream?src=[stream-url]
+            setStreamUrl(`${go2rtcUrl}/api/stream?src=${encodeURIComponent(rtspUrl)}`);
+          } else {
+            setStreamUrl(rtspUrl);
+          }
+        } else {
+          setStreamUrl(rtspUrl);
+        }
       } else if (type === 'rtsp') {
-        const hlsUrl = await convertRtspToHls(rtspUrl);
-        setStreamUrl(hlsUrl);
-        setVideoType('hls');
+        if (preferredEngine === 'go2rtc') {
+          // Try to use go2rtc gateway if available
+          const go2rtcUrl = localStorage.getItem('go2rtcUrl');
+          if (go2rtcUrl) {
+            setStreamUrl(`${go2rtcUrl}/api/stream?src=${encodeURIComponent(rtspUrl)}`);
+            setVideoType('hls');
+          } else {
+            const hlsUrl = await convertRtspToHls(rtspUrl);
+            setStreamUrl(hlsUrl);
+            setVideoType('hls');
+          }
+        } else {
+          const hlsUrl = await convertRtspToHls(rtspUrl);
+          setStreamUrl(hlsUrl);
+          setVideoType('hls');
+        }
       } else if (type === 'iframe') {
         if (rtspUrl.startsWith('rtsp://')) {
           const hlsUrl = await convertRtspToHls(rtspUrl);
@@ -247,6 +274,42 @@ const RtspPlayer: React.FC<RtspPlayerProps> = ({
         />
       );
     } else if (videoType === 'hls') {
+      if (preferredEngine === 'videojs' && typeof window !== 'undefined') {
+        // Use Video.js for HLS playback when preferred
+        return (
+          <div data-vjs-player className="w-full h-full">
+            <video
+              ref={(el) => {
+                if (el && streamUrl) {
+                  // Initialize video.js (would be loaded via CDN or as a dependency)
+                  if (window.videojs) {
+                    const player = window.videojs(el, {
+                      autoplay: autoPlay,
+                      controls: true,
+                      sources: [{ src: streamUrl, type: 'application/x-mpegURL' }]
+                    });
+                    
+                    player.on('error', handleVideoError);
+                    player.on('canplay', handleStreamReady);
+                    
+                    // Cleanup on unmount
+                    return () => {
+                      if (player) {
+                        player.dispose();
+                      }
+                    };
+                  }
+                }
+              }}
+              className="video-js vjs-fluid vjs-default-skin vjs-big-play-centered"
+              playsInline
+              muted={isMuted}
+            />
+          </div>
+        );
+      }
+      
+      // Default to ReactHlsPlayer
       return (
         <ReactHlsPlayer
           src={streamUrl}
