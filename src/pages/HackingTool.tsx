@@ -25,6 +25,7 @@ const HackingToolPage: React.FC = () => {
   const [isRealmode, setIsRealmode] = useState(false);
   const [toolOutput, setToolOutput] = useState<string | null>(null);
   const [isExecuting, setIsExecuting] = useState(false);
+  const [copySuccess, setCopySuccess] = useState<string | null>(null);
   
   // Check for configuration in localStorage
   useEffect(() => {
@@ -43,6 +44,18 @@ const HackingToolPage: React.FC = () => {
         "Tools will execute real commands. Use with caution." : 
         "Tools will run in simulation mode with no real impact.",
       variant: newMode ? "destructive" : "default"
+    });
+  };
+
+  // Handle copy to clipboard functionality
+  const handleCopyToClipboard = (text: string, type: string) => {
+    navigator.clipboard.writeText(text).then(() => {
+      setCopySuccess(type);
+      setTimeout(() => setCopySuccess(null), 2000);
+      toast({
+        title: "Copied to clipboard!",
+        description: `The ${type} has been copied to your clipboard.`,
+      });
     });
   };
 
@@ -187,16 +200,6 @@ const HackingToolPage: React.FC = () => {
       </main>
     </div>
   );
-};
-
-// Handle copy to clipboard functionality
-const handleCopyToClipboard = (text: string, type: string) => {
-  navigator.clipboard.writeText(text).then(() => {
-    toast({
-      title: "Copied to clipboard!",
-      description: `The ${type} has been copied to your clipboard.`,
-    });
-  });
 };
 
 export default HackingToolPage;
