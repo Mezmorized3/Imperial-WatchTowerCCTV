@@ -20,7 +20,7 @@ import {
   Play,
   MonitorPlay,
   Database,
-  Tool
+  Wrench // Replace Tool with Wrench, which is a valid icon in lucide-react
 } from 'lucide-react';
 
 type CommandOption = {
@@ -65,7 +65,7 @@ const CommandPalette = ({ open, setOpen }: { open: boolean; setOpen: (open: bool
     },
     {
       label: "OSINT Tools",
-      icon: <Tool className="mr-2 h-4 w-4" />,
+      icon: <Wrench className="mr-2 h-4 w-4" />, // Changed from Tool to Wrench
       path: "/osint-tools",
       description: "Open-source intelligence gathering tools",
       shortcut: "O T"
