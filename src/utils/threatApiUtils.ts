@@ -1,33 +1,24 @@
 
 import { ThreatIntelData } from '@/types/scanner';
+import { imperialServerService } from './imperialServerService';
 
 /**
  * Fetches threat intelligence data for an IP address from VirusTotal
- * Requires a valid VirusTotal API key
+ * Requires a valid VirusTotal API key from server config
  */
 export const checkVirusTotal = async (ip: string): Promise<ThreatIntelData | null> => {
   console.log(`Checking VirusTotal for IP: ${ip}`);
   
-  const apiKey = localStorage.getItem('VIRUSTOTAL_API_KEY');
-  if (!apiKey) {
-    console.error('No VirusTotal API key found. Please add your API key in Settings -> API Keys.');
-    return null;
-  }
-  
   try {
-    const response = await fetch(`https://www.virustotal.com/api/v3/ip_addresses/${ip}`, {
-      headers: {
-        'x-apikey': apiKey
-      }
-    });
+    // Use the server-side implementation that has access to API keys
+    const response = await imperialServerService.executeOsintTool('virustotal', { ip });
     
-    if (!response.ok) {
-      console.error(`VirusTotal API error: ${response.status} ${response.statusText}`);
+    if (!response || !response.success) {
+      console.error('VirusTotal API error:', response?.error || 'Unknown error');
       return null;
     }
     
-    const data = await response.json();
-    const attributes = data?.data?.attributes;
+    const attributes = response.data?.attributes;
     
     if (!attributes) {
       return null;
@@ -60,32 +51,21 @@ export const checkVirusTotal = async (ip: string): Promise<ThreatIntelData | nul
 
 /**
  * Fetches threat intelligence data for an IP address from AbuseIPDB
- * Requires a valid AbuseIPDB API key
+ * Requires a valid AbuseIPDB API key from server config
  */
 export const checkAbuseIPDB = async (ip: string): Promise<ThreatIntelData | null> => {
   console.log(`Checking AbuseIPDB for IP: ${ip}`);
   
-  const apiKey = localStorage.getItem('ABUSEIPDB_API_KEY');
-  if (!apiKey) {
-    console.error('No AbuseIPDB API key found. Please add your API key in Settings -> API Keys.');
-    return null;
-  }
-  
   try {
-    const response = await fetch(`https://api.abuseipdb.com/api/v2/check?ipAddress=${ip}&maxAgeInDays=90&verbose=true`, {
-      headers: {
-        'Key': apiKey,
-        'Accept': 'application/json'
-      }
-    });
+    // Use the server-side implementation that has access to API keys
+    const response = await imperialServerService.executeOsintTool('abuseipdb', { ip });
     
-    if (!response.ok) {
-      console.error(`AbuseIPDB API error: ${response.status} ${response.statusText}`);
+    if (!response || !response.success) {
+      console.error('AbuseIPDB API error:', response?.error || 'Unknown error');
       return null;
     }
     
-    const data = await response.json();
-    const attributes = data?.data;
+    const attributes = response.data;
     
     if (!attributes) {
       return null;

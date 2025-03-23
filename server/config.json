@@ -8,7 +8,7 @@
     "3000": "HLS Restream Server",
     "1935": "RTMP Server"
   },
-  "adminToken": "REPLACE_WITH_SECURE_TOKEN_IN_PRODUCTION",
+  "adminToken": "imp_CTL_84f3a21b7e695d28c09f52a31cb41d907feac8a2",
   "royalCourtPort": 7443,
   "useHttps": false,
   "sslOptions": {
@@ -23,15 +23,18 @@
   "apiServices": {
     "virusTotal": {
       "enabled": true,
-      "endpoint": "https://www.virustotal.com/api/v3"
+      "endpoint": "https://www.virustotal.com/api/v3",
+      "apiKey": "vt_api_9f27b346a8c52e495e3f9f2d91247c01c92ec2d837ac645a87d39b99a27f"
     },
     "abuseIPDB": {
       "enabled": true,
-      "endpoint": "https://api.abuseipdb.com/api/v2"
+      "endpoint": "https://api.abuseipdb.com/api/v2",
+      "apiKey": "ab1pd_7c33f19a82bc4e8fd91e45683cb57f234a1e29d836af5271c943bf6257"
     },
     "nvd": {
       "enabled": true,
-      "endpoint": "https://services.nvd.nist.gov/rest/json/cves/2.0"
+      "endpoint": "https://services.nvd.nist.gov/rest/json/cves/2.0",
+      "apiKey": "nvd_api_2a57f90c12dd451e8b9276f120a5dc17"
     }
   },
   "securitySettings": {
@@ -39,7 +42,11 @@
       "apiRequests": 100,
       "authAttempts": 5
     },
-    "tokenExpiration": "24h"
+    "tokenExpiration": "24h",
+    "jwtSecret": "imp_JWT_9c4f8e63b215a972d84f7aa38c2cb891e76519af",
+    "encryptionKey": "imp_ENC_b237e8af6d31c490f7eb21082305a391",
+    "authSalt": "8f5db97a31e4c7bc8651",
+    "keyRotationDays": 30
   },
   "logConfig": {
     "level": "info",
@@ -51,21 +58,51 @@
     "httpPort": 8000,
     "ffmpegPath": "/usr/bin/ffmpeg",
     "enableTrans": true,
-    "enableAuth": false,
+    "enableAuth": true,
+    "authSecret": "imp_STREAM_7d25a991e3bc471f9ae8",
     "mediaRoot": "./media"
   },
   "externalTools": {
     "github": {
       "cloneDirectory": "./tools",
-      "updateInterval": 86400000
+      "updateInterval": 86400000,
+      "accessToken": "gho_p4tK8a7hD2fE9bN1mL3jR6sT0vX5yZ2aC8bE"
     },
     "cameradar": {
       "mode": "release",
-      "windowsSupport": true
+      "windowsSupport": true,
+      "apiKey": "imp_CAM_3a57f90c12dd451e8b9276f120a5dc17"
     },
     "ffmpeg": {
       "threads": 4,
-      "logLevel": "error"
+      "logLevel": "error",
+      "presets": {
+        "hls": "-c:v libx264 -preset superfast -tune zerolatency -c:a aac -ar 44100",
+        "mp4": "-c:v libx264 -preset medium -crf 23 -c:a aac -b:a 128k"
+      }
+    }
+  },
+  "imperialShield": {
+    "enabled": true,
+    "cipherKey": "3f7d8a1e6b5c9f2e4d7c8a9b6f3e2d1c",
+    "trustedNetworks": ["192.168.1.0/24", "10.0.0.0/8"],
+    "blockCountries": ["", ""],
+    "allowCountries": ["US", "GB", "CA", "AU", "DE", "FR", "JP"],
+    "authMode": "oauth2"
+  },
+  "oauth2": {
+    "enabled": false,
+    "providers": {
+      "google": {
+        "clientId": "",
+        "clientSecret": "",
+        "callbackURL": "http://localhost:5001/auth/google/callback"
+      },
+      "github": {
+        "clientId": "",
+        "clientSecret": "",
+        "callbackURL": "http://localhost:5001/auth/github/callback"
+      }
     }
   }
 }

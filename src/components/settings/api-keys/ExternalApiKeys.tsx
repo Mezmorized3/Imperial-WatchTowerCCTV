@@ -4,8 +4,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Key } from 'lucide-react';
+import { Key, CheckCircle, Info } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 interface ExternalApiKeysProps {
   onSave: () => void;
@@ -17,22 +18,32 @@ export const ExternalApiKeys: React.FC<ExternalApiKeysProps> = ({ onSave, isApiK
   const [virusTotalApiKey, setVirusTotalApiKey] = useState(localStorage.getItem('VIRUSTOTAL_API_KEY') || '');
   const [abuseIPDBApiKey, setAbuseIPDBApiKey] = useState(localStorage.getItem('ABUSEIPDB_API_KEY') || '');
   const [nvdApiKey, setNvdApiKey] = useState(localStorage.getItem('NVD_API_KEY') || '');
+  const [useServerConfig, setUseServerConfig] = useState(true);
 
   const handleSave = () => {
-    // Save API keys to localStorage
-    if (virusTotalApiKey) {
-      localStorage.setItem('VIRUSTOTAL_API_KEY', virusTotalApiKey);
-    }
-    if (abuseIPDBApiKey) {
-      localStorage.setItem('ABUSEIPDB_API_KEY', abuseIPDBApiKey);
-    }
-    if (nvdApiKey) {
-      localStorage.setItem('NVD_API_KEY', nvdApiKey);
+    if (!useServerConfig) {
+      // Save API keys to localStorage (fallback option)
+      if (virusTotalApiKey) {
+        localStorage.setItem('VIRUSTOTAL_API_KEY', virusTotalApiKey);
+      }
+      if (abuseIPDBApiKey) {
+        localStorage.setItem('ABUSEIPDB_API_KEY', abuseIPDBApiKey);
+      }
+      if (nvdApiKey) {
+        localStorage.setItem('NVD_API_KEY', nvdApiKey);
+      }
+    } else {
+      // Remove any keys from localStorage since we're using server config
+      localStorage.removeItem('VIRUSTOTAL_API_KEY');
+      localStorage.removeItem('ABUSEIPDB_API_KEY');
+      localStorage.removeItem('NVD_API_KEY');
     }
     
     toast({
-      title: "API keys saved",
-      description: "Your API keys have been saved successfully.",
+      title: "API keys configuration saved",
+      description: useServerConfig 
+        ? "Using secure server-side API keys from configuration." 
+        : "Your local API keys have been saved successfully.",
     });
     
     onSave();
@@ -47,36 +58,67 @@ export const ExternalApiKeys: React.FC<ExternalApiKeysProps> = ({ onSave, isApiK
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
-        <div className="space-y-4">
-          <ApiKeyInput 
-            id="virustotal-api-key"
-            label="VirusTotal API Key"
-            tagLabel="Threat Intel"
-            tagColor="blue"
-            value={virusTotalApiKey}
-            onChange={setVirusTotalApiKey}
-            description="Used for IP reputation and threat intelligence data."
+        <Alert className="bg-green-900/20 border-green-800">
+          <CheckCircle className="h-4 w-4 text-green-500" />
+          <AlertDescription className="text-sm ml-2">
+            API keys are now securely stored in the server configuration. 
+            You don't need to enter them here unless you want to override server settings.
+          </AlertDescription>
+        </Alert>
+        
+        <div className="flex items-center space-x-2">
+          <div className="flex-1">
+            <Label htmlFor="use-server-config" className="text-sm font-medium">
+              Use secure server-side API keys
+            </Label>
+            <p className="text-xs text-gray-400">
+              Recommended for security. Keys are stored in server/config.json.
+            </p>
+          </div>
+          <input
+            type="checkbox"
+            id="use-server-config"
+            checked={useServerConfig}
+            onChange={(e) => setUseServerConfig(e.target.checked)}
+            className="h-4 w-4 rounded border-gray-500 bg-gray-800 text-primary"
           />
-          
-          <ApiKeyInput 
-            id="abuseipdb-api-key"
-            label="AbuseIPDB API Key"
-            tagLabel="Threat Intel"
-            tagColor="blue"
-            value={abuseIPDBApiKey}
-            onChange={setAbuseIPDBApiKey}
-            description="Used for IP reputation and abuse reporting data."
-          />
-          
-          <ApiKeyInput 
-            id="nvd-api-key"
-            label="NVD API Key"
-            tagLabel="Firmware"
-            tagColor="red"
-            value={nvdApiKey}
-            onChange={setNvdApiKey}
-            description="Used for firmware vulnerability analysis from the National Vulnerability Database."
-          />
+        </div>
+        
+        <div className={useServerConfig ? "opacity-50" : "opacity-100"}>
+          <div className="space-y-4">
+            <ApiKeyInput 
+              id="virustotal-api-key"
+              label="VirusTotal API Key"
+              tagLabel="Threat Intel"
+              tagColor="blue"
+              value={virusTotalApiKey}
+              onChange={setVirusTotalApiKey}
+              description="Used for IP reputation and threat intelligence data."
+              disabled={useServerConfig}
+            />
+            
+            <ApiKeyInput 
+              id="abuseipdb-api-key"
+              label="AbuseIPDB API Key"
+              tagLabel="Threat Intel"
+              tagColor="blue"
+              value={abuseIPDBApiKey}
+              onChange={setAbuseIPDBApiKey}
+              description="Used for IP reputation and abuse reporting data."
+              disabled={useServerConfig}
+            />
+            
+            <ApiKeyInput 
+              id="nvd-api-key"
+              label="NVD API Key"
+              tagLabel="Firmware"
+              tagColor="red"
+              value={nvdApiKey}
+              onChange={setNvdApiKey}
+              description="Used for firmware vulnerability analysis from the National Vulnerability Database."
+              disabled={useServerConfig}
+            />
+          </div>
         </div>
         
         <div className="pt-4">
@@ -86,11 +128,20 @@ export const ExternalApiKeys: React.FC<ExternalApiKeysProps> = ({ onSave, isApiK
             className="w-full"
           >
             <Key className="mr-2 h-4 w-4" />
-            {isApiKeySaved ? "API Keys Saved" : "Save API Keys"}
+            {isApiKeySaved ? "Settings Saved" : "Save Settings"}
           </Button>
         </div>
         
-        <SecurityNote />
+        <div className="border border-gray-700 p-4 rounded-md bg-gray-800/50 mt-4">
+          <h4 className="text-sm font-medium mb-2 text-gray-300 flex items-center">
+            <Info className="h-4 w-4 mr-2 text-blue-400" />
+            Security Information
+          </h4>
+          <p className="text-xs text-gray-400">
+            For enhanced security, API keys are now stored in the server configuration file (<code className="text-xs bg-gray-900 px-1 py-0.5 rounded">server/config.json</code>).
+            This approach prevents API keys from being exposed in the browser.
+          </p>
+        </div>
       </CardContent>
     </Card>
   );
@@ -104,6 +155,7 @@ interface ApiKeyInputProps {
   value: string;
   onChange: (value: string) => void;
   description: string;
+  disabled?: boolean;
 }
 
 const ApiKeyInput: React.FC<ApiKeyInputProps> = ({ 
@@ -113,7 +165,8 @@ const ApiKeyInput: React.FC<ApiKeyInputProps> = ({
   tagColor, 
   value, 
   onChange, 
-  description 
+  description,
+  disabled = false
 }) => {
   const tagColorClass = {
     blue: "bg-blue-900 text-blue-200",
@@ -133,19 +186,9 @@ const ApiKeyInput: React.FC<ApiKeyInputProps> = ({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={`Enter your ${label}`}
+        disabled={disabled}
       />
       <p className="text-xs text-gray-400">{description}</p>
-    </div>
-  );
-};
-
-const SecurityNote: React.FC = () => {
-  return (
-    <div className="border border-gray-700 p-4 rounded-md bg-gray-800/50 mt-4">
-      <h4 className="text-sm font-medium mb-2 text-gray-300">Security Note</h4>
-      <p className="text-xs text-gray-400">
-        API keys are stored in your browser's local storage. For production use, consider configuring these keys on the server side in <code className="text-xs bg-gray-900 px-1 py-0.5 rounded">server/config.json</code>.
-      </p>
     </div>
   );
 };
