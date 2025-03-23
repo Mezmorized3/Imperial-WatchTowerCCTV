@@ -3,7 +3,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import ViewerHeader from '@/components/viewer/ViewerHeader';
 import CameraSearchTools from '@/components/surveillance/CameraSearchTools';
 import { Globe, Search, Users, Database, FileSearch } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
@@ -85,32 +85,63 @@ const OsintTools = () => {
                   <h2 className="text-xl font-bold">Social Media Intelligence</h2>
                   <p className="text-gray-400 mb-4">Tools for gathering intelligence from social media platforms</p>
                   
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {['Username Search', 'Twint', 'Social Media Analyzer'].map((tool) => (
-                      <div key={tool} className="bg-scanner-dark p-4 rounded-md border border-gray-700">
-                        <h3 className="text-lg font-medium mb-2">{tool}</h3>
-                        <p className="text-sm text-gray-400 mb-4">
-                          {tool === 'Username Search'
-                            ? 'Find accounts across multiple platforms'
-                            : tool === 'Twint'
-                            ? 'Twitter intelligence tool'
-                            : 'Analyze profiles and connections'}
-                        </p>
-                        <Button 
-                          variant="outline" 
-                          className="w-full"
-                          onClick={() => {
-                            setActiveTab('camera-tools');
-                            toast({
-                              title: "Redirecting",
-                              description: `Loading ${tool} tool...`,
-                            });
-                          }}
-                        >
-                          Open Tool
-                        </Button>
-                      </div>
-                    ))}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="bg-scanner-dark p-4 rounded-md border border-gray-700">
+                      <h3 className="text-lg font-medium mb-2">Username Search</h3>
+                      <p className="text-sm text-gray-400 mb-4">
+                        Find accounts across multiple platforms
+                      </p>
+                      <Button 
+                        variant="outline" 
+                        className="w-full"
+                        onClick={() => {
+                          toast({
+                            title: "Username Search",
+                            description: "Opening username search tool...",
+                          });
+                        }}
+                      >
+                        Open Tool
+                      </Button>
+                    </div>
+                    
+                    <div className="bg-scanner-dark p-4 rounded-md border border-gray-700">
+                      <h3 className="text-lg font-medium mb-2">Twint</h3>
+                      <p className="text-sm text-gray-400 mb-4">
+                        Twitter intelligence tool
+                      </p>
+                      <Button 
+                        variant="outline" 
+                        className="w-full"
+                        onClick={() => {
+                          toast({
+                            title: "Twint",
+                            description: "Opening Twitter intelligence tool...",
+                          });
+                        }}
+                      >
+                        Open Tool
+                      </Button>
+                    </div>
+                    
+                    <div className="bg-scanner-dark p-4 rounded-md border border-gray-700">
+                      <h3 className="text-lg font-medium mb-2">Social Media Analyzer</h3>
+                      <p className="text-sm text-gray-400 mb-4">
+                        Analyze profiles and connections
+                      </p>
+                      <Button 
+                        variant="outline" 
+                        className="w-full"
+                        onClick={() => {
+                          toast({
+                            title: "Social Media Analyzer",
+                            description: "Opening social media analyzer tool...",
+                          });
+                        }}
+                      >
+                        Open Tool
+                      </Button>
+                    </div>
                   </div>
                 </div>
               </CardContent>
