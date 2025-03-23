@@ -11,6 +11,7 @@ import ImperialControl from './pages/ImperialControl';
 import ImperialShinobi from './pages/ImperialShinobi';
 import ImperialShield from './pages/ImperialShield';
 import OsintTools from './pages/OsintTools';
+import HackingToolPage from './pages/HackingTool';
 
 function App() {
   return (
@@ -25,6 +26,7 @@ function App() {
         <Route path="/imperial-shinobi" element={<ImperialShinobi />} />
         <Route path="/imperial-shield" element={<ImperialShield />} />
         <Route path="/osint-tools" element={<OsintTools />} />
+        <Route path="/hacking-tool" element={<HackingToolPage />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </div>

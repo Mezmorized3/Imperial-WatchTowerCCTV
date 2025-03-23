@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -16,7 +15,8 @@ import {
   Eye, 
   Server, 
   Settings,
-  Home
+  Home,
+  Terminal
 } from 'lucide-react';
 
 const ImperialNavigation: React.FC = () => {
@@ -143,6 +143,20 @@ const ImperialNavigation: React.FC = () => {
                       </li>
                       <li>
                         <Link
+                          to="/hacking-tool"
+                          className="flex h-full w-full select-none flex-col justify-end rounded-md bg-scanner-dark p-6 no-underline outline-none focus:shadow-md hover:bg-scanner-dark-alt"
+                        >
+                          <Terminal className="h-6 w-6 text-green-500 mb-2" />
+                          <div className="mb-2 mt-4 text-lg font-medium text-white">
+                            Hacking Tool
+                          </div>
+                          <p className="text-sm leading-tight text-gray-400">
+                            Security testing framework
+                          </p>
+                        </Link>
+                      </li>
+                      <li>
+                        <Link
                           to="/settings"
                           className="flex h-full w-full select-none flex-col justify-end rounded-md bg-scanner-dark p-6 no-underline outline-none focus:shadow-md hover:bg-scanner-dark-alt"
                         >
@@ -202,6 +216,16 @@ const ImperialNavigation: React.FC = () => {
             >
               <Link to="/imperial-shinobi">
                 <Eye className="h-4 w-4" />
+              </Link>
+            </Button>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              asChild
+              className={`text-gray-400 hover:text-white ${isActive('/hacking-tool') ? 'bg-scanner-dark' : ''}`}
+            >
+              <Link to="/hacking-tool">
+                <Terminal className="h-4 w-4" />
               </Link>
             </Button>
             <Button 
