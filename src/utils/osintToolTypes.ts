@@ -64,6 +64,9 @@ export interface CameraResult {
   threatIntelligence?: any;
   firmware?: any;
   brand?: string;
+  // Add properties to fix errors in ScanController
+  lastSeen?: Date;
+  accessLevel?: string;
 }
 
 export interface ScanResult extends ToolResult {
@@ -94,6 +97,18 @@ export interface CCTVParams extends ToolParams {
   saveResults?: boolean;
   country?: string;
   type?: string;
+}
+
+// New HackCCTV parameters
+export interface HackCCTVParams extends ToolParams {
+  targetIP?: string;
+  targetRange?: string;
+  exploitType?: string;
+  bruteforce?: boolean;
+  ports?: string;
+  timeout?: number;
+  customWordlist?: string[];
+  deepScan?: boolean;
 }
 
 export interface TorBotParams extends ToolParams {
@@ -262,4 +277,19 @@ export interface ScrapyResult extends ToolResult {
   urls?: string[];
   items?: any[];
   errors?: string[];
+}
+
+// ScanSettings extension for ScanController
+export interface ScanSettings {
+  detailed?: boolean;
+  aggressive?: boolean;
+  targetSubnet?: string;
+  portRange?: string;
+  timeout?: number;
+  // Additional properties to fix build errors
+  testCredentials?: boolean;
+  checkVulnerabilities?: boolean;
+  saveSnapshots?: boolean;
+  regionFilter?: string;
+  threadsCount?: number;
 }

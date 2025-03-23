@@ -13,6 +13,11 @@ export {
   executeCamerattack
 } from './osintImplementations/cameraTools';
 
+// Export the new hackCCTV tool
+export {
+  executeHackCCTV
+} from './osintImplementations/hackCCTVTools';
+
 // Re-export all web tools
 export {
   executeWebCheck,

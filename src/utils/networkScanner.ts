@@ -10,6 +10,11 @@ export interface ScanSettings {
   targetSubnet?: string;
   portRange?: string;
   timeout?: number;
+  testCredentials?: boolean;
+  checkVulnerabilities?: boolean;
+  saveSnapshots?: boolean;
+  regionFilter?: string;
+  threadsCount?: number;
 }
 
 // Local functions to fix build errors
@@ -56,16 +61,41 @@ const getThreatIntelligence = (ipAddress: string) => {
 };
 
 // Add missing proxy utility functions
-export const testProxyConnection = async (proxyConfig: any): Promise<boolean> => {
+export const testProxyConnection = async (proxyConfig: any): Promise<{
+  success: boolean;
+  latency?: number;
+  details?: string;
+  error?: string;
+}> => {
   console.log("Testing proxy connection:", proxyConfig);
   await new Promise(resolve => setTimeout(resolve, 1000));
-  return Math.random() > 0.2; // Simulate 80% success rate
+  const success = Math.random() > 0.2; // Simulate 80% success rate
+  
+  return {
+    success,
+    latency: success ? Math.floor(Math.random() * 200) + 50 : undefined,
+    details: success ? `Connected via ${proxyConfig.type.toUpperCase()} proxy` : undefined,
+    error: !success ? "Connection timed out" : undefined
+  };
 };
 
-export const rotateProxy = async (proxyConfig: any): Promise<boolean> => {
+export const rotateProxy = async (proxyConfig: any): Promise<{
+  success: boolean;
+  currentProxy?: string;
+  error?: string;
+}> => {
   console.log("Rotating proxy:", proxyConfig);
   await new Promise(resolve => setTimeout(resolve, 1000));
-  return Math.random() > 0.1; // Simulate 90% success rate
+  const success = Math.random() > 0.1; // Simulate 90% success rate
+  
+  // Generate a random IP for the new proxy
+  const randomIp = `${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}`;
+  
+  return {
+    success,
+    currentProxy: success ? `${randomIp}:${Math.floor(Math.random() * 10000) + 1000}` : undefined,
+    error: !success ? "Failed to rotate proxy" : undefined
+  };
 };
 
 // Declare ScanResult interface
@@ -132,7 +162,10 @@ export const scanNetwork = async (
             ]
           },
           accessible: Math.random() > 0.3,
-          vulnerabilities: generateVulnerabilities(randomType)
+          vulnerabilities: generateVulnerabilities(randomType),
+          // Add properties to fix type errors
+          lastSeen: new Date(),
+          accessLevel: Math.random() > 0.5 ? 'admin' : 'guest'
         };
         
         // Add additional data for detailed scans
@@ -141,7 +174,7 @@ export const scanNetwork = async (
           camera.threatIntelligence = getThreatIntelligence(camera.ip);
           
           // Add firmware analysis
-          camera.firmware = analyzeFirmware(camera.manufacturer);
+          camera.firmware = analyzeFirmware(camera.manufacturer!);
         }
         
         cameras.push(camera);
