@@ -5,8 +5,6 @@ import { HelpCircle } from 'lucide-react';
 import SearchBar from '@/components/help/SearchBar';
 import GuidesSection from '@/components/help/GuidesSection';
 import FaqSection from '@/components/help/FaqSection';
-import TutorialsSection from '@/components/help/TutorialsSection';
-import SupportSection from '@/components/help/SupportSection';
 
 const Help = () => {
   const imperialDirectiveBanner = `
@@ -44,8 +42,6 @@ const Help = () => {
           <TabsList className="bg-gray-800">
             <TabsTrigger value="guides">User Guides</TabsTrigger>
             <TabsTrigger value="faq">FAQ</TabsTrigger>
-            <TabsTrigger value="tutorials">Video Tutorials</TabsTrigger>
-            <TabsTrigger value="support">Support</TabsTrigger>
           </TabsList>
 
           <TabsContent value="guides" className="space-y-6">
@@ -54,14 +50,6 @@ const Help = () => {
 
           <TabsContent value="faq" className="space-y-6">
             <FaqSection />
-          </TabsContent>
-
-          <TabsContent value="tutorials" className="space-y-6">
-            <TutorialsSection />
-          </TabsContent>
-
-          <TabsContent value="support" className="space-y-6">
-            <SupportSection />
           </TabsContent>
         </Tabs>
       </div>
