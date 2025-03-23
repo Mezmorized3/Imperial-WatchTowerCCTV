@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Terminal, Tools } from 'lucide-react';
+import { Terminal, Wrench } from 'lucide-react';
 
 interface HackingTabsProps {
   selectedTab: string;
@@ -28,7 +28,7 @@ export const HackingTabs: React.FC<HackingTabsProps> = ({
           value="tools"
           className="flex items-center justify-center gap-2 data-[state=active]:bg-scanner-primary data-[state=active]:text-black"
         >
-          <Tools className="h-4 w-4" />
+          <Wrench className="h-4 w-4" />
           Tool Selection
         </TabsTrigger>
         <TabsTrigger 
