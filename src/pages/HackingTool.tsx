@@ -2,9 +2,10 @@
 import React from 'react';
 import ViewerHeader from '@/components/viewer/ViewerHeader';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Cpu, Terminal, Download, ExternalLink, Code, Shield } from 'lucide-react';
+import { Cpu, Terminal, Download, ExternalLink, Code, Shield, AlertTriangle, Tool } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/components/ui/use-toast';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const HackingToolPage: React.FC = () => {
   const handleToolClick = (toolName: string) => {
@@ -41,10 +42,39 @@ const HackingToolPage: React.FC = () => {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <p className="text-gray-400">
-                Our comprehensive hacking toolkit is being rebuilt with improved features.
-                Please check back later for the full implementation.
-              </p>
+              <div className="flex items-start space-x-3">
+                <Tool className="h-5 w-5 text-scanner-primary flex-shrink-0 mt-1" />
+                <div>
+                  <p className="font-semibold text-scanner-primary">HackTools</p>
+                  <p className="text-gray-400 text-sm">
+                    The all-in-one Red Team browser extension for Web Pentesters. 
+                    HackTools is being integrated into our framework to provide a comprehensive 
+                    set of tools right at your fingertips.
+                  </p>
+                </div>
+              </div>
+              
+              <div className="space-y-2 mt-2">
+                <p className="text-gray-300 text-sm font-medium">Features coming soon:</p>
+                <ul className="text-xs text-gray-400 space-y-1 pl-5 list-disc">
+                  <li>Reverse Shell generator</li>
+                  <li>XSS payload generator</li>
+                  <li>Hash & Encode/Decode utilities</li>
+                  <li>CMS & Web technology detection</li>
+                  <li>SQLi payloads & cheatsheets</li>
+                </ul>
+              </div>
+              
+              <div className="pt-2">
+                <Button 
+                  variant="outline" 
+                  className="border-gray-700 hover:bg-scanner-dark-alt text-sm w-full"
+                  onClick={() => window.open('https://github.com/LasCC/HackTools', '_blank')}
+                >
+                  <ExternalLink className="h-4 w-4 mr-2" />
+                  View HackTools on GitHub
+                </Button>
+              </div>
             </CardContent>
           </Card>
 
