@@ -2,7 +2,7 @@
 import React from 'react';
 import ViewerHeader from '@/components/viewer/ViewerHeader';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Cpu, Terminal, Download, ExternalLink, Code, Shield, AlertTriangle, Tool } from 'lucide-react';
+import { Cpu, Terminal, Download, ExternalLink, Code, Shield, AlertTriangle, Wrench } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/components/ui/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -43,7 +43,7 @@ const HackingToolPage: React.FC = () => {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex items-start space-x-3">
-                <Tool className="h-5 w-5 text-scanner-primary flex-shrink-0 mt-1" />
+                <Wrench className="h-5 w-5 text-scanner-primary flex-shrink-0 mt-1" />
                 <div>
                   <p className="font-semibold text-scanner-primary">HackTools</p>
                   <p className="text-gray-400 text-sm">
