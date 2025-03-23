@@ -12,7 +12,6 @@ import { InsecamTool } from './search-tools/InsecamTool';
 import HackCCTVTool from './search-tools/HackCCTVTool';
 import AdvancedWebHackTool from './search-tools/AdvancedWebHackTool';
 import RapidPayloadTool from './search-tools/RapidPayloadTool';
-import HackingToolTool from './search-tools/HackingToolTool';
 import SecurityToolsTabs from './search-tools/SecurityToolsTabs';
 
 const CameraSearchTools: React.FC = () => {
@@ -83,7 +82,13 @@ const CameraSearchTools: React.FC = () => {
           </TabsContent>
 
           <TabsContent value="hackingtools">
-            <HackingToolTool />
+            <div className="p-6 text-center">
+              <h2 className="text-xl font-semibold mb-2">Hacking Tools</h2>
+              <p className="text-gray-400">
+                Tools for security testing and vulnerability assessment are being reimplemented.
+                Please visit the <a href="/hacking-tool" className="text-scanner-primary hover:underline">Hacking Tool page</a> for more information.
+              </p>
+            </div>
           </TabsContent>
         </Tabs>
       </CardContent>
