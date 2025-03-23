@@ -191,15 +191,6 @@ const FileCentipede: React.FC = () => {
             <Download className="h-4 w-4 mr-2" />
             Download
           </Button>
-          
-          <Button 
-            variant="outline" 
-            className="border-gray-700 hover:bg-scanner-dark-alt hover:text-scanner-primary transition-colors"
-            onClick={() => window.open('https://github.com/filecxx/FileCentipede', '_blank')}
-          >
-            <ExternalLink className="h-4 w-4 mr-2" />
-            GitHub
-          </Button>
         </div>
         
         {selectedCountry && rangeDetails && (

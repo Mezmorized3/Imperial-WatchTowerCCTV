@@ -2,7 +2,7 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Shield, Code, ExternalLink } from 'lucide-react';
+import { Shield, Code } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
 import { executeSecurityAdmin } from '@/utils/osintTools';
 
@@ -31,15 +31,6 @@ const AdditionalTools: React.FC<AdditionalToolsProps> = ({ isRealmode }) => {
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="flex flex-wrap gap-2">
-          <Button 
-            variant="outline" 
-            className="border-gray-700 hover:bg-scanner-dark-alt"
-            onClick={() => window.open('https://github.com/LasCC/HackTools', '_blank')}
-          >
-            <ExternalLink className="h-4 w-4 mr-2" />
-            HackTools GitHub
-          </Button>
-          
           <Button 
             variant="outline" 
             className="border-gray-700 hover:bg-scanner-dark-alt"
