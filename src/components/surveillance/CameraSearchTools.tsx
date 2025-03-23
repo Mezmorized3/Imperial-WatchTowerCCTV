@@ -3,13 +3,13 @@ import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 
-import CameradarTool from './search-tools/CameradarTool';
-import IPCamSearchTool from './search-tools/IPCamSearchTool';
-import CCTVExplorerTool from './search-tools/CCTVExplorerTool';
-import SpeedCameraTool from './search-tools/SpeedCameraTool';
-import CamerattackTool from './search-tools/CamerattackTool';
-import InsecamTool from './search-tools/InsecamTool';
-import HackCCTVTool from './search-tools/HackCCTVTool';
+import { CameradarTool } from './search-tools/CameradarTool';
+import { IPCamSearchTool } from './search-tools/IPCamSearchTool';
+import { CCTVExplorerTool } from './search-tools/CCTVExplorerTool';
+import { SpeedCameraTool } from './search-tools/SpeedCameraTool';
+import { CamerattackTool } from './search-tools/CamerattackTool';
+import { InsecamTool } from './search-tools/InsecamTool';
+import { HackCCTVTool } from './search-tools/HackCCTVTool';
 
 const CameraSearchTools: React.FC = () => {
   return (

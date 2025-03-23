@@ -1,10 +1,11 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { useToast } from '@/components/ui/use-toast';
-import { scanNetwork, ScanSettings } from '@/utils/networkScanner';
-import { ScanTarget, ScanProgress, CameraResult } from '@/types/scanner';
+import { scanNetwork, ScanSettings as NetworkScanSettings } from '@/utils/networkScanner';
+import { ScanTarget, ScanProgress, CameraResult, ScanSettings } from '@/types/scanner';
 import { getRandomGeoLocation } from '@/utils/osintUtils';
 import { ProxyConfig } from '@/utils/osintToolTypes';
+import { CameraResult as OsintCameraResult } from '@/utils/osintToolTypes';
 
 interface ScanControllerProps {
   onScanProgressUpdate: (progress: ScanProgress) => void;
@@ -12,6 +13,31 @@ interface ScanControllerProps {
   onErrorOccurred: (error: string | null) => void;
   proxyConfig?: ProxyConfig;
 }
+
+// Helper function to convert between camera result types
+const convertCameraResult = (camera: OsintCameraResult): CameraResult => {
+  return {
+    id: camera.id,
+    ip: camera.ip,
+    port: camera.port || 0, // Ensure port is not optional
+    brand: camera.manufacturer,
+    model: camera.model,
+    url: camera.rtspUrl,
+    status: (camera.status as any) || 'unknown',
+    credentials: camera.credentials,
+    vulnerabilities: camera.vulnerabilities,
+    location: camera.geolocation ? {
+      country: camera.geolocation.country,
+      city: camera.geolocation.city,
+      latitude: camera.geolocation.coordinates ? camera.geolocation.coordinates[0] : undefined,
+      longitude: camera.geolocation.coordinates ? camera.geolocation.coordinates[1] : undefined,
+    } : undefined,
+    lastSeen: camera.lastSeen ? camera.lastSeen.toISOString() : new Date().toISOString(),
+    accessLevel: camera.accessLevel || 'none',
+    firmwareVersion: camera.firmware?.version,
+    threatIntel: camera.threatIntelligence as any,
+  };
+};
 
 const ScanController = ({ 
   onScanProgressUpdate, 
@@ -147,9 +173,15 @@ const ScanController = ({
         scanInProgressRef.current = false;
       };
       
+      // Convert ScanSettings to NetworkScanSettings
+      const networkSettings: NetworkScanSettings = {
+        ...settings,
+        regionFilter: Array.isArray(settings.regionFilter) ? settings.regionFilter.join(',') : settings.regionFilter
+      };
+      
       const scanResult = await scanNetwork(
         ipRange,
-        settings,
+        networkSettings,
         (progress) => {
           if (abortController.signal.aborted) return;
           
@@ -165,8 +197,11 @@ const ScanController = ({
         (camera) => {
           if (abortController.signal.aborted) return;
           
+          // Convert the camera to the proper type
+          const convertedCamera = convertCameraResult(camera);
+          
           // Get current results and add the new camera
-          const newResults = [...results, camera];
+          const newResults = [...results, convertedCamera];
           setResults(newResults);
           onResultsUpdate(newResults);
           
@@ -195,8 +230,12 @@ const ScanController = ({
         
         onScanProgressUpdate(completedProgress);
         setScanProgress(completedProgress);
-        setResults(scanResult.data.cameras);
-        onResultsUpdate(scanResult.data.cameras);
+        
+        // Convert all cameras to the proper type
+        const convertedCameras = scanResult.data.cameras.map(convertCameraResult);
+        
+        setResults(convertedCameras);
+        onResultsUpdate(convertedCameras);
         
         const elapsedTime = calculateElapsedTime(completedProgress.startTime!);
         

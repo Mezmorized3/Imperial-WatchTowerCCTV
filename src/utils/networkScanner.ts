@@ -1,20 +1,19 @@
-
 import { nanoid } from 'nanoid';
 import { CameraResult } from '@/utils/osintToolTypes';
-import { ScanProgress } from '@/types/scanner';
+import { ScanProgress, ScanSettings as AppScanSettings } from '@/types/scanner';
 
-// Add missing ScanSettings interface from osintToolTypes
-export interface ScanSettings {
+// Use the ScanSettings from types/scanner and extend it to ensure compatibility
+export interface ScanSettings extends Omit<AppScanSettings, 'regionFilter'> {
   detailed?: boolean;
-  aggressive?: boolean;
+  aggressive: boolean; // Make sure this is required
   targetSubnet?: string;
   portRange?: string;
-  timeout?: number;
-  testCredentials?: boolean;
-  checkVulnerabilities?: boolean;
-  saveSnapshots?: boolean;
-  regionFilter?: string;
-  threadsCount?: number;
+  timeout: number;
+  testCredentials: boolean;
+  checkVulnerabilities: boolean;
+  saveSnapshots: boolean;
+  regionFilter?: string | string[]; // Support both string and string[] to match both types
+  threadsCount: number;
 }
 
 // Local functions to fix build errors
@@ -79,23 +78,23 @@ export const testProxyConnection = async (proxyConfig: any): Promise<{
   };
 };
 
-export const rotateProxy = async (proxyConfig: any): Promise<{
-  success: boolean;
-  currentProxy?: string;
-  error?: string;
-}> => {
-  console.log("Rotating proxy:", proxyConfig);
+export const rotateProxy = async (proxyList: string[], currentProxy?: string): Promise<string> => {
+  console.log("Rotating proxy, current:", currentProxy);
   await new Promise(resolve => setTimeout(resolve, 1000));
-  const success = Math.random() > 0.1; // Simulate 90% success rate
   
-  // Generate a random IP for the new proxy
-  const randomIp = `${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}`;
+  if (!proxyList || proxyList.length === 0) {
+    return '';
+  }
   
-  return {
-    success,
-    currentProxy: success ? `${randomIp}:${Math.floor(Math.random() * 10000) + 1000}` : undefined,
-    error: !success ? "Failed to rotate proxy" : undefined
-  };
+  let index = 0;
+  if (currentProxy) {
+    const currentIndex = proxyList.indexOf(currentProxy);
+    index = (currentIndex >= 0) ? (currentIndex + 1) % proxyList.length : 0;
+  } else {
+    index = Math.floor(Math.random() * proxyList.length);
+  }
+  
+  return proxyList[index];
 };
 
 // Declare ScanResult interface

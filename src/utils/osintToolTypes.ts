@@ -33,14 +33,14 @@ export interface ProxyConfig {
   lastKnownExternalIp?: string;
 }
 
-// Camera discovery tools
+// Camera discovery tools - aligned with scanner.ts definitions
 export interface CameraResult {
   id: string;
   ip: string;
+  port?: number;
   model?: string;
   manufacturer?: string;
   location?: string;
-  port?: number;
   status?: string;
   type?: string;
   protocol?: string;

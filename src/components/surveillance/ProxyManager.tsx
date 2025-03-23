@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -52,14 +51,12 @@ const ProxyManager: React.FC<ProxyManagerProps> = ({ onProxyChange }) => {
   const { toast } = useToast();
   
   useEffect(() => {
-    // Load saved proxy configuration from localStorage if available
     const savedConfig = localStorage.getItem('proxyConfig');
     if (savedConfig) {
       try {
         const parsedConfig = JSON.parse(savedConfig);
         setProxyConfig(parsedConfig);
         
-        // If proxy is enabled, test connection on load
         if (parsedConfig.enabled) {
           testProxyConnectionHandler(parsedConfig);
         }
@@ -68,7 +65,6 @@ const ProxyManager: React.FC<ProxyManagerProps> = ({ onProxyChange }) => {
       }
     }
     
-    // Start interval for proxy rotation if enabled
     let rotationInterval: NodeJS.Timeout | null = null;
     
     if (proxyConfig.enabled && proxyConfig.rotationEnabled && proxyConfig.proxyList?.length > 0) {
@@ -84,7 +80,6 @@ const ProxyManager: React.FC<ProxyManagerProps> = ({ onProxyChange }) => {
     };
   }, [proxyConfig.enabled, proxyConfig.rotationEnabled, proxyConfig.rotationInterval]);
   
-  // Notify parent component when proxy config changes
   useEffect(() => {
     if (onProxyChange) {
       onProxyChange(proxyConfig);
@@ -94,13 +89,11 @@ const ProxyManager: React.FC<ProxyManagerProps> = ({ onProxyChange }) => {
   const handleProxyChange = (config: ProxyConfig) => {
     setProxyConfig(config);
     
-    // Update proxy status
     setProxyStatus(prev => ({
       ...prev,
       isActive: config.enabled
     }));
     
-    // Log change
     console.log(`Proxy configuration updated: ${config.type}://${config.host}:${config.port} (Enabled: ${config.enabled})`);
   };
 
@@ -150,7 +143,6 @@ const ProxyManager: React.FC<ProxyManagerProps> = ({ onProxyChange }) => {
           variant: "destructive",
         });
         
-        // If automatic mode, disable proxy on failure
         if (config.autoReconnect !== true) {
           setProxyConfig({
             ...config,
@@ -179,45 +171,47 @@ const ProxyManager: React.FC<ProxyManagerProps> = ({ onProxyChange }) => {
     }
   };
 
-  const rotateProxyHandler = () => {
+  const rotateProxyHandler = async () => {
     if (!proxyConfig.rotationEnabled || !proxyConfig.proxyList || proxyConfig.proxyList.length === 0) {
       return;
     }
     
-    const nextProxy = rotateProxy(proxyConfig.proxyList, proxyStatus.currentProxy || undefined);
-    
-    if (nextProxy) {
-      const [host, portStr] = nextProxy.split(':');
-      const port = parseInt(portStr, 10);
+    try {
+      const nextProxy = await rotateProxy(proxyConfig.proxyList, proxyStatus.currentProxy || undefined);
       
-      if (host && !isNaN(port)) {
-        // Update the proxy configuration
-        const updatedConfig = {
-          ...proxyConfig,
-          host,
-          port
-        };
+      if (nextProxy) {
+        const [host, portStr] = nextProxy.split(':');
+        const port = parseInt(portStr, 10);
         
-        setProxyConfig(updatedConfig);
-        
-        // Update status
-        setProxyStatus(prev => ({
-          ...prev,
-          currentProxy: nextProxy,
-          rotationsCount: prev.rotationsCount + 1,
-          trafficStats: {
-            ...prev.trafficStats,
-            sent: prev.trafficStats.sent + Math.floor(Math.random() * 50),
-            received: prev.trafficStats.received + Math.floor(Math.random() * 30)
+        if (host && !isNaN(port)) {
+          const updatedConfig = {
+            ...proxyConfig,
+            host,
+            port
+          };
+          
+          setProxyConfig(updatedConfig);
+          
+          setProxyStatus(prev => ({
+            ...prev,
+            currentProxy: nextProxy,
+            rotationsCount: prev.rotationsCount + 1,
+            trafficStats: {
+              ...prev.trafficStats,
+              sent: prev.trafficStats.sent + Math.floor(Math.random() * 50),
+              received: prev.trafficStats.received + Math.floor(Math.random() * 30)
+            }
+          }));
+          
+          console.log(`Proxy rotated to: ${nextProxy}`);
+          
+          if (onProxyChange) {
+            onProxyChange(updatedConfig);
           }
-        }));
-        
-        console.log(`Proxy rotated to: ${nextProxy}`);
-        
-        if (onProxyChange) {
-          onProxyChange(updatedConfig);
         }
       }
+    } catch (error) {
+      console.error("Error rotating proxy:", error);
     }
   };
 
