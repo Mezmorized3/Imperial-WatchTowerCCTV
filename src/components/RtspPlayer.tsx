@@ -12,6 +12,7 @@ import {
   getStreamUrlForEngine
 } from '@/utils/rtspUtils';
 import { useToast } from '@/hooks/use-toast';
+import { extractYouTubeId, sanitizeStreamUrl, formatAuthHeaders, requiresCorsHandling, addDebugInfo } from '@/utils/videoUtils';
 
 interface RtspPlayerProps {
   rtspUrl: string;
@@ -82,11 +83,14 @@ const RtspPlayer: React.FC<RtspPlayerProps> = ({
       const normalizedUrl = normalizeStreamUrl(rtspUrl);
       console.log(`Normalized URL: ${normalizedUrl}`);
       
-      const type = detectStreamType(normalizedUrl);
+      const sanitizedUrl = sanitizeStreamUrl(normalizedUrl);
+      console.log(`Sanitized URL: ${sanitizedUrl}`);
+      
+      const type = detectStreamType(sanitizedUrl);
       setVideoType(type);
       
       if (type === 'youtube') {
-        const videoId = extractYouTubeId(normalizedUrl);
+        const videoId = extractYouTubeId(sanitizedUrl);
         if (videoId) {
           setStreamUrl(`https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1`);
         } else {
@@ -96,7 +100,11 @@ const RtspPlayer: React.FC<RtspPlayerProps> = ({
         console.log('Detected HLS stream');
         
         if (preferredEngine === 'videojs') {
-          const playerUrl = `/player.html?url=${encodeURIComponent(normalizedUrl)}&engine=videojs`;
+          const authHeaders = formatAuthHeaders(sanitizedUrl);
+          const hasCors = requiresCorsHandling(sanitizedUrl);
+          const debugEnabled = localStorage.getItem('debugStreaming') === 'true';
+          
+          const playerUrl = `/player.html?url=${encodeURIComponent(sanitizedUrl)}&engine=videojs&cors=${hasCors ? '1' : '0'}&debug=${debugEnabled ? '1' : '0'}`;
           console.log(`Using Video.js player via iframe: ${playerUrl}`);
           setStreamUrl(playerUrl);
           setVideoType('iframe');
@@ -104,36 +112,46 @@ const RtspPlayer: React.FC<RtspPlayerProps> = ({
         else if (preferredEngine === 'go2rtc') {
           const go2rtcUrl = localStorage.getItem('go2rtcUrl');
           if (go2rtcUrl) {
-            const finalUrl = `${go2rtcUrl}/api/stream?src=${encodeURIComponent(normalizedUrl)}`;
+            const finalUrl = `${go2rtcUrl}/api/stream?src=${encodeURIComponent(sanitizedUrl)}`;
             console.log(`Using go2rtc for HLS: ${finalUrl}`);
             setStreamUrl(finalUrl);
           } else {
-            console.log(`Using direct HLS URL: ${normalizedUrl}`);
-            setStreamUrl(normalizedUrl);
+            console.log(`Using direct HLS URL: ${sanitizedUrl}`);
+            setStreamUrl(sanitizedUrl);
           }
         } 
         else {
-          console.log(`Using direct HLS with ${preferredEngine}: ${normalizedUrl}`);
-          setStreamUrl(normalizedUrl);
+          console.log(`Using direct HLS with ${preferredEngine}: ${sanitizedUrl}`);
+          
+          const useImperialProxy = localStorage.getItem('rtspProxyEnabled') !== 'false';
+          const imperialProxyUrl = localStorage.getItem('rtspProxyUrl');
+          
+          if (useImperialProxy && imperialProxyUrl) {
+            console.log('Using Imperial proxy for CORS handling');
+            const streamId = btoa(sanitizedUrl).replace(/[/+=]/g, '').substring(0, 12);
+            setStreamUrl(`${imperialProxyUrl}/stream/${streamId}/index.m3u8`);
+          } else {
+            setStreamUrl(sanitizedUrl);
+          }
         }
       } else if (type === 'direct') {
         console.log('Detected direct video stream');
-        setStreamUrl(normalizedUrl);
+        setStreamUrl(sanitizedUrl);
       } else if (type === 'rtsp') {
         console.log('Detected RTSP stream, needs conversion');
-        const convertedUrl = await convertRtspToHls(normalizedUrl);
+        const convertedUrl = await convertRtspToHls(sanitizedUrl);
         console.log(`Converted RTSP to HLS: ${convertedUrl}`);
         setStreamUrl(convertedUrl);
         setVideoType('hls');
       } else if (type === 'iframe') {
         console.log('Using iframe for player');
-        if (normalizedUrl.startsWith('rtsp://')) {
-          const convertedUrl = await convertRtspToHls(normalizedUrl);
+        if (sanitizedUrl.startsWith('rtsp://')) {
+          const convertedUrl = await convertRtspToHls(sanitizedUrl);
           console.log(`Converted RTSP to HLS for iframe: ${convertedUrl}`);
           setStreamUrl(convertedUrl);
           setVideoType('hls');
         } else {
-          setStreamUrl(normalizedUrl);
+          setStreamUrl(sanitizedUrl);
         }
       }
       
@@ -231,8 +249,24 @@ const RtspPlayer: React.FC<RtspPlayerProps> = ({
     
     document.addEventListener('fullscreenchange', handleFullscreenChange);
     
+    const handleIframeMessage = (event: MessageEvent) => {
+      if (event.data && event.data.type === 'stream-error') {
+        console.error(`Player error: ${event.data.message}`);
+        setError(event.data.message);
+        if (onError) onError(event.data.message);
+      }
+      
+      if (event.data && event.data.type === 'stream-ready') {
+        console.log('Stream is ready from iframe');
+        if (onStreamReady) onStreamReady();
+      }
+    };
+    
+    window.addEventListener('message', handleIframeMessage);
+    
     return () => {
       document.removeEventListener('fullscreenchange', handleFullscreenChange);
+      window.removeEventListener('message', handleIframeMessage);
     };
   }, [rtspUrl, preferredEngine]);
   
@@ -293,7 +327,9 @@ const RtspPlayer: React.FC<RtspPlayerProps> = ({
       let iframeUrl = streamUrl;
       
       if (preferredEngine === 'videojs' && !streamUrl.includes('player.html')) {
-        iframeUrl = `/player.html?url=${encodeURIComponent(streamUrl)}&engine=videojs`;
+        const debugEnabled = localStorage.getItem('debugStreaming') === 'true';
+        const hasCors = requiresCorsHandling(streamUrl);
+        iframeUrl = `/player.html?url=${encodeURIComponent(streamUrl)}&engine=videojs&cors=${hasCors ? '1' : '0'}&debug=${debugEnabled ? '1' : '0'}`;
       }
       
       return (
@@ -306,6 +342,10 @@ const RtspPlayer: React.FC<RtspPlayerProps> = ({
           allowFullScreen
           style={{ border: 'none' }}
           title={videoType === 'youtube' ? "YouTube Video" : "Video Stream"}
+          onError={() => {
+            console.error("Iframe loading error");
+            handleVideoError();
+          }}
         />
       );
     } else if (videoType === 'hls') {
@@ -321,6 +361,7 @@ const RtspPlayer: React.FC<RtspPlayerProps> = ({
             onError={handleVideoError}
             onCanPlay={handleStreamReady}
             muted={isMuted}
+            crossOrigin="anonymous"
           />
         );
       }
@@ -338,10 +379,14 @@ const RtspPlayer: React.FC<RtspPlayerProps> = ({
             maxMaxBufferLength: 60,
             liveSyncDurationCount: 3,
             debug: false,
+            xhrSetup: (xhr: XMLHttpRequest) => {
+              xhr.withCredentials = true;
+            },
           }}
           onError={handleVideoError}
           onCanPlay={handleStreamReady}
           muted={isMuted}
+          crossOrigin="anonymous"
         />
       );
     } else if (videoType === 'direct') {
@@ -356,6 +401,7 @@ const RtspPlayer: React.FC<RtspPlayerProps> = ({
           onError={handleVideoError}
           onCanPlay={handleStreamReady}
           muted={isMuted}
+          crossOrigin="anonymous"
         />
       );
     } else {

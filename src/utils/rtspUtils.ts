@@ -2,6 +2,7 @@
 import { ToolResult } from './osintToolTypes';
 import { ffmpegConvertRtspToHls, ffmpegRecordStream } from './ffmpeg/ffmpegService';
 import { executeExternalTool } from './github/externalToolsConnector';
+import { sanitizeStreamUrl, formatAuthHeaders } from './videoUtils';
 
 /**
  * Validate RTSP URL format
@@ -50,14 +51,24 @@ export const normalizeStreamUrl = (url: string): string => {
       }
     }
     
-    // For HLS URLs, make sure auth credentials are properly handled
-    if (normalizedUrl.includes('.m3u8') || normalizedUrl.includes('.mpd')) {
-      // HLS URLs might have credentials in them that need to be preserved
-      const urlObj = new URL(normalizedUrl);
-      if (urlObj.username || urlObj.password) {
-        console.log('Stream URL contains credentials, ensuring they are preserved');
+    // Handle URLs with authentication in them
+    if (normalizedUrl.includes('@')) {
+      console.log('URL contains authentication credentials');
+      try {
+        // Try to parse and preserve the authentication
+        const urlObj = new URL(normalizedUrl);
+        if (urlObj.username || urlObj.password) {
+          console.log('Stream URL contains credentials, ensuring they are preserved');
+        }
+      } catch (err) {
+        console.warn('URL parsing failed for auth handling', err);
       }
-      return normalizedUrl;
+    }
+    
+    // Special handling for URLs with explicit credentials like user:pass@host
+    if (normalizedUrl.includes(':') && normalizedUrl.includes('@')) {
+      // Be careful not to modify the URL format
+      console.log('Handling URL with explicit credentials');
     }
     
     return normalizedUrl;
@@ -176,14 +187,17 @@ export const convertRtspToHls = async (rtspUrl: string): Promise<string> => {
     const normalizedUrl = normalizeStreamUrl(rtspUrl);
     console.log(`Converting stream: ${normalizedUrl}`);
     
+    // Apply additional sanitization for special characters and auth
+    const sanitizedUrl = sanitizeStreamUrl(normalizedUrl);
+    console.log(`Sanitized URL: ${sanitizedUrl}`);
+    
     // Check if go2rtc is enabled and configured
     const go2rtcUrl = localStorage.getItem('go2rtcUrl');
     const useGo2rtc = !!go2rtcUrl && localStorage.getItem('preferredStreamEngine') === 'go2rtc';
     
     if (useGo2rtc) {
       // Use go2rtc for the conversion
-      // Format: http://[go2rtc-ip]:8554/api/stream?src=[stream-url]
-      return `${go2rtcUrl}/api/stream?src=${encodeURIComponent(normalizedUrl)}`;
+      return `${go2rtcUrl}/api/stream?src=${encodeURIComponent(sanitizedUrl)}`;
     }
     
     // Check if Imperial proxy is enabled
@@ -192,30 +206,30 @@ export const convertRtspToHls = async (rtspUrl: string): Promise<string> => {
     
     if (useImperialProxy && imperialProxyUrl) {
       // Use Imperial proxy for better performance
-      const streamId = btoa(normalizedUrl).replace(/[/+=]/g, '').substring(0, 12);
+      const streamId = btoa(sanitizedUrl).replace(/[/+=]/g, '').substring(0, 12);
       return `${imperialProxyUrl}/stream/${streamId}/index.m3u8`;
     }
     
     // For HLS streams, just return the URL directly - no conversion needed
-    if (normalizedUrl.includes('.m3u8')) {
-      console.log(`Direct HLS stream detected: ${normalizedUrl}`);
-      return normalizedUrl;
+    if (sanitizedUrl.includes('.m3u8')) {
+      console.log(`Direct HLS stream detected: ${sanitizedUrl}`);
+      return sanitizedUrl;
     }
     
     // For non-RTSP, non-HLS streams that can be played directly
-    if (!normalizedUrl.startsWith('rtsp://') && 
-        (normalizedUrl.endsWith('.mp4') || 
-         normalizedUrl.endsWith('.webm') || 
-         normalizedUrl.includes('mjpeg'))) {
-      console.log(`Direct video stream detected: ${normalizedUrl}`);
-      return normalizedUrl;
+    if (!sanitizedUrl.startsWith('rtsp://') && 
+        (sanitizedUrl.endsWith('.mp4') || 
+         sanitizedUrl.endsWith('.webm') || 
+         sanitizedUrl.includes('mjpeg'))) {
+      console.log(`Direct video stream detected: ${sanitizedUrl}`);
+      return sanitizedUrl;
     }
     
     // For RTSP streams, generate a unique output path
     const outputDir = `output/streams/${Date.now()}`;
     const outputPath = `${outputDir}/stream.m3u8`;
     
-    const result = await ffmpegConvertRtspToHls(normalizedUrl, outputPath);
+    const result = await ffmpegConvertRtspToHls(sanitizedUrl, outputPath);
     
     if (result.success) {
       // In a real-world scenario, you'd return a URL to access this stream
@@ -583,4 +597,106 @@ export const getStreamUrlForEngine = (url: string, engine: 'native' | 'hlsjs' | 
   
   // Otherwise return the URL as is
   return normalizedUrl;
+};
+
+/**
+ * Advanced authentication handler for streams
+ * Supports various authentication methods for different camera types
+ */
+export const handleStreamAuthentication = async (
+  streamUrl: string,
+  options: {
+    username?: string;
+    password?: string;
+    authType?: 'basic' | 'digest' | 'token';
+    token?: string;
+  } = {}
+): Promise<string> => {
+  try {
+    const { username, password, authType, token } = options;
+    
+    // If credentials are provided separately
+    if ((username || password) && !streamUrl.includes('@')) {
+      const urlObj = new URL(streamUrl);
+      urlObj.username = username || '';
+      urlObj.password = password || '';
+      return urlObj.toString();
+    }
+    
+    // If token auth is specified
+    if (authType === 'token' && token) {
+      const urlObj = new URL(streamUrl);
+      urlObj.searchParams.append('token', token);
+      return urlObj.toString();
+    }
+    
+    // Otherwise return the original URL
+    return streamUrl;
+  } catch (error) {
+    console.error('Error handling stream authentication:', error);
+    return streamUrl;
+  }
+};
+
+/**
+ * Force stream access through multiple methods
+ * This will try various approaches to access a protected stream
+ */
+export const forceStreamAccess = async (streamUrl: string): Promise<string> => {
+  console.log(`Attempting to force access to: ${streamUrl}`);
+  
+  // Try with common credentials if not already specified
+  if (!streamUrl.includes('@')) {
+    const commonCredentials = [
+      { user: 'admin', pass: 'admin' },
+      { user: 'admin', pass: '12345' },
+      { user: 'admin', pass: 'password' },
+      { user: 'root', pass: 'root' },
+      { user: 'user', pass: 'user' }
+    ];
+    
+    for (const cred of commonCredentials) {
+      try {
+        const urlWithCreds = await handleStreamAuthentication(streamUrl, {
+          username: cred.user,
+          password: cred.pass
+        });
+        
+        // Test if we can connect with these credentials
+        const isConnected = await testRtspConnection(urlWithCreds);
+        if (isConnected) {
+          console.log(`Successfully accessed stream with credentials: ${cred.user}:${cred.pass}`);
+          return urlWithCreds;
+        }
+      } catch (error) {
+        continue; // Try next credentials
+      }
+    }
+  }
+  
+  // Try accessing through go2rtc if available
+  const go2rtcUrl = localStorage.getItem('go2rtcUrl');
+  if (go2rtcUrl) {
+    try {
+      console.log('Attempting access through go2rtc');
+      return `${go2rtcUrl}/api/stream?src=${encodeURIComponent(streamUrl)}`;
+    } catch (error) {
+      console.error('Error accessing through go2rtc:', error);
+    }
+  }
+  
+  // Try using Imperial proxy if available
+  const imperialProxyUrl = localStorage.getItem('rtspProxyUrl');
+  if (imperialProxyUrl) {
+    try {
+      console.log('Attempting access through Imperial proxy');
+      const streamId = btoa(streamUrl).replace(/[/+=]/g, '').substring(0, 12);
+      return `${imperialProxyUrl}/stream/${streamId}/index.m3u8`;
+    } catch (error) {
+      console.error('Error accessing through Imperial proxy:', error);
+    }
+  }
+  
+  // If all else fails, return the original URL
+  return streamUrl;
 };
