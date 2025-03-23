@@ -23,7 +23,6 @@ from rich.progress import Progress
 from getpass import getuser
 from cryptography.fernet import Fernet
 from concurrent.futures import ThreadPoolExecutor
-import logging.handlers
 
 # Setup rich console with enhanced styling
 console = Console(highlight=False)
@@ -740,3 +739,667 @@ class PrometheusNetworkSentry:
                 
                 # Known dangerous port
                 if port in self.dangerous_ports:
+                    risk_assessment['risk_score'] += 30
+                    risk_assessment['risk_factors'].append(f"Listening on dangerous port {port} ({self.dangerous_ports[port]})")
+                    risk_assessment['service'] = self.dangerous_ports[port]
+                
+                # Unusual high port
+                if port > 50000:
+                    risk_assessment['risk_score'] += 15
+                    risk_assessment['risk_factors'].append(f"Listening on unusual high port {port}")
+                
+                # Port frequently changing processes
+                if port in self.port_history and len(self.port_history[port]['pid_history']) > 2:
+                    risk_assessment['risk_score'] += 25
+                    risk_assessment['risk_factors'].append(f"Port {port} has been used by multiple processes")
+            
+            # Check established outbound connections
+            if conn.status == 'ESTABLISHED' and conn.raddr:
+                remote_ip = conn.raddr.ip
+                remote_port = conn.raddr.port
+                
+                # Check against threat intelligence
+                if self.threat_intel.is_ip_malicious(remote_ip):
+                    risk_assessment['risk_score'] += 70
+                    risk_assessment['risk_factors'].append(f"Connected to known malicious IP {remote_ip}")
+                
+                # Check for connections to common C2 ports
+                if remote_port in [4444, 8080, 8443, 9001, 1337]:
+                    risk_assessment['risk_score'] += 20
+                    risk_assessment['risk_factors'].append(f"Connected to potential C2 port {remote_port}")
+                
+                # Check for unusual protocols
+                try:
+                    proc = psutil.Process(conn.pid)
+                    proc_name = proc.name()
+                    
+                    # Browser connecting to unusual ports
+                    browsers = ['chrome', 'firefox', 'iexplore', 'safari', 'edge']
+                    if any(browser in proc_name.lower() for browser in browsers) and \
+                       remote_port not in [80, 443, 8080, 8443]:
+                        risk_assessment['risk_score'] += 25
+                        risk_assessment['risk_factors'].append(f"Browser connecting to non-HTTP port {remote_port}")
+                        
+                    # Check for data exfiltration patterns (high upload volume)
+                    if conn.pid in self.process_traffic_stats:
+                        stats = self.process_traffic_stats[conn.pid]
+                        if stats['bytes_sent'] > 1000000 and stats['bytes_sent'] > stats['bytes_recv'] * 10:
+                            risk_assessment['risk_score'] += 40
+                            risk_assessment['risk_factors'].append("Possible data exfiltration (high upload volume)")
+                            
+                except (psutil.NoSuchProcess, psutil.AccessDenied):
+                    pass
+            
+            # Only add connections that exceed risk threshold
+            if risk_assessment['risk_score'] >= threshold:
+                alerts.append(risk_assessment)
+                logger.warning(
+                    f"Suspicious network connection: {risk_assessment['local_address']} -> "
+                    f"{risk_assessment['remote_address']} (Score: {risk_assessment['risk_score']})"
+                )
+                
+        # Update last scan time
+        self.last_scan = current_time
+        return alerts
+    
+    @property
+    def process_traffic_stats(self):
+        """Get traffic statistics per process"""
+        stats = {}
+        try:
+            # This is OS-dependent and would require platform-specific implementations
+            # This is a simplified example that would need to be expanded
+            if platform.system().lower() == 'linux':
+                for proc in psutil.process_iter(['pid', 'name']):
+                    stats[proc.info['pid']] = {
+                        'bytes_sent': 0,
+                        'bytes_recv': 0
+                    }
+                    # In a real implementation, we would use netstat or similar tools
+                    # to gather actual network traffic statistics per process
+        except Exception:
+            pass
+        return stats
+    
+    def disrupt_connection(self, conn_info, aggressive=False):
+        """Actively disrupt a suspicious connection"""
+        try:
+            pid = conn_info['pid']
+            port = conn_info['port']
+            
+            # First attempt: Send deceptive banner
+            if port and send_deception_banner(port, aggressive=aggressive):
+                logger.info(f"Sent deception banner to port {port}")
+                
+            # Second attempt: Reset connections for the process
+            proc = psutil.Process(pid)
+            proc_name = proc.name()
+            
+            # Use platform-specific commands to reset connections
+            if platform.system().lower() == 'windows':
+                # Windows: Use netsh to reset connections
+                cmd = ['netsh', 'interface', 'ip', 'delete', 'arpcache']
+                subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            else:
+                # Linux/Unix: Use tcpkill if available
+                try:
+                    # This is a simulated command - in reality would require tcpkill installed
+                    cmd = ['sudo', 'tcpkill', '-i', 'any', 'host', conn_info['remote_address'].split(':')[0]]
+                    subprocess.Popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                except FileNotFoundError:
+                    pass
+            
+            logger.info(f"Disrupted connection for process {proc_name} (PID: {pid})")
+            return True
+        except Exception as e:
+            logger.error(f"Failed to disrupt connection: {str(e)}")
+            return False
+    
+    def implement_firewall_rule(self, conn_info, duration_minutes=60):
+        """Create a temporary firewall rule to block malicious traffic"""
+        try:
+            remote_ip = conn_info['remote_address'].split(':')[0]
+            
+            # Skip private IP addresses
+            if remote_ip.startswith(('10.', '192.168.', '172.16.', '127.')):
+                return False
+                
+            if platform.system().lower() == 'windows':
+                # Windows Firewall block
+                rule_name = f"AEGIS_BLOCK_{remote_ip}_{int(time.time())}"
+                cmd = [
+                    'netsh', 'advfirewall', 'firewall', 'add', 'rule',
+                    'name=' + rule_name,
+                    'dir=out',
+                    'action=block',
+                    'remoteip=' + remote_ip
+                ]
+                subprocess.run(cmd, check=True, stdout=subprocess.DEVNULL)
+                
+                # Schedule rule removal
+                if duration_minutes > 0:
+                    remove_time = int((time.time() + duration_minutes * 60) / 60)
+                    removal_cmd = f'at {remove_time} netsh advfirewall firewall delete rule name="{rule_name}"'
+                    subprocess.Popen(removal_cmd, shell=True, stdout=subprocess.DEVNULL)
+            else:
+                # Linux/Unix iptables block
+                cmd = ['iptables', '-A', 'OUTPUT', '-d', remote_ip, '-j', 'DROP']
+                subprocess.run(cmd, check=True, stdout=subprocess.DEVNULL)
+                
+                # Schedule rule removal
+                if duration_minutes > 0:
+                    removal_cmd = f'sleep {duration_minutes * 60} && iptables -D OUTPUT -d {remote_ip} -j DROP'
+                    subprocess.Popen(removal_cmd, shell=True, stdout=subprocess.DEVNULL)
+            
+            logger.info(f"Implemented temporary firewall rule to block {remote_ip} for {duration_minutes} minutes")
+            return True
+        except Exception as e:
+            logger.error(f"Failed to implement firewall rule: {str(e)}")
+            return False
+    
+    def monitor_network(self, interval=10):
+        """Continuously monitor network for suspicious activity"""
+        try:
+            alerts = self.inspect_connections()
+            for alert in alerts:
+                if alert['risk_score'] >= 70:
+                    # Critical threat - active countermeasures
+                    self.disrupt_connection(alert, aggressive=True)
+                    self.implement_firewall_rule(alert)
+                elif alert['risk_score'] >= 50:
+                    # High threat - passive disruption
+                    self.disrupt_connection(alert, aggressive=False)
+            return alerts
+        except Exception as e:
+            logger.error(f"Error during network monitoring: {str(e)}")
+            return []
+
+# ========================
+# FORTIFIED SYSTEM HARDENER
+# ========================
+class FortifiedSystemHardener:
+    def __init__(self):
+        self.hardening_results = {
+            'vulnerabilities': [],
+            'fixed': [],
+            'score': 0
+        }
+    
+    def audit_security(self):
+        """Perform comprehensive security audit of the system"""
+        issues = []
+        
+        # Run OS-specific security checks
+        if platform.system().lower() == "windows":
+            issues.extend(self._audit_windows_security())
+        else:
+            issues.extend(self._audit_unix_security())
+            
+        # Common checks across platforms
+        issues.extend(self._audit_common_security())
+        
+        # Calculate security score (0-100)
+        total_checks = 10
+        failed_checks = len(issues)
+        self.hardening_results['score'] = max(0, 100 - (failed_checks * 100 // total_checks))
+        self.hardening_results['vulnerabilities'] = issues
+        
+        logger.info(f"Security audit completed. Score: {self.hardening_results['score']}%. Found {len(issues)} issues.")
+        return issues
+    
+    def _audit_windows_security(self):
+        """Audit Windows-specific security settings"""
+        issues = []
+        
+        # Check for excessive listening ports
+        try:
+            netstat_output = subprocess.run(["netstat", "-an"], capture_output=True, text=True).stdout
+            if netstat_output.count("LISTENING") > 20:
+                issues.append({
+                    'type': 'Network',
+                    'severity': 'Medium',
+                    'description': "Excessive listening ports detected",
+                    'recommendation': "Review and close unnecessary services"
+                })
+        except Exception:
+            pass
+            
+        # Check Windows Firewall status
+        try:
+            firewall_output = subprocess.run(
+                ["netsh", "advfirewall", "show", "currentprofile"], 
+                capture_output=True, text=True
+            ).stdout
+            
+            if "State                                 OFF" in firewall_output:
+                issues.append({
+                    'type': 'Firewall',
+                    'severity': 'High',
+                    'description': "Windows Firewall is disabled",
+                    'recommendation': "Enable Windows Firewall",
+                    'fix_command': "netsh advfirewall set currentprofile state on"
+                })
+        except Exception:
+            pass
+            
+        # Check for pending Windows updates
+        try:
+            update_output = subprocess.run(
+                ["powershell", "Get-WUList"], 
+                capture_output=True, text=True
+            ).stdout
+            
+            if "KB" in update_output:
+                issues.append({
+                    'type': 'Updates',
+                    'severity': 'High',
+                    'description': "Pending security updates detected",
+                    'recommendation': "Install Windows updates",
+                    'fix_command': "powershell Install-WindowsUpdate -AcceptAll"
+                })
+        except Exception:
+            pass
+        
+        return issues
+    
+    def _audit_unix_security(self):
+        """Audit Unix/Linux security settings"""
+        issues = []
+        
+        # Check SSH configuration
+        if os.path.exists("/etc/ssh/sshd_config"):
+            try:
+                with open("/etc/ssh/sshd_config", "r") as f:
+                    sshd_config = f.read()
+                    
+                    if "PermitRootLogin yes" in sshd_config:
+                        issues.append({
+                            'type': 'SSH',
+                            'severity': 'High',
+                            'description': "SSH allows root login",
+                            'recommendation': "Disable SSH root login",
+                            'fix_command': "sed -i 's/PermitRootLogin yes/PermitRootLogin no/g' /etc/ssh/sshd_config"
+                        })
+                        
+                    if "PasswordAuthentication yes" in sshd_config:
+                        issues.append({
+                            'type': 'SSH',
+                            'severity': 'Medium',
+                            'description': "SSH allows password authentication",
+                            'recommendation': "Use key-based authentication only",
+                            'fix_command': "sed -i 's/PasswordAuthentication yes/PasswordAuthentication no/g' /etc/ssh/sshd_config"
+                        })
+            except Exception:
+                pass
+                
+        # Check for world-writable files in important directories
+        try:
+            world_writable = subprocess.run(
+                ["find", "/etc", "-type", "f", "-perm", "-o+w"], 
+                capture_output=True, text=True
+            ).stdout
+            
+            if world_writable.strip():
+                issues.append({
+                    'type': 'Permissions',
+                    'severity': 'High',
+                    'description': "World-writable files found in /etc",
+                    'recommendation': "Fix file permissions",
+                    'fix_command': "find /etc -type f -perm -o+w -exec chmod o-w {} \\;"
+                })
+        except Exception:
+            pass
+            
+        # Check for SUID/SGID binaries
+        try:
+            suid_output = subprocess.run(
+                ["find", "/", "-path", "/proc", "-prune", "-o", "-type", "f", "-perm", "-u+s", "-ls"], 
+                capture_output=True, text=True,
+                timeout=30  # Timeout to prevent hanging
+            ).stdout
+            
+            suspicious_suid_count = len(suid_output.splitlines())
+            if suspicious_suid_count > 30:  # Typical systems have 20-30 legitimate SUID binaries
+                issues.append({
+                    'type': 'Permissions',
+                    'severity': 'Medium',
+                    'description': f"Unusually high number of SUID binaries ({suspicious_suid_count})",
+                    'recommendation': "Review and remove unnecessary SUID permissions"
+                })
+        except Exception:
+            pass
+        
+        return issues
+    
+    def _audit_common_security(self):
+        """Common security checks across platforms"""
+        issues = []
+        
+        # Check for weak user passwords (simulated - would need actual authentication integration)
+        issues.append({
+            'type': 'Authentication',
+            'severity': 'Info',
+            'description': "Password strength cannot be verified without additional permissions",
+            'recommendation': "Implement strong password policy"
+        })
+        
+        # Check for automatic updates
+        if platform.system().lower() == "windows":
+            try:
+                auto_update = subprocess.run(
+                    ["reg", "query", "HKEY_LOCAL_MACHINE\\SOFTWARE\\Policies\\Microsoft\\Windows\\WindowsUpdate\\AU", "/v", "NoAutoUpdate"],
+                    capture_output=True, text=True
+                ).stdout
+                
+                if "0x1" in auto_update:
+                    issues.append({
+                        'type': 'Updates',
+                        'severity': 'Medium',
+                        'description': "Automatic updates are disabled",
+                        'recommendation': "Enable automatic updates",
+                        'fix_command': "reg add HKEY_LOCAL_MACHINE\\SOFTWARE\\Policies\\Microsoft\\Windows\\WindowsUpdate\\AU /v NoAutoUpdate /t REG_DWORD /d 0 /f"
+                    })
+            except Exception:
+                pass
+        else:
+            # Linux/Unix update check would be distribution-specific
+            pass
+        
+        return issues
+    
+    def apply_hardening(self, issue):
+        """Apply a specific hardening recommendation"""
+        if 'fix_command' not in issue:
+            logger.warning(f"No automatic fix available for issue: {issue['description']}")
+            return False
+            
+        try:
+            # Execute the fix command
+            if platform.system().lower() == "windows":
+                subprocess.run(issue['fix_command'], shell=True, check=True)
+            else:
+                subprocess.run(["sudo"] + issue['fix_command'].split(), check=True)
+                
+            # Record the fixed issue
+            self.hardening_results['fixed'].append(issue)
+            logger.info(f"Successfully fixed security issue: {issue['description']}")
+            return True
+        except Exception as e:
+            logger.error(f"Failed to apply fix for {issue['description']}: {str(e)}")
+            return False
+    
+    def apply_basic_hardening(self):
+        """Apply basic hardening measures automatically"""
+        # First perform audit
+        self.audit_security()
+        fixed_count = 0
+        
+        # Apply fixes for medium and high severity issues that have automated fixes
+        for issue in self.hardening_results['vulnerabilities']:
+            if issue['severity'] in ['Medium', 'High'] and 'fix_command' in issue:
+                if console.input(f"Fix {issue['severity']} issue: {issue['description']}? (y/n): ").lower() == 'y':
+                    if self.apply_hardening(issue):
+                        fixed_count += 1
+        
+        logger.info(f"Applied basic hardening measures. Fixed {fixed_count} issues.")
+        return fixed_count
+
+# ========================
+# AEGIS SHIELD MAIN INTERFACE
+# ========================
+class AegisShield:
+    def __init__(self):
+        # Initialize threat intelligence
+        self.threat_intel = ThreatIntelligence()
+        
+        # Initialize defense components
+        self.file_scanner = QuantumFileScanner(self.threat_intel)
+        self.process_guardian = AdaptiveProcessGuardian(self.threat_intel)
+        self.network_sentry = PrometheusNetworkSentry(self.threat_intel)
+        self.system_hardener = FortifiedSystemHardener()
+        
+        # Thread control
+        self.monitoring_active = False
+        self.monitoring_threads = []
+        
+        # Defense metrics
+        self.metrics = {
+            'scan_count': 0,
+            'threats_detected': 0,
+            'threats_neutralized': 0,
+            'start_time': datetime.now()
+        }
+    
+    def display_dashboard(self):
+        """Display the main AEGIS Shield dashboard"""
+        # Calculate uptime
+        uptime = datetime.now() - self.metrics['start_time']
+        uptime_str = f"{uptime.days}d {uptime.seconds // 3600}h {(uptime.seconds // 60) % 60}m"
+        
+        # Calculate efficacy percentage
+        efficacy = 0
+        if self.metrics['threats_detected'] > 0:
+            efficacy = (self.metrics['threats_neutralized'] / self.metrics['threats_detected']) * 100
+            
+        console.print("\n")
+        console.print(Panel.fit(
+            "[bold blue]══════════════════════════════════════[/]\n"
+            "[bold cyan]     AEGIS SHIELD DEFENSE SYSTEM     [/]\n"
+            "[bold cyan]     Advanced System Protection      [/]\n"
+            "[bold blue]══════════════════════════════════════[/]",
+            style="blue"
+        ))
+        
+        # Main stats table
+        table = Table(show_header=False, box=None, padding=(0, 2))
+        table.add_column("Metric", style="cyan")
+        table.add_column("Value", style="yellow")
+        
+        table.add_row("System", platform.system())
+        table.add_row("Hostname", platform.node())
+        table.add_row("User", getuser())
+        table.add_row("Shield Uptime", uptime_str)
+        table.add_row("Defense Status", "[green]ACTIVE[/]" if self.monitoring_active else "[red]INACTIVE[/]")
+        table.add_row("Scans Performed", str(self.metrics['scan_count']))
+        table.add_row("Threats Detected", str(self.metrics['threats_detected']))
+        table.add_row("Threats Neutralized", str(self.metrics['threats_neutralized']))
+        table.add_row("Defense Efficacy", f"{efficacy:.1f}%")
+        
+        console.print(Panel(table, title="[bold]Defense Status[/]", border_style="blue"))
+        
+        # Component status table
+        component_table = Table(show_header=True, header_style="bold magenta")
+        component_table.add_column("Component", style="cyan")
+        component_table.add_column("Status")
+        component_table.add_column("Last Activity")
+        
+        # Calculate last activity time for each component
+        file_scan_time = "Not yet run"
+        process_time = "Not yet run"
+        network_time = "Not yet run"
+        hardening_time = "Not yet run"
+        
+        if hasattr(self.file_scanner, 'last_scan'):
+            time_diff = datetime.now() - self.file_scanner.last_scan
+            file_scan_time = f"{time_diff.seconds // 60}m {time_diff.seconds % 60}s ago"
+            
+        if hasattr(self.process_guardian, 'last_scan'):
+            time_diff = datetime.now() - self.process_guardian.last_scan
+            process_time = f"{time_diff.seconds // 60}m {time_diff.seconds % 60}s ago"
+            
+        if hasattr(self.network_sentry, 'last_scan'):
+            time_diff = datetime.now() - self.network_sentry.last_scan
+            network_time = f"{time_diff.seconds // 60}m {time_diff.seconds % 60}s ago"
+        
+        component_table.add_row(
+            "Quantum File Scanner", 
+            "Active" if self.file_scanner.av_config else "Disabled",
+            file_scan_time
+        )
+        component_table.add_row(
+            "Adaptive Process Guardian", 
+            "Active" if self.monitoring_active else "Standby",
+            process_time
+        )
+        component_table.add_row(
+            "Prometheus Network Sentry", 
+            "Active" if self.monitoring_active else "Standby",
+            network_time
+        )
+        component_table.add_row(
+            "Fortified System Hardener", 
+            "Active",
+            hardening_time
+        )
+        
+        console.print(Panel(component_table, title="[bold]Defense Components[/]", border_style="blue"))
+    
+    def _monitor_processes(self, interval=15):
+        """Thread function for continuous process monitoring"""
+        while self.monitoring_active:
+            try:
+                high_risk_procs = self.process_guardian.monitor_processes()
+                
+                if high_risk_procs:
+                    self.metrics['threats_detected'] += len(high_risk_procs)
+                    
+                    for proc in high_risk_procs:
+                        risk_factors = ", ".join(proc['risk_factors'])
+                        prompt = (
+                            f"[bold red]⚠️ High risk process detected:[/] [cyan]{proc['name']}[/] "
+                            f"(PID: {proc['pid']}, Risk: {proc['risk_score']})\n"
+                            f"Factors: {risk_factors}\n"
+                            f"Terminate process? (y/n): "
+                        )
+                        
+                        if console.input(prompt).lower() == 'y':
+                            if self.process_guardian.terminate_process(proc['pid']):
+                                self.metrics['threats_neutralized'] += 1
+                                console.print(f"[green]Process {proc['name']} (PID: {proc['pid']}) terminated[/]")
+                            else:
+                                console.print(f"[red]Failed to terminate process {proc['name']} (PID: {proc['pid']})[/]")
+                                if console.input(f"Attempt force termination? (y/n): ").lower() == 'y':
+                                    if self.process_guardian.terminate_process(proc['pid'], force=True):
+                                        self.metrics['threats_neutralized'] += 1
+                                        console.print(f"[green]Process {proc['name']} (PID: {proc['pid']}) force terminated[/]")
+            except Exception as e:
+                logger.error(f"Error in process monitoring thread: {str(e)}")
+                
+            time.sleep(interval)
+    
+    def _monitor_network(self, interval=20):
+        """Thread function for continuous network monitoring"""
+        while self.monitoring_active:
+            try:
+                alerts = self.network_sentry.monitor_network()
+                
+                if alerts:
+                    self.metrics['threats_detected'] += len(alerts)
+                    
+                    for alert in alerts:
+                        risk_factors = ", ".join(alert['risk_factors'])
+                        prompt = (
+                            f"[bold red]⚠️ Suspicious network activity:[/] "
+                            f"{alert['local_address']} → {alert['remote_address']}\n"
+                            f"Risk: {alert['risk_score']}, Factors: {risk_factors}\n"
+                            f"Take action? (b=block, d=disrupt, i=ignore): "
+                        )
+                        
+                        action = console.input(prompt).lower()
+                        if action == 'b':
+                            # Block with firewall rule
+                            if self.network_sentry.implement_firewall_rule(alert):
+                                self.metrics['threats_neutralized'] += 1
+                                console.print(f"[green]Traffic to {alert['remote_address']} blocked[/]")
+                        elif action == 'd':
+                            # Disrupt the connection
+                            if self.network_sentry.disrupt_connection(alert, aggressive=True):
+                                self.metrics['threats_neutralized'] += 1
+                                console.print(f"[green]Connection to {alert['remote_address']} disrupted[/]")
+            except Exception as e:
+                logger.error(f"Error in network monitoring thread: {str(e)}")
+                
+            time.sleep(interval)
+    
+    def start_defense_protocol(self):
+        """Start the complete defense protocol"""
+        # First establish process baseline
+        self.process_guardian.establish_baseline()
+        
+        # Start monitoring threads
+        self.monitoring_active = True
+        
+        proc_thread = threading.Thread(target=self._monitor_processes, daemon=True)
+        net_thread = threading.Thread(target=self._monitor_network, daemon=True)
+        
+        proc_thread.start()
+        net_thread.start()
+        
+        self.monitoring_threads = [proc_thread, net_thread]
+        
+        console.print("[green]Defense protocol activated - Real-time monitoring started[/]")
+        
+        # Run initial file system scan if requested
+        if console.input("Run initial file system scan? (y/n): ").lower() == 'y':
+            quick = console.input("Run quick scan (y) or full scan (n)? ").lower() == 'y'
+            memory = console.input("Include memory scan for fileless malware? (y/n): ").lower() == 'y'
+            
+            with Progress() as progress:
+                scan_task = progress.add_task("[cyan]Scanning system...", total=100)
+                
+                # Start scan in a separate thread to avoid blocking UI
+                scan_results = []
+                
+                def run_scan():
+                    nonlocal scan_results
+                    scan_results = self.file_scanner.scan(quick=quick, memory_scan=memory)
+                
+                scan_thread = threading.Thread(target=run_scan)
+                scan_thread.start()
+                
+                # Update progress while scan is running
+                while scan_thread.is_alive():
+                    progress.update(scan_task, advance=1)
+                    time.sleep(0.5)
+                    
+                scan_thread.join()
+                progress.update(scan_task, completed=100)
+            
+            self.metrics['scan_count'] += 1
+            
+            # Display scan results
+            if scan_results:
+                console.print(f"[yellow]Found {len(scan_results)} potential threats[/]")
+                self.metrics['threats_detected'] += len(scan_results)
+                
+                # Group by risk level
+                grouped_results = {}
+                for threat in scan_results:
+                    risk = threat.get('risk', 'Medium')
+                    if risk not in grouped_results:
+                        grouped_results[risk] = []
+                    grouped_results[risk].append(threat)
+                
+                # Display results by risk level
+                for risk in ['Critical', 'High', 'Medium', 'Low']:
+                    if risk in grouped_results:
+                        console.print(f"[bold]{risk} Risk Threats:[/] {len(grouped_results[risk])}")
+                        
+                        for i, threat in enumerate(grouped_results[risk][:5]):  # Show top 5 of each category
+                            if 'path' in threat:
+                                console.print(f"  - {threat.get('threat', 'Unknown')}: {threat['path']}")
+                            else:
+                                console.print(f"  - {threat.get('threat', 'Unknown threat')}")
+                                
+                        if len(grouped_results[risk]) > 5:
+                            console.print(f"  ... and {len(grouped_results[risk]) - 5} more {risk.lower()} risk threats")
+                
+                # Offer automatic remediation for high-risk threats
+                if 'Critical' in grouped_results or 'High' in grouped_results:
+                    critical_threats = grouped_results.get('Critical', [])
+                    high_threats = grouped_results.get('High', [])
+                    
+                    if console.input("Attempt to quarantine high-risk threats? (y/n): ").lower() == 'y':
+                        neutralized = 0
+                        for threat in critical_threats + high_threats:
+                            if
