@@ -34,7 +34,9 @@ export type {
   // Additional new tool types
   HackToolsParams,
   HackCCTVParams,
-  WebhackAdvancedParams
+  WebhackAdvancedParams,
+  // Proxy configuration
+  ProxyConfig
 } from './osintToolTypes';
 
 // Import function implementations from specific modules
@@ -98,3 +100,4 @@ export * from './searchUtils';
 export * from './networkUtils';
 export * from './cameraSearchUtils';
 export * from './geoUtils';
+export * from './proxyUtils';

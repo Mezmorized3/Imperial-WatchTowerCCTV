@@ -1,4 +1,3 @@
-
 import { CameraResult, ScanProgress, ScanSettings, ScanTarget } from '@/types/scanner';
 import { analyzeFirmware, getComprehensiveThreatIntel } from './threatIntelligence';
 
@@ -7,12 +6,31 @@ import { analyzeFirmware, getComprehensiveThreatIntel } from './threatIntelligen
  * due to security restrictions. This implementation uses simulation to demonstrate
  * how the scanner would work in a real environment (like an Electron app or backend server).
  */
+export interface ScanParams {
+  target: string;
+  targetType?: 'ip' | 'range' | 'shodan' | 'zoomeye' | 'censys';
+  ports?: string;
+  aggressive?: boolean;
+  timeout?: number;
+  proxy?: ProxyConfig;
+}
+
+/**
+ * Scan a network for vulnerable cameras
+ * @param ipRange IP range in CIDR notation (e.g., 192.168.1.0/24)
+ * @param settings Scan settings (timeouts, aggressiveness, etc.)
+ * @param onProgress Callback for scan progress updates
+ * @param onCameraFound Callback for when a camera is found
+ * @param targetType Type of target (direct IP, range, or search engine)
+ * @param abortSignal Optional abort signal to cancel scan
+ * @returns Promise resolving when scan completes
+ */
 export const scanNetwork = async (
   ipRange: string,
   settings: ScanSettings,
-  onProgress: (progress: ScanProgress) => void,
+  onProgress: (progress: Partial<ScanProgress>) => void,
   onCameraFound: (camera: CameraResult) => void,
-  scanType?: string,
+  targetType?: string,
   abortSignal?: AbortSignal
 ): Promise<void> => {
   // Check if scan has been aborted
@@ -20,11 +38,11 @@ export const scanNetwork = async (
     throw new Error('Scan was aborted');
   }
 
-  console.log(`Starting scan of ${ipRange} with type: ${scanType || 'ip/range'}`);
+  console.log(`Starting scan of ${ipRange} with type: ${targetType || 'ip/range'}`);
   
   // If we're using a search engine query, handle it differently
-  if (scanType && ['shodan', 'zoomeye', 'censys'].includes(scanType)) {
-    return await handleSearchEngineQuery(ipRange, scanType, settings, onProgress, onCameraFound, abortSignal);
+  if (targetType && ['shodan', 'zoomeye', 'censys'].includes(targetType)) {
+    return await handleSearchEngineQuery(ipRange, targetType, settings, onProgress, onCameraFound, abortSignal);
   }
   
   // Parse the CIDR notation to get start and end IPs

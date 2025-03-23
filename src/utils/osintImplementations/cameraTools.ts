@@ -18,11 +18,17 @@ import {
   CamerattackParams,
   HackCCTVParams
 } from '../osintToolTypes';
+import { getProxyString } from '../proxyUtils';
 
 // Will be replaced with github.com/Ullaakut/cameradar implementation
-export const executeCameradar = async (params: { target: string, ports?: string }): Promise<ScanResult> => {
+export const executeCameradar = async (params: { target: string, ports?: string, proxy?: any }): Promise<ScanResult> => {
   await simulateNetworkDelay(2000);
   console.log('Executing Cameradar:', params);
+  
+  // Check if proxy is enabled and log proxy information
+  if (params.proxy?.enabled) {
+    console.log(`Using proxy: ${getProxyString(params.proxy)}`);
+  }
 
   // Simulated results - will be replaced with real implementation
   const ipRange = params.target.includes('/') ? parseIpRange(params.target) : [params.target];
@@ -45,9 +51,14 @@ export const executeCameradar = async (params: { target: string, ports?: string 
 };
 
 // Will be replaced with github.com/hmgle/ipcam_search_protocol implementation
-export const executeIPCamSearch = async (params: { subnet: string, protocols?: string[] }): Promise<ScanResult> => {
+export const executeIPCamSearch = async (params: { subnet: string, protocols?: string[], proxy?: any }): Promise<ScanResult> => {
   await simulateNetworkDelay(1500);
   console.log('Executing IP Cam Search:', params);
+  
+  // Check if proxy is enabled and log proxy information
+  if (params.proxy?.enabled) {
+    console.log(`Using proxy: ${getProxyString(params.proxy)}`);
+  }
 
   // Simulated results - will be replaced with real implementation
   const ipRange = params.subnet.includes('/') ? parseIpRange(params.subnet) : [params.subnet];
@@ -72,6 +83,11 @@ export const executeIPCamSearch = async (params: { subnet: string, protocols?: s
 export const executeCCTV = async (params: CCTVParams): Promise<ScanResult> => {
   await simulateNetworkDelay(1800);
   console.log('Executing CCTV tool:', params);
+  
+  // Check if proxy is enabled and log proxy information
+  if (params.proxy?.enabled) {
+    console.log(`Using proxy: ${getProxyString(params.proxy)}`);
+  }
 
   // Simulated results - will be replaced with real implementation
   const region = params.region || 'us';
@@ -130,6 +146,11 @@ export const executeSpeedCamera = async (params: SpeedCameraParams): Promise<Sca
 export const executeCamerattack = async (params: CamerattackParams): Promise<ScanResult> => {
   await simulateNetworkDelay(2200);
   console.log('Executing Camerattack:', params);
+  
+  // Check if proxy is enabled and log proxy information
+  if (params.proxy?.enabled) {
+    console.log(`Using proxy: ${getProxyString(params.proxy)}`);
+  }
 
   // Simulated results - will be replaced with real implementation
   return {
@@ -154,6 +175,11 @@ export const executeCamerattack = async (params: CamerattackParams): Promise<Sca
 export const executeHackCCTV = async (params: HackCCTVParams): Promise<ScanResult> => {
   await simulateNetworkDelay(2500);
   console.log('Executing HackCCTV:', params);
+  
+  // Check if proxy is enabled and log proxy information
+  if (params.proxy?.enabled) {
+    console.log(`Using proxy: ${getProxyString(params.proxy)}`);
+  }
 
   // Generate different results based on the mode
   const mode = params.mode || 'scan';

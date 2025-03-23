@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { UsernameSearchTool } from './search-tools/UsernameSearchTool';
 import { CameradarTool } from './search-tools/CameradarTool';
@@ -25,13 +25,21 @@ import WebhackAdvancedTool from './search-tools/WebhackAdvancedTool';
 import HackToolsTool from './search-tools/HackToolsTool';
 import HackCCTVTool from './search-tools/HackCCTVTool';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import ProxyManager from './ProxyManager';
+import { ProxyConfig } from '@/utils/osintToolTypes';
 
 export const CameraSearchTools = () => {
   const [activeTab, setActiveTab] = useState("cameradar");
+  const [proxyConfig, setProxyConfig] = useState<ProxyConfig | undefined>(undefined);
 
   const handleTabChange = (newTab: string) => {
     setActiveTab(newTab);
   };
+
+  const handleProxyChange = useCallback((proxy: ProxyConfig) => {
+    setProxyConfig(proxy);
+    console.log("Global proxy configuration updated:", proxy);
+  }, []);
 
   // Define our tool groups for better organization
   const toolGroups = [
@@ -74,6 +82,9 @@ export const CameraSearchTools = () => {
 
   return (
     <div className="p-4">
+      {/* Add the proxy manager at the top */}
+      <ProxyManager onProxyChange={handleProxyChange} />
+      
       <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
         <div className="space-y-2">
           {toolGroups.map((group, index) => (
@@ -91,51 +102,51 @@ export const CameraSearchTools = () => {
           ))}
         </div>
 
-        <ScrollArea className="h-[calc(100vh-280px)] mt-4">
+        <ScrollArea className="h-[calc(100vh-340px)] mt-4">
           <TabsContent value="cameradar" className="mt-0">
-            <CameradarTool />
+            <CameradarTool proxyConfig={proxyConfig} />
           </TabsContent>
           <TabsContent value="ipcam" className="mt-0">
-            <IPCamSearchTool />
+            <IPCamSearchTool proxyConfig={proxyConfig} />
           </TabsContent>
           <TabsContent value="cctv" className="mt-0">
-            <CCTVTool />
+            <CCTVTool proxyConfig={proxyConfig} />
           </TabsContent>
           <TabsContent value="username" className="mt-0">
-            <UsernameSearchTool />
+            <UsernameSearchTool proxyConfig={proxyConfig} />
           </TabsContent>
           <TabsContent value="webcheck" className="mt-0">
-            <WebCheckTool />
+            <WebCheckTool proxyConfig={proxyConfig} />
           </TabsContent>
           <TabsContent value="torbot" className="mt-0">
-            <TorBotTool />
+            <TorBotTool proxyConfig={proxyConfig} />
           </TabsContent>
           <TabsContent value="webhack" className="mt-0">
-            <WebHackTool />
+            <WebHackTool proxyConfig={proxyConfig} />
           </TabsContent>
           <TabsContent value="photon" className="mt-0">
-            <PhotonTool />
+            <PhotonTool proxyConfig={proxyConfig} />
           </TabsContent>
           <TabsContent value="twint" className="mt-0">
-            <TwintTool />
+            <TwintTool proxyConfig={proxyConfig} />
           </TabsContent>
           <TabsContent value="osint" className="mt-0">
-            <OSINTTool />
+            <OSINTTool proxyConfig={proxyConfig} />
           </TabsContent>
           <TabsContent value="shield-ai" className="mt-0">
-            <ShieldAITool />
+            <ShieldAITool proxyConfig={proxyConfig} />
           </TabsContent>
           <TabsContent value="botexploits" className="mt-0">
-            <BotExploitsTool />
+            <BotExploitsTool proxyConfig={proxyConfig} />
           </TabsContent>
           <TabsContent value="camerattack" className="mt-0">
-            <CamerattackTool />
+            <CamerattackTool proxyConfig={proxyConfig} />
           </TabsContent>
           <TabsContent value="backhack" className="mt-0">
-            <BackHackTool />
+            <BackHackTool proxyConfig={proxyConfig} />
           </TabsContent>
           <TabsContent value="imperial-oculus" className="mt-0">
-            <ImperialOculusTool />
+            <ImperialOculusTool proxyConfig={proxyConfig} />
           </TabsContent>
           
           {/* Tool tabs */}
@@ -143,29 +154,29 @@ export const CameraSearchTools = () => {
             <FFmpegTool />
           </TabsContent>
           <TabsContent value="rapid-payload" className="mt-0">
-            <RapidPayloadTool />
+            <RapidPayloadTool proxyConfig={proxyConfig} />
           </TabsContent>
           <TabsContent value="hacking-tool" className="mt-0">
-            <HackingToolTool />
+            <HackingToolTool proxyConfig={proxyConfig} />
           </TabsContent>
           <TabsContent value="security-admin" className="mt-0">
-            <SecurityAdminTool />
+            <SecurityAdminTool proxyConfig={proxyConfig} />
           </TabsContent>
           
           {/* Scrapy tool tab */}
           <TabsContent value="scrapy" className="mt-0">
-            <ScrapyTool />
+            <ScrapyTool proxyConfig={proxyConfig} />
           </TabsContent>
           
           {/* New tool tabs */}
           <TabsContent value="webhack-adv" className="mt-0">
-            <WebhackAdvancedTool />
+            <WebhackAdvancedTool proxyConfig={proxyConfig} />
           </TabsContent>
           <TabsContent value="hack-tools" className="mt-0">
-            <HackToolsTool />
+            <HackToolsTool proxyConfig={proxyConfig} />
           </TabsContent>
           <TabsContent value="hack-cctv" className="mt-0">
-            <HackCCTVTool />
+            <HackCCTVTool proxyConfig={proxyConfig} />
           </TabsContent>
         </ScrollArea>
       </Tabs>

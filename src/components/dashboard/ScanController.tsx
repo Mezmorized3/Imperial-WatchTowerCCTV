@@ -4,6 +4,7 @@ import { useToast } from '@/components/ui/use-toast';
 import { scanNetwork } from '@/utils/networkScanner';
 import { ScanTarget, ScanSettings, ScanProgress, CameraResult } from '@/types/scanner';
 import { getRandomGeoLocation } from '@/utils/osintUtils';
+import { ProxyConfig } from '@/utils/osintToolTypes';
 
 interface ScanControllerProps {
   onScanProgressUpdate: (progress: ScanProgress) => void;
@@ -19,6 +20,7 @@ const ScanController = ({
   const { toast } = useToast();
   const cleanupFunctionRef = useRef<(() => void) | null>(null);
   const scanInProgressRef = useRef<boolean>(false);
+  const [proxyConfig, setProxyConfig] = useState<ProxyConfig | undefined>(undefined);
 
   useEffect(() => {
     return () => {
@@ -105,9 +107,14 @@ const ScanController = ({
     
     onScanProgressUpdate(initialProgress);
     
+    // Add proxy information to toast if enabled
+    const proxyMessage = proxyConfig?.enabled 
+      ? ` through ${proxyConfig.type.toUpperCase()} proxy ${proxyConfig.host}:${proxyConfig.port}`
+      : '';
+
     toast({
       title: "Scan Started",
-      description: `Starting scan of ${target.value} with ${settings.aggressive ? 'aggressive' : 'standard'} settings`,
+      description: `Starting scan of ${target.value}${proxyMessage} with ${settings.aggressive ? 'aggressive' : 'standard'} settings`,
     });
     
     toast({
@@ -126,9 +133,15 @@ const ScanController = ({
         scanInProgressRef.current = false;
       };
       
+      // Pass proxy configuration to scanner
+      const scanParams = {
+        ...settings,
+        proxy: proxyConfig
+      };
+
       await scanNetwork(
         ipRange,
-        settings,
+        scanParams,
         (progress) => {
           if (abortController.signal.aborted) return;
           
@@ -207,6 +220,12 @@ const ScanController = ({
     }
   };
 
+  // Set proxy configuration to be used for scans
+  const handleProxyConfigChange = (config: ProxyConfig) => {
+    setProxyConfig(config);
+    console.log("Proxy configuration updated:", config);
+  };
+
   // These state variables were missing but are used in the code
   const [results, setResults] = useState<CameraResult[]>([]);
   const [scanProgress, setScanProgress] = useState<ScanProgress>({
@@ -216,7 +235,7 @@ const ScanController = ({
     camerasFound: 0
   });
 
-  return { handleStartScan };
+  return { handleStartScan, handleProxyConfigChange, proxyConfig };
 };
 
 export default ScanController;
