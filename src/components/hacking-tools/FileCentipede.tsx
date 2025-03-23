@@ -1,5 +1,5 @@
-
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Download, ExternalLink, Globe, Search, Copy, ChevronRight } from 'lucide-react';
@@ -31,12 +31,10 @@ const FileCentipede: React.FC = () => {
   const handleRangeSelect = (range: string) => {
     setSelectedRange(range);
     
-    // Find the selected range details
     const countryRanges = DETAILED_COUNTRY_IP_RANGES[selectedCountry as keyof typeof DETAILED_COUNTRY_IP_RANGES] || [];
     const rangeInfo = countryRanges.find(r => r.range === range);
     
     if (rangeInfo) {
-      // Generate a random IP within the range as a sample
       const randomIp = getRandomIpInRange(range);
       
       setRangeDetails({
