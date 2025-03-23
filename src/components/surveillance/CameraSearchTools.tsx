@@ -20,6 +20,7 @@ import FFmpegTool from './search-tools/FFmpegTool';
 import RapidPayloadTool from './search-tools/RapidPayloadTool';
 import HackingToolTool from './search-tools/HackingToolTool';
 import SecurityAdminTool from './search-tools/SecurityAdminTool';
+import ScrapyTool from './search-tools/ScrapyTool';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
 export const CameraSearchTools = () => {
@@ -61,6 +62,7 @@ export const CameraSearchTools = () => {
       { id: "security-admin", label: "Security Admin" },
       { id: "rapid-payload", label: "RapidPayload" },
       { id: "hacking-tool", label: "Hacking Tool" },
+      { id: "scrapy", label: "Scrapy" },
     ]
   ];
 
@@ -130,7 +132,7 @@ export const CameraSearchTools = () => {
             <ImperialOculusTool />
           </TabsContent>
           
-          {/* New tool tabs */}
+          {/* Tool tabs */}
           <TabsContent value="ffmpeg" className="mt-0">
             <FFmpegTool />
           </TabsContent>
@@ -142,6 +144,11 @@ export const CameraSearchTools = () => {
           </TabsContent>
           <TabsContent value="security-admin" className="mt-0">
             <SecurityAdminTool />
+          </TabsContent>
+          
+          {/* New Scrapy tool tab */}
+          <TabsContent value="scrapy" className="mt-0">
+            <ScrapyTool />
           </TabsContent>
         </ScrollArea>
       </Tabs>
