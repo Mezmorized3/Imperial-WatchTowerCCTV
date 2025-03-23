@@ -23,6 +23,7 @@ import {
   Wrench,
   Video,
   Save,
+  Terminal
 } from 'lucide-react';
 
 type CommandOption = {
@@ -71,6 +72,13 @@ const CommandPalette = ({ open, setOpen }: { open: boolean; setOpen: (open: bool
       path: "/osint-tools",
       description: "Open-source intelligence gathering tools",
       shortcut: "O T"
+    },
+    {
+      label: "Hacking Tool",
+      icon: <Terminal className="mr-2 h-4 w-4" />,
+      path: "/hacking-tool",
+      description: "Security testing framework",
+      shortcut: "H T"
     },
     {
       label: "Camera Viewer",
