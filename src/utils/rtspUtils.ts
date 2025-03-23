@@ -7,7 +7,7 @@ import { executeExternalTool } from './github/externalToolsConnector';
  * Validate RTSP URL format
  */
 export const validateRtspUrl = (url: string): boolean => {
-  const rtspRegex = new RegExp('^rtsp://([a-zA-Z0-9.-]+(:\\d+)?)(/[a-zA-Z0-9/.-]+)?$');
+  const rtspRegex = new RegExp('^rtsp://([a-zA-Z0-9._~:/?#\\[\\]@!$&\'()*+,;=%-]*)$');
   return rtspRegex.test(url);
 };
 
@@ -19,6 +19,7 @@ export const extractCredentials = (rtspUrl: string): { username?: string; passwo
     const url = new URL(rtspUrl);
     const username = url.username;
     const password = url.password;
+    // Create a clean URL without credentials
     url.username = '';
     url.password = '';
     return {
@@ -29,6 +30,40 @@ export const extractCredentials = (rtspUrl: string): { username?: string; passwo
   } catch (error) {
     console.error('Error extracting credentials from RTSP URL:', error);
     return { url: rtspUrl };
+  }
+};
+
+/**
+ * Handle special URL characters and encoding for HLS URLs
+ */
+export const normalizeStreamUrl = (url: string): string => {
+  try {
+    // Remove any XML-unsafe characters that might cause issues
+    let normalizedUrl = url.trim();
+    
+    // If the URL is already encoded (contains %xx sequences), decode it first to prevent double-encoding
+    if (normalizedUrl.includes('%')) {
+      try {
+        normalizedUrl = decodeURIComponent(normalizedUrl);
+      } catch (e) {
+        console.warn('URL decoding failed, using original URL', e);
+      }
+    }
+    
+    // For HLS URLs, make sure auth credentials are properly handled
+    if (normalizedUrl.includes('.m3u8') || normalizedUrl.includes('.mpd')) {
+      // HLS URLs might have credentials in them that need to be preserved
+      const urlObj = new URL(normalizedUrl);
+      if (urlObj.username || urlObj.password) {
+        console.log('Stream URL contains credentials, ensuring they are preserved');
+      }
+      return normalizedUrl;
+    }
+    
+    return normalizedUrl;
+  } catch (error) {
+    console.error('Error normalizing stream URL:', error);
+    return url; // Return original URL if normalization fails
   }
 };
 
@@ -137,6 +172,10 @@ export const recordStreamFFmpeg = async (streamUrl: string, outputPath: string =
  */
 export const convertRtspToHls = async (rtspUrl: string): Promise<string> => {
   try {
+    // Try to normalize the URL to handle special characters
+    const normalizedUrl = normalizeStreamUrl(rtspUrl);
+    console.log(`Converting stream: ${normalizedUrl}`);
+    
     // Check if go2rtc is enabled and configured
     const go2rtcUrl = localStorage.getItem('go2rtcUrl');
     const useGo2rtc = !!go2rtcUrl && localStorage.getItem('preferredStreamEngine') === 'go2rtc';
@@ -144,7 +183,7 @@ export const convertRtspToHls = async (rtspUrl: string): Promise<string> => {
     if (useGo2rtc) {
       // Use go2rtc for the conversion
       // Format: http://[go2rtc-ip]:8554/api/stream?src=[stream-url]
-      return `${go2rtcUrl}/api/stream?src=${encodeURIComponent(rtspUrl)}`;
+      return `${go2rtcUrl}/api/stream?src=${encodeURIComponent(normalizedUrl)}`;
     }
     
     // Check if Imperial proxy is enabled
@@ -153,15 +192,30 @@ export const convertRtspToHls = async (rtspUrl: string): Promise<string> => {
     
     if (useImperialProxy && imperialProxyUrl) {
       // Use Imperial proxy for better performance
-      const streamId = btoa(rtspUrl).replace(/[/+=]/g, '').substring(0, 12);
+      const streamId = btoa(normalizedUrl).replace(/[/+=]/g, '').substring(0, 12);
       return `${imperialProxyUrl}/stream/${streamId}/index.m3u8`;
     }
     
-    // Generate a unique output path
+    // For HLS streams, just return the URL directly - no conversion needed
+    if (normalizedUrl.includes('.m3u8')) {
+      console.log(`Direct HLS stream detected: ${normalizedUrl}`);
+      return normalizedUrl;
+    }
+    
+    // For non-RTSP, non-HLS streams that can be played directly
+    if (!normalizedUrl.startsWith('rtsp://') && 
+        (normalizedUrl.endsWith('.mp4') || 
+         normalizedUrl.endsWith('.webm') || 
+         normalizedUrl.includes('mjpeg'))) {
+      console.log(`Direct video stream detected: ${normalizedUrl}`);
+      return normalizedUrl;
+    }
+    
+    // For RTSP streams, generate a unique output path
     const outputDir = `output/streams/${Date.now()}`;
     const outputPath = `${outputDir}/stream.m3u8`;
     
-    const result = await ffmpegConvertRtspToHls(rtspUrl, outputPath);
+    const result = await ffmpegConvertRtspToHls(normalizedUrl, outputPath);
     
     if (result.success) {
       // In a real-world scenario, you'd return a URL to access this stream
@@ -472,4 +526,61 @@ export const addStreamToGo2rtc = async (
     console.error('Error adding stream to go2rtc:', error);
     return false;
   }
+};
+
+/**
+ * Test connection to any stream URL (RTSP, HLS, etc.)
+ */
+export const testStreamConnection = async (streamUrl: string): Promise<boolean> => {
+  try {
+    const normalizedUrl = normalizeStreamUrl(streamUrl);
+    
+    if (normalizedUrl.startsWith('rtsp://')) {
+      return testRtspStreamConnectivity(normalizedUrl);
+    }
+    
+    // For HLS/HTTP streams, use fetch with a HEAD request
+    if (normalizedUrl.startsWith('http')) {
+      try {
+        const response = await fetch(normalizedUrl, { 
+          method: 'HEAD',
+          mode: 'no-cors', // Try no-cors for cross-origin URLs
+          credentials: 'include' // Include credentials for authenticated streams
+        });
+        return true; // With no-cors we can't check status, so assume success if no error
+      } catch (error) {
+        console.error('Error testing HTTP stream connection:', error);
+        return false;
+      }
+    }
+    
+    // For other protocols, assume they work and let the player handle errors
+    return true;
+  } catch (error) {
+    console.error('Error testing stream connection:', error);
+    return false;
+  }
+};
+
+/**
+ * Stream URL handling for go2rtc integration
+ */
+export const getStreamUrlForEngine = (url: string, engine: 'native' | 'hlsjs' | 'videojs' | 'go2rtc'): string => {
+  const normalizedUrl = normalizeStreamUrl(url);
+  
+  // If using go2rtc engine and a go2rtc server is configured
+  if (engine === 'go2rtc') {
+    const go2rtcUrl = localStorage.getItem('go2rtcUrl');
+    if (go2rtcUrl) {
+      return `${go2rtcUrl}/api/stream?src=${encodeURIComponent(normalizedUrl)}`;
+    }
+  }
+  
+  // For HLS streams with videojs, use player.html
+  if (engine === 'videojs' && (normalizedUrl.includes('.m3u8') || normalizedUrl.includes('.mpd'))) {
+    return `/player.html?url=${encodeURIComponent(normalizedUrl)}&engine=videojs`;
+  }
+  
+  // Otherwise return the URL as is
+  return normalizedUrl;
 };

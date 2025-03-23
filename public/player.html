@@ -131,6 +131,7 @@
       <button id="muteButton">Unmute</button>
       <button id="engineButton">Switch Engine</button>
       <button id="debugButton">Debug Info</button>
+      <button id="retryButton" style="display: none;">Retry</button>
     </div>
     <div id="debugInfo"></div>
   </div>
@@ -138,8 +139,10 @@
   <script>
     document.addEventListener('DOMContentLoaded', function() {
       const urlParams = new URLSearchParams(window.location.search);
-      const streamUrl = urlParams.get('url');
+      let streamUrl = urlParams.get('url');
       const preferredEngine = urlParams.get('engine') || 'hlsjs'; // hlsjs, videojs, native
+      const maxRetries = 3;
+      let retryCount = 0;
       
       const videoEl = document.getElementById('videoPlayer');
       const loadingIndicator = document.getElementById('loadingIndicator');
@@ -148,6 +151,7 @@
       const muteButton = document.getElementById('muteButton');
       const engineButton = document.getElementById('engineButton');
       const debugButton = document.getElementById('debugButton');
+      const retryButton = document.getElementById('retryButton');
       const debugInfo = document.getElementById('debugInfo');
       
       // Hide error message initially
@@ -158,6 +162,19 @@
       
       let currentPlayer = null; // To keep track of the video.js player instance
       let currentHls = null; // To keep track of the HLS.js instance
+      
+      // Decode URL properly if it's encoded
+      if (streamUrl) {
+        try {
+          // Check if URL seems to be double-encoded
+          if (streamUrl.includes('%25')) {
+            streamUrl = decodeURIComponent(streamUrl);
+          }
+          console.log('Original stream URL:', streamUrl);
+        } catch (e) {
+          console.error('Error decoding URL:', e);
+        }
+      }
       
       // Enable debug mode
       const toggleDebug = () => {
@@ -180,11 +197,22 @@
           info += `HLS Level: ${currentHls.currentLevel} / ${currentHls.levels?.length || 0}<br>`;
           info += `Latency: ${Math.round(currentHls.latency * 1000) / 1000}s<br>`;
           info += `Buffer: ${Math.round(currentHls.mainBufferLength * 1000) / 1000}s<br>`;
+          if (currentHls.media) {
+            info += `Network State: ${currentHls.media.networkState}<br>`;
+            info += `Ready State: ${currentHls.media.readyState}<br>`;
+          }
         }
         
         if (videoEl.videoWidth) {
           info += `Resolution: ${videoEl.videoWidth}x${videoEl.videoHeight}<br>`;
         }
+        
+        // Add error information if available
+        if (videoEl.error) {
+          info += `<span style="color:red">Player Error: ${videoEl.error.code} - ${videoEl.error.message}</span><br>`;
+        }
+        
+        info += `Retry count: ${retryCount}/${maxRetries}<br>`;
         
         debugInfo.innerHTML = info;
         
@@ -194,6 +222,24 @@
       
       // Attach debug button event
       debugButton.addEventListener('click', toggleDebug);
+      
+      // Retry button handler
+      retryButton.addEventListener('click', function() {
+        if (retryCount < maxRetries) {
+          retryCount++;
+          retryButton.textContent = `Retry (${retryCount}/${maxRetries})`;
+          errorMessage.style.display = 'none';
+          loadingIndicator.style.display = 'block';
+          
+          // Try a different engine on retry
+          const engines = ['hlsjs', 'videojs', 'native'];
+          const nextEngineIndex = (engines.indexOf(preferredEngine) + retryCount) % engines.length;
+          initializePlayer(engines[nextEngineIndex]);
+        } else {
+          retryButton.disabled = true;
+          retryButton.textContent = 'Max retries reached';
+        }
+      });
       
       const initializePlayer = (engine) => {
         console.log(`Initializing player with engine: ${engine} for URL: ${streamUrl}`);
@@ -222,7 +268,7 @@
             newVideo.muted = true;
             oldVideo.parentNode.replaceChild(newVideo, oldVideo);
             
-            // Initialize video.js
+            // Initialize video.js with enhanced error handling
             currentPlayer = videojs('videoPlayer', {
               autoplay: true,
               controls: true,
@@ -232,13 +278,18 @@
               liveui: true,
               html5: {
                 hls: {
-                  overrideNative: true
+                  overrideNative: true,
+                  withCredentials: true,  // Added for authenticated streams
+                  xhrSetup: function(xhr) {
+                    xhr.withCredentials = true;  // For CORS with credentials
+                  }
                 }
               },
               sources: [{
                 src: streamUrl,
                 type: streamUrl.includes('.m3u8') ? 'application/x-mpegURL' : 
-                     streamUrl.includes('.mpd') ? 'application/dash+xml' : 'video/mp4'
+                      streamUrl.includes('.mpd') ? 'application/dash+xml' : 'video/mp4',
+                withCredentials: true  // For CORS with credentials
               }]
             });
             
@@ -247,11 +298,13 @@
               loadingIndicator.style.display = 'none';
               errorMessage.textContent = 'Error loading the stream with Video.js: ' + (currentPlayer.error()?.message || 'Unknown error');
               errorMessage.style.display = 'block';
+              retryButton.style.display = 'inline-block';
             });
             
             currentPlayer.on('loadedmetadata', function() {
               console.log('Video.js: Stream metadata loaded');
               loadingIndicator.style.display = 'none';
+              retryButton.style.display = 'none';
             });
             
             engineButton.textContent = 'Switch to HLS.js';
@@ -274,7 +327,11 @@
               debug: false,
               enableWorker: true,
               lowLatencyMode: true,
-              backBufferLength: 90
+              backBufferLength: 90,
+              xhrSetup: function(xhr, url) {
+                // Set withCredentials to true for all requests - helps with authenticated streams
+                xhr.withCredentials = true;
+              }
             });
             
             currentHls = hls;
@@ -286,6 +343,7 @@
             hls.on(Hls.Events.MANIFEST_PARSED, function(event, data) {
               console.log('HLS.js: Manifest loaded, found levels:', data.levels.length);
               loadingIndicator.style.display = 'none';
+              retryButton.style.display = 'none';
               newVideo.play().catch(e => {
                 console.warn('Autoplay not allowed:', e);
               });
@@ -304,6 +362,7 @@
                 loadingIndicator.style.display = 'none';
                 errorMessage.textContent = `Stream error: ${data.details}`;
                 errorMessage.style.display = 'block';
+                retryButton.style.display = 'inline-block';
                 
                 switch (data.type) {
                   case Hls.ErrorTypes.NETWORK_ERROR:
@@ -338,6 +397,7 @@
             newVideo.autoplay = true;
             newVideo.muted = true;
             newVideo.src = streamUrl;
+            newVideo.crossOrigin = "use-credentials"; // For CORS with credentials
             oldVideo.parentNode.replaceChild(newVideo, oldVideo);
             
             console.log('Native: Loading source', streamUrl);
@@ -345,6 +405,7 @@
             newVideo.addEventListener('loadedmetadata', function() {
               console.log('Native: Stream metadata loaded');
               loadingIndicator.style.display = 'none';
+              retryButton.style.display = 'none';
               newVideo.play().catch(e => {
                 console.warn('Autoplay not allowed:', e);
               });
@@ -355,6 +416,7 @@
               loadingIndicator.style.display = 'none';
               errorMessage.textContent = 'Error loading the stream with native player: ' + (newVideo.error?.message || newVideo.error?.code || 'Unknown error');
               errorMessage.style.display = 'block';
+              retryButton.style.display = 'inline-block';
             });
             
             engineButton.textContent = 'Switch to Video.js';

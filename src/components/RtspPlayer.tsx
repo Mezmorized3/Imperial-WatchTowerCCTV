@@ -1,10 +1,16 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
-import { AlertCircle, RefreshCw, Maximize2, Volume2, VolumeX, VideoOff, Video, DownloadCloud, Info } from 'lucide-react';
+import { AlertCircle, RefreshCw, Maximize2, Volume2, VolumeX, VideoOff, Video, Info } from 'lucide-react';
 import ReactHlsPlayer from 'react-hls-player';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
-import { getProperStreamUrl, convertRtspToHls, startRecording, stopRecording } from '@/utils/rtspUtils';
+import { 
+  getProperStreamUrl, 
+  convertRtspToHls, 
+  startRecording, 
+  stopRecording, 
+  normalizeStreamUrl,
+  getStreamUrlForEngine
+} from '@/utils/rtspUtils';
 import { useToast } from '@/hooks/use-toast';
 
 interface RtspPlayerProps {
@@ -37,12 +43,6 @@ const RtspPlayer: React.FC<RtspPlayerProps> = ({
   const { toast } = useToast();
   
   const streamId = btoa(rtspUrl).replace(/[/+=]/g, '').substring(0, 12);
-  
-  const extractYouTubeId = (url: string): string | null => {
-    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
-    const match = url.match(regExp);
-    return (match && match[2].length === 11) ? match[2] : null;
-  };
   
   const detectStreamType = (url: string): 'hls' | 'dash' | 'direct' | 'iframe' | 'youtube' | 'rtsp' => {
     const lowerUrl = url.toLowerCase();
@@ -79,11 +79,14 @@ const RtspPlayer: React.FC<RtspPlayerProps> = ({
     
     try {
       console.log(`Initializing stream: ${rtspUrl} with engine: ${preferredEngine}`);
-      const type = detectStreamType(rtspUrl);
+      const normalizedUrl = normalizeStreamUrl(rtspUrl);
+      console.log(`Normalized URL: ${normalizedUrl}`);
+      
+      const type = detectStreamType(normalizedUrl);
       setVideoType(type);
       
       if (type === 'youtube') {
-        const videoId = extractYouTubeId(rtspUrl);
+        const videoId = extractYouTubeId(normalizedUrl);
         if (videoId) {
           setStreamUrl(`https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1`);
         } else {
@@ -91,65 +94,46 @@ const RtspPlayer: React.FC<RtspPlayerProps> = ({
         }
       } else if (type === 'hls') {
         console.log('Detected HLS stream');
-        // For HLS, check if go2rtc is enabled as the preferred engine
-        if (preferredEngine === 'go2rtc') {
-          // Try to use go2rtc gateway if available
+        
+        if (preferredEngine === 'videojs') {
+          const playerUrl = `/player.html?url=${encodeURIComponent(normalizedUrl)}&engine=videojs`;
+          console.log(`Using Video.js player via iframe: ${playerUrl}`);
+          setStreamUrl(playerUrl);
+          setVideoType('iframe');
+        } 
+        else if (preferredEngine === 'go2rtc') {
           const go2rtcUrl = localStorage.getItem('go2rtcUrl');
           if (go2rtcUrl) {
-            // Format: http://[go2rtc-ip]:8554/api/stream?src=[stream-url]
-            const finalUrl = `${go2rtcUrl}/api/stream?src=${encodeURIComponent(rtspUrl)}`;
+            const finalUrl = `${go2rtcUrl}/api/stream?src=${encodeURIComponent(normalizedUrl)}`;
             console.log(`Using go2rtc for HLS: ${finalUrl}`);
             setStreamUrl(finalUrl);
           } else {
-            console.log(`Using direct HLS URL: ${rtspUrl}`);
-            setStreamUrl(rtspUrl);
+            console.log(`Using direct HLS URL: ${normalizedUrl}`);
+            setStreamUrl(normalizedUrl);
           }
-        } else if (preferredEngine === 'videojs') {
-          // When using Video.js, we'll pass the URL to the iframe player
-          setStreamUrl(`/player.html?url=${encodeURIComponent(rtspUrl)}&engine=videojs`);
-          setVideoType('iframe');
-        } else {
-          // Direct HLS playback with HLS.js or native
-          console.log(`Using direct HLS with ${preferredEngine}: ${rtspUrl}`);
-          setStreamUrl(rtspUrl);
+        } 
+        else {
+          console.log(`Using direct HLS with ${preferredEngine}: ${normalizedUrl}`);
+          setStreamUrl(normalizedUrl);
         }
       } else if (type === 'direct') {
         console.log('Detected direct video stream');
-        setStreamUrl(rtspUrl);
+        setStreamUrl(normalizedUrl);
       } else if (type === 'rtsp') {
         console.log('Detected RTSP stream, needs conversion');
-        if (preferredEngine === 'go2rtc') {
-          // Try to use go2rtc gateway if available
-          const go2rtcUrl = localStorage.getItem('go2rtcUrl');
-          if (go2rtcUrl) {
-            const finalUrl = `${go2rtcUrl}/api/stream?src=${encodeURIComponent(rtspUrl)}`;
-            console.log(`Using go2rtc for RTSP: ${finalUrl}`);
-            setStreamUrl(finalUrl);
-            setVideoType('hls');
-          } else {
-            console.log('No go2rtc available, falling back to convertRtspToHls');
-            const hlsUrl = await convertRtspToHls(rtspUrl);
-            console.log(`Converted RTSP to HLS: ${hlsUrl}`);
-            setStreamUrl(hlsUrl);
-            setVideoType('hls');
-          }
-        } else {
-          console.log('Using convertRtspToHls for RTSP');
-          const hlsUrl = await convertRtspToHls(rtspUrl);
-          console.log(`Converted RTSP to HLS: ${hlsUrl}`);
-          setStreamUrl(hlsUrl);
-          setVideoType('hls');
-        }
+        const convertedUrl = await convertRtspToHls(normalizedUrl);
+        console.log(`Converted RTSP to HLS: ${convertedUrl}`);
+        setStreamUrl(convertedUrl);
+        setVideoType('hls');
       } else if (type === 'iframe') {
-        console.log('Defaulting to iframe for unknown content type');
-        if (rtspUrl.startsWith('rtsp://')) {
-          console.log('Converting RTSP for iframe');
-          const hlsUrl = await convertRtspToHls(rtspUrl);
-          console.log(`Converted RTSP to HLS for iframe: ${hlsUrl}`);
-          setStreamUrl(hlsUrl);
+        console.log('Using iframe for player');
+        if (normalizedUrl.startsWith('rtsp://')) {
+          const convertedUrl = await convertRtspToHls(normalizedUrl);
+          console.log(`Converted RTSP to HLS for iframe: ${convertedUrl}`);
+          setStreamUrl(convertedUrl);
           setVideoType('hls');
         } else {
-          setStreamUrl(rtspUrl);
+          setStreamUrl(normalizedUrl);
         }
       }
       
@@ -168,7 +152,6 @@ const RtspPlayer: React.FC<RtspPlayerProps> = ({
       playerRef.current.muted = !isMuted;
       setIsMuted(!isMuted);
     } else if (iframeRef.current) {
-      // For iframes, we need to send a message to the iframe
       try {
         iframeRef.current.contentWindow?.postMessage({
           action: 'toggleMute'
@@ -286,7 +269,7 @@ const RtspPlayer: React.FC<RtspPlayerProps> = ({
             <AlertDescription>
               {error || 'Failed to connect to stream'}
               <p className="text-gray-500 text-xs mt-2">
-                The stream could not be accessed. This could be due to network restrictions or an invalid URL.
+                The stream could not be accessed. This could be due to network restrictions, authentication issues, or an invalid URL.
               </p>
             </AlertDescription>
           </Alert>
@@ -298,6 +281,7 @@ const RtspPlayer: React.FC<RtspPlayerProps> = ({
             <p>Original URL: {rtspUrl}</p>
             <p>Engine: {preferredEngine}</p>
             <p>Type: {videoType}</p>
+            <p>Normalized URL: {streamUrl || ''}</p>
           </div>
         </div>
       </div>
@@ -308,7 +292,6 @@ const RtspPlayer: React.FC<RtspPlayerProps> = ({
     if (videoType === 'youtube' || (videoType === 'iframe' || preferredEngine === 'videojs')) {
       let iframeUrl = streamUrl;
       
-      // For videojs, use our player.html as a wrapper
       if (preferredEngine === 'videojs' && !streamUrl.includes('player.html')) {
         iframeUrl = `/player.html?url=${encodeURIComponent(streamUrl)}&engine=videojs`;
       }
@@ -327,7 +310,6 @@ const RtspPlayer: React.FC<RtspPlayerProps> = ({
       );
     } else if (videoType === 'hls') {
       if (preferredEngine === 'native') {
-        // Use native HLS playback for browsers that support it
         return (
           <video 
             ref={playerRef}
@@ -343,7 +325,6 @@ const RtspPlayer: React.FC<RtspPlayerProps> = ({
         );
       }
       
-      // Default to ReactHlsPlayer for HLS streams
       return (
         <ReactHlsPlayer
           src={streamUrl}
@@ -411,6 +392,8 @@ const RtspPlayer: React.FC<RtspPlayerProps> = ({
               <div>Resolution: {playerRef.current.videoWidth}x{playerRef.current.videoHeight}</div>
               <div>Duration: {Math.round(playerRef.current.duration * 100) / 100}s</div>
               <div>Current Time: {Math.round(playerRef.current.currentTime * 100) / 100}s</div>
+              <div>Network State: {playerRef.current.networkState}</div>
+              <div>Ready State: {playerRef.current.readyState}</div>
             </>
           )}
         </div>
