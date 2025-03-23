@@ -27,21 +27,62 @@ const RtspPlayer: React.FC<RtspPlayerProps> = ({
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
   const [isRecording, setIsRecording] = useState(false);
+  const [videoType, setVideoType] = useState<'hls' | 'dash' | 'direct' | 'iframe'>('direct');
   const playerRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
   
-  // Generate a stable stream ID from the RTSP URL
+  // Generate a stable stream ID from the URL
   const streamId = btoa(rtspUrl).replace(/[/+=]/g, '').substring(0, 12);
+  
+  const detectStreamType = (url: string): 'hls' | 'dash' | 'direct' | 'iframe' => {
+    const lowerUrl = url.toLowerCase();
+    
+    if (lowerUrl.includes('.m3u8')) {
+      return 'hls';
+    } else if (lowerUrl.includes('.mpd')) {
+      return 'dash';
+    } else if (lowerUrl.startsWith('rtsp://')) {
+      return 'iframe'; // RTSP needs conversion or iframe
+    } else if (/\.(mp4|webm|ogg|mov)$/i.test(lowerUrl)) {
+      return 'direct'; // Direct video files
+    } else if (lowerUrl.startsWith('http') || lowerUrl.startsWith('https')) {
+      // For HTTP URLs, check if they point to known video formats
+      if (/\.(mp4|webm|ogg|mov|m3u8|mpd)$/i.test(lowerUrl)) {
+        if (lowerUrl.includes('.m3u8')) return 'hls';
+        if (lowerUrl.includes('.mpd')) return 'dash';
+        return 'direct';
+      }
+      return 'iframe'; // Default to iframe for unknown HTTP content
+    }
+    
+    return 'iframe'; // Default fallback
+  };
   
   const initializeStream = async () => {
     setIsLoading(true);
     setError(null);
     
     try {
-      // Need to await the Promise before setting to state
-      const hlsUrl = await convertRtspToHls(rtspUrl);
-      setStreamUrl(hlsUrl);
+      const type = detectStreamType(rtspUrl);
+      setVideoType(type);
+      
+      if (type === 'hls' || type === 'direct') {
+        // For HLS or direct video, use the URL directly
+        setStreamUrl(rtspUrl);
+      } else if (type === 'iframe') {
+        // For RTSP or unknown formats that need conversion
+        if (rtspUrl.startsWith('rtsp://')) {
+          // Convert RTSP to HLS if needed
+          const hlsUrl = await convertRtspToHls(rtspUrl);
+          setStreamUrl(hlsUrl);
+          setVideoType('hls');
+        } else {
+          // Use iframe for other formats
+          setStreamUrl(rtspUrl);
+        }
+      }
+      
       setIsLoading(false);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to initialize stream';
@@ -178,13 +219,10 @@ const RtspPlayer: React.FC<RtspPlayerProps> = ({
     );
   }
   
-  return (
-    <div 
-      ref={containerRef}
-      className="w-full h-full aspect-video bg-black relative"
-    >
-      {/* Use ReactHlsPlayer for HLS streams when available */}
-      {streamUrl.includes('.m3u8') ? (
+  // Render the appropriate player based on video type
+  const renderPlayer = () => {
+    if (videoType === 'hls') {
+      return (
         <ReactHlsPlayer
           src={streamUrl}
           autoPlay={autoPlay}
@@ -202,17 +240,43 @@ const RtspPlayer: React.FC<RtspPlayerProps> = ({
           onCanPlay={handleStreamReady}
           muted={isMuted}
         />
-      ) : (
-        // Fallback to direct iframe for other proxy methods
+      );
+    } else if (videoType === 'direct') {
+      // For direct video files (MP4, WebM, etc.)
+      return (
+        <video 
+          ref={playerRef}
+          src={streamUrl}
+          autoPlay={autoPlay}
+          controls={true}
+          width="100%"
+          height="100%"
+          onError={handleVideoError}
+          onCanPlay={handleStreamReady}
+          muted={isMuted}
+        />
+      );
+    } else {
+      // Fallback to iframe for other formats
+      return (
         <iframe 
           src={streamUrl}
           width="100%" 
           height="100%" 
           allow="autoplay; encrypted-media; picture-in-picture"
           style={{ border: 'none' }}
-          title="Camera Stream"
+          title="Video Stream"
         />
-      )}
+      );
+    }
+  };
+  
+  return (
+    <div 
+      ref={containerRef}
+      className="w-full h-full aspect-video bg-black relative"
+    >
+      {renderPlayer()}
       
       <div className="absolute bottom-0 left-0 right-0 p-2 bg-black/70 flex justify-between items-center">
         <div className="font-mono truncate text-xs text-gray-400 max-w-sm">

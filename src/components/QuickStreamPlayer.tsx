@@ -9,6 +9,7 @@ import { imperialServerService } from '@/utils/imperialServerService';
 import { Card, CardContent } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
+import { getProperStreamUrl, testRtspConnection } from '@/utils/rtspUtils';
 
 interface QuickStreamPlayerProps {
   className?: string;
@@ -28,8 +29,25 @@ const QuickStreamPlayer: React.FC<QuickStreamPlayerProps> = ({ className }) => {
   const { toast } = useToast();
   const playerRef = useRef<HTMLDivElement>(null);
 
+  const isValidUrl = (url: string): boolean => {
+    if (!url) return false;
+    
+    // Check if it's a valid URL format
+    try {
+      new URL(url);
+      return true;
+    } catch (e) {
+      // If not a valid URL, check if it might be a local video file path
+      // or another format that could be played
+      return url.match(/\.(mp4|webm|ogg|mov|avi|flv|wmv|m3u8|mpd)$/i) !== null || 
+             url.startsWith('rtsp://') || 
+             url.startsWith('rtmp://') ||
+             url.startsWith('/');
+    }
+  };
+
   const handlePlayStream = () => {
-    if (streamUrl) {
+    if (streamUrl && isValidUrl(streamUrl)) {
       setIsPlaying(true);
       
       // Add to recent streams if not already there
@@ -47,6 +65,12 @@ const QuickStreamPlayer: React.FC<QuickStreamPlayerProps> = ({ className }) => {
           source: 'quick-stream'
         }).catch(err => console.error('Failed to log stream to Imperial chest:', err));
       }
+    } else {
+      toast({
+        title: "Invalid URL",
+        description: "Please enter a valid stream URL",
+        variant: "destructive",
+      });
     }
   };
 
@@ -193,7 +217,7 @@ const QuickStreamPlayer: React.FC<QuickStreamPlayerProps> = ({ className }) => {
         <div className="flex flex-row gap-2">
           <Input
             type="text"
-            placeholder="Enter stream URL..."
+            placeholder="Enter any video stream URL (RTSP, HTTP, HLS, DASH, etc)..."
             value={streamUrl}
             onChange={handleInputChange}
             onKeyDown={handleKeyDown}
