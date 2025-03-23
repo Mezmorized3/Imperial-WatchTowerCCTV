@@ -8,8 +8,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { ProxyConfig } from "@/utils/osintToolTypes";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { AlertCircle, CheckCircle, Shield } from "lucide-react";
+import { AlertCircle, CheckCircle, Shield, RefreshCw, Globe, Server, Lock } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
+import { testProxyConnection } from "@/utils/networkScanner";
+import { Progress } from "@/components/ui/progress";
 
 interface ProxySettingsProps {
   onProxyChange: (config: ProxyConfig) => void;
@@ -34,6 +36,7 @@ const ProxySettings: React.FC<ProxySettingsProps> = ({ onProxyChange, initialCon
   const [activeTab, setActiveTab] = useState<string>("custom");
   const [testStatus, setTestStatus] = useState<'idle' | 'testing' | 'success' | 'failed'>('idle');
   const [proxyListInput, setProxyListInput] = useState<string>('');
+  const [testDetails, setTestDetails] = useState<any>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -43,6 +46,11 @@ const ProxySettings: React.FC<ProxySettingsProps> = ({ onProxyChange, initialCon
       try {
         const parsedConfig = JSON.parse(savedConfig);
         setProxyConfig(parsedConfig);
+        
+        // Initialize proxy list input if we have saved proxies
+        if (parsedConfig.proxyList && parsedConfig.proxyList.length > 0) {
+          setProxyListInput(parsedConfig.proxyList.join('\n'));
+        }
       } catch (e) {
         console.error('Error parsing saved proxy config:', e);
       }
@@ -100,7 +108,7 @@ const ProxySettings: React.FC<ProxySettingsProps> = ({ onProxyChange, initialCon
     });
   };
 
-  const testProxyConnection = () => {
+  const testProxyConnectionHandler = async () => {
     if (!proxyConfig.host || !proxyConfig.port) {
       toast({
         title: "Validation Error",
@@ -111,21 +119,38 @@ const ProxySettings: React.FC<ProxySettingsProps> = ({ onProxyChange, initialCon
     }
     
     setTestStatus('testing');
+    setTestDetails(null);
     
-    // Simulate testing the proxy
-    setTimeout(() => {
-      const success = Math.random() > 0.3; // 70% chance of success for simulation
+    try {
+      const result = await testProxyConnection(proxyConfig);
       
-      setTestStatus(success ? 'success' : 'failed');
+      if (result.success) {
+        setTestStatus('success');
+        setTestDetails(result.details);
+        
+        toast({
+          title: "Proxy Connection Successful",
+          description: `Connected to ${proxyConfig.host}:${proxyConfig.port} with ${result.latency}ms latency`,
+          variant: "default",
+        });
+      } else {
+        setTestStatus('failed');
+        
+        toast({
+          title: "Proxy Connection Failed",
+          description: result.error || "Could not connect to proxy server",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      setTestStatus('failed');
       
       toast({
-        title: success ? "Proxy Connection Successful" : "Proxy Connection Failed",
-        description: success 
-          ? `Successfully connected to ${proxyConfig.host}:${proxyConfig.port}`
-          : `Failed to connect to proxy. Please check your settings.`,
-        variant: success ? "default" : "destructive",
+        title: "Connection Test Error",
+        description: error instanceof Error ? error.message : "An unknown error occurred",
+        variant: "destructive",
       });
-    }, 1500);
+    }
   };
 
   const handleProxyListChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -159,20 +184,46 @@ const ProxySettings: React.FC<ProxySettingsProps> = ({ onProxyChange, initialCon
     });
   };
 
+  const importProxyList = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      if (evt.target?.result) {
+        const content = evt.target.result.toString();
+        setProxyListInput(content);
+        
+        toast({
+          title: "Proxy List Imported",
+          description: "Please review and click 'Update Proxy List' to save changes.",
+        });
+      }
+    };
+    reader.readAsText(file);
+  };
+
   return (
     <Card className="w-full">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <Shield className="h-5 w-5" /> Proxy Settings
+          <Shield className="h-5 w-5" /> Advanced Proxy Settings
         </CardTitle>
         <CardDescription>
-          Configure proxy settings to hide your real IP address during scanning operations.
+          Configure proxy settings to hide your real IP address during scanning operations and enhance your OPSEC.
         </CardDescription>
       </CardHeader>
       
       <CardContent>
         <div className="flex justify-between items-center mb-4">
-          <Label htmlFor="proxyEnabled" className="font-medium">Enable Proxy</Label>
+          <div className="flex items-center gap-2">
+            <Label htmlFor="proxyEnabled" className="font-medium">Enable Proxy</Label>
+            {proxyConfig.enabled && (
+              <Badge variant="outline" className="bg-green-900/20 text-green-400 border-green-500 text-xs">
+                Active
+              </Badge>
+            )}
+          </div>
           <Switch
             id="proxyEnabled"
             checked={proxyConfig.enabled}
@@ -182,9 +233,10 @@ const ProxySettings: React.FC<ProxySettingsProps> = ({ onProxyChange, initialCon
         
         <Tabs value={activeTab} onValueChange={setActiveTab} className="mt-4">
           <TabsList className="w-full">
-            <TabsTrigger value="custom">Custom Proxy</TabsTrigger>
-            <TabsTrigger value="presets">Presets</TabsTrigger>
-            <TabsTrigger value="rotation">Proxy Rotation</TabsTrigger>
+            <TabsTrigger value="custom"><Server className="h-4 w-4 mr-1" />Custom Proxy</TabsTrigger>
+            <TabsTrigger value="presets"><Globe className="h-4 w-4 mr-1" />Presets</TabsTrigger>
+            <TabsTrigger value="rotation"><RefreshCw className="h-4 w-4 mr-1" />Proxy Rotation</TabsTrigger>
+            <TabsTrigger value="advanced"><Lock className="h-4 w-4 mr-1" />Advanced</TabsTrigger>
           </TabsList>
           
           <TabsContent value="custom" className="space-y-4 mt-4">
@@ -266,10 +318,10 @@ const ProxySettings: React.FC<ProxySettingsProps> = ({ onProxyChange, initialCon
             
             <div className="flex gap-2 mt-4">
               <Button 
-                onClick={testProxyConnection}
+                onClick={testProxyConnectionHandler}
                 disabled={testStatus === 'testing' || !proxyConfig.host}
               >
-                {testStatus === 'testing' ? 'Testing...' : 'Test Connection'}
+                {testStatus === 'testing' ? "Testing..." : "Test Connection"}
               </Button>
               
               {testStatus === 'success' && (
@@ -286,10 +338,31 @@ const ProxySettings: React.FC<ProxySettingsProps> = ({ onProxyChange, initialCon
                 </div>
               )}
             </div>
+            
+            {testStatus === 'testing' && (
+              <Progress value={50} className="h-2 animate-pulse" />
+            )}
+            
+            {testDetails && (
+              <div className="mt-4 p-3 border rounded bg-gray-800 border-gray-700 text-sm">
+                <div className="flex justify-between mb-1">
+                  <span className="text-gray-400">External IP:</span>
+                  <span>{testDetails.externalIp}</span>
+                </div>
+                <div className="flex justify-between mb-1">
+                  <span className="text-gray-400">Location:</span>
+                  <span>{testDetails.location?.city}, {testDetails.location?.country}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-400">Provider:</span>
+                  <span>{testDetails.provider}</span>
+                </div>
+              </div>
+            )}
           </TabsContent>
           
           <TabsContent value="presets" className="mt-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               <Card className="cursor-pointer hover:border-primary transition-colors" onClick={() => applyPreset({
                 type: 'socks5',
                 host: '127.0.0.1',
@@ -355,6 +428,72 @@ const ProxySettings: React.FC<ProxySettingsProps> = ({ onProxyChange, initialCon
                   </Button>
                 </CardContent>
               </Card>
+              
+              <Card className="cursor-pointer hover:border-primary transition-colors" onClick={() => applyPreset({
+                type: 'socks5',
+                host: '127.0.0.1',
+                port: 1080,
+                useAuthentication: false
+              })}>
+                <CardHeader className="p-4">
+                  <CardTitle className="text-base">SSH Tunnel</CardTitle>
+                  <CardDescription>Dynamic SSH tunnel proxy</CardDescription>
+                </CardHeader>
+                <CardContent className="p-4 pt-0">
+                  <p className="text-sm">SOCKS5 - 127.0.0.1:1080</p>
+                  <Button 
+                    size="sm" 
+                    variant="outline"
+                    className="mt-2"
+                  >
+                    Apply
+                  </Button>
+                </CardContent>
+              </Card>
+              
+              <Card className="cursor-pointer hover:border-primary transition-colors" onClick={() => applyPreset({
+                type: 'http',
+                host: 'localhost',
+                port: 8888,
+                useAuthentication: false
+              })}>
+                <CardHeader className="p-4">
+                  <CardTitle className="text-base">Charles Proxy</CardTitle>
+                  <CardDescription>HTTP debugging proxy application</CardDescription>
+                </CardHeader>
+                <CardContent className="p-4 pt-0">
+                  <p className="text-sm">HTTP - localhost:8888</p>
+                  <Button 
+                    size="sm" 
+                    variant="outline"
+                    className="mt-2"
+                  >
+                    Apply
+                  </Button>
+                </CardContent>
+              </Card>
+              
+              <Card className="cursor-pointer hover:border-primary transition-colors" onClick={() => applyPreset({
+                type: 'http',
+                host: 'localhost',
+                port: 8082,
+                useAuthentication: false
+              })}>
+                <CardHeader className="p-4">
+                  <CardTitle className="text-base">ZAP Proxy</CardTitle>
+                  <CardDescription>OWASP Zed Attack Proxy</CardDescription>
+                </CardHeader>
+                <CardContent className="p-4 pt-0">
+                  <p className="text-sm">HTTP - localhost:8082</p>
+                  <Button 
+                    size="sm" 
+                    variant="outline"
+                    className="mt-2"
+                  >
+                    Apply
+                  </Button>
+                </CardContent>
+              </Card>
             </div>
           </TabsContent>
           
@@ -384,7 +523,23 @@ const ProxySettings: React.FC<ProxySettingsProps> = ({ onProxyChange, initialCon
                 </div>
                 
                 <div className="space-y-2">
-                  <Label htmlFor="proxyList">Proxy List (one per line, format: host:port)</Label>
+                  <div className="flex justify-between items-center">
+                    <Label htmlFor="proxyList">Proxy List (one per line, format: host:port)</Label>
+                    <input
+                      type="file"
+                      id="proxyListFile"
+                      onChange={importProxyList}
+                      className="hidden"
+                      accept=".txt,.csv,.list"
+                    />
+                    <Button 
+                      size="sm" 
+                      variant="outline"
+                      onClick={() => document.getElementById('proxyListFile')?.click()}
+                    >
+                      Import File
+                    </Button>
+                  </div>
                   <textarea
                     id="proxyList"
                     className="w-full h-32 px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary"
@@ -410,6 +565,91 @@ proxy2.example.com:8080"
                 )}
               </>
             )}
+          </TabsContent>
+          
+          <TabsContent value="advanced" className="mt-4 space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="connectionTimeout">Connection Timeout (ms)</Label>
+                <Input
+                  id="connectionTimeout"
+                  name="connectionTimeout"
+                  type="number"
+                  value={proxyConfig.connectionTimeout || 30000}
+                  onChange={(e) => setProxyConfig({
+                    ...proxyConfig, 
+                    connectionTimeout: parseInt(e.target.value, 10)
+                  })}
+                  placeholder="30000"
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="maxRetries">Maximum Retries</Label>
+                <Input
+                  id="maxRetries"
+                  name="maxRetries"
+                  type="number"
+                  value={proxyConfig.maxRetries || 3}
+                  onChange={(e) => setProxyConfig({
+                    ...proxyConfig, 
+                    maxRetries: parseInt(e.target.value, 10)
+                  })}
+                  placeholder="3"
+                />
+              </div>
+            </div>
+            
+            <div className="space-y-2">
+              <div className="flex justify-between items-center">
+                <Label htmlFor="dnsFallback">DNS Leak Protection</Label>
+                <Switch
+                  id="dnsFallback"
+                  checked={proxyConfig.dnsProtection || false}
+                  onCheckedChange={(checked) => setProxyConfig({
+                    ...proxyConfig,
+                    dnsProtection: checked
+                  })}
+                />
+              </div>
+              <p className="text-xs text-gray-500">
+                Prevents DNS requests from bypassing the proxy and revealing your real IP address.
+              </p>
+            </div>
+            
+            <div className="space-y-2">
+              <div className="flex justify-between items-center">
+                <Label htmlFor="forceTls">Force TLS Encryption</Label>
+                <Switch
+                  id="forceTls"
+                  checked={proxyConfig.forceTls || false}
+                  onCheckedChange={(checked) => setProxyConfig({
+                    ...proxyConfig,
+                    forceTls: checked
+                  })}
+                />
+              </div>
+              <p className="text-xs text-gray-500">
+                Enforces TLS encryption for proxy communication when possible.
+              </p>
+            </div>
+            
+            <div className="space-y-2">
+              <div className="flex justify-between items-center">
+                <Label htmlFor="autoReconnect">Auto Reconnect</Label>
+                <Switch
+                  id="autoReconnect"
+                  checked={proxyConfig.autoReconnect || false}
+                  onCheckedChange={(checked) => setProxyConfig({
+                    ...proxyConfig,
+                    autoReconnect: checked
+                  })}
+                />
+              </div>
+              <p className="text-xs text-gray-500">
+                Automatically attempts to reconnect if the proxy connection drops.
+              </p>
+            </div>
           </TabsContent>
         </Tabs>
       </CardContent>

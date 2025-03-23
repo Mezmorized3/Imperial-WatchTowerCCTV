@@ -1,4 +1,3 @@
-
 export type ScanTarget = {
   type: 'ip' | 'range' | 'file' | 'shodan' | 'zoomeye' | 'censys';
   value: string;
@@ -72,7 +71,7 @@ export type CameraResult = {
 
 export type ScanStatus = 'idle' | 'running' | 'completed' | 'failed';
 
-export type ScanProgress = {
+export interface ScanProgress {
   status: ScanStatus;
   targetsTotal: number;
   targetsScanned: number;
@@ -83,9 +82,10 @@ export type ScanProgress = {
   scanTarget?: ScanTarget;
   scanSettings?: ScanSettings;
   currentTarget?: string;
+  scanSpeed?: string;
   targetCountry?: string;
-  scanSpeed?: number;
-};
+  source?: string;
+}
 
 export type AlertConfig = {
   enabled: boolean;

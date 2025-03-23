@@ -4,17 +4,20 @@ import { useToast } from '@/components/ui/use-toast';
 import { scanNetwork } from '@/utils/networkScanner';
 import { ScanTarget, ScanSettings, ScanProgress, CameraResult } from '@/types/scanner';
 import { getRandomGeoLocation } from '@/utils/osintUtils';
+import { ProxyConfig } from '@/utils/osintToolTypes';
 
 interface ScanControllerProps {
   onScanProgressUpdate: (progress: ScanProgress) => void;
   onResultsUpdate: (results: CameraResult[]) => void;
   onErrorOccurred: (error: string | null) => void;
+  proxyConfig?: ProxyConfig;
 }
 
 const ScanController = ({ 
   onScanProgressUpdate, 
   onResultsUpdate, 
-  onErrorOccurred 
+  onErrorOccurred,
+  proxyConfig
 }: ScanControllerProps) => {
   const { toast } = useToast();
   const cleanupFunctionRef = useRef<(() => void) | null>(null);
@@ -110,12 +113,21 @@ const ScanController = ({
       description: `Starting scan of ${target.value} with ${settings.aggressive ? 'aggressive' : 'standard'} settings`,
     });
     
-    toast({
-      title: "Browser Limitation Notice",
-      description: "This demo uses simulation since browsers don't allow direct network scanning. In a real application, this would connect to a backend service.",
-      duration: 8000,
-      variant: "default",
-    });
+    // Show proxy notification if active
+    if (proxyConfig?.enabled) {
+      toast({
+        title: "Proxy Active",
+        description: `Using ${proxyConfig.type.toUpperCase()} proxy at ${proxyConfig.host}:${proxyConfig.port}`,
+        duration: 5000,
+      });
+    } else {
+      toast({
+        title: "Browser Limitation Notice",
+        description: "This demo uses simulation since browsers don't allow direct network scanning. In a real application, this would connect to a backend service.",
+        duration: 8000,
+        variant: "default",
+      });
+    }
     
     try {
       const abortController = new AbortController();
@@ -156,7 +168,8 @@ const ScanController = ({
           onScanProgressUpdate(updatedProgress);
         },
         target.type,
-        abortController.signal
+        abortController.signal,
+        proxyConfig
       );
       
       if (!abortController.signal.aborted) {
