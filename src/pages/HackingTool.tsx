@@ -14,7 +14,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 
 const HackingToolPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState('reverse-shell');
-  const [selectedPayload, setSelectedPayload] = useState('');
+  const [selectedRevShellPayload, setSelectedRevShellPayload] = useState('');
+  const [selectedXssPayload, setSelectedXssPayload] = useState('');
   const [customIp, setCustomIp] = useState('0.0.0.0');
   const [customPort, setCustomPort] = useState('4444');
   const [copySuccess, setCopySuccess] = useState<string | null>(null);
@@ -175,8 +176,8 @@ const HackingToolPage: React.FC = () => {
                       <div>
                         <Label htmlFor="shell-type">Shell Type</Label>
                         <Select 
-                          value={selectedPayload} 
-                          onValueChange={setSelectedPayload}
+                          value={selectedRevShellPayload} 
+                          onValueChange={setSelectedRevShellPayload}
                         >
                           <SelectTrigger className="bg-scanner-dark-alt border-gray-700">
                             <SelectValue placeholder="Select a shell type" />
@@ -189,13 +190,13 @@ const HackingToolPage: React.FC = () => {
                         </Select>
                       </div>
                       
-                      {selectedPayload && (
+                      {selectedRevShellPayload && (
                         <div className="mt-4">
                           <Label>Generated Shell Command</Label>
                           <div className="relative mt-1.5">
                             <Textarea 
                               readOnly 
-                              value={reverseShellPayloads[selectedPayload as keyof typeof reverseShellPayloads]}
+                              value={reverseShellPayloads[selectedRevShellPayload as keyof typeof reverseShellPayloads]}
                               className="min-h-24 font-mono text-sm bg-scanner-dark-alt border-gray-700"
                             />
                             <Button 
@@ -203,7 +204,7 @@ const HackingToolPage: React.FC = () => {
                               variant="outline" 
                               className="absolute right-2 top-2 h-8 border-gray-700 hover:bg-scanner-dark-alt"
                               onClick={() => handleCopyToClipboard(
-                                reverseShellPayloads[selectedPayload as keyof typeof reverseShellPayloads], 
+                                reverseShellPayloads[selectedRevShellPayload as keyof typeof reverseShellPayloads], 
                                 'reverse shell command'
                               )}
                             >
@@ -228,8 +229,8 @@ const HackingToolPage: React.FC = () => {
                       <div>
                         <Label htmlFor="xss-type">XSS Payload Type</Label>
                         <Select 
-                          value={selectedPayload} 
-                          onValueChange={setSelectedPayload}
+                          value={selectedXssPayload} 
+                          onValueChange={setSelectedXssPayload}
                         >
                           <SelectTrigger className="bg-scanner-dark-alt border-gray-700">
                             <SelectValue placeholder="Select an XSS payload" />
@@ -242,13 +243,13 @@ const HackingToolPage: React.FC = () => {
                         </Select>
                       </div>
                       
-                      {selectedPayload && (
+                      {selectedXssPayload && (
                         <div className="mt-4">
                           <Label>Generated XSS Payload</Label>
                           <div className="relative mt-1.5">
                             <Textarea 
                               readOnly 
-                              value={xssPayloads[selectedPayload as keyof typeof xssPayloads]}
+                              value={xssPayloads[selectedXssPayload as keyof typeof xssPayloads]}
                               className="min-h-24 font-mono text-sm bg-scanner-dark-alt border-gray-700"
                             />
                             <Button 
@@ -256,7 +257,7 @@ const HackingToolPage: React.FC = () => {
                               variant="outline" 
                               className="absolute right-2 top-2 h-8 border-gray-700 hover:bg-scanner-dark-alt"
                               onClick={() => handleCopyToClipboard(
-                                xssPayloads[selectedPayload as keyof typeof xssPayloads], 
+                                xssPayloads[selectedXssPayload as keyof typeof xssPayloads], 
                                 'XSS payload'
                               )}
                             >
