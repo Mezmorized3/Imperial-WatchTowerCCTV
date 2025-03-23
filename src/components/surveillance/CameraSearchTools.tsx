@@ -10,14 +10,18 @@ import { SpeedCameraTool } from './search-tools/SpeedCameraTool';
 import { CamerattackTool } from './search-tools/CamerattackTool';
 import { InsecamTool } from './search-tools/InsecamTool';
 import HackCCTVTool from './search-tools/HackCCTVTool';
+import AdvancedWebHackTool from './search-tools/AdvancedWebHackTool';
+import RapidPayloadTool from './search-tools/RapidPayloadTool';
+import HackingToolTool from './search-tools/HackingToolTool';
+import SecurityToolsTabs from './search-tools/SecurityToolsTabs';
 
 const CameraSearchTools: React.FC = () => {
   return (
     <Card className="border-gray-700">
       <CardHeader>
-        <CardTitle className="text-xl font-semibold">Camera Search Tools</CardTitle>
+        <CardTitle className="text-xl font-semibold">Camera & Security Tools</CardTitle>
         <CardDescription>
-          Tools for discovering and analyzing CCTV and IP cameras
+          Tools for discovering, analyzing, and testing security of CCTV and IP cameras
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -30,6 +34,10 @@ const CameraSearchTools: React.FC = () => {
             <TabsTrigger value="speedcamera">Speed Camera</TabsTrigger>
             <TabsTrigger value="camerattack">Camerattack</TabsTrigger>
             <TabsTrigger value="insecam">Insecam</TabsTrigger>
+            <TabsTrigger value="webhack">Web Hack</TabsTrigger>
+            <TabsTrigger value="securitytools">Security Tools</TabsTrigger>
+            <TabsTrigger value="payload">Payload Gen</TabsTrigger>
+            <TabsTrigger value="hackingtools">Hacking Tools</TabsTrigger>
           </TabsList>
           
           <TabsContent value="cameradar">
@@ -58,6 +66,22 @@ const CameraSearchTools: React.FC = () => {
           
           <TabsContent value="insecam">
             <InsecamTool />
+          </TabsContent>
+
+          <TabsContent value="webhack">
+            <AdvancedWebHackTool />
+          </TabsContent>
+
+          <TabsContent value="securitytools">
+            <SecurityToolsTabs />
+          </TabsContent>
+
+          <TabsContent value="payload">
+            <RapidPayloadTool />
+          </TabsContent>
+
+          <TabsContent value="hackingtools">
+            <HackingToolTool />
           </TabsContent>
         </Tabs>
       </CardContent>
