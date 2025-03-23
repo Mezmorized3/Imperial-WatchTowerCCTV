@@ -169,6 +169,7 @@ export interface HackingToolParams extends ToolParams {
   options?: Record<string, any>;
   toolCategory?: string;
   target?: string;
+  customCommand?: string;  // Added this property for custom commands
 }
 
 export interface FFmpegParams extends ToolParams {
@@ -209,4 +210,31 @@ export interface ImperialShieldResult {
   securityRating: number;
   error?: string;
   data?: any;
+}
+
+// Scrapy tool types
+export interface ScrapyParams extends ToolParams {
+  url?: string;
+  depth?: string;
+  selector?: string;
+  outputFormat?: string;
+  customCode?: string;
+  followLinks?: boolean;
+  respectRobotsTxt?: boolean;
+}
+
+export interface ScrapyResult extends ToolResult {
+  data: {
+    url?: string;
+    spiderName?: string;
+    crawledPages?: number;
+    itemsScraped?: number;
+    executionTime?: string;
+    depth?: number;
+    selector?: string;
+    elapsedTime?: string;
+  };
+  urls?: string[];
+  items?: any[];
+  errors?: string[];
 }

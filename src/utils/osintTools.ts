@@ -27,7 +27,10 @@ export type {
   RapidPayloadParams,
   HackingToolParams,
   FFmpegParams,
-  SecurityAdminParams
+  SecurityAdminParams,
+  // Scrapy tool types
+  ScrapyParams,
+  ScrapyResult
 } from './osintToolTypes';
 
 // Import function implementations from specific modules

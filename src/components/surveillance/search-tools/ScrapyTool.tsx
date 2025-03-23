@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Loader2, Spider, Bug, AlertTriangle, Check, Code } from 'lucide-react';
+import { Loader2, Bug, AlertTriangle, Check, Code } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 // This would be implemented in a real application
@@ -174,7 +174,7 @@ class ExampleSpider(scrapy.Spider):
     <Card className="border-gray-700 bg-scanner-dark-alt">
       <CardHeader>
         <CardTitle className="text-scanner-primary flex items-center">
-          <Spider className="mr-2 h-5 w-5" />
+          <Bug className="mr-2 h-5 w-5" />
           Scrapy Web Crawler
         </CardTitle>
       </CardHeader>
