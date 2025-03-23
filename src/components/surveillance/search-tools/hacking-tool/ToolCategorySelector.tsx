@@ -35,12 +35,12 @@ export const ToolCategorySelector: React.FC<ToolCategorySelectorProps> = ({
           // Reset tool selection will happen in parent component
         }}
       >
-        <SelectTrigger className="w-full bg-scanner-dark border-gray-700">
+        <SelectTrigger id="toolCategory" className="w-full bg-scanner-dark border-gray-700 text-white">
           <SelectValue placeholder="Select category" />
         </SelectTrigger>
         <SelectContent className="bg-scanner-dark text-white border-gray-700">
           {toolCategories.map((category) => (
-            <SelectItem key={category} value={category}>{category}</SelectItem>
+            <SelectItem key={category} value={category} className="text-white">{category}</SelectItem>
           ))}
         </SelectContent>
       </Select>

@@ -17,7 +17,7 @@ import SecurityToolsTabs from './search-tools/SecurityToolsTabs';
 
 const CameraSearchTools: React.FC = () => {
   return (
-    <Card className="border-gray-700">
+    <Card className="border-gray-700 bg-scanner-dark">
       <CardHeader>
         <CardTitle className="text-xl font-semibold">Camera & Security Tools</CardTitle>
         <CardDescription>
@@ -27,7 +27,7 @@ const CameraSearchTools: React.FC = () => {
       <CardContent>
         <Tabs defaultValue="cameradar" className="w-full">
           <div className="overflow-x-auto pb-2">
-            <TabsList className="flex min-w-max w-full mb-6">
+            <TabsList className="flex min-w-max w-full mb-6 bg-scanner-dark-alt border border-gray-700">
               <TabsTrigger value="cameradar" className="flex-1 whitespace-nowrap">Cameradar</TabsTrigger>
               <TabsTrigger value="ipcamsearch" className="flex-1 whitespace-nowrap">IPCam Search</TabsTrigger>
               <TabsTrigger value="cctv" className="flex-1 whitespace-nowrap">CCTV Explorer</TabsTrigger>

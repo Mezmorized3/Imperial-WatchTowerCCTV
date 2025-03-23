@@ -17,23 +17,23 @@ export const HackingTabs: React.FC<HackingTabsProps> = ({
   customTabContent
 }) => {
   return (
-    <Tabs value={selectedTab} onValueChange={setSelectedTab}>
-      <TabsList className="grid grid-cols-2 mb-4">
-        <TabsTrigger value="tools">
+    <Tabs value={selectedTab} onValueChange={setSelectedTab} className="w-full">
+      <TabsList className="grid grid-cols-2 mb-4 bg-scanner-dark border border-gray-700">
+        <TabsTrigger value="tools" className="data-[state=active]:bg-scanner-primary/20">
           <Folder className="h-4 w-4 mr-2" />
           Tool Selection
         </TabsTrigger>
-        <TabsTrigger value="custom">
+        <TabsTrigger value="custom" className="data-[state=active]:bg-scanner-primary/20">
           <Terminal className="h-4 w-4 mr-2" />
           Custom Command
         </TabsTrigger>
       </TabsList>
       
-      <TabsContent value="tools" className="space-y-4">
+      <TabsContent value="tools" className="space-y-4 text-white">
         {toolsTabContent}
       </TabsContent>
       
-      <TabsContent value="custom" className="space-y-4">
+      <TabsContent value="custom" className="space-y-4 text-white">
         {customTabContent}
       </TabsContent>
     </Tabs>

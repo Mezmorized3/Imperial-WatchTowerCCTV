@@ -14,7 +14,7 @@ const HackingToolTool: React.FC = () => {
   const [tool, setTool] = useState<string>('');
   const [target, setTarget] = useState<string>('');
   const [isExecuting, setIsExecuting] = useState<boolean>(false);
-  const [results, setResults] = useState<string | null>(null);
+  const [results, setResults] = useState<string>('');
   const [selectedTab, setSelectedTab] = useState<string>('tools');
   const [customCommand, setCustomCommand] = useState<string>('');
   const [outputFormat, setOutputFormat] = useState<string>('json');
@@ -22,7 +22,7 @@ const HackingToolTool: React.FC = () => {
 
   const handleToolExecution = (params: HackingToolParams, successMessage: string) => {
     setIsExecuting(true);
-    setResults(null);
+    setResults('');
     
     return {
       onSuccess: (data: any) => {
@@ -45,14 +45,14 @@ const HackingToolTool: React.FC = () => {
   };
 
   return (
-    <Card className="border-gray-700">
-      <CardHeader>
+    <Card className="border-gray-700 bg-scanner-dark">
+      <CardHeader className="bg-scanner-dark">
         <CardTitle className="text-scanner-primary flex items-center">
           <Cpu className="mr-2 h-5 w-5" />
           Hacking Tool Framework
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-4 bg-scanner-dark">
         <HackingTabs 
           selectedTab={selectedTab}
           setSelectedTab={setSelectedTab}
