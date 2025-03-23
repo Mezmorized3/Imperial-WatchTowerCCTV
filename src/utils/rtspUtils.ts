@@ -473,6 +473,3 @@ export const addStreamToGo2rtc = async (
     return false;
   }
 };
-
-// Export the new functions
-export { configureGo2rtcServer, addStreamToGo2rtc };

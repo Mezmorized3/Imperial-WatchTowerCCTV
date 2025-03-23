@@ -100,6 +100,22 @@
     .hide-controls:hover .vjs-control-bar {
       opacity: 1;
     }
+    
+    /* Debug overlay for stream information */
+    #debugInfo {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: rgba(0, 0, 0, 0.7);
+      color: #00ff00;
+      padding: 10px;
+      border-radius: 4px;
+      font-family: monospace;
+      font-size: 12px;
+      max-width: 300px;
+      z-index: 1000;
+      display: none;
+    }
   </style>
 </head>
 <body>
@@ -114,7 +130,9 @@
       <button id="fullscreenButton">Fullscreen</button>
       <button id="muteButton">Unmute</button>
       <button id="engineButton">Switch Engine</button>
+      <button id="debugButton">Debug Info</button>
     </div>
+    <div id="debugInfo"></div>
   </div>
 
   <script>
@@ -129,6 +147,8 @@
       const fullscreenButton = document.getElementById('fullscreenButton');
       const muteButton = document.getElementById('muteButton');
       const engineButton = document.getElementById('engineButton');
+      const debugButton = document.getElementById('debugButton');
+      const debugInfo = document.getElementById('debugInfo');
       
       // Hide error message initially
       errorMessage.style.display = 'none';
@@ -137,12 +157,56 @@
       loadingIndicator.style.display = 'block';
       
       let currentPlayer = null; // To keep track of the video.js player instance
+      let currentHls = null; // To keep track of the HLS.js instance
+      
+      // Enable debug mode
+      const toggleDebug = () => {
+        if (debugInfo.style.display === 'none') {
+          debugInfo.style.display = 'block';
+          updateDebugInfo();
+        } else {
+          debugInfo.style.display = 'none';
+        }
+      };
+      
+      // Update debug information
+      const updateDebugInfo = () => {
+        if (debugInfo.style.display === 'none') return;
+        
+        let info = `Stream URL: ${streamUrl}<br>`;
+        info += `Engine: ${preferredEngine}<br>`;
+        
+        if (currentHls) {
+          info += `HLS Level: ${currentHls.currentLevel} / ${currentHls.levels?.length || 0}<br>`;
+          info += `Latency: ${Math.round(currentHls.latency * 1000) / 1000}s<br>`;
+          info += `Buffer: ${Math.round(currentHls.mainBufferLength * 1000) / 1000}s<br>`;
+        }
+        
+        if (videoEl.videoWidth) {
+          info += `Resolution: ${videoEl.videoWidth}x${videoEl.videoHeight}<br>`;
+        }
+        
+        debugInfo.innerHTML = info;
+        
+        // Update every second
+        setTimeout(updateDebugInfo, 1000);
+      };
+      
+      // Attach debug button event
+      debugButton.addEventListener('click', toggleDebug);
       
       const initializePlayer = (engine) => {
+        console.log(`Initializing player with engine: ${engine} for URL: ${streamUrl}`);
+        
         // Clean up any existing player
         if (currentPlayer && typeof currentPlayer.dispose === 'function') {
           currentPlayer.dispose();
           currentPlayer = null;
+        }
+        
+        if (currentHls) {
+          currentHls.destroy();
+          currentHls = null;
         }
         
         if (streamUrl) {
@@ -166,6 +230,11 @@
               playsinline: true,
               fluid: true,
               liveui: true,
+              html5: {
+                hls: {
+                  overrideNative: true
+                }
+              },
               sources: [{
                 src: streamUrl,
                 type: streamUrl.includes('.m3u8') ? 'application/x-mpegURL' : 
@@ -173,13 +242,15 @@
               }]
             });
             
-            currentPlayer.on('error', function() {
+            currentPlayer.on('error', function(e) {
+              console.error('Video.js error:', e);
               loadingIndicator.style.display = 'none';
-              errorMessage.textContent = 'Error loading the stream with Video.js';
+              errorMessage.textContent = 'Error loading the stream with Video.js: ' + (currentPlayer.error()?.message || 'Unknown error');
               errorMessage.style.display = 'block';
             });
             
             currentPlayer.on('loadedmetadata', function() {
+              console.log('Video.js: Stream metadata loaded');
               loadingIndicator.style.display = 'none';
             });
             
@@ -206,18 +277,27 @@
               backBufferLength: 90
             });
             
+            currentHls = hls;
+            
+            console.log('HLS.js: Loading source', streamUrl);
             hls.loadSource(streamUrl);
             hls.attachMedia(newVideo);
             
-            hls.on(Hls.Events.MANIFEST_PARSED, function() {
-              console.log('Manifest loaded, found levels:', hls.levels.length);
+            hls.on(Hls.Events.MANIFEST_PARSED, function(event, data) {
+              console.log('HLS.js: Manifest loaded, found levels:', data.levels.length);
               loadingIndicator.style.display = 'none';
               newVideo.play().catch(e => {
                 console.warn('Autoplay not allowed:', e);
               });
             });
             
+            hls.on(Hls.Events.LEVEL_LOADED, function(event, data) {
+              console.log('HLS.js: Level loaded, details:', data.details.type);
+            });
+            
             hls.on(Hls.Events.ERROR, function(event, data) {
+              console.error('HLS.js error:', data.type, data.details);
+              
               if (data.fatal) {
                 console.error('Fatal error:', data.type, data.details);
                 
@@ -260,16 +340,20 @@
             newVideo.src = streamUrl;
             oldVideo.parentNode.replaceChild(newVideo, oldVideo);
             
+            console.log('Native: Loading source', streamUrl);
+            
             newVideo.addEventListener('loadedmetadata', function() {
+              console.log('Native: Stream metadata loaded');
               loadingIndicator.style.display = 'none';
               newVideo.play().catch(e => {
                 console.warn('Autoplay not allowed:', e);
               });
             });
             
-            newVideo.addEventListener('error', function() {
+            newVideo.addEventListener('error', function(e) {
+              console.error('Native player error:', e);
               loadingIndicator.style.display = 'none';
-              errorMessage.textContent = 'Error loading the stream with native player';
+              errorMessage.textContent = 'Error loading the stream with native player: ' + (newVideo.error?.message || newVideo.error?.code || 'Unknown error');
               errorMessage.style.display = 'block';
             });
             
@@ -311,6 +395,9 @@
       
       // Initialize with the preferred engine
       initializePlayer(preferredEngine);
+      
+      // Start checking for debug information
+      updateDebugInfo();
     });
   </script>
 </body>
