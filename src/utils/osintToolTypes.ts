@@ -1,4 +1,3 @@
-
 /**
  * Type definitions for OSINT and security tools
  */
@@ -24,6 +23,12 @@ export interface ProxyConfig {
   rotationEnabled?: boolean;
   rotationInterval?: number;
   proxyList?: string[];
+  autoReconnect?: boolean;
+  dnsProtection?: boolean;
+  forceTls?: boolean;
+  connectionTimeout?: number;
+  maxRetries?: number;
+  lastKnownExternalIp?: string;
 }
 
 // Camera discovery tools

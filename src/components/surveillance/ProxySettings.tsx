@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -12,6 +11,7 @@ import { AlertCircle, CheckCircle, Shield, RefreshCw, Globe, Server, Lock } from
 import { useToast } from "@/components/ui/use-toast";
 import { testProxyConnection } from "@/utils/networkScanner";
 import { Progress } from "@/components/ui/progress";
+import { Badge } from "@/components/ui/badge";
 
 interface ProxySettingsProps {
   onProxyChange: (config: ProxyConfig) => void;
@@ -40,14 +40,12 @@ const ProxySettings: React.FC<ProxySettingsProps> = ({ onProxyChange, initialCon
   const { toast } = useToast();
 
   useEffect(() => {
-    // Load saved proxy configuration from localStorage if available
     const savedConfig = localStorage.getItem('proxyConfig');
     if (savedConfig) {
       try {
         const parsedConfig = JSON.parse(savedConfig);
         setProxyConfig(parsedConfig);
         
-        // Initialize proxy list input if we have saved proxies
         if (parsedConfig.proxyList && parsedConfig.proxyList.length > 0) {
           setProxyListInput(parsedConfig.proxyList.join('\n'));
         }
@@ -58,10 +56,7 @@ const ProxySettings: React.FC<ProxySettingsProps> = ({ onProxyChange, initialCon
   }, []);
 
   useEffect(() => {
-    // Notify parent component when proxy config changes
     onProxyChange(proxyConfig);
-    
-    // Save to localStorage
     localStorage.setItem('proxyConfig', JSON.stringify(proxyConfig));
   }, [proxyConfig, onProxyChange]);
 

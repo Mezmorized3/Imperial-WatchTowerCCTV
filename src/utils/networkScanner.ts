@@ -1,11 +1,65 @@
-
 // Import statements and any other necessary dependencies
-import { ScanSettings, NetworkScanResult, CameraResult } from '@/types/scanner';
-import { getRandomGeoLocation, getRandomCameraDetails } from './osintUtils';
+import { ScanSettings, CameraResult } from '@/types/scanner';
+import { getRandomGeoLocation } from './osintUtils';
 import { ProxyConfig } from './osintToolTypes';
-import { generateVulnerabilities } from './vulnerabilityUtils';
-import { getThreatIntelligence } from './threatIntelligence';
-import { analyzeCameraFirmware } from './firmwareUtils';
+
+// Mock data and utility functions for camera details
+const getRandomCameraDetails = () => {
+  const manufacturers = ['Hikvision', 'Dahua', 'Axis', 'Bosch', 'Samsung', 'Sony', 'Panasonic', 'Vivotek'];
+  const models = ['IP1234', 'DS-2CD2032', 'DH-IPC-HDW', 'P3367', 'SNB-6004', 'SNC-EM632R', 'WV-SF438', 'IB8369'];
+  const ports = [80, 443, 554, 1935, 8000, 8080, 37777];
+  const types = ['PTZ', 'Dome', 'Bullet', 'Box', 'Fisheye'];
+  const protocols = ['rtsp', 'http', 'https', 'rtmp'];
+  const streams = ['/stream1', '/live', '/h264/ch1/main/av_stream', '/cam/realmonitor', '/videostream.cgi', '/axis-media/media.amp'];
+  
+  return {
+    manufacturer: manufacturers[Math.floor(Math.random() * manufacturers.length)],
+    model: models[Math.floor(Math.random() * models.length)],
+    port: ports[Math.floor(Math.random() * ports.length)],
+    type: types[Math.floor(Math.random() * types.length)],
+    protocol: protocols[Math.floor(Math.random() * protocols.length)],
+    stream: streams[Math.floor(Math.random() * streams.length)],
+    hasAuth: Math.random() > 0.5,
+    defaultPassword: ['admin', 'password', '123456', 'camera', ''][Math.floor(Math.random() * 5)]
+  };
+};
+
+// Generate random vulnerabilities
+const generateVulnerabilities = () => {
+  const vulnerabilities = [
+    { name: 'Default Credentials', severity: 'high', description: 'Camera is using default credentials' },
+    { name: 'Outdated Firmware', severity: 'medium', description: 'Camera is running outdated firmware with known vulnerabilities' },
+    { name: 'Unencrypted Connection', severity: 'medium', description: 'Camera communications are not encrypted' },
+    { name: 'Remote Code Execution', severity: 'critical', description: 'Camera is vulnerable to remote code execution' },
+    { name: 'Information Disclosure', severity: 'low', description: 'Camera exposes sensitive information' }
+  ];
+  
+  // Return a random subset of vulnerabilities
+  return Math.random() > 0.3
+    ? vulnerabilities.filter(() => Math.random() > 0.6)
+    : [];
+};
+
+// Mock threat intelligence
+const getThreatIntelligence = async (ip: string) => {
+  return {
+    ipReputation: Math.floor(Math.random() * 100),
+    confidenceScore: Math.random(),
+    source: ['virustotal', 'abuseipdb', 'threatfox', 'other'][Math.floor(Math.random() * 4)],
+    lastReportedMalicious: Math.random() > 0.7 ? new Date().toISOString() : undefined,
+    reportedBy: Math.random() > 0.6 ? ['Community', 'SecurityFirm', 'Honeypot'] : []
+  };
+};
+
+// Mock firmware analysis
+const analyzeFirmware = async (manufacturer: string, model: string) => {
+  return {
+    outdated: Math.random() > 0.5,
+    lastUpdate: new Date(Date.now() - Math.random() * 31536000000).toISOString(),
+    knownVulnerabilities: Math.random() > 0.6 ? ['CVE-2022-1234', 'CVE-2021-5678'] : [],
+    recommendedVersion: `${Math.floor(Math.random() * 10)}.${Math.floor(Math.random() * 10)}.${Math.floor(Math.random() * 10)}`
+  };
+};
 
 // Mock scanning function for frontend demonstration
 export const scanNetwork = async (
@@ -84,35 +138,36 @@ export const scanNetwork = async (
           const cameraDetails = getRandomCameraDetails();
           
           // Create a camera object with the details
+          const cameraIp = `${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}`;
           const camera: CameraResult = {
             id: `cam-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
-            ip: `${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}`,
-            manufacturer: cameraDetails.manufacturer,
-            model: cameraDetails.model,
+            ip: cameraIp,
             port: cameraDetails.port,
-            type: cameraDetails.type,
-            protocol: cameraDetails.protocol,
+            model: cameraDetails.model,
+            brand: cameraDetails.manufacturer,
             status: 'online',
             vulnerabilities: generateVulnerabilities(),
             accessible: Math.random() > 0.3,
-            geolocation: {
+            location: {
               country: geo.country,
               city: geo.city,
-              coordinates: [geo.lng, geo.lat]
+              latitude: geo.lat,
+              longitude: geo.lng
             },
-            rtspUrl: cameraDetails.protocol === 'rtsp' ? 
-              `rtsp://${cameraDetails.hasAuth ? 'admin:password@' : ''}${camera.ip}:${cameraDetails.port}${cameraDetails.stream}` : 
+            lastSeen: new Date().toISOString(),
+            firstSeen: new Date().toISOString(),
+            accessLevel: ['none', 'view', 'control', 'admin'][Math.floor(Math.random() * 4)] as any,
+            url: cameraDetails.protocol === 'rtsp' ? 
+              `rtsp://${cameraDetails.hasAuth ? 'admin:password@' : ''}${cameraIp}:${cameraDetails.port}${cameraDetails.stream}` : 
               undefined,
-            credentials: cameraDetails.hasAuth ? {
-              username: 'admin',
-              password: cameraDetails.defaultPassword || 'admin'
-            } : null
+            services: [cameraDetails.protocol]
           };
           
           // Add enhanced proxy information if available
           if (proxyConfig?.enabled) {
-            camera.metaData = {
-              ...camera.metaData,
+            // Using additional type to add metadata
+            const cameraWithMeta = camera as any;
+            cameraWithMeta.metaData = {
               discoveredVia: proxyConfig.type,
               proxied: true,
               proxyHost: proxyConfig.host,
@@ -121,13 +176,15 @@ export const scanNetwork = async (
           }
           
           // Add threat intelligence if this is a detailed scan
-          if (settings.detailed) {
+          if (settings.checkThreatIntel) {
             try {
-              camera.threatIntelligence = await getThreatIntelligence(camera.ip);
+              // Using additional type to add threat intelligence
+              const cameraWithThreat = camera as any;
+              cameraWithThreat.threatIntel = await getThreatIntelligence(camera.ip);
               
               // Add firmware analysis if available
-              if (camera.model && camera.manufacturer) {
-                camera.firmwareAnalysis = await analyzeCameraFirmware(camera.manufacturer, camera.model);
+              if (cameraDetails.model && cameraDetails.manufacturer) {
+                camera.firmwareAnalysis = await analyzeFirmware(cameraDetails.manufacturer, cameraDetails.model);
               }
             } catch (err) {
               console.error("Error fetching threat intelligence:", err);

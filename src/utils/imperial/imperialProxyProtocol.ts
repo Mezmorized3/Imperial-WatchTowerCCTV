@@ -78,7 +78,7 @@ export function initializeProxyProtocol(config: ProxyConfig): boolean {
     type: config.type,
     host: config.host,
     port: config.port,
-    encrypted: config.type === 'https' || config.forceTls === true,
+    encrypted: config.type === 'https' || Boolean(config.forceTls),
     authenticated: config.useAuthentication === true,
     lastRotation: new Date()
   };
