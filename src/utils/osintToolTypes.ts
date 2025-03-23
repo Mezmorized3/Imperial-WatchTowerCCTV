@@ -1,4 +1,3 @@
-
 /**
  * Type definitions for OSINT and security tools
  */
@@ -56,7 +55,7 @@ export interface CameraResult {
   };
   vulnerabilities?: Array<{
     name: string;
-    severity: string;
+    severity: 'low' | 'medium' | 'high' | 'critical';
     description: string;
   }>;
   accessible?: boolean;
@@ -66,7 +65,7 @@ export interface CameraResult {
   brand?: string;
   // Add properties to fix errors in ScanController
   lastSeen?: Date;
-  accessLevel?: string;
+  accessLevel?: 'none' | 'view' | 'control' | 'admin';
 }
 
 export interface ScanResult extends ToolResult {

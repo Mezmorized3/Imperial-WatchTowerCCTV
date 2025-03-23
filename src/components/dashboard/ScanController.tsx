@@ -1,4 +1,3 @@
-
 import { useState, useRef, useEffect } from 'react';
 import { useToast } from '@/components/ui/use-toast';
 import { scanNetwork, ScanSettings as NetworkScanSettings } from '@/utils/networkScanner';
@@ -16,6 +15,26 @@ interface ScanControllerProps {
 
 // Helper function to convert between camera result types
 const convertCameraResult = (camera: OsintCameraResult): CameraResult => {
+  // Map severity strings to the allowed enum values
+  const mapSeverity = (sev: string): 'low' | 'medium' | 'high' | 'critical' => {
+    switch (sev.toLowerCase()) {
+      case 'critical': return 'critical';
+      case 'high': return 'high';
+      case 'medium': return 'medium';
+      default: return 'low';
+    }
+  };
+
+  // Map accessLevel to allowed values
+  const mapAccessLevel = (level?: string): 'none' | 'view' | 'control' | 'admin' => {
+    switch (level?.toLowerCase()) {
+      case 'admin': return 'admin';
+      case 'control': return 'control';
+      case 'view': return 'view';
+      default: return 'none';
+    }
+  };
+
   return {
     id: camera.id,
     ip: camera.ip,
@@ -25,7 +44,11 @@ const convertCameraResult = (camera: OsintCameraResult): CameraResult => {
     url: camera.rtspUrl,
     status: (camera.status as any) || 'unknown',
     credentials: camera.credentials,
-    vulnerabilities: camera.vulnerabilities,
+    vulnerabilities: camera.vulnerabilities ? camera.vulnerabilities.map(v => ({
+      name: v.name,
+      severity: mapSeverity(v.severity),
+      description: v.description
+    })) : undefined,
     location: camera.geolocation ? {
       country: camera.geolocation.country,
       city: camera.geolocation.city,
@@ -33,7 +56,7 @@ const convertCameraResult = (camera: OsintCameraResult): CameraResult => {
       longitude: camera.geolocation.coordinates ? camera.geolocation.coordinates[1] : undefined,
     } : undefined,
     lastSeen: camera.lastSeen ? camera.lastSeen.toISOString() : new Date().toISOString(),
-    accessLevel: camera.accessLevel || 'none',
+    accessLevel: mapAccessLevel(camera.accessLevel),
     firmwareVersion: camera.firmware?.version,
     threatIntel: camera.threatIntelligence as any,
   };
