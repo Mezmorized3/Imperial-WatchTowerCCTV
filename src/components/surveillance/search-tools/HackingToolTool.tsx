@@ -45,14 +45,14 @@ const HackingToolTool: React.FC = () => {
   };
 
   return (
-    <Card className="border-gray-700 bg-scanner-dark">
-      <CardHeader className="bg-scanner-dark">
+    <Card className="border-gray-700 bg-scanner-dark shadow-lg">
+      <CardHeader className="bg-scanner-dark border-b border-gray-700">
         <CardTitle className="text-scanner-primary flex items-center">
           <Cpu className="mr-2 h-5 w-5" />
           Hacking Tool Framework
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4 bg-scanner-dark">
+      <CardContent className="space-y-4 bg-scanner-dark p-4">
         <HackingTabs 
           selectedTab={selectedTab}
           setSelectedTab={setSelectedTab}
@@ -87,7 +87,7 @@ const HackingToolTool: React.FC = () => {
         {results && <ExecutionResults results={results} />}
         
         <div className="mt-2 text-xs text-gray-400 flex items-start">
-          <AlertTriangle className="h-3 w-3 mr-1 mt-0.5 flex-shrink-0" />
+          <AlertTriangle className="h-3.5 w-3.5 mr-1 mt-0.5 flex-shrink-0 text-yellow-500" />
           <span>
             WARNING: This tool framework provides access to security testing utilities. 
             Use only on systems you own or have explicit permission to test. 
