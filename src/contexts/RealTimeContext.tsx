@@ -1,4 +1,3 @@
-
 /**
  * Real-Time Context Provider
  * 
@@ -6,7 +5,7 @@
  */
 
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { ScanProgress, CameraResult } from '@/types/scanner';
+import { ScanProgress, CameraResult, ScanTarget, ScanSettings } from '@/types/scanner';
 import { useWebSocket } from '@/hooks/useWebSocket';
 import { toast } from '@/components/ui/use-toast';
 
@@ -40,7 +39,7 @@ interface RealTimeContextValue {
   
   // Actions
   markAlertAsRead: (alertId: string) => void;
-  startScan: (options: any) => void;
+  startScan: (options: { target: ScanTarget, settings: ScanSettings }) => void;
   updateCameraStatus: (cameraId: string, status: string) => void;
 }
 
@@ -204,8 +203,8 @@ export const RealTimeProvider: React.FC<RealTimeProviderProps> = ({
     };
   }, [isConnected, subscribe]);
   
-  // Start a scan
-  const startScan = (options: any) => {
+  // Start a scan with the updated parameters
+  const startScan = (options: { target: ScanTarget, settings: ScanSettings }) => {
     if (!isConnected) {
       toast({
         title: "Not Connected",

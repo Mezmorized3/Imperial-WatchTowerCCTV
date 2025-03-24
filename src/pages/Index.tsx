@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ScanProgress, CameraResult } from '@/types/scanner';
+import { ScanProgress, CameraResult, ScanTarget, ScanSettings } from '@/types/scanner';
 import { Toaster } from '@/components/ui/toaster';
 import DashboardHeader from '@/components/DashboardHeader';
 import { Button } from '@/components/ui/button';
@@ -84,10 +84,10 @@ const Index = () => {
     onErrorOccurred: setError
   });
 
-  const handleRealTimeStartScan = (options: any) => {
+  const handleRealTimeStartScan = (target: ScanTarget, settings: ScanSettings) => {
     // If connected to real-time, use that for starting scan
     if (isConnected) {
-      realtimeStartScan(options);
+      realtimeStartScan({ target, settings });
     } else {
       // Fall back to regular method
       handleStartScan();
