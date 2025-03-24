@@ -1,7 +1,7 @@
-
 import { nanoid } from 'nanoid';
 import { CameraResult } from '@/utils/osintToolTypes';
 import { ScanProgress, ScanSettings as AppScanSettings } from '@/types/scanner';
+import { ThreatIntelData } from '@/utils/osintToolTypes';
 
 // Use the ScanSettings from types/scanner and extend it to ensure compatibility
 export interface ScanSettings extends Omit<AppScanSettings, 'regionFilter'> {
@@ -43,20 +43,37 @@ const generateVulnerabilities = (cameraType: string) => {
 const analyzeFirmware = (cameraModel: string) => {
   return {
     version: `1.${Math.floor(Math.random() * 10)}.${Math.floor(Math.random() * 100)}`,
-    releaseDate: "2022-06-15",
-    vulnerabilities: Math.random() > 0.5 ? "Multiple CVEs detected" : "No known vulnerabilities",
+    vulnerabilities: Array(Math.floor(Math.random() * 3)).fill('').map(() => 
+      `CVE-202${Math.floor(Math.random() * 3)}-${1000 + Math.floor(Math.random() * 9000)}`
+    ),
     updateAvailable: Math.random() > 0.6,
-    integrityStatus: Math.random() > 0.8 ? "Verified" : "Unknown"
+    lastChecked: new Date().toISOString()
   };
 };
 
-const getThreatIntelligence = (ipAddress: string) => {
+const getThreatIntelligence = (ipAddress: string): ThreatIntelData => {
+  const malware = [
+    'Mirai', 'Emotet', 'TrickBot', 'Ryuk', 'WannaCry', 
+    'Stuxnet', 'Zeus', 'CryptoLocker', 'BlackEnergy', 'Duqu'
+  ];
+  
+  // Generate between 0-3 associated malware items
+  const malwareCount = Math.floor(Math.random() * 4);
+  const associatedMalware = [];
+  
+  for (let i = 0; i < malwareCount; i++) {
+    associatedMalware.push(malware[Math.floor(Math.random() * malware.length)]);
+  }
+  
   return {
-    knownMalicious: Math.random() > 0.9,
-    reportCount: Math.floor(Math.random() * 5),
-    lastReportDate: "2022-10-21",
-    associatedThreats: ["Botnet", "Unauthorized Access"].filter(() => Math.random() > 0.7),
-    riskScore: Math.floor(Math.random() * 100)
+    ipReputation: Math.floor(Math.random() * 100),
+    confidenceScore: Math.floor(Math.random() * 100),
+    source: 'default',
+    associatedMalware,
+    lastReportedMalicious: malwareCount > 0 ? new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString() : undefined,
+    reportedBy: malwareCount > 0 ? ['CERT', 'Community', 'Security Researchers'].slice(0, Math.floor(Math.random() * 3) + 1) : [],
+    firstSeen: new Date(Date.now() - Math.random() * 365 * 24 * 60 * 60 * 1000).toISOString(),
+    tags: ['IoT', 'Camera', 'Botnet', 'Scanning'].slice(0, Math.floor(Math.random() * 4))
   };
 };
 

@@ -1,4 +1,3 @@
-
 import { ProxyConfig } from '../osintToolTypes';
 
 /**
@@ -78,7 +77,7 @@ export function initializeProxyProtocol(config: ProxyConfig): boolean {
     type: config.type,
     host: config.host,
     port: config.port,
-    encrypted: config.type === 'https' || Boolean(config.forceTls),
+    encrypted: (config.type === "http" && config.forceTls) || config.type === "socks5" || config.type === "socks4" || config.type === "tor",
     authenticated: config.useAuthentication === true,
     lastRotation: new Date()
   };

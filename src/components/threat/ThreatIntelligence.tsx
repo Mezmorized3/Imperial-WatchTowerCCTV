@@ -22,7 +22,6 @@ const ThreatIntelligence: React.FC<ThreatIntelligenceProps> = ({ camera }) => {
     confidenceScore: 50,
     source: 'default',
     associatedMalware: [],
-    knownExploits: [],
     lastUpdated: new Date().toISOString()
   };
 

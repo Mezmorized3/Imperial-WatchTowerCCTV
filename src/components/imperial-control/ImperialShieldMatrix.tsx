@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -38,7 +37,8 @@ export const ImperialShieldMatrix: React.FC = () => {
       // In real implementation, this would check Imperial Shield Protocol status
       const result = await testImperialShieldConnection('https://shield.example.com');
       
-      setStatus(result.shieldStatus);
+      // Fix: Convert string status to the correct enum type
+      setStatus(result.shieldStatus as 'inactive' | 'active' | 'breached');
       setSecurityRating(result.securityRating);
       setLastChecked(new Date());
       

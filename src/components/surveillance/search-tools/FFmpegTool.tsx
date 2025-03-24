@@ -6,9 +6,39 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Loader2, Play, Download, Video } from 'lucide-react';
-import { executeFFmpeg, ffmpegConvertRtspToHls, ffmpegRecordStream, applyMotionDetection } from '@/utils/osintTools';
+import { executeFFmpeg } from '@/utils/osintTools';
 import { FFmpegParams } from '@/utils/osintToolTypes';
 import { useToast } from '@/hooks/use-toast';
+
+const ffmpegConvertRtspToHls = async (inputStream: string) => {
+  const params: FFmpegParams = {
+    input: inputStream,
+    output: `output_${Date.now()}.m3u8`,
+    videoCodec: 'h264',
+    outputFormat: 'hls'
+  };
+  return executeFFmpeg(params);
+};
+
+const ffmpegRecordStream = async (inputStream: string) => {
+  const params: FFmpegParams = {
+    input: inputStream,
+    output: `recording_${Date.now()}.mp4`,
+    videoCodec: 'h264',
+    outputFormat: 'mp4'
+  };
+  return executeFFmpeg(params);
+};
+
+const applyMotionDetection = async (inputStream: string) => {
+  const params: FFmpegParams = {
+    input: inputStream,
+    output: `motion_${Date.now()}.mp4`,
+    filters: ['motion=0.5'],
+    options: { detectMotion: true }
+  };
+  return executeFFmpeg(params);
+};
 
 const FFmpegTool: React.FC = () => {
   const [inputStream, setInputStream] = useState<string>('rtsp://admin:admin@192.168.1.10:554/stream1');

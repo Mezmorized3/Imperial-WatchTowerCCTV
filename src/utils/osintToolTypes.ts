@@ -13,7 +13,7 @@ export interface ToolResult {
   data: any;
   error?: string;
   simulatedData?: boolean;
-  shieldStatus?: string;
+  shieldStatus?: 'active' | 'inactive' | 'breached';
   securityRating?: number;
 }
 
@@ -119,8 +119,8 @@ export interface ImperialShieldResult extends ToolResult {
     protocol?: string;
     target?: string;
   };
-  shieldStatus?: string;
-  securityRating?: number;
+  shieldStatus: 'active' | 'inactive' | 'breached';
+  securityRating: number;
   responseTime?: number;
 }
 
@@ -137,6 +137,7 @@ export interface HackCCTVParams {
   bruteforce?: boolean;
   exploitType?: string;
   ports?: string;
+  targetRange?: string;
 }
 
 // Specific tool parameter interfaces

@@ -1,4 +1,3 @@
-
 /**
  * OSINT utility functions
  */
@@ -59,6 +58,42 @@ export const getIpGeolocation = async (ip: string) => {
   };
 };
 
+export const getRandomGeoLocation = (regionFilter?: string) => {
+  const countries = regionFilter ? [regionFilter] : [
+    'United States', 'Germany', 'France', 'United Kingdom', 
+    'Japan', 'Brazil', 'Canada', 'Russia', 'China', 'Australia'
+  ];
+  
+  const getRandomArrayElement = (arr: any[]) => arr[Math.floor(Math.random() * arr.length)];
+  const country = getRandomArrayElement(countries);
+  
+  // Generate random lat/long for the selected country
+  let lat, lng;
+  switch (country) {
+    case 'United States':
+      lat = 37 + (Math.random() * 10) - 5;
+      lng = -100 + (Math.random() * 50) - 25;
+      break;
+    case 'Germany':
+      lat = 51 + (Math.random() * 4) - 2;
+      lng = 10 + (Math.random() * 4) - 2;
+      break;
+    case 'Russia':
+      lat = 55 + (Math.random() * 10) - 5;
+      lng = 37 + (Math.random() * 100) - 50;
+      break;
+    default:
+      lat = (Math.random() * 180) - 90;
+      lng = (Math.random() * 360) - 180;
+  }
+  
+  return {
+    country,
+    latitude: parseFloat(lat.toFixed(6)),
+    longitude: parseFloat(lng.toFixed(6))
+  };
+};
+
 export const analyzeFirmware = (firmwareVersion: string) => {
   // Generate simulated firmware vulnerability data
   const vulnerabilities = [];
@@ -107,6 +142,7 @@ export const getThreatIntelligence = (ip: string) => {
 
 export default {
   getIpGeolocation,
+  getRandomGeoLocation,
   analyzeFirmware,
   getThreatIntelligence
 };

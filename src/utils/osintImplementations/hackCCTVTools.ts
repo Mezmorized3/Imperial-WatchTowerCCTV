@@ -5,12 +5,55 @@
  */
 
 import { simulateNetworkDelay } from '../networkUtils';
-import { parseIpRange } from '../networkUtils';
 import { 
   ScanResult,
   HackCCTVParams
 } from '../osintToolTypes';
 import { nanoid } from 'nanoid';
+
+// Custom parseIpRange implementation since the import is failing
+const parseIpRange = (ipRange: string): string[] => {
+  // Basic implementation to parse CIDR notation
+  if (ipRange.includes('/')) {
+    const [baseIp, cidrPart] = ipRange.split('/');
+    const cidr = parseInt(cidrPart);
+    
+    // For simplicity, return a few IPs in the range for simulation
+    const ipParts = baseIp.split('.');
+    const results: string[] = [];
+    
+    // Generate 10 IPs in the range
+    for (let i = 0; i < 10; i++) {
+      const lastOctet = parseInt(ipParts[3]) + i;
+      if (lastOctet <= 255) {
+        results.push(`${ipParts[0]}.${ipParts[1]}.${ipParts[2]}.${lastOctet}`);
+      }
+    }
+    
+    return results;
+  }
+  
+  // Handle range notation like 192.168.1.1-10
+  if (ipRange.includes('-')) {
+    const [start, end] = ipRange.split('-');
+    const results: string[] = [];
+    
+    if (start.includes('.')) {
+      const baseParts = start.split('.');
+      const startNum = parseInt(baseParts[3]);
+      const endNum = parseInt(end);
+      
+      for (let i = startNum; i <= endNum && i <= 255; i++) {
+        results.push(`${baseParts[0]}.${baseParts[1]}.${baseParts[2]}.${i}`);
+      }
+    }
+    
+    return results;
+  }
+  
+  // Single IP
+  return [ipRange];
+};
 
 // Create a database of common default CCTV credentials
 const defaultCredentials = [
@@ -120,15 +163,15 @@ export const executeHackCCTV = async (params: HackCCTVParams): Promise<ScanResul
   // Parse target IP or range
   const targetIPs: string[] = [];
   
-  if (params.targetIP) {
-    targetIPs.push(params.targetIP);
-  } else if (params.targetRange) {
-    // Use parseIpRange utility or generate a small random set
-    if (params.targetRange.includes('/')) {
-      targetIPs.push(...parseIpRange(params.targetRange).slice(0, 10));
-    } else {
+  if (params.target) {
+    targetIPs.push(params.target);
+  } else if (params.target) { // Using 'target' instead of the incorrect 'targetRange'
+    // Use parseIpRange utility
+    if (params.target.includes('/')) {
+      targetIPs.push(...parseIpRange(params.target).slice(0, 10));
+    } else if (params.target.includes('-')) {
       // Simple range like 192.168.1.1-10
-      const parts = params.targetRange.split('-');
+      const parts = params.target.split('-');
       if (parts.length === 2) {
         const baseIP = parts[0].substring(0, parts[0].lastIndexOf('.') + 1);
         const startNum = parseInt(parts[0].substring(parts[0].lastIndexOf('.') + 1));
@@ -138,8 +181,10 @@ export const executeHackCCTV = async (params: HackCCTVParams): Promise<ScanResul
           targetIPs.push(`${baseIP}${i}`);
         }
       } else {
-        targetIPs.push(params.targetRange);
+        targetIPs.push(params.target);
       }
+    } else {
+      targetIPs.push(params.target);
     }
   } else {
     // Generate some random IPs for demo
@@ -203,6 +248,9 @@ export const executeHackCCTV = async (params: HackCCTVParams): Promise<ScanResul
   
   return {
     success: true,
+    total: targetIPs.length,
+    found: results.length,
+    results: results,
     data: {
       cameras: results,
       total: results.length,

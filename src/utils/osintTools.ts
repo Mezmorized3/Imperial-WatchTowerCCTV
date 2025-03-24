@@ -28,11 +28,10 @@ export type {
   HackingToolParams,
   FFmpegParams,
   SecurityAdminParams,
-  // Scrapy tool types
-  ScrapyParams,
-  ScrapyResult,
   // Proxy configuration
-  ProxyConfig
+  ProxyConfig,
+  // Add HackCCTVParams
+  HackCCTVParams
 } from './osintToolTypes';
 
 // Import function implementations from specific modules
