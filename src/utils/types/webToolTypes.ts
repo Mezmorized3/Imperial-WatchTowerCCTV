@@ -1,4 +1,3 @@
-
 /**
  * Web tool types
  */
@@ -60,4 +59,4 @@ export interface PhotonParams {
 export type WebhackParams = WebHackParams;
 
 // Re-export BackHackParams from cameraTypes
-export { BackHackParams } from './cameraTypes';
+export type { BackHackParams } from './cameraTypes';

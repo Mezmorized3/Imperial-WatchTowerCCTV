@@ -1,4 +1,3 @@
-
 /**
  * Threat intelligence types
  */
@@ -61,5 +60,5 @@ export interface ThreatAssessment {
   lastUpdated: string;
 }
 
-// Add ImperialShieldResult for compatibility with imports
-export { ImperialShieldResult } from './advancedToolTypes';
+// Change re-export to use 'export type'
+export type { ImperialShieldResult } from './advancedToolTypes';

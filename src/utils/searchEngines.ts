@@ -1,7 +1,8 @@
 import { CameraResult } from '@/utils/types/cameraTypes';
+import { CameraStatus, Vulnerability } from '@/utils/types/cameraTypes';
+import { ThreatIntelData } from '@/utils/types/threatIntelTypes';
 import { getComprehensiveThreatIntel, analyzeFirmware } from './threatIntelligence';
 import { simulateNetworkDelay } from './networkUtils';
-import { ThreatIntelData } from './types/threatIntelTypes';
 import { getIpPrefixByCountry, getCountryName, getCountryCities, getCountryCoordinates } from './countryUtils';
 import { getRandomGeoLocation } from './osintUtils';
 import { getCountryIpRanges, getRandomIpInRange } from './ipRangeUtils';
@@ -522,3 +523,4 @@ export const searchCamerasByCountry = async (
   return cameras;
 };
 
+const EASTERN_EUROPEAN_COUNTRIES = ['russia', 'ukraine', 'belarus', 'poland', 'romania', 'hungary', 'slovakia', 'moldova'];

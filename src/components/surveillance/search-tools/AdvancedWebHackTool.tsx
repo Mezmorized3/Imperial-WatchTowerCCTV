@@ -138,7 +138,7 @@ const AdvancedWebHackTool: React.FC<AdvancedWebHackToolProps> = ({ onScanComplet
           <Checkbox
             id="check-vulnerabilities"
             checked={checkVulnerabilities}
-            onCheckedChange={setCheckVulnerabilities}
+            onCheckedChange={(checked) => setCheckVulnerabilities(checked === true)}
           />
           <Label htmlFor="check-vulnerabilities">Check Vulnerabilities</Label>
         </div>
@@ -147,7 +147,7 @@ const AdvancedWebHackTool: React.FC<AdvancedWebHackToolProps> = ({ onScanComplet
           <Checkbox
             id="check-subdomains"
             checked={checkSubdomains}
-            onCheckedChange={setCheckSubdomains}
+            onCheckedChange={(checked) => setCheckSubdomains(checked === true)}
           />
           <Label htmlFor="check-subdomains">Check Subdomains</Label>
         </div>
@@ -167,7 +167,7 @@ const AdvancedWebHackTool: React.FC<AdvancedWebHackToolProps> = ({ onScanComplet
           <Checkbox
             id="save-results"
             checked={saveResults}
-            onCheckedChange={setSaveResults}
+            onCheckedChange={(checked) => setSaveResults(checked === true)}
           />
           <Label htmlFor="save-results">Save Results</Label>
         </div>

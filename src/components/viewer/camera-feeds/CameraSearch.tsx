@@ -1,14 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { CameraResult } from '@/types/scanner';
-import { Search, Filter, MapPin, RefreshCw, Camera, Check } from 'lucide-react';
-import CountrySelector from '@/components/inputs/CountrySelector';
+import React from 'react';
+import CountrySelector from '@/components/ui/CountrySelector';
 
 interface CameraSearchProps {
   onSearch: (filters: any) => void;
@@ -56,7 +47,6 @@ const CameraSearch: React.FC<CameraSearchProps> = ({
     }
   };
 
-  // The special Eastern European cameras for the project
   const eastEuropeanCountries = [
     { name: 'Ukraine', code: 'UA', flag: '🇺🇦' },
     { name: 'Russia', code: 'RU', flag: '🇷🇺' },
@@ -125,11 +115,10 @@ const CameraSearch: React.FC<CameraSearchProps> = ({
     </div>
   );
 
-  // Update the camera card location data
   const renderCameraLocation = (camera: CameraResult) => {
     if (!camera) return "Unknown location";
     
-    const location = camera.location; // Use location instead of geolocation
+    const location = camera.location;
     
     if (!location || (!location.country && !location.city)) {
       return "Unknown location";
