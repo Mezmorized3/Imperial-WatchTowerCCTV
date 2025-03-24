@@ -8,10 +8,14 @@ import { ThreatIntelData } from './baseTypes';
 export interface CameraResult {
   id: string;
   ip: string;
-  port?: number;
+  port: number;
   model?: string;
   manufacturer?: string;
-  location?: string;
+  location?: string | {
+    country: string;
+    city?: string;
+    coordinates?: [number, number];
+  };
   status?: string;
   type?: string;
   protocol?: string;
@@ -41,8 +45,8 @@ export interface CameraResult {
   threatIntel?: ThreatIntelData;
   country?: string;
   brand?: string;
-  accessLevel?: 'none' | 'view' | 'control' | 'admin';
-  lastSeen?: Date | string;
+  accessLevel: 'none' | 'view' | 'control' | 'admin';
+  lastSeen: string;
   url?: string;
   snapshotUrl?: string;
 }

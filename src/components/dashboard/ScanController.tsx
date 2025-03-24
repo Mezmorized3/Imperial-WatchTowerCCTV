@@ -1,4 +1,3 @@
-
 import { useState, useRef, useEffect } from 'react';
 import { useToast } from '@/components/ui/use-toast';
 import scanNetwork, { ScanSettings as NetworkScanSettings } from '@/utils/networkScanner';
@@ -238,7 +237,7 @@ const ScanController = ({
       
       const networkSettings: NetworkScanSettings = {
         ...settings,
-        regionFilter: Array.isArray(settings.regionFilter) ? settings.regionFilter.join(',') : settings.regionFilter,
+        regionFilter: Array.isArray(settings.regionFilter) ? settings.regionFilter : [settings.regionFilter],
         targetSubnet: ipRange
       };
       
@@ -289,7 +288,7 @@ const ScanController = ({
         onScanProgressUpdate(completedProgress);
         setScanProgress(completedProgress);
         
-        const convertedCameras = scanResult.data.cameras.map(convertCameraResult);
+        const convertedCameras = scanResult.data.cameras ? scanResult.data.cameras.map((camera: any) => convertCameraResult(camera)) : [];
         
         setResults(convertedCameras);
         onResultsUpdate(convertedCameras);

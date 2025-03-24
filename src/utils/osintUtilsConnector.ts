@@ -5,23 +5,39 @@
 
 import { 
   ToolResult,
+  ProxyConfig
+} from './types/baseTypes';
+
+import {
   CCTVParams,
-  TorBotParams,
-  WebHackParams,
   SpeedCameraParams,
-  WebCheckParams,
-  TwintParams,
-  OSINTParams,
-  ShieldAIParams,
+  CamerattackParams
+} from './types/cameraTypes';
+
+import {
+  TorBotParams,
   BotExploitsParams,
-  CamerattackParams,
-  BackHackParams,
-  ImperialOculusParams,
+  ImperialOculusParams
+} from './types/networkTypes';
+
+import {
+  WebHackParams,
+  WebCheckParams,
+  BackHackParams
+} from './types/webTypes';
+
+import {
+  TwintParams,
+  OSINTParams
+} from './types/socialTypes';
+
+import {
+  ShieldAIParams,
   RapidPayloadParams,
   HackingToolParams,
   FFmpegParams,
   SecurityAdminParams
-} from './types/osintToolTypes';
+} from './types/advancedToolTypes';
 
 import {
   executeExternalTool,
@@ -34,7 +50,7 @@ import { imperialServerService } from './imperialServerService';
 // Fix: Define ToolExecutionResult interface to match expected structure
 interface ToolExecutionResult<T> {
   success: boolean;
-  data?: T;
+  data: T;
   error?: string;
 }
 

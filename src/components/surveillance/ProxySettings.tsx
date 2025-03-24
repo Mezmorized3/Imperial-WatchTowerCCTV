@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -29,12 +30,18 @@ const ProxySettings: React.FC<ProxySettingsProps> = ({ onProxyChange, initialCon
   }, [proxyConfig, onProxyChange]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value, type, checked } = e.target;
-    const newValue = type === 'checkbox' ? checked : value;
-
+    const { name, value } = e.target;
+    
     setProxyConfig(prevConfig => ({
       ...prevConfig,
-      [name]: newValue,
+      [name]: value,
+    }));
+  };
+
+  const handleSwitchChange = (name: string, checked: boolean) => {
+    setProxyConfig(prevConfig => ({
+      ...prevConfig,
+      [name]: checked,
     }));
   };
 
@@ -62,9 +69,8 @@ const ProxySettings: React.FC<ProxySettingsProps> = ({ onProxyChange, initialCon
           <Label htmlFor="proxy-enabled" className="text-sm">Enable Proxy</Label>
           <Switch
             id="proxy-enabled"
-            name="enabled"
             checked={proxyConfig.enabled || false}
-            onCheckedChange={(checked) => handleInputChange({ target: { name: 'enabled', value: checked, type: 'checkbox' } } as any)}
+            onCheckedChange={(checked) => handleSwitchChange('enabled', checked)}
           />
         </div>
 
@@ -72,9 +78,8 @@ const ProxySettings: React.FC<ProxySettingsProps> = ({ onProxyChange, initialCon
           <div>
             <Label htmlFor="proxy-type">Proxy Type</Label>
             <Select
-              id="proxy-type"
               value={proxyConfig.type}
-              onValueChange={(value) => handleInputChange({ target: { name: 'type', value: value, type: 'text' } } as any)}
+              onValueChange={(value) => setProxyConfig(prev => ({ ...prev, type: value as ProxyConfig['type'] }))}
             >
               <SelectTrigger className="bg-scanner-dark">
                 <SelectValue placeholder="Select proxy type" />
@@ -116,9 +121,8 @@ const ProxySettings: React.FC<ProxySettingsProps> = ({ onProxyChange, initialCon
             <Label htmlFor="proxy-auth">Authentication</Label>
             <Switch
               id="proxy-auth"
-              name="useAuthentication"
               checked={proxyConfig.useAuthentication || false}
-              onCheckedChange={(checked) => handleInputChange({ target: { name: 'useAuthentication', value: checked, type: 'checkbox' } } as any)}
+              onCheckedChange={(checked) => handleSwitchChange('useAuthentication', checked)}
             />
           </div>
         </div>
@@ -155,9 +159,8 @@ const ProxySettings: React.FC<ProxySettingsProps> = ({ onProxyChange, initialCon
           <Label htmlFor="proxy-rotation">Auto-Rotation</Label>
           <Switch
             id="proxy-rotation"
-            name="rotationEnabled"
             checked={proxyConfig.rotationEnabled || false}
-            onCheckedChange={(checked) => handleInputChange({ target: { name: 'rotationEnabled', value: checked, type: 'checkbox' } } as any)}
+            onCheckedChange={(checked) => handleSwitchChange('rotationEnabled', checked)}
           />
         </div>
 
@@ -193,9 +196,8 @@ const ProxySettings: React.FC<ProxySettingsProps> = ({ onProxyChange, initialCon
             <Label htmlFor="dns-protection">DNS Leak Protection</Label>
             <Switch
               id="dns-protection"
-              name="dnsProtection"
               checked={proxyConfig.dnsProtection || false}
-              onCheckedChange={(checked) => handleInputChange({ target: { name: 'dnsProtection', value: checked, type: 'checkbox' } } as any)}
+              onCheckedChange={(checked) => handleSwitchChange('dnsProtection', checked)}
             />
           </div>
 
@@ -203,9 +205,8 @@ const ProxySettings: React.FC<ProxySettingsProps> = ({ onProxyChange, initialCon
             <Label htmlFor="force-tls">Force TLS Encryption</Label>
             <Switch
               id="force-tls"
-              name="forceTls"
               checked={proxyConfig.forceTls || false}
-              onCheckedChange={(checked) => handleInputChange({ target: { name: 'forceTls', value: checked, type: 'checkbox' } } as any)}
+              onCheckedChange={(checked) => handleSwitchChange('forceTls', checked)}
             />
           </div>
 
@@ -213,9 +214,8 @@ const ProxySettings: React.FC<ProxySettingsProps> = ({ onProxyChange, initialCon
             <Label htmlFor="auto-reconnect">Auto Reconnect</Label>
             <Switch
               id="auto-reconnect"
-              name="autoReconnect"
               checked={proxyConfig.autoReconnect || false}
-              onCheckedChange={(checked) => handleInputChange({ target: { name: 'autoReconnect', value: checked, type: 'checkbox' } } as any)}
+              onCheckedChange={(checked) => handleSwitchChange('autoReconnect', checked)}
             />
           </div>
         </div>

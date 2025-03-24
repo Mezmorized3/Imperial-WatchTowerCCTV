@@ -79,7 +79,7 @@ const HackCCTVTool: React.FC = () => {
       const response = await executeHackCCTV(params);
 
       if (response.success && response.data && response.data.cameras) {
-        setResults(response.data.cameras);
+        setResults(convertCameraResults(response.data.cameras));
         toast({
           title: 'Scan Complete',
           description: `Found ${response.data.cameras.length} vulnerable cameras`,
@@ -124,6 +124,28 @@ const HackCCTVTool: React.FC = () => {
       title: 'Opening Stream',
       description: 'Attempting to connect to camera stream...',
     });
+  };
+
+  const convertCameraResults = (cameras: import('@/types/scanner').CameraResult[]): import('@/utils/types/cameraTypes').CameraResult[] => {
+    return cameras.map(camera => ({
+      id: camera.id,
+      ip: camera.ip,
+      port: camera.port || 554,
+      model: camera.model,
+      manufacturer: camera.brand,
+      location: camera.location ? 
+        (typeof camera.location === 'string' ? 
+          camera.location : 
+          `${camera.location.country}${camera.location.city ? `, ${camera.location.city}` : ''}`) 
+        : undefined,
+      status: camera.status,
+      credentials: camera.credentials,
+      vulnerabilities: camera.vulnerabilities,
+      accessible: camera.accessLevel !== 'none',
+      threatIntelligence: camera.threatIntel,
+      accessLevel: camera.accessLevel || 'none',
+      lastSeen: typeof camera.lastSeen === 'string' ? camera.lastSeen : camera.lastSeen?.toISOString() || new Date().toISOString()
+    }));
   };
 
   return (

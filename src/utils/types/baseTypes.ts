@@ -3,7 +3,7 @@
  * Base types for OSINT and camera discovery tools
  */
 
-import { CameraResult } from '@/types/scanner';
+import { CameraResult as ScannerCameraResult } from '@/types/scanner';
 
 // Basic tool parameter and result interfaces
 export interface ToolParams {
@@ -25,12 +25,12 @@ export interface ScanResult {
   found: number;
   results: any[];
   data?: {
-    cameras?: CameraResult[];
+    cameras?: ScannerCameraResult[];
     total?: number;
     vulnerabilities?: any[];
   };
   simulatedData?: boolean;
-  cameras?: CameraResult[];
+  cameras?: ScannerCameraResult[];
 }
 
 export interface UsernameResult {

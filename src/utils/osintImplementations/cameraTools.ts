@@ -15,7 +15,7 @@ import {
   CCTVParams, 
   SpeedCameraParams,
   CamerattackParams
-} from '../osintToolTypes';
+} from '../types/cameraTypes';
 
 // Custom parseIpRange implementation since the import is failing
 const parseIpRange = (ipRange: string): string[] => {
@@ -76,7 +76,9 @@ export const executeCameradar = async (params: { target: string, ports?: string 
     port: 554,
     model: `Simulated Camera ${i}`,
     manufacturer: 'Generic',
-    status: 'vulnerable'
+    status: 'vulnerable',
+    lastSeen: new Date().toISOString(),
+    accessLevel: 'none' as const
   }));
   
   return {
@@ -106,7 +108,9 @@ export const executeIPCamSearch = async (params: { subnet: string, protocols?: s
     ip,
     port: 80,
     model: `IP Camera ${i}`,
-    status: 'online'
+    status: 'online',
+    lastSeen: new Date().toISOString(),
+    accessLevel: 'none' as const
   }));
   
   return {
@@ -131,9 +135,12 @@ export const executeCCTV = async (params: CCTVParams): Promise<ScanResult> => {
   const results = Array(params.limit || 2).fill(0).map((_, i) => ({
     id: `cctv-${i}`,
     ip: `${params.region === 'us' ? '11' : '9'}2.168.1.${10 + i}`,
+    port: 554, // Added port
     model: `CCTV Camera ${i}`,
     location: params.region.toUpperCase(),
-    status: 'online'
+    status: 'online',
+    lastSeen: new Date().toISOString(),
+    accessLevel: 'none' as const
   }));
   
   return {
@@ -158,8 +165,11 @@ export const executeSpeedCamera = async (params: SpeedCameraParams): Promise<Sca
   const results = Array(2).fill(0).map((_, i) => ({
     id: `speed-cam-${i}`,
     ip: `192.168.1.${20 + i}`,
+    port: 554, // Added port
     model: `Speed Camera ${i}`,
-    status: 'online'
+    status: 'online',
+    lastSeen: new Date().toISOString(),
+    accessLevel: 'none' as const
   }));
   
   return {
@@ -182,14 +192,17 @@ export const executeCamerattack = async (params: CamerattackParams): Promise<Sca
 
   // Simulated results - will be replaced with real implementation
   const vulnerabilities = [
-    { name: 'Default Credentials', severity: 'high' },
-    { name: 'Unencrypted Stream', severity: 'medium' }
+    { name: 'Default Credentials', severity: 'high' as const },
+    { name: 'Unencrypted Stream', severity: 'medium' as const }
   ];
   
   const camera = {
     id: `attack-target`,
     ip: params.target,
-    status: 'vulnerable'
+    port: 554, // Added port
+    status: 'vulnerable',
+    lastSeen: new Date().toISOString(),
+    accessLevel: 'none' as const
   };
   
   return {

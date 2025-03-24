@@ -27,6 +27,7 @@ export type ThreatIntelData = {
   tags?: string[];
   confidenceScore: number;
   source: 'virustotal' | 'abuseipdb' | 'threatfox' | 'other';
+  lastUpdated: string;
 };
 
 export type CameraResult = {

@@ -38,7 +38,7 @@ const ThreatIntelligence: React.FC<ThreatIntelligenceProps> = ({ camera }) => {
   const threatIntel: ThreatIntelData = camera.threatIntelligence || camera.threatIntel || {
     ipReputation: 50,
     confidenceScore: 50,
-    source: 'other', // Fix: use one of the allowed source values
+    source: 'other',
     associatedMalware: [],
     lastUpdated: new Date().toISOString()
   };
