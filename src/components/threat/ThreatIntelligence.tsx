@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { CameraResult } from '@/utils/osintToolTypes';
+import { CameraResult, ThreatIntelData } from '@/utils/osintToolTypes';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Shield, HardDrive, Server } from 'lucide-react';
 import ThreatReputation from './ThreatReputation';
@@ -16,7 +16,15 @@ const ThreatIntelligence: React.FC<ThreatIntelligenceProps> = ({ camera }) => {
     return <div className="p-4 text-muted-foreground">Select a camera to view threat intelligence.</div>;
   }
 
-  const { threatIntel, ip } = camera;
+  // Create default ThreatIntelData if missing
+  const threatIntel: ThreatIntelData = camera.threatIntelligence || camera.threatIntel || {
+    ipReputation: 50,
+    confidenceScore: 50,
+    source: 'default',
+    associatedMalware: [],
+    knownExploits: [],
+    lastUpdated: new Date().toISOString()
+  };
 
   return (
     <div className="space-y-4">

@@ -26,9 +26,9 @@ const SecurityAdminTool: React.FC = () => {
       setResults(null);
       
       const params: SecurityAdminParams = {
-        command: `scan_${scanType}`, // Add command property
+        command: `scan_${scanType}`,
         scanType,
-        target: target || 'localhost',
+        target,
         fixVulnerabilities,
         reportFormat
       };

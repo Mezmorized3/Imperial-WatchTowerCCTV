@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,25 +7,20 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/components/ui/use-toast';
 import { 
   Loader2, 
   Wifi, 
   ShieldAlert, 
-  Lock, 
-  Play, 
   Eye, 
   Globe,
   Crosshair,
   AlertTriangle,
-  Key,
-  LucideIcon
+  Key
 } from 'lucide-react';
 import { executeHackCCTV } from '@/utils/osintImplementations';
 import { CameraResult, HackCCTVParams } from '@/utils/osintToolTypes';
 
-// Inspired by https://github.com/mohammadmahdi-termux/hackCCTV
 const HackCCTVTool: React.FC = () => {
   const { toast } = useToast();
   const [targetIP, setTargetIP] = useState<string>('');
@@ -73,8 +67,7 @@ const HackCCTVTool: React.FC = () => {
 
     try {
       const params: HackCCTVParams = {
-        targetIP: activeTab === 'single' ? targetIP : undefined,
-        targetRange: activeTab === 'range' ? targetRange : undefined,
+        target: activeTab === 'single' ? targetIP : targetRange,
         exploitType,
         bruteforce,
         ports,
@@ -85,7 +78,7 @@ const HackCCTVTool: React.FC = () => {
       // Execute hackCCTV with the provided parameters
       const response = await executeHackCCTV(params);
 
-      if (response.success && response.data.cameras) {
+      if (response.success && response.data && response.data.cameras) {
         setResults(response.data.cameras);
         toast({
           title: 'Scan Complete',

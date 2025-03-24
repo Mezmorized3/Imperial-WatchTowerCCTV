@@ -1,8 +1,9 @@
+
 import { useState, useRef, useEffect } from 'react';
 import { useToast } from '@/components/ui/use-toast';
 import { scanNetwork, ScanSettings as NetworkScanSettings } from '@/utils/networkScanner';
 import { ScanTarget, ScanProgress, CameraResult, ScanSettings } from '@/types/scanner';
-import { getRandomGeoLocation } from '@/utils/osintUtils';
+import { getIpGeolocation } from '@/utils/osintUtils';
 import { ProxyConfig } from '@/utils/osintToolTypes';
 import { CameraResult as OsintCameraResult } from '@/utils/osintToolTypes';
 import { getCountryIpRanges, getRandomIpInRange } from '@/utils/ipRangeUtils';
@@ -53,7 +54,7 @@ const convertCameraResult = (camera: OsintCameraResult): CameraResult => {
       latitude: camera.geolocation.coordinates ? camera.geolocation.coordinates[0] : undefined,
       longitude: camera.geolocation.coordinates ? camera.geolocation.coordinates[1] : undefined,
     } : undefined,
-    lastSeen: camera.lastSeen ? camera.lastSeen.toISOString() : new Date().toISOString(),
+    lastSeen: camera.lastSeen ? (typeof camera.lastSeen === 'string' ? camera.lastSeen : camera.lastSeen.toISOString()) : new Date().toISOString(),
     accessLevel: mapAccessLevel(camera.accessLevel),
     firmwareVersion: camera.firmware?.version,
     threatIntel: camera.threatIntelligence as any,

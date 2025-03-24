@@ -1,270 +1,215 @@
 import React, { useState } from 'react';
-import { Input } from '@/components/ui/input';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Switch } from '@/components/ui/switch';
+import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Search, Shield, Server, AlertTriangle } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { executeWebhack } from '@/utils/osintTools';
-import { useToast } from '@/hooks/use-toast';
-import { Badge } from '@/components/ui/badge';
+import { WebHackParams } from '@/utils/osintToolTypes';
+import { toast } from '@/components/ui/use-toast';
+import { Globe, Shield, Server, Database, RefreshCw, AlertTriangle } from 'lucide-react';
 
-export const WebHackTool: React.FC = () => {
+const scanTypes = [
+  { value: 'full', label: 'Full Scan' },
+  { value: 'quick', label: 'Quick Scan' },
+  { value: 'passive', label: 'Passive Scan' },
+  { value: 'aggressive', label: 'Aggressive Scan' }
+];
+
+const WebHackTool = () => {
   const [url, setUrl] = useState('');
-  const [scanType, setScanType] = useState('basic');
-  const [findVulnerabilities, setFindVulnerabilities] = useState(true);
-  const [checkHeaders, setCheckHeaders] = useState(true);
-  const [testXss, setTestXss] = useState(true);
-  const [testSql, setTestSql] = useState(true);
-  const [isScanning, setIsScanning] = useState(false);
-  const [results, setResults] = useState<any>(null);
-  const { toast } = useToast();
+  const [scanType, setScanType] = useState('full');
+  const [scanning, setScanning] = useState(false);
+  const [results, setResults] = useState(null);
+  const [error, setError] = useState('');
 
   const handleScan = async () => {
     if (!url) {
       toast({
         title: "URL Required",
-        description: "Please enter a URL to scan",
+        description: "Please enter a target URL to scan",
         variant: "destructive"
       });
       return;
     }
-    
-    // Validate URL format
+
+    setScanning(true);
+    setResults(null);
+    setError('');
+
     try {
-      new URL(url.startsWith('http') ? url : `https://${url}`);
-    } catch (e) {
-      toast({
-        title: "Invalid URL",
-        description: "Please enter a valid URL",
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    setIsScanning(true);
-    toast({
-      title: "WebHack Scan Initiated",
-      description: `Scanning ${url}...`,
-    });
-    
-    try {
-      const formattedUrl = url.startsWith('http') ? url : `https://${url}`;
-      const scanResults = await executeWebhack({
-        url: formattedUrl,
-        scanType
-      });
+      const params: WebHackParams = {
+        target: url,
+        scanType: scanType,
+        mode: scanType === 'aggressive' ? 'aggressive' : 'standard'
+      };
       
-      setResults(scanResults);
+      const result = await executeWebhack(params);
+      
+      if (result.success) {
+        setResults(result.data);
+        toast({
+          title: "Scan Complete",
+          description: `Found ${result.data.vulnerabilities?.length || 0} vulnerabilities`
+        });
+      } else {
+        setError(result.error || 'Unknown error occurred');
+        toast({
+          title: "Scan Failed",
+          description: result.error || "An unknown error occurred during the scan",
+          variant: "destructive"
+        });
+      }
+    } catch (err) {
+      console.error('Error during scan:', err);
+      setError(err instanceof Error ? err.message : 'Unknown error occurred');
       toast({
-        title: "Scan Complete",
-        description: scanResults?.simulatedData 
-          ? "Showing simulated results (dev mode)" 
-          : "WebHack scan completed successfully",
-      });
-    } catch (error) {
-      console.error('WebHack scan error:', error);
-      toast({
-        title: "Scan Failed",
-        description: error instanceof Error ? error.message : "An unknown error occurred",
+        title: "Scan Error",
+        description: err instanceof Error ? err.message : "An unexpected error occurred",
         variant: "destructive"
       });
     } finally {
-      setIsScanning(false);
-    }
-  };
-
-  const getSeverityColor = (severity: string) => {
-    switch (severity.toLowerCase()) {
-      case 'critical':
-        return 'bg-red-600 hover:bg-red-700';
-      case 'high':
-        return 'bg-orange-500 hover:bg-orange-600';
-      case 'medium':
-        return 'bg-yellow-500 hover:bg-yellow-600';
-      case 'low':
-        return 'bg-blue-500 hover:bg-blue-600';
-      default:
-        return 'bg-gray-500 hover:bg-gray-600';
+      setScanning(false);
     }
   };
 
   return (
-    <div className="space-y-4">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="md:col-span-2">
+    <Card className="border-gray-700 bg-scanner-dark-alt">
+      <CardHeader>
+        <CardTitle className="text-scanner-primary flex items-center">
+          <Globe className="mr-2 h-5 w-5" />
+          Web Vulnerability Scanner
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="space-y-2">
+          <Label htmlFor="url">Target URL</Label>
           <Input
-            placeholder="Enter URL to scan (e.g., example.com)"
+            id="url"
+            placeholder="https://example.com"
             value={url}
             onChange={(e) => setUrl(e.target.value)}
-            className="bg-scanner-dark"
+            disabled={scanning}
+            className="bg-scanner-dark border-gray-700"
           />
         </div>
-        <div>
-          <Button 
-            onClick={handleScan} 
-            disabled={isScanning || !url}
-            className="w-full"
+
+        <div className="space-y-2">
+          <Label htmlFor="scanType">Scan Type</Label>
+          <Select
+            value={scanType}
+            onValueChange={setScanType}
+            disabled={scanning}
           >
-            {isScanning ? (
-              <>Scanning...</>
-            ) : (
-              <>
-                <Search className="mr-2 h-4 w-4" />
-                Scan Website
-              </>
-            )}
-          </Button>
+            <SelectTrigger className="bg-scanner-dark border-gray-700">
+              <SelectValue placeholder="Select scan type" />
+            </SelectTrigger>
+            <SelectContent className="bg-scanner-dark text-white border-gray-700">
+              {scanTypes.map((type) => (
+                <SelectItem key={type.value} value={type.value}>
+                  {type.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
-      </div>
-      
-      <Card className="bg-scanner-dark-alt border-gray-700">
-        <CardContent className="pt-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <Label className="text-sm text-gray-400">Scan Type</Label>
-              <div className="mt-1">
-                <Tabs value={scanType} onValueChange={setScanType} className="w-full">
-                  <TabsList className="w-full">
-                    <TabsTrigger value="basic" className="flex-1">Basic</TabsTrigger>
-                    <TabsTrigger value="full" className="flex-1">Full Scan</TabsTrigger>
-                  </TabsList>
-                </Tabs>
-              </div>
-            </div>
-            
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="find-vulns" className="text-sm">Find Vulnerabilities</Label>
-                <Switch 
-                  id="find-vulns" 
-                  checked={findVulnerabilities}
-                  onCheckedChange={setFindVulnerabilities}
-                />
-              </div>
-              
-              <div className="flex items-center justify-between">
-                <Label htmlFor="check-headers" className="text-sm">Check Security Headers</Label>
-                <Switch 
-                  id="check-headers" 
-                  checked={checkHeaders}
-                  onCheckedChange={setCheckHeaders}
-                />
-              </div>
-            </div>
-          </div>
-          
-          <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="flex items-center space-x-2">
-              <Checkbox 
-                id="test-xss" 
-                checked={testXss} 
-                onCheckedChange={(checked) => setTestXss(checked as boolean)}
-                disabled={!findVulnerabilities}
-              />
-              <Label htmlFor="test-xss" className={!findVulnerabilities ? "text-gray-500" : ""}>
-                Test for XSS vulnerabilities
-              </Label>
-            </div>
-            
-            <div className="flex items-center space-x-2">
-              <Checkbox 
-                id="test-sql" 
-                checked={testSql} 
-                onCheckedChange={(checked) => setTestSql(checked as boolean)}
-                disabled={!findVulnerabilities}
-              />
-              <Label htmlFor="test-sql" className={!findVulnerabilities ? "text-gray-500" : ""}>
-                Test for SQL injection
-              </Label>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-      
-      {results && (
-        <Tabs defaultValue="vulnerabilities" className="w-full">
-          <TabsList className="w-full">
-            <TabsTrigger value="vulnerabilities" className="flex items-center">
+
+        <Button
+          onClick={handleScan}
+          disabled={scanning || !url}
+          className="w-full bg-scanner-primary hover:bg-scanner-primary/90"
+        >
+          {scanning ? (
+            <>
+              <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+              Scanning...
+            </>
+          ) : (
+            <>
               <Shield className="mr-2 h-4 w-4" />
-              Vulnerabilities
-            </TabsTrigger>
-            <TabsTrigger value="headers" className="flex items-center">
-              <Server className="mr-2 h-4 w-4" />
-              Headers
-            </TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="vulnerabilities" className="pt-4">
-            <Card className="bg-scanner-dark-alt border-gray-700">
-              <CardContent className="pt-4">
-                {results.vulnerabilities && results.vulnerabilities.length > 0 ? (
-                  <div className="space-y-4">
-                    {results.vulnerabilities.map((vuln: any, index: number) => (
-                      <div key={index} className="p-3 bg-scanner-dark rounded-md border border-gray-700">
-                        <div className="flex items-start justify-between">
-                          <div className="flex items-center">
-                            <AlertTriangle className="h-5 w-5 text-red-500 mr-2" />
-                            <span className="font-medium">{vuln.name}</span>
-                          </div>
-                          <Badge className={getSeverityColor(vuln.severity)}>
-                            {vuln.severity}
-                          </Badge>
-                        </div>
-                        <div className="mt-2 text-sm text-gray-400">
-                          <p><span className="font-medium">Path:</span> {vuln.path}</p>
-                          <p><span className="font-medium">Details:</span> {vuln.details}</p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-8 text-gray-400">
-                    <Shield className="h-12 w-12 mx-auto mb-2" />
-                    <p>No vulnerabilities detected</p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-          
-          <TabsContent value="headers" className="pt-4">
-            <Card className="bg-scanner-dark-alt border-gray-700">
-              <CardContent className="pt-4">
-                {results.headers && Object.keys(results.headers).length > 0 ? (
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-left">
-                      <thead>
-                        <tr className="text-gray-400 border-b border-gray-700">
-                          <th className="pb-2">Header</th>
-                          <th className="pb-2">Value</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {Object.entries(results.headers).map(([header, value]: any, index: number) => (
-                          value && (
-                            <tr key={index} className="border-b border-gray-800">
-                              <td className="py-2 font-medium">{header}</td>
-                              <td className="py-2 text-gray-300">{value}</td>
-                            </tr>
-                          )
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                ) : (
-                  <div className="text-center py-8 text-gray-400">
-                    <Server className="h-12 w-12 mx-auto mb-2" />
-                    <p>No header information available</p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
-      )}
-    </div>
+              Start Scan
+            </>
+          )}
+        </Button>
+
+        {error && (
+          <div className="text-red-500 mt-2 flex items-center">
+            <AlertTriangle className="mr-2 h-4 w-4" />
+            {error}
+          </div>
+        )}
+
+        {results && (
+          <div className="mt-4">
+            <h3 className="text-sm font-medium mb-2">Scan Results:</h3>
+            <div className="bg-scanner-dark-alt rounded-md border border-gray-700 p-4 space-y-4">
+              <div className="flex justify-between items-center">
+                <div className="flex items-center">
+                  <Globe className="mr-2 h-4 w-4" />
+                  <span className="text-gray-400">Target:</span>
+                </div>
+                <span className="font-mono">{results.target}</span>
+              </div>
+
+              <div className="flex justify-between items-center">
+                <div className="flex items-center">
+                  <Shield className="mr-2 h-4 w-4" />
+                  <span className="text-gray-400">Scan Type:</span>
+                </div>
+                <span className="capitalize">{results.mode}</span>
+              </div>
+
+              <div className="flex justify-between items-center">
+                <div className="flex items-center">
+                  <Server className="mr-2 h-4 w-4" />
+                  <span className="text-gray-400">Technologies:</span>
+                </div>
+                <span>
+                  {results.technologies && results.technologies.length > 0 ? (
+                    results.technologies.join(', ')
+                  ) : (
+                    'N/A'
+                  )}
+                </span>
+              </div>
+
+              <div className="flex justify-between items-center">
+                <div className="flex items-center">
+                  <Database className="mr-2 h-4 w-4" />
+                  <span className="text-gray-400">Vulnerabilities:</span>
+                </div>
+                <span>{results.vulnerabilities?.length || 0}</span>
+              </div>
+
+              {results.vulnerabilities && results.vulnerabilities.length > 0 && (
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Vulnerability</TableHead>
+                        <TableHead>Severity</TableHead>
+                        <TableHead>Path</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {results.vulnerabilities.map((vuln, index) => (
+                        <TableRow key={index}>
+                          <TableCell className="font-medium">{vuln.name}</TableCell>
+                          <TableCell>{vuln.severity}</TableCell>
+                          <TableCell className="font-mono text-xs">{vuln.path}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 };
+
+export default WebHackTool;

@@ -25,7 +25,7 @@ const FFmpegTool: React.FC = () => {
       setIsConverting(true);
       setResults(null);
       
-      const result = await ffmpegConvertRtspToHls(inputStream, `output_${Date.now()}.m3u8`);
+      const result = await ffmpegConvertRtspToHls(inputStream);
       
       if (result.success) {
         toast({

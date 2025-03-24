@@ -62,23 +62,14 @@ export interface CameraResult {
     description: string;
   }>;
   accessible?: boolean;
-  threatIntelligence?: {
-    associatedMalware?: string[];
-    knownExploits?: string[];
-    lastUpdated?: string;
-  };
+  threatIntelligence?: ThreatIntelData;
   firmware?: {
     version?: string;
     vulnerabilities?: string[];
     updateAvailable?: boolean;
     lastChecked?: string;
   };
-  // Required by some implementations
-  threatIntel?: {
-    associatedMalware?: string[];
-    knownExploits?: string[];
-    lastUpdated?: string;
-  };
+  threatIntel?: ThreatIntelData;
   country?: string;
   brand?: string;
   accessLevel?: 'none' | 'view' | 'control' | 'admin';
@@ -142,6 +133,10 @@ export interface HackCCTVParams {
   limit?: number;
   timeout?: number;
   scanType?: string;
+  deepScan?: boolean;
+  bruteforce?: boolean;
+  exploitType?: string;
+  ports?: string;
 }
 
 // Specific tool parameter interfaces
@@ -166,6 +161,10 @@ export interface WebHackParams {
   mode?: string;
   url?: string;
   scanType?: string;
+  findVulnerabilities?: boolean;
+  checkHeaders?: boolean;
+  testXss?: boolean;
+  testSql?: boolean;
 }
 
 export interface SpeedCameraParams {
@@ -234,6 +233,10 @@ export interface RapidPayloadParams {
   options?: Record<string, any>;
   format?: string;
   lhost?: string;
+  lport?: number;
+  encode?: boolean;
+  encryption?: string;
+  outputPath?: string;
 }
 
 export interface HackingToolParams {
@@ -248,14 +251,13 @@ export interface SecurityAdminParams {
   options?: Record<string, any>;
   scanType?: string;
   target?: string;
+  fixVulnerabilities?: boolean;
+  reportFormat?: string;
 }
 
 export interface FFmpegParams {
-  input?: string;
-  output?: string;
-  inputStream?: string;
-  outputPath?: string;
-  outputFormat?: string;
+  input: string;
+  output: string;
   videoCodec?: string;
   audioCodec?: string;
   resolution?: string;
@@ -263,16 +265,20 @@ export interface FFmpegParams {
   framerate?: string;
   filters?: string[];
   options?: Record<string, any>;
+  inputStream?: string;
+  outputPath?: string;
+  outputFormat?: string;
 }
 
 // Additional type for threat intelligence data
 export interface ThreatIntelData {
-  ipReputation?: number; // 0-100, higher is better
+  ipReputation: number; // 0-100, higher is better
   lastReportedMalicious?: string; // ISO date string
   associatedMalware?: string[]; // List of malware names
   reportedBy?: string[]; // List of sources
   firstSeen?: string; // ISO date string
   tags?: string[]; // Tags associated with the IP
-  confidenceScore?: number; // 0-100
-  source?: string; // Source of the threat intel
+  confidenceScore: number; // 0-100
+  source: string; // Source of the threat intel
 }
+

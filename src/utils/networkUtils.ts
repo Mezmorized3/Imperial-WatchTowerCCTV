@@ -1,228 +1,133 @@
-/**
- * Network utility functions for networking operations
- */
 
 /**
- * Simulates a network delay for realistic testing
+ * Network utility functions for discovery and analysis
  */
-export const simulateNetworkDelay = (ms: number): Promise<void> => {
-  return new Promise(resolve => setTimeout(resolve, ms));
+
+import { ProxyConfig } from './osintToolTypes';
+
+export const simulateNetworkDelay = (ms: number = 1000) => {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 };
 
-/**
- * Fetches WHOIS data for a domain
- */
-export const fetchWhoisData = async (domain: string): Promise<any> => {
-  try {
-    // Use a real WHOIS API service
-    const response = await fetch(`https://whois.freeaiapi.io/?domain=${domain}`);
-    if (!response.ok) {
-      throw new Error(`WHOIS API returned status: ${response.status}`);
-    }
-    return await response.json();
-  } catch (error) {
-    console.error('Error fetching WHOIS data:', error);
-    throw error;
-  }
-};
-
-/**
- * Fetches DNS records for a domain
- */
-export const fetchDnsRecords = async (domain: string, recordType = 'A'): Promise<any[]> => {
-  try {
-    // Use a real DNS API service
-    const response = await fetch(`https://dns.google/resolve?name=${domain}&type=${recordType}`);
-    if (!response.ok) {
-      throw new Error(`DNS API returned status: ${response.status}`);
-    }
-    const data = await response.json();
+export const parseIpRange = (ipRange: string): string[] => {
+  // Basic implementation to parse CIDR notation
+  if (ipRange.includes('/')) {
+    const [baseIp, cidrPart] = ipRange.split('/');
+    const cidr = parseInt(cidrPart);
     
-    // Parse the response into a common format
-    return (data.Answer || []).map((record: any) => ({
-      name: record.name,
-      value: record.data,
-      ttl: record.TTL,
-      type: recordType
-    }));
-  } catch (error) {
-    console.error('Error fetching DNS records:', error);
-    throw error;
-  }
-};
-
-/**
- * Parses an IP range in CIDR notation to start and end IPs
- */
-export const parseIpRange = (cidrRange: string): { startIp: string; endIp: string; count: number } => {
-  try {
-    const [baseIp, prefixBits] = cidrRange.split('/');
-    const prefixSize = parseInt(prefixBits, 10);
+    // For simplicity, return a few IPs in the range for simulation
+    const ipParts = baseIp.split('.');
+    const results: string[] = [];
     
-    if (isNaN(prefixSize) || prefixSize < 0 || prefixSize > 32) {
-      throw new Error('Invalid prefix size in CIDR range');
+    // Generate 10 IPs in the range
+    for (let i = 0; i < 10; i++) {
+      const lastOctet = parseInt(ipParts[3]) + i;
+      if (lastOctet <= 255) {
+        results.push(`${ipParts[0]}.${ipParts[1]}.${ipParts[2]}.${lastOctet}`);
+      }
     }
     
-    const ipNum = ipToNumber(baseIp);
-    const mask = ~(0xFFFFFFFF >>> prefixSize);
-    const startIpNum = ipNum & mask;
-    const endIpNum = startIpNum | ~mask;
-    
-    return {
-      startIp: numberToIp(startIpNum),
-      endIp: numberToIp(endIpNum),
-      count: endIpNum - startIpNum + 1
-    };
-  } catch (error) {
-    console.error('Error parsing IP range:', error);
-    throw error;
+    return results;
   }
-};
-
-/**
- * Analyzes a website for various security and performance metrics
- */
-export const analyzeWebsite = async (domain: string): Promise<any> => {
-  try {
-    await simulateNetworkDelay(2000);
+  
+  // Handle range notation like 192.168.1.1-10
+  if (ipRange.includes('-')) {
+    const [start, end] = ipRange.split('-');
+    const results: string[] = [];
     
-    // In a real implementation, this would connect to an API or use a headless browser
-    return {
-      performance: {
-        score: Math.floor(Math.random() * 100),
-        loadTime: Math.floor(Math.random() * 5000) + 500,
-        resourceSize: Math.floor(Math.random() * 10000) + 100,
-        requests: Math.floor(Math.random() * 100) + 10
-      },
-      security: {
-        score: Math.floor(Math.random() * 100),
-        ssl: {
-          valid: Math.random() > 0.2,
-          grade: ['A+', 'A', 'B', 'C'][Math.floor(Math.random() * 4)],
-          expiresOn: new Date(Date.now() + Math.random() * 31536000000).toISOString(),
-          issuer: ['Let\'s Encrypt', 'DigiCert', 'Comodo', 'GeoTrust'][Math.floor(Math.random() * 4)]
-        },
-        headers: {
-          xssProtection: Math.random() > 0.5,
-          contentSecurity: Math.random() > 0.6,
-          frameOptions: Math.random() > 0.4,
-          hsts: Math.random() > 0.7
-        },
-        vulnerabilities: Math.random() > 0.7 ? [] : [
-          { name: 'XSS', severity: 'high', url: '/contact' },
-          { name: 'CSRF', severity: 'medium', url: '/login' },
-          { name: 'Outdated Library', severity: 'low', url: '/js/jquery.js' }
-        ]
-      },
-      seo: {
-        score: Math.floor(Math.random() * 100),
-        title: Math.random() > 0.2,
-        description: Math.random() > 0.3,
-        headings: Math.random() > 0.4,
-        responseTime: Math.floor(Math.random() * 500) + 50
-      },
-      technologies: [
-        'WordPress',
-        'PHP',
-        'jQuery',
-        'Apache',
-        'MySQL',
-        'Bootstrap',
-        'Google Analytics'
-      ].filter(() => Math.random() > 0.5)
-    };
-  } catch (error) {
-    console.error('Error analyzing website:', error);
-    throw error;
+    if (start.includes('.')) {
+      const baseParts = start.split('.');
+      const startNum = parseInt(baseParts[3]);
+      const endNum = parseInt(end);
+      
+      for (let i = startNum; i <= endNum && i <= 255; i++) {
+        results.push(`${baseParts[0]}.${baseParts[1]}.${baseParts[2]}.${i}`);
+      }
+    }
+    
+    return results;
   }
+  
+  // Single IP
+  return [ipRange];
 };
 
-/**
- * Calculates the subnet size from a CIDR notation
- */
-export const calculateSubnetSize = (cidr: string): number => {
-  const parts = cidr.split('/');
-  if (parts.length !== 2) return 0;
+export const analyzeWebsite = async (url: string) => {
+  // Simulate website analysis
+  await simulateNetworkDelay(1500);
   
-  const prefix = parseInt(parts[1], 10);
-  if (isNaN(prefix) || prefix < 0 || prefix > 32) return 0;
-  
-  return Math.pow(2, 32 - prefix);
+  return {
+    url,
+    statusCode: 200,
+    server: 'nginx/1.19.3',
+    technologies: ['WordPress', 'PHP', 'MySQL', 'jQuery'],
+    headers: {
+      'Content-Type': 'text/html',
+      'Server': 'nginx/1.19.3',
+      'X-Powered-By': 'PHP/7.4.11'
+    },
+    cookies: [
+      { name: 'session', secure: true, httpOnly: true },
+      { name: 'tracking', secure: false, httpOnly: false }
+    ],
+    securityHeaders: {
+      'Content-Security-Policy': 'missing',
+      'X-XSS-Protection': 'present',
+      'X-Frame-Options': 'present'
+    },
+    ports: [80, 443, 8080],
+    vulnerabilities: [
+      { name: 'Outdated jQuery', severity: 'medium', description: 'The site is using an outdated jQuery library with known vulnerabilities.' },
+      { name: 'Sensitive Files Exposed', severity: 'high', description: 'Backup files are accessible on the server.' }
+    ]
+  };
 };
 
-/**
- * Converts an IP address to its numeric representation
- */
-export const ipToNumber = (ip: string): number => {
-  const parts = ip.split('.');
-  if (parts.length !== 4) return 0;
+export const performPortScan = async (target: string, ports: string) => {
+  // Simulate port scanning
+  await simulateNetworkDelay(2000);
   
-  return ((parseInt(parts[0], 10) << 24) >>> 0) +
-         ((parseInt(parts[1], 10) << 16) >>> 0) +
-         ((parseInt(parts[2], 10) << 8) >>> 0) +
-         parseInt(parts[3], 10);
+  const portList = ports.split(',').map(p => parseInt(p.trim()));
+  const openPorts = portList.filter(() => Math.random() > 0.5);
+  
+  return {
+    target,
+    scanned: portList.length,
+    open: openPorts.length,
+    openPorts
+  };
 };
 
-/**
- * Converts a numeric representation to an IP address
- */
-export const numberToIp = (num: number): string => {
-  return [
-    (num >>> 24) & 255,
-    (num >>> 16) & 255,
-    (num >>> 8) & 255,
-    num & 255
-  ].join('.');
+export const checkForCVEs = async (software: string, version: string) => {
+  // Simulate CVE lookup
+  await simulateNetworkDelay(1000);
+  
+  return {
+    software,
+    version,
+    cveCount: Math.floor(Math.random() * 5),
+    cves: [
+      { id: 'CVE-2022-1234', severity: 'high', description: 'Remote code execution vulnerability' },
+      { id: 'CVE-2021-5678', severity: 'medium', description: 'Cross-site scripting vulnerability' }
+    ]
+  };
 };
 
-/**
- * Generates a random IP address within a given subnet
- */
-export const getRandomIpInSubnet = (subnet: string): string => {
-  const [base, cidr] = subnet.split('/');
-  if (!base || !cidr) return '';
-  
-  const baseNum = ipToNumber(base);
-  const size = calculateSubnetSize(subnet);
-  
-  if (size === 0) return '';
-  
-  const randomOffset = Math.floor(Math.random() * (size - 2)) + 1;
-  return numberToIp(baseNum + randomOffset);
+export const setupProxy = (config: ProxyConfig) => {
+  console.log('Setting up proxy with config:', config);
+  return {
+    connected: true,
+    externalIp: '45.67.89.123',
+    latency: 120,
+    config
+  };
 };
 
-/**
- * Sends a ping to the specified host to check if it's alive
- */
-export const pingHost = async (host: string, timeout = 1000): Promise<{alive: boolean, responseTime?: number}> => {
-  try {
-    const startTime = performance.now();
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), timeout);
-    
-    const response = await fetch(`https://${host}`, {
-      method: 'HEAD',
-      signal: controller.signal,
-      mode: 'no-cors'
-    });
-    
-    clearTimeout(timeoutId);
-    const endTime = performance.now();
-    
-    return {
-      alive: true,
-      responseTime: Math.round(endTime - startTime)
-    };
-  } catch (error) {
-    return { alive: false };
-  }
-};
-
-/**
- * Performs a traceroute to the specified host
- */
-export const traceroute = async (host: string): Promise<any[]> => {
-  console.log('Traceroute is not natively supported in browsers');
-  // In a real implementation, this would be handled by a backend service
-  throw new Error('Traceroute requires server-side implementation');
+export default {
+  parseIpRange,
+  simulateNetworkDelay,
+  performPortScan,
+  checkForCVEs,
+  setupProxy,
+  analyzeWebsite
 };

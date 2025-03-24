@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -38,14 +37,13 @@ const RapidPayloadTool: React.FC = () => {
       setResults(null);
       
       const params: RapidPayloadParams = {
-        targetOS: payloadType, // Add targetOS and set it equal to payloadType
-        payloadType,
-        format,
-        lhost,
-        lport,
-        encode,
-        encryption,
-        outputPath: `payload_${Date.now()}.${format}`
+        targetOS: payloadType,
+        payloadType: payloadType,
+        format: format,
+        lhost: lhost,
+        lport: lport,
+        encode: encode,
+        encryption: encryption
       };
       
       const result = await executeRapidPayload(params);
@@ -91,7 +89,6 @@ const RapidPayloadTool: React.FC = () => {
               value={payloadType} 
               onValueChange={(value: 'windows' | 'android' | 'linux' | 'macos' | 'web') => {
                 setPayloadType(value);
-                // Set default format for the selected platform
                 setFormat(formatOptions[value][0]);
               }}
             >

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -67,10 +66,9 @@ const AdvancedWebHackTool: React.FC = () => {
         target: url,
         mode: scanType,
         scanType,
-        findVulnerabilities: true,
-        checkHeaders: options.checkHeaderVulnerabilities,
         testXss: options.checkXss,
-        testSql: options.checkSqlInjection
+        testSql: options.checkSqlInjection,
+        checkHeaders: options.checkHeaderVulnerabilities
       };
       
       const result = await executeWebhack(params);
