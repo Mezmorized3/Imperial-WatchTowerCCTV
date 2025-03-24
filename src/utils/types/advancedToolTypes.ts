@@ -17,6 +17,9 @@ export interface RapidPayloadParams extends ToolParams {
     lport?: number;
   };
   output?: string;
+  targetOS?: string;
+  encode?: boolean;
+  encryption?: string;
 }
 
 export interface HackingToolParams extends ToolParams {
@@ -31,6 +34,8 @@ export interface SecurityAdminParams extends ToolParams {
   target?: string;
   tool: string;
   mode?: string;
+  command?: string;
+  scanType?: string;
   options?: {
     [key: string]: any;
   };
@@ -49,7 +54,7 @@ export interface FFmpegParams extends ToolParams {
 
 export interface ImperialShieldParams extends ToolParams {
   target: string;
-  mode?: 'analyze' | 'defend' | 'monitor';
+  mode?: 'analyze' | 'defend' | 'monitor' | 'test';
   options?: {
     scanLevel?: 'basic' | 'advanced' | 'royal';
     alertThreshold?: number;

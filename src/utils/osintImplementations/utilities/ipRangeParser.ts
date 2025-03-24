@@ -1,11 +1,12 @@
 
 /**
- * Utility to parse IP ranges in various formats
+ * IP range parser utility
  */
 
 /**
- * Parses an IP range string into an array of IP addresses
- * Supports CIDR notation (192.168.1.0/24) and range notation (192.168.1.1-10)
+ * Parses an IP range in CIDR notation and returns an array of IPs
+ * @param ipRange The IP range to parse (e.g., 192.168.1.0/24)
+ * @returns An array of individual IP addresses
  */
 export const parseIpRange = (ipRange: string): string[] => {
   // Basic implementation to parse CIDR notation
@@ -13,12 +14,13 @@ export const parseIpRange = (ipRange: string): string[] => {
     const [baseIp, cidrPart] = ipRange.split('/');
     const cidr = parseInt(cidrPart);
     
-    // For simplicity, return a few IPs in the range for simulation
+    // For simulation, return a few IPs in the range
     const ipParts = baseIp.split('.');
     const results: string[] = [];
     
-    // Generate 10 IPs in the range
-    for (let i = 0; i < 10; i++) {
+    // Generate up to 10 IPs in the range
+    const count = Math.min(10, Math.pow(2, 32 - cidr));
+    for (let i = 0; i < count; i++) {
       const lastOctet = parseInt(ipParts[3]) + i;
       if (lastOctet <= 255) {
         results.push(`${ipParts[0]}.${ipParts[1]}.${ipParts[2]}.${lastOctet}`);
@@ -38,8 +40,12 @@ export const parseIpRange = (ipRange: string): string[] => {
       const startNum = parseInt(baseParts[3]);
       const endNum = parseInt(end);
       
-      for (let i = startNum; i <= endNum && i <= 255; i++) {
-        results.push(`${baseParts[0]}.${baseParts[1]}.${baseParts[2]}.${i}`);
+      const count = Math.min(10, endNum - startNum + 1);
+      for (let i = 0; i < count; i++) {
+        const lastOctet = startNum + i;
+        if (lastOctet <= 255) {
+          results.push(`${baseParts[0]}.${baseParts[1]}.${baseParts[2]}.${lastOctet}`);
+        }
       }
     }
     
@@ -48,4 +54,16 @@ export const parseIpRange = (ipRange: string): string[] => {
   
   // Single IP
   return [ipRange];
+};
+
+/**
+ * Estimates the number of IP addresses in a CIDR range
+ * @param cidr The CIDR range (e.g., 192.168.1.0/24)
+ * @returns The number of IP addresses in the range
+ */
+export const countIpsInRange = (cidr: string): number => {
+  if (!cidr.includes('/')) return 1;
+  
+  const prefix = parseInt(cidr.split('/')[1]);
+  return Math.pow(2, 32 - prefix);
 };

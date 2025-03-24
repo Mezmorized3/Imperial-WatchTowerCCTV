@@ -97,10 +97,12 @@ export const executeCCTV = async (params: CCTVParams): Promise<ScanResult> => {
     ip: `${params.region === 'us' ? '11' : '9'}2.168.1.${10 + i}`,
     port: 554,
     model: `CCTV Camera ${i}`,
-    location: params.region.toUpperCase(),
     status: 'online',
     lastSeen: new Date().toISOString(),
-    accessLevel: 'none'
+    accessLevel: 'none',
+    geolocation: {
+      country: params.country || params.region.toUpperCase()
+    }
   }));
   
   return {
@@ -159,7 +161,7 @@ export const executeCamerattack = async (params: CamerattackParams): Promise<Sca
   const camera: CameraResult = {
     id: `attack-target`,
     ip: params.target,
-    port: 554,
+    port: params.port || 554,
     status: 'vulnerable',
     lastSeen: new Date().toISOString(),
     accessLevel: 'none',

@@ -33,7 +33,7 @@ export interface ImperialOculusParams extends ToolParams {
 
 export interface ShieldAIParams extends ToolParams {
   target: string;
-  mode?: string;
+  mode?: 'analyze' | 'defend' | 'monitor';
   scanType?: string;
   options?: {
     [key: string]: any;
@@ -52,4 +52,13 @@ export interface TokenBlacklistParams extends ToolParams {
   action: 'add' | 'check' | 'remove';
   token: string;
   expiry?: number;
+}
+
+export interface ChromeExtensionParams extends ToolParams {
+  command: 'authenticate' | 'scan' | 'monitor' | 'defend';
+  extensionId?: string;
+  token?: string;
+  options?: {
+    [key: string]: any;
+  };
 }

@@ -1,14 +1,21 @@
 
 /**
  * Implementation for hackCCTV tools
- * Based on https://github.com/mohammadmahdi-termux/hackCCTV
+ * Based on implementations from:
+ * - https://github.com/Whomrx666/Hack-cctv
+ * - https://github.com/akashblackhat/cctv-Hack.py
+ * - https://github.com/er4vn/Cam-Dumper
+ * - https://github.com/nak0823/OpenCCTV
+ * - https://github.com/Rihan444/CCTV_HACKED
  */
 
 import { simulateNetworkDelay } from '../networkUtils';
 import { 
   ScanResult,
-  HackCCTVParams
-} from '../osintToolTypes';
+  HackCCTVParams,
+  CameraResult,
+  CameraStatus
+} from '../types/cameraTypes';
 import { nanoid } from 'nanoid';
 
 // Custom parseIpRange implementation since the import is failing
@@ -73,42 +80,42 @@ const defaultCredentials = [
 const commonVulnerabilities = [
   {
     name: 'Default Credentials',
-    severity: 'high',
+    severity: 'high' as const,
     description: 'The camera uses factory default username and password'
   },
   {
     name: 'Telnet Enabled',
-    severity: 'critical',
+    severity: 'critical' as const,
     description: 'Telnet service is enabled on this device'
   },
   {
     name: 'Outdated Firmware',
-    severity: 'medium',
+    severity: 'medium' as const,
     description: 'Camera firmware has known security vulnerabilities'
   },
   {
     name: 'Unencrypted RTSP Stream',
-    severity: 'medium',
+    severity: 'medium' as const,
     description: 'Video stream is transmitted without encryption'
   },
   {
     name: 'Web Interface XSS',
-    severity: 'high',
+    severity: 'high' as const,
     description: 'Web interface is vulnerable to cross-site scripting attacks'
   },
   {
     name: 'Authentication Bypass',
-    severity: 'critical',
+    severity: 'critical' as const,
     description: 'Camera has known authentication bypass vulnerabilities'
   },
   {
     name: 'Command Injection',
-    severity: 'critical',
+    severity: 'critical' as const,
     description: 'Device is vulnerable to command injection attacks via the web interface'
   },
   {
     name: 'Insecure Password Storage',
-    severity: 'high',
+    severity: 'high' as const,
     description: 'Passwords are stored in cleartext or with weak encryption'
   }
 ];
@@ -154,7 +161,7 @@ const simulateBruteforce = (ip: string, port: number = 80): { success: boolean; 
 
 /**
  * Executes the hackCCTV tool to find vulnerable CCTV cameras
- * Based on https://github.com/mohammadmahdi-termux/hackCCTV
+ * Based on multiple implementations from GitHub repos
  */
 export const executeHackCCTV = async (params: HackCCTVParams): Promise<ScanResult> => {
   await simulateNetworkDelay(2000);
@@ -164,28 +171,7 @@ export const executeHackCCTV = async (params: HackCCTVParams): Promise<ScanResul
   const targetIPs: string[] = [];
   
   if (params.target) {
-    targetIPs.push(params.target);
-  } else if (params.target) { // Using 'target' instead of the incorrect 'targetRange'
-    // Use parseIpRange utility
-    if (params.target.includes('/')) {
-      targetIPs.push(...parseIpRange(params.target).slice(0, 10));
-    } else if (params.target.includes('-')) {
-      // Simple range like 192.168.1.1-10
-      const parts = params.target.split('-');
-      if (parts.length === 2) {
-        const baseIP = parts[0].substring(0, parts[0].lastIndexOf('.') + 1);
-        const startNum = parseInt(parts[0].substring(parts[0].lastIndexOf('.') + 1));
-        const endNum = parseInt(parts[1]);
-        
-        for (let i = startNum; i <= endNum; i++) {
-          targetIPs.push(`${baseIP}${i}`);
-        }
-      } else {
-        targetIPs.push(params.target);
-      }
-    } else {
-      targetIPs.push(params.target);
-    }
+    targetIPs.push(...parseIpRange(params.target));
   } else {
     // Generate some random IPs for demo
     for (let i = 0; i < 5; i++) {
@@ -196,7 +182,7 @@ export const executeHackCCTV = async (params: HackCCTVParams): Promise<ScanResul
   
   // Limit the number of targets for the simulation
   const limitedTargets = targetIPs.slice(0, params.deepScan ? 10 : 5);
-  const results: any[] = [];
+  const results: CameraResult[] = [];
   
   // Process each target IP
   for (const ip of limitedTargets) {
@@ -224,24 +210,47 @@ export const executeHackCCTV = async (params: HackCCTVParams): Promise<ScanResul
       // Generate vulnerabilities based on the camera model
       const vulnerabilities = camera.vulnerabilities.map(index => commonVulnerabilities[index]);
       
+      // Determine the country based on IP pattern
+      let country = 'United States';
+      if (ip.startsWith('5.152.') || ip.startsWith('31.146.') || ip.startsWith('37.110.')) {
+        country = 'Georgia';
+      } else if (ip.startsWith('5.2.') || ip.startsWith('5.12.') || ip.startsWith('31.5.')) {
+        country = 'Romania';
+      } else if (ip.startsWith('5.1.') || ip.startsWith('5.58.') || ip.startsWith('5.105.')) {
+        country = 'Ukraine';
+      } else if (ip.startsWith('5.3.') || ip.startsWith('5.8.') || ip.startsWith('5.16.')) {
+        country = 'Russia';
+      }
+      
+      // Generate a city based on the country
+      const cities: Record<string, string[]> = {
+        'Georgia': ['Tbilisi', 'Batumi', 'Kutaisi', 'Rustavi'],
+        'Romania': ['Bucharest', 'Cluj-Napoca', 'Timișoara', 'Iași'],
+        'Ukraine': ['Kyiv', 'Lviv', 'Odesa', 'Kharkiv'],
+        'Russia': ['Moscow', 'Saint Petersburg', 'Kazan', 'Novosibirsk'],
+        'United States': ['New York', 'Los Angeles', 'Chicago', 'Houston']
+      };
+      
+      const cityList = cities[country] || cities['United States'];
+      const city = cityList[Math.floor(Math.random() * cityList.length)];
+      
       // Generate a result for this camera
       results.push({
         id: nanoid(),
         ip,
         port,
-        brand: camera.brand,
-        model: `${camera.model}${Math.floor(Math.random() * 100)}`,
+        model: `${camera.brand} ${camera.model}${Math.floor(Math.random() * 100)}`,
+        manufacturer: camera.brand,
         rtspUrl: `rtsp://${ip}:${port === 554 ? 554 : '554'}/live/ch0`,
-        status: Math.random() > 0.2 ? 'online' : 'offline', // 80% chance to be online
+        status: credentials !== null ? 'vulnerable' : (Math.random() > 0.2 ? 'online' : 'offline') as CameraStatus,
+        lastSeen: new Date().toISOString(),
+        accessLevel: credentials !== null ? 'admin' : 'none',
         credentials,
         vulnerabilities,
-        accessible: credentials !== null,
         geolocation: {
-          country: ['United States', 'United Kingdom', 'Germany', 'France', 'China', 'Russia', 'Japan'][Math.floor(Math.random() * 7)],
-          city: ['New York', 'London', 'Berlin', 'Paris', 'Beijing', 'Moscow', 'Tokyo'][Math.floor(Math.random() * 7)]
-        },
-        lastSeen: new Date(),
-        accessLevel: credentials ? 'admin' : 'none'
+          country,
+          city
+        }
       });
     }
   }
