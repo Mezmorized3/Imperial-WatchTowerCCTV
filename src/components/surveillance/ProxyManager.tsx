@@ -1,7 +1,8 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ProxyConfig } from "@/utils/osintToolTypes";
+import { ProxyConfig } from "@/utils/types/baseTypes";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Activity, Shield, Globe, AlertTriangle } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";

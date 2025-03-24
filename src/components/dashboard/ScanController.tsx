@@ -1,11 +1,11 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { useToast } from '@/components/ui/use-toast';
-import { scanNetwork, ScanSettings as NetworkScanSettings } from '@/utils/networkScanner';
+import scanNetwork, { ScanSettings as NetworkScanSettings } from '@/utils/networkScanner';
 import { ScanTarget, ScanProgress, CameraResult, ScanSettings } from '@/types/scanner';
 import { getIpGeolocation } from '@/utils/osintUtils';
-import { ProxyConfig } from '@/utils/osintToolTypes';
-import { CameraResult as OsintCameraResult } from '@/utils/osintToolTypes';
+import { ProxyConfig } from '@/utils/types/baseTypes';
+import { CameraResult as OsintCameraResult } from '@/utils/types/cameraTypes';
 import { getCountryIpRanges, getRandomIpInRange } from '@/utils/ipRangeUtils';
 
 interface ScanControllerProps {

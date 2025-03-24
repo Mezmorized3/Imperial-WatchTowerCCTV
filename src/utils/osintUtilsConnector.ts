@@ -21,7 +21,7 @@ import {
   HackingToolParams,
   FFmpegParams,
   SecurityAdminParams
-} from './osintToolTypes';
+} from './types/osintToolTypes';
 
 import {
   executeExternalTool,
@@ -30,6 +30,13 @@ import {
 } from './github/externalToolsConnector';
 
 import { imperialServerService } from './imperialServerService';
+
+// Fix: Define ToolExecutionResult interface to match expected structure
+interface ToolExecutionResult<T> {
+  success: boolean;
+  data?: T;
+  error?: string;
+}
 
 /**
  * Base function to execute any OSINT tool through the server API
@@ -86,7 +93,14 @@ const executeToolLocallyIfAvailable = async <T extends object>(
       }
     });
     
-    return await executeExternalTool(toolName, args);
+    // Fix: Handle the case when data might be undefined in ToolExecutionResult
+    const result = await executeExternalTool(toolName, args);
+    return {
+      success: result.success,
+      data: result.data || {}, // Ensure data is always defined
+      error: result.error,
+      simulatedData: false
+    };
   }
   
   // If tool is not available, try to set it up
@@ -301,7 +315,14 @@ const simulateToolExecution = async (toolName: string, params: any): Promise<Too
       }
     });
     
-    return await executeExternalTool(toolName, args);
+    // Fix: Handle the case when data might be undefined in ToolExecutionResult
+    const result = await executeExternalTool(toolName, args);
+    return {
+      success: result.success,
+      data: result.data || {}, // Ensure data is always defined
+      error: result.error,
+      simulatedData: false
+    };
   }
   
   // If tool is not available, try to set it up

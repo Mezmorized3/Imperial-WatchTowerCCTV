@@ -44,5 +44,5 @@ export interface FFmpegParams {
   inputStream?: string;
   outputPath?: string;
   outputFormat?: string;
-  duration?: string;
+  duration?: string; // Add duration property to fix missing property error
 }

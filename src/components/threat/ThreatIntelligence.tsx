@@ -5,15 +5,19 @@ import { Shield, HardDrive, Server } from 'lucide-react';
 import ThreatReputation from './ThreatReputation';
 import FirmwareDetails from './FirmwareDetails';
 import ServerStatus from '../ServerStatus';
-import { ThreatIntelData } from '@/utils/types/baseTypes';
-import { CameraResult } from '@/utils/types/cameraTypes';
+import { ThreatIntelData } from '@/types/scanner';
 
+// Add port, status, lastSeen, accessLevel to fix type compatibility
 export interface ThreatIntelligenceProps {
   camera: {
     id: string;
     ip: string;
     model?: string;
     manufacturer?: string;
+    port?: number;
+    status?: string;
+    lastSeen?: string;
+    accessLevel?: 'none' | 'view' | 'control' | 'admin';
     threatIntelligence?: ThreatIntelData;
     threatIntel?: ThreatIntelData;
     firmware?: {
@@ -30,11 +34,11 @@ const ThreatIntelligence: React.FC<ThreatIntelligenceProps> = ({ camera }) => {
     return <div className="p-4 text-muted-foreground">Select a camera to view threat intelligence.</div>;
   }
 
-  // Create default ThreatIntelData if missing
+  // Create default ThreatIntelData with proper source type
   const threatIntel: ThreatIntelData = camera.threatIntelligence || camera.threatIntel || {
     ipReputation: 50,
     confidenceScore: 50,
-    source: 'default',
+    source: 'other', // Fix: use one of the allowed source values
     associatedMalware: [],
     lastUpdated: new Date().toISOString()
   };
