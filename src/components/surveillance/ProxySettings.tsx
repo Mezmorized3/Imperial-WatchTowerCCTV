@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -145,7 +146,7 @@ const ProxySettings: React.FC<ProxySettingsProps> = ({ initialConfig, onProxyCha
             </Select>
           </div>
           
-          {config.type !== 'tor' && (
+          {config.type !== "tor" && (
             <>
               <div>
                 <Label htmlFor="proxy-host">Proxy Host</Label>
@@ -181,7 +182,7 @@ const ProxySettings: React.FC<ProxySettingsProps> = ({ initialConfig, onProxyCha
             </>
           )}
           
-          {config.type === 'tor' && (
+          {config.type === "tor" && (
             <div className="flex items-center justify-between">
               <Label htmlFor="use-tor" className="text-sm flex items-center cursor-pointer">
                 <Lock className="h-4 w-4 mr-2" />

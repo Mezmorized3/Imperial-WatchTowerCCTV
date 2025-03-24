@@ -161,7 +161,7 @@ const ImperialOculusTool: React.FC<ImperialOculusToolProps> = ({ onScanComplete 
             <Checkbox
               id="saveResults"
               checked={saveResults}
-              onCheckedChange={setSaveResults}
+              onCheckedChange={(checked) => setSaveResults(checked === true)}
               disabled={isScanning}
             />
           </div>

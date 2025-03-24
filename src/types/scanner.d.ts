@@ -1,3 +1,4 @@
+
 export interface CameraResult {
   id: string;
   ip: string;

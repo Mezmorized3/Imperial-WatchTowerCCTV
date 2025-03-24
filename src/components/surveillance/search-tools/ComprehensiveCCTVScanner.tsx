@@ -10,7 +10,7 @@ import {
   Globe,
   Search,
   Eye,
-  Webcam, // Use Webcam instead of CameraSearch
+  Webcam,
   RotateCw
 } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
@@ -55,8 +55,7 @@ const ComprehensiveCCTVScanner: React.FC<ComprehensiveCCTVScannerProps> = ({ onS
         case 'cameradar':
           result = await executeCameradar({
             target: target || "",
-            ports: "554,8554,8000",
-            timeout: 30000
+            ports: "554,8554,8000"
           });
           break;
           
@@ -73,7 +72,7 @@ const ComprehensiveCCTVScanner: React.FC<ComprehensiveCCTVScannerProps> = ({ onS
         case 'camDumper':
           result = await executeCamDumper({
             target: target || "",
-            method: 'scan', // Add required method property
+            method: 'scan',
             country: selectedCountry
           });
           break;
@@ -89,7 +88,7 @@ const ComprehensiveCCTVScanner: React.FC<ComprehensiveCCTVScannerProps> = ({ onS
         case 'eyePwn':
           result = await executeEyePwn({
             target: target || "",
-            method: 'all', // Add required method property
+            method: 'all',
             country: selectedCountry,
             bruteforce: useBruteforce
           });
@@ -107,8 +106,7 @@ const ComprehensiveCCTVScanner: React.FC<ComprehensiveCCTVScannerProps> = ({ onS
         default:
           result = await executeCameradar({
             target: target || "",
-            ports: "554,8554,8000",
-            timeout: 30000
+            ports: "554,8554,8000"
           });
       }
       
@@ -148,7 +146,7 @@ const ComprehensiveCCTVScanner: React.FC<ComprehensiveCCTVScannerProps> = ({ onS
     try {
       const result = await executeCamDumper({
         target: target || "",
-        method: 'scan', // Add required method property
+        method: 'scan',
         country: selectedCountry
       });
       
@@ -183,7 +181,7 @@ const ComprehensiveCCTVScanner: React.FC<ComprehensiveCCTVScannerProps> = ({ onS
     try {
       const result = await executeEyePwn({
         target: target || "",
-        method: 'all', // Add required method property
+        method: 'all',
         country: selectedCountry,
         bruteforce: useBruteforce
       });

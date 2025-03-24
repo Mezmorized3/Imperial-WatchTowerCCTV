@@ -28,7 +28,6 @@ const AdvancedWebHackTool: React.FC<AdvancedWebHackToolProps> = ({ onScanComplet
   const scanTypes = ['basic', 'full'];
   
   const startScan = async () => {
-    // Validate URL
     if (!targetUrl.startsWith('http')) {
       toast({
         title: "Invalid URL",
@@ -42,10 +41,9 @@ const AdvancedWebHackTool: React.FC<AdvancedWebHackToolProps> = ({ onScanComplet
     setResults(null);
     
     try {
-      // Construct scan parameters
       const params: WebHackParams = {
         url: targetUrl,
-        scanType: scanType as 'basic' | 'full', // Cast the string to the correct type
+        scanType: scanType as 'basic' | 'full',
         timeout: parseInt(timeout),
         checkVulnerabilities: checkVulnerabilities,
         checkSubdomains: checkSubdomains,
@@ -53,7 +51,6 @@ const AdvancedWebHackTool: React.FC<AdvancedWebHackToolProps> = ({ onScanComplet
         saveResults: saveResults
       };
       
-      // Execute the scan
       const result = await executeWebhack(params);
       
       if (result && result.success) {

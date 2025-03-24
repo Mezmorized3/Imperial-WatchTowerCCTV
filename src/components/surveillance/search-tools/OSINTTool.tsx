@@ -4,51 +4,69 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Search, Eye, Globe } from 'lucide-react';
+import { Search, Globe } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
-import { executeOSINT } from '@/utils/osintTools';
+import { executeUsernameSearch, executeTwint, executeOSINT } from '@/utils/osintTools';
 
-export const OSINTTool: React.FC = () => {
+const OSINTTool: React.FC = () => {
   const [query, setQuery] = useState('');
-  const [queryType, setQueryType] = useState('person');
-  const [searchDepth, setSearchDepth] = useState('deep');
-  const [results, setResults] = useState<any>(null);
+  const [searchType, setSearchType] = useState('username');
   const [isLoading, setIsLoading] = useState(false);
+  const [results, setResults] = useState<any>(null);
 
   const handleSearch = async () => {
     if (!query) {
       toast({
-        title: "Query Required",
-        description: "Please enter a query to search",
+        title: "Error",
+        description: "Please enter a search query",
         variant: "destructive"
       });
       return;
     }
-
+    
     setIsLoading(true);
-    toast({
-      title: "OSINT Search Initiated",
-      description: `Searching for ${query}...`,
-    });
-
+    setResults(null);
+    
     try {
-      const scanResults = await executeOSINT({
-        target: query.trim(),
-        type: queryType,
-        depth: searchDepth
-      });
-
-      setResults(scanResults.data);
-      toast({
-        title: "Search Complete",
-        description: scanResults?.simulatedData
-          ? "Showing simulated results (dev mode)"
-          : "OSINT search completed successfully",
-      });
+      let result;
+      
+      switch (searchType) {
+        case 'username':
+          result = await executeUsernameSearch();
+          break;
+        case 'twitter':
+          result = await executeTwint();
+          break;
+        case 'osint':
+          result = await executeOSINT();
+          break;
+        default:
+          toast({
+            title: "Error",
+            description: "Invalid search type",
+            variant: "destructive"
+          });
+          setIsLoading(false);
+          return;
+      }
+      
+      if (result && result.success) {
+        setResults(result.data);
+        toast({
+          title: "Search Complete",
+          description: `Search completed successfully`
+        });
+      } else {
+        toast({
+          title: "Search Failed",
+          description: result?.error || "Unknown error occurred",
+          variant: "destructive"
+        });
+      }
     } catch (error) {
-      console.error('OSINT search error:', error);
+      console.error("Error during search:", error);
       toast({
-        title: "Search Failed",
+        title: "Search Error",
         description: error instanceof Error ? error.message : "An unknown error occurred",
         variant: "destructive"
       });
@@ -58,84 +76,68 @@ export const OSINTTool: React.FC = () => {
   };
 
   return (
-    <div className="space-y-4">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="md:col-span-2">
-          <Input
-            placeholder="Enter name, domain, or company to search"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            className="bg-scanner-dark"
-          />
-        </div>
-        <div>
+    <Card className="w-full shadow-md">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Globe className="h-5 w-5" />
+          OSINT Search Tool
+        </CardTitle>
+        <CardDescription>
+          Perform OSINT searches across various platforms
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="query">Search Query</Label>
+            <Input
+              id="query"
+              placeholder="Enter search query"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              disabled={isLoading}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="searchType">Search Type</Label>
+            <Select 
+              value={searchType} 
+              onValueChange={(value) => setSearchType(value)}
+              disabled={isLoading}
+            >
+              <SelectTrigger id="searchType" className="bg-scanner-dark-alt border-gray-700">
+                <SelectValue placeholder="Select search type" />
+              </SelectTrigger>
+              <SelectContent className="bg-scanner-dark border-gray-700">
+                <SelectItem value="username">Username Search</SelectItem>
+                <SelectItem value="twitter">Twitter (Twint)</SelectItem>
+                <SelectItem value="osint">Generic OSINT</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
           <Button
+            className="w-full"
             onClick={handleSearch}
             disabled={isLoading || !query}
-            className="w-full"
           >
-            {isLoading ? (
-              <>Searching...</>
-            ) : (
-              <>
-                Search OSINT
-              </>
-            )}
+            {isLoading ? 'Searching...' : 'Start Search'}
+            {!isLoading && <Search className="ml-2 h-4 w-4" />}
           </Button>
+
+          {results && (
+            <div className="mt-6 space-y-3">
+              <h3 className="text-lg font-semibold">Search Results</h3>
+              <pre className="text-xs text-muted-foreground">
+                {JSON.stringify(results, null, 2)}
+              </pre>
+            </div>
+          )}
         </div>
-      </div>
-
-      <Card className="bg-scanner-dark-alt border-gray-700">
-        <CardHeader>
-          <CardTitle>Search Options</CardTitle>
-        </CardHeader>
-        <CardContent className="pt-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <Label className="text-sm text-gray-400">Search Type</Label>
-              <Select
-                value={queryType}
-                onChange={(e) => setQueryType(e.target.value)}
-                className="w-full bg-scanner-dark border-gray-700 rounded px-4 py-2 mt-1"
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select a type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="person">Person</SelectItem>
-                  <SelectItem value="domain">Domain</SelectItem>
-                  <SelectItem value="company">Company</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <Label className="text-sm text-gray-400">Search Depth</Label>
-              <Select
-                value={searchDepth}
-                onChange={(e) => setSearchDepth(e.target.value)}
-                className="w-full bg-scanner-dark border-gray-700 rounded px-4 py-2 mt-1"
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select a depth" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="shallow">Shallow</SelectItem>
-                  <SelectItem value="deep">Deep</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {results && (
-        <Card className="bg-scanner-dark-alt border-gray-700">
-          <CardContent className="pt-4">
-            <pre className="text-white">{JSON.stringify(results, null, 2)}</pre>
-          </CardContent>
-        </Card>
-      )}
-    </div>
+      </CardContent>
+    </Card>
   );
 };
+
+export default OSINTTool;

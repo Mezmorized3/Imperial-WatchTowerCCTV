@@ -1,9 +1,13 @@
-import React from 'react';
+
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Search, Shield, Server, FileWarning } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
 import { executeBackHack } from '@/utils/osintTools';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
 
 const BackHackTool = () => {
   const [target, setTarget] = useState('');

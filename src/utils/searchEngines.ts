@@ -6,6 +6,7 @@ import { simulateNetworkDelay } from './networkUtils';
 import { getIpPrefixByCountry, getCountryName, getCountryCities, getCountryCoordinates } from './countryUtils';
 import { getRandomGeoLocation } from './osintUtils';
 import { getCountryIpRanges, getRandomIpInRange } from './ipRangeUtils';
+import { EASTERN_EUROPEAN_COUNTRIES } from './constants/countries';
 
 /**
  * Generate a search query for Shodan
@@ -336,7 +337,8 @@ export async function searchThreatFoxCameras(
       firstSeen: new Date(Date.now() - Math.random() * 31536000000).toISOString(), // Last year
       tags: ['botnet', 'command_control', 'malware_host'].slice(0, Math.floor(Math.random() * 3) + 1),
       confidenceScore: Math.floor(Math.random() * 20) + 80, // High confidence
-      source: 'threatfox' as const
+      source: 'threatfox' as const,
+      lastUpdated: new Date().toISOString()
     };
     
     // Get firmware analysis
@@ -353,11 +355,13 @@ export async function searchThreatFoxCameras(
       status: 'vulnerable' as CameraStatus, // ThreatFox results are likely vulnerable
       vulnerabilities: [
         {
+          id: `VULN-${Math.floor(Math.random() * 1000)}`,
           name: 'Botnet C&C Communication',
           severity: 'critical' as 'critical',
           description: 'Device is communicating with known botnet command and control servers.'
         },
         {
+          id: `VULN-${Math.floor(Math.random() * 1000)}`,
           name: 'Malware Infection',
           severity: 'critical' as 'critical',
           description: 'Device appears to be infected with IoT malware.'

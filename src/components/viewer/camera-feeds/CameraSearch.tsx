@@ -1,5 +1,12 @@
-import React from 'react';
-import CountrySelector from '@/components/ui/CountrySelector';
+import React, { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Card, CardContent } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Search, Filter } from 'lucide-react';
+import { CameraResult } from '@/types/scanner';
 
 interface CameraSearchProps {
   onSearch: (filters: any) => void;

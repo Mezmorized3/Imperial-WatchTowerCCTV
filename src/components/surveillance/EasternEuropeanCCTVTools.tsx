@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ComprehensiveCCTVScanner } from './search-tools/ComprehensiveCCTVScanner';
+import ComprehensiveCCTVScanner from './search-tools/ComprehensiveCCTVScanner';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { Camera, Globe, AlertCircle, Crosshair, Eye } from 'lucide-react';

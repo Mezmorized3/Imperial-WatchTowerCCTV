@@ -27,18 +27,15 @@ const VideoFeeds: React.FC<VideoFeedsProps> = ({ cameras }) => {
   const [activeTab, setActiveTab] = useState<string>('cameralist');
   const [savedFeeds, setSavedFeeds] = useState<{ name: string; url: string }[]>([]);
   
-  // Stream controls
   const [currentStreamUrl, setCurrentStreamUrl] = useState<string>('');
   const [hlsStreamUrl, setHlsStreamUrl] = useState<string>('');
   const [isConverting, setIsConverting] = useState<boolean>(false);
   
-  // Recording controls
   const [isRecording, setIsRecording] = useState<boolean>(false);
   const [recordingId, setRecordingId] = useState<string>('');
   const [recordingDuration, setRecordingDuration] = useState<number>(60);
   const [recordings, setRecordings] = useState<any[]>([]);
   
-  // Media server settings
   const [mediaServerUrl, setMediaServerUrl] = useState<string>('http://localhost:8000');
   
   useEffect(() => {
@@ -51,7 +48,6 @@ const VideoFeeds: React.FC<VideoFeedsProps> = ({ cameras }) => {
       }
     }
     
-    // Load recordings if authenticated
     if (imperialServerService.isAuthenticated()) {
       loadRecordings();
     }
@@ -61,7 +57,6 @@ const VideoFeeds: React.FC<VideoFeedsProps> = ({ cameras }) => {
     try {
       const result = await imperialServerService.getRecordings();
       if (result.success) {
-        // Combine active and completed recordings
         const allRecordings = [
           ...result.activeRecordings.map((rec: any) => ({
             ...rec,
@@ -89,7 +84,6 @@ const VideoFeeds: React.FC<VideoFeedsProps> = ({ cameras }) => {
     try {
       setIsConverting(true);
       
-      // Fix for rtspUrl property not existing, use url instead
       const streamUrl = selectedCamera?.url || customRtspUrl;
       setCurrentStreamUrl(streamUrl);
       
@@ -139,7 +133,6 @@ const VideoFeeds: React.FC<VideoFeedsProps> = ({ cameras }) => {
     try {
       setIsRecording(true);
       
-      // Fix for rtspUrl property not existing, use url instead
       const streamUrl = selectedCamera?.url || customRtspUrl || currentStreamUrl;
       
       if (!streamUrl) {
@@ -166,7 +159,6 @@ const VideoFeeds: React.FC<VideoFeedsProps> = ({ cameras }) => {
           description: result.message || "Recording in progress",
         });
         
-        // Refresh recordings list
         loadRecordings();
       } else {
         toast({
@@ -202,7 +194,6 @@ const VideoFeeds: React.FC<VideoFeedsProps> = ({ cameras }) => {
           description: `Recording saved: ${result.recordingId}`,
         });
         
-        // Refresh recordings list
         loadRecordings();
       } else {
         toast({
@@ -267,8 +258,13 @@ const VideoFeeds: React.FC<VideoFeedsProps> = ({ cameras }) => {
         
         <TabsContent value="search">
           <CameraSearch 
-            setCustomRtspUrl={setCustomRtspUrl}
-            setActiveTab={setActiveTab}
+            onSearch={(filters) => {
+              console.log('Search filters:', filters);
+            }}
+            isLoading={false}
+            totalCameras={cameras.length}
+            onSelectCamera={(camera) => setSelectedCamera(camera)}
+            selectedCamera={selectedCamera}
           />
         </TabsContent>
         
@@ -403,7 +399,6 @@ const VideoFeeds: React.FC<VideoFeedsProps> = ({ cameras }) => {
         </TabsContent>
       </Tabs>
       
-      {/* HLS Player Section */}
       {(showCustomStream || selectedCamera) && (
         <Card className="border-gray-700 bg-scanner-dark-alt mt-6">
           <CardHeader>
@@ -483,3 +478,4 @@ const VideoFeeds: React.FC<VideoFeedsProps> = ({ cameras }) => {
 };
 
 export default VideoFeeds;
+

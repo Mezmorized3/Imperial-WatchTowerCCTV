@@ -1,4 +1,3 @@
-
 /**
  * Imperial Shield utilities
  */
@@ -45,10 +44,11 @@ export async function testImperialShieldConnection(
   if (isSuccessful) {
     return {
       id: `shield-test-${Date.now()}`,
-      target: endpoint,
+      name: 'Test Connection',
+      description: 'Successfully connected to Imperial Shield',
       status: 'secure',
-      timestamp: new Date().toISOString(),
-      findings: [],
+      lastScan: new Date().toISOString(),
+      vulnerabilities: [],
       score: Math.floor(Math.random() * 40) + 60, // 60-100 score
       mode: 'test',
       shieldStatus: 'active',
@@ -58,10 +58,11 @@ export async function testImperialShieldConnection(
   } else {
     return {
       id: `shield-test-${Date.now()}`,
-      target: endpoint,
+      name: 'Test Connection',
+      description: 'Connection timeout or rejected',
       status: 'vulnerable',
-      timestamp: new Date().toISOString(),
-      findings: [
+      lastScan: new Date().toISOString(),
+      vulnerabilities: [
         {
           severity: 'medium',
           description: 'Connection timeout or rejected',
@@ -86,7 +87,7 @@ export async function checkImperialShieldStatus(): Promise<ImperialShieldResult>
   await new Promise(resolve => setTimeout(resolve, 800));
   
   // Generate random status (80% chance of active)
-  const status = Math.random() > 0.2 ? 'active' : Math.random() > 0.5 ? 'inactive' : 'breached';
+  const status = Math.random() > 0.2 ? 'active' : Math.random() > 0.5 ? 'inactive' : 'compromised';
   const securityScore = status === 'active' 
     ? Math.floor(Math.random() * 30) + 70
     : status === 'inactive'
@@ -95,10 +96,11 @@ export async function checkImperialShieldStatus(): Promise<ImperialShieldResult>
   
   return {
     id: `shield-status-${Date.now()}`,
-    target: 'imperial.shield.local',
+    name: 'Shield Status',
+    description: 'Current status of Imperial Shield',
     status: status === 'active' ? 'secure' : status === 'inactive' ? 'unknown' : 'vulnerable',
-    timestamp: new Date().toISOString(),
-    findings: status === 'breached' ? [
+    lastScan: new Date().toISOString(),
+    vulnerabilities: status === 'compromised' ? [
       {
         severity: 'critical',
         description: 'Shield breach detected',
@@ -107,9 +109,9 @@ export async function checkImperialShieldStatus(): Promise<ImperialShieldResult>
     ] : [],
     score: securityScore,
     mode: 'monitor',
-    shieldStatus: status as 'active' | 'inactive' | 'breached',
+    shieldStatus: status as 'active' | 'inactive' | 'compromised',
     securityRating: securityScore,
-    success: status !== 'breached' // Add the success property
+    success: status !== 'compromised' // Add the success property
   };
 }
 
@@ -125,10 +127,11 @@ export async function activateImperialShield(): Promise<ImperialShieldResult> {
   
   return {
     id: `shield-activate-${Date.now()}`,
-    target: 'imperial-matrix',
+    name: 'Activate Shield',
+    description: 'Imperial Shield activated',
     status: success ? 'secure' : 'unknown',
-    timestamp: new Date().toISOString(),
-    findings: [],
+    lastScan: new Date().toISOString(),
+    vulnerabilities: [],
     score: success ? 85 : 40,
     mode: 'defend',
     shieldStatus: success ? 'active' : 'inactive',

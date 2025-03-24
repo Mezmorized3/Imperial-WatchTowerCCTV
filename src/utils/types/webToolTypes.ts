@@ -1,3 +1,4 @@
+
 /**
  * Web tool types
  */
@@ -22,6 +23,8 @@ export interface WebHackParams {
   checkSubdomains?: boolean;
   userAgent?: string;
   saveResults?: boolean;
+  target?: string; // Adding missing properties
+  method?: string; // Adding missing properties
 }
 
 export interface WebHackResult {
