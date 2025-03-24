@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { ScanProgress, CameraResult, ScanTarget, ScanSettings } from '@/types/scanner';
 import { Toaster } from '@/components/ui/toaster';
@@ -90,8 +89,21 @@ const Index = () => {
     if (isConnected) {
       realtimeStartScan({ target, settings });
     } else {
-      // Fall back to regular method - fixing this line to pass empty object parameters
-      handleStartScan({}, {});
+      // Fall back to regular method - create default parameters that match required types
+      const defaultTarget: ScanTarget = {
+        type: 'ip',
+        value: '192.168.1.1'
+      };
+      const defaultSettings: ScanSettings = {
+        aggressive: false,
+        testCredentials: false,
+        checkVulnerabilities: false,
+        saveSnapshots: false,
+        regionFilter: [],
+        threadsCount: 1,
+        timeout: 5000
+      };
+      handleStartScan(defaultTarget, defaultSettings);
     }
   };
 
