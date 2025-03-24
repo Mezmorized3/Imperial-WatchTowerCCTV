@@ -1,4 +1,3 @@
-
 /**
  * OSINT Tools Connector
  * This module provides bridges between our frontend and real external tools.
@@ -259,4 +258,65 @@ export const getRealImplementation = <T extends Function>(
 ): T => {
   console.log(`Using real implementation for ${toolName}`);
   return realImplementation;
+};
+
+/**
+ * Execute a tool by name
+ */
+export const executeToolByName = async (toolName: string, params: any): Promise<ToolResult> => {
+  try {
+    const result = await simulateToolExecution(toolName, params);
+    return {
+      success: result?.success || false,
+      data: result?.data || {},
+      error: result?.error,
+      simulatedData: true
+    };
+  } catch (error) {
+    return {
+      success: false,
+      data: {},
+      error: error instanceof Error ? error.message : 'Unknown error occurred',
+      simulatedData: true
+    };
+  }
+};
+
+/**
+ * Simulate tool execution
+ */
+const simulateToolExecution = async (toolName: string, params: any): Promise<ToolResult> => {
+  // Check if tool is available locally
+  const isAvailable = await checkToolAvailability(toolName);
+  
+  if (isAvailable) {
+    // Convert params to array of args for command-line style execution
+    const args: string[] = [];
+    
+    Object.entries(params).forEach(([key, value]) => {
+      if (typeof value === 'boolean' && value) {
+        args.push(`--${key}`);
+      } else if (value !== undefined && value !== null && value !== '') {
+        args.push(`--${key}`, value.toString());
+      }
+    });
+    
+    return await executeExternalTool(toolName, args);
+  }
+  
+  // If tool is not available, try to set it up
+  const setupSuccess = await setupTool(toolName);
+  
+  if (setupSuccess) {
+    console.log(`Successfully set up ${toolName}, trying execution again...`);
+    return simulateToolExecution(toolName, params);
+  }
+  
+  console.error(`Tool ${toolName} is not available and could not be set up`);
+  return {
+    success: false,
+    data: null,
+    error: `Tool ${toolName} is not available and could not be set up automatically.`,
+    simulatedData: false
+  };
 };

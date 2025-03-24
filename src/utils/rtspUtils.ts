@@ -1,3 +1,4 @@
+
 /**
  * RTSP utility functions for streaming and media processing
  */
@@ -29,7 +30,7 @@ export const ffmpegConvertRtspToHls = async (params: FFmpegParams): Promise<any>
  * Function to record a stream for a specified duration using FFmpeg
  */
 export const ffmpegRecordStream = async (params: FFmpegParams): Promise<any> => {
-  console.log(`Recording stream: ${params.input} for ${params.duration}s to ${params.output}`);
+  console.log(`Recording stream: ${params.input} for ${params.duration || '30s'} to ${params.output}`);
   await simulateNetworkDelay(3000);
   
   // Simulate success
@@ -157,6 +158,90 @@ export const convertVideoFormat = async (inputUrl: string, outputPath: string, f
   return true;
 };
 
+/**
+ * Function to convert RTSP to HLS format
+ */
+export const convertRtspToHls = async (rtspUrl: string): Promise<string> => {
+  console.log(`Converting RTSP to HLS: ${rtspUrl}`);
+  await simulateNetworkDelay(2500);
+  return `https://example.com/hls/${btoa(rtspUrl).replace(/[/+=]/g, '').substring(0, 12)}/index.m3u8`;
+};
+
+/**
+ * Function to start recording a stream
+ */
+export const startRecording = async (streamId: string): Promise<boolean> => {
+  console.log(`Starting recording for stream ${streamId}`);
+  await simulateNetworkDelay(1500);
+  return true;
+};
+
+/**
+ * Function to stop recording a stream
+ */
+export const stopRecording = async (streamId: string): Promise<boolean> => {
+  console.log(`Stopping recording for stream ${streamId}`);
+  await simulateNetworkDelay(1500);
+  return true;
+};
+
+/**
+ * Function to normalize stream URL
+ */
+export const normalizeStreamUrl = (url: string): string => {
+  return url.trim();
+};
+
+/**
+ * Function to get stream URL for a specific engine
+ */
+export const getStreamUrlForEngine = (url: string, engine: string): string => {
+  return url;
+};
+
+/**
+ * Function to get proper stream URL based on camera properties
+ */
+export const getProperStreamUrl = (camera: any): string => {
+  if (camera.rtspUrl) {
+    return camera.rtspUrl;
+  }
+  
+  if (camera.url) {
+    return camera.url;
+  }
+  
+  // Build RTSP URL based on camera properties
+  const credentials = camera.credentials ? `${camera.credentials.username}:${camera.credentials.password}@` : '';
+  const port = camera.port || 554;
+  const path = '/Streaming/Channels/101';  // Default path for many cameras
+  
+  return `rtsp://${credentials}${camera.ip}:${port}${path}`;
+};
+
+/**
+ * Function to test RTSP connection
+ */
+export const testRtspConnection = async (url: string): Promise<boolean> => {
+  console.log(`Testing RTSP connection to ${url}`);
+  await simulateNetworkDelay(2000);
+  return Math.random() > 0.3; // 70% chance of success
+};
+
+/**
+ * Function to detect motion in a video stream
+ */
+export const detectMotion = async (rtspUrl: string): Promise<any> => {
+  console.log(`Detecting motion in ${rtspUrl}`);
+  await simulateNetworkDelay(2500);
+  
+  return {
+    hasMotion: Math.random() > 0.5,
+    confidence: Math.floor(Math.random() * 100),
+    timestamp: new Date().toISOString()
+  };
+};
+
 export default {
   ffmpegConvertRtspToHls,
   ffmpegRecordStream,
@@ -169,5 +254,13 @@ export default {
   rotateVideo,
   mergeVideos,
   extractAudio,
-  convertVideoFormat
+  convertVideoFormat,
+  convertRtspToHls,
+  startRecording,
+  stopRecording,
+  normalizeStreamUrl,
+  getStreamUrlForEngine,
+  getProperStreamUrl,
+  testRtspConnection,
+  detectMotion
 };

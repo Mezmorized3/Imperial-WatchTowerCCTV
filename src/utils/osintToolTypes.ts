@@ -22,7 +22,11 @@ export interface ScanResult {
   total: number;
   found: number;
   results: any[];
-  data?: any;
+  data?: {
+    cameras?: CameraResult[];
+    total?: number;
+    vulnerabilities?: any[];
+  };
   simulatedData?: boolean;
   cameras?: CameraResult[];
 }
@@ -258,7 +262,7 @@ export interface SecurityAdminParams {
 
 export interface FFmpegParams {
   input: string;
-  output: string;
+  output?: string;
   videoCodec?: string;
   audioCodec?: string;
   resolution?: string;
@@ -269,6 +273,7 @@ export interface FFmpegParams {
   inputStream?: string;
   outputPath?: string;
   outputFormat?: string;
+  duration?: string;
 }
 
 // Additional type for threat intelligence data
@@ -281,5 +286,16 @@ export interface ThreatIntelData {
   tags?: string[]; // Tags associated with the IP
   confidenceScore: number; // 0-100
   source: string; // Source of the threat intel
+  lastUpdated?: string; // Last update timestamp
 }
 
+// Add ScrapyParams and ScrapyResult interfaces
+export interface ScrapyParams {
+  url: string;
+  depth?: number;
+  output?: string;
+}
+
+export interface ScrapyResult extends ScanResult {
+  data: any;
+}

@@ -1,14 +1,27 @@
 
 import React from 'react';
-import { CameraResult, ThreatIntelData } from '@/utils/osintToolTypes';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Shield, HardDrive, Server } from 'lucide-react';
 import ThreatReputation from './ThreatReputation';
 import FirmwareDetails from './FirmwareDetails';
 import ServerStatus from '../ServerStatus';
+import { ThreatIntelData } from '@/utils/osintToolTypes';
 
 export interface ThreatIntelligenceProps {
-  camera: CameraResult | null;
+  camera: {
+    id: string;
+    ip: string;
+    model?: string;
+    manufacturer?: string;
+    threatIntelligence?: ThreatIntelData;
+    threatIntel?: ThreatIntelData;
+    firmware?: {
+      version?: string;
+      vulnerabilities?: string[];
+      updateAvailable?: boolean;
+      lastChecked?: string;
+    }
+  } | null;
 }
 
 const ThreatIntelligence: React.FC<ThreatIntelligenceProps> = ({ camera }) => {

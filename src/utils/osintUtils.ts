@@ -1,3 +1,4 @@
+
 /**
  * OSINT utility functions
  */
@@ -90,8 +91,35 @@ export const getRandomGeoLocation = (regionFilter?: string) => {
   return {
     country,
     latitude: parseFloat(lat.toFixed(6)),
-    longitude: parseFloat(lng.toFixed(6))
+    longitude: parseFloat(lng.toFixed(6)),
+    city: getRandomCity(country),
+    lat: parseFloat(lat.toFixed(6)),
+    lng: parseFloat(lng.toFixed(6))
   };
+};
+
+// Helper function to get random city
+const getRandomCity = (country: string): string => {
+  const cities: Record<string, string[]> = {
+    'United States': ['New York', 'Los Angeles', 'Chicago', 'Houston', 'Phoenix'],
+    'Germany': ['Berlin', 'Munich', 'Hamburg', 'Frankfurt', 'Cologne'],
+    'France': ['Paris', 'Marseille', 'Lyon', 'Toulouse', 'Nice'],
+    'United Kingdom': ['London', 'Manchester', 'Birmingham', 'Leeds', 'Glasgow'],
+    'Japan': ['Tokyo', 'Osaka', 'Kyoto', 'Yokohama', 'Sapporo'],
+    'Brazil': ['Sao Paulo', 'Rio de Janeiro', 'Brasilia', 'Salvador', 'Fortaleza'],
+    'Canada': ['Toronto', 'Montreal', 'Vancouver', 'Calgary', 'Ottawa'],
+    'Russia': ['Moscow', 'Saint Petersburg', 'Novosibirsk', 'Yekaterinburg', 'Kazan'],
+    'China': ['Beijing', 'Shanghai', 'Shenzhen', 'Guangzhou', 'Chengdu'],
+    'Australia': ['Sydney', 'Melbourne', 'Brisbane', 'Perth', 'Adelaide']
+  };
+  
+  const getRandomArrayElement = (arr: any[]) => arr[Math.floor(Math.random() * arr.length)];
+  
+  if (cities[country]) {
+    return getRandomArrayElement(cities[country]);
+  }
+  
+  return 'Unknown City';
 };
 
 export const analyzeFirmware = (firmwareVersion: string) => {
