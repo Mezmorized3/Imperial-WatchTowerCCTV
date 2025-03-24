@@ -1,197 +1,234 @@
 
 /**
- * Implementation of social media tools
+ * Implementation of social media OSINT tools
  */
 
-import { SocialPostData, SocialSearchParams, UsernameSearchParams, TwintParams } from '../types/socialToolTypes';
-import { analyzeSentiment } from '../sentimentAnalysis';
+import { ScanResult } from '../types/baseTypes';
+import { SocialSearchParams, SocialPostData } from '../types/socialToolTypes';
+import { simulateNetworkDelay } from '../networkUtils';
 
-// Simulate social media post search
-export const executeSocialSearch = async (params: SocialSearchParams) => {
-  const { query, platform = 'all', limit = 10 } = params;
-  
-  // Simulate API response with a delay
-  await new Promise(resolve => setTimeout(resolve, 800));
-  
-  try {
-    // Simulate data
-    const posts: SocialPostData[] = Array.from({ length: limit }).map((_, index) => {
-      const sentiment = Math.random() * 2 - 1; // -1 to 1
-      const content = `${sentiment > 0 ? 'Great' : 'Bad'} post about ${query} #${index + 1}`;
-      const sentimentAnalysis = analyzeSentiment(content);
-      
-      return {
-        id: `post-${platform}-${index}`,
-        content,
-        author: `user${Math.floor(Math.random() * 1000)}`,
-        platform: platform === 'all' ? ['twitter', 'instagram', 'facebook'][Math.floor(Math.random() * 3)] : platform,
-        date: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString(),
-        likes: Math.floor(Math.random() * 1000),
-        shares: Math.floor(Math.random() * 200),
-        comments: Math.floor(Math.random() * 50),
-        sentiment: sentimentAnalysis.score,
-        url: `https://example.com/${platform}/post/${index}`
-      };
-    });
-    
-    return {
-      success: true,
-      data: {
-        posts,
-        query,
-        platform,
-        total: posts.length,
-        avgSentiment: posts.reduce((sum, post) => sum + (post.sentiment || 0), 0) / posts.length
-      },
-      simulatedData: true
-    };
-  } catch (error) {
-    console.error('Social search error:', error);
-    return {
-      success: false,
-      data: null,
-      error: error instanceof Error ? error.message : 'Unknown error',
-      simulatedData: true
-    };
-  }
-};
-
-// Simulate username search across platforms
-export const executeUsernameSearch = async (params: UsernameSearchParams) => {
-  const { username, platforms = [] } = params;
-  
-  // Simulate API response with a delay
-  await new Promise(resolve => setTimeout(resolve, 1200));
-  
-  try {
-    const availablePlatforms = [
-      'twitter', 'instagram', 'facebook', 'github', 
-      'linkedin', 'reddit', 'tiktok', 'snapchat',
-      'youtube', 'pinterest', 'tumblr', 'quora'
-    ];
-    
-    const searchPlatforms = platforms.length > 0 ? platforms : availablePlatforms;
-    
-    // Simulate found accounts
-    const sites = searchPlatforms.map(platform => {
-      const found = Math.random() > 0.3; // 70% chance of finding the username
-      
-      return {
-        platform,
-        username: username,
-        url: found ? `https://${platform}.com/${username}` : null,
-        found,
-        avatar: found ? `https://ui-avatars.com/api/?name=${username}&background=random` : null,
-        followerCount: found ? Math.floor(Math.random() * 10000) : null,
-        bio: found ? `This is the ${platform} profile of ${username}` : null
-      };
-    });
-    
-    const found = sites.filter(site => site.found);
-    
-    return {
-      success: true,
-      sites,
-      totalFound: found.length,
-      data: {
-        username,
-        found: found.length,
-        total: sites.length,
-        sites
-      },
-      simulatedData: true
-    };
-  } catch (error) {
-    console.error('Username search error:', error);
-    return {
-      success: false,
-      sites: [],
-      totalFound: 0,
-      error: error instanceof Error ? error.message : 'Unknown error',
-      simulatedData: true
-    };
-  }
-};
-
-// Simulate Twitter Intelligence Tool
-export const executeTwint = async (params: TwintParams) => {
-  const { username, search, limit = 10 } = params;
-  
-  // Simulate API response with a delay
-  await new Promise(resolve => setTimeout(resolve, 1500));
-  
-  try {
-    if (!username && !search) {
-      throw new Error('Either username or search term is required');
+const mockUsers = [
+  {
+    username: 'johndoe',
+    platforms: {
+      twitter: { found: true, followers: 1243, following: 567, posts: 234, joinDate: '2015-04-12' },
+      instagram: { found: true, followers: 872, following: 433, posts: 121, bio: 'Travel photographer and coffee lover' },
+      facebook: { found: true, url: 'facebook.com/johndoe' },
+      linkedin: { found: true, title: 'Software Engineer at Tech Corp', location: 'San Francisco, CA' },
+      github: { found: true, repos: 23, gists: 7, joined: '2013-09-22' }
     }
+  },
+  {
+    username: 'janedoe',
+    platforms: {
+      twitter: { found: true, followers: 3456, following: 876, posts: 987, joinDate: '2012-06-23' },
+      instagram: { found: true, followers: 5432, following: 654, posts: 432, bio: 'Digital marketer, dog mom, and coffee addict' },
+      facebook: { found: false },
+      linkedin: { found: true, title: 'Marketing Director at Brand Inc', location: 'New York, NY' },
+      github: { found: false }
+    }
+  },
+  {
+    username: 'techguru',
+    platforms: {
+      twitter: { found: true, followers: 12765, following: 342, posts: 4532, joinDate: '2010-11-14' },
+      instagram: { found: true, followers: 3421, following: 243, posts: 176, bio: 'Tech reviewer and gadget enthusiast' },
+      facebook: { found: true, url: 'facebook.com/techguru' },
+      linkedin: { found: true, title: 'Tech Journalist', location: 'Seattle, WA' },
+      github: { found: true, repos: 67, gists: 23, joined: '2011-03-12' }
+    }
+  }
+];
+
+/**
+ * Search for a username across multiple social media platforms
+ */
+export const executeUsernameSearch = async (params: SocialSearchParams): Promise<ScanResult> => {
+  console.log('Executing username search with params:', params);
+  await simulateNetworkDelay(800, 2000);
+  
+  const { username, platforms = ['twitter', 'instagram', 'facebook', 'linkedin', 'github'] } = params;
+  
+  // Mock the search by checking our predefined users or randomizing
+  let userData;
+  const existingUser = mockUsers.find(u => u.username.toLowerCase() === username.toLowerCase());
+  
+  if (existingUser) {
+    userData = existingUser;
+  } else {
+    // Generate random results
+    const foundPlatforms: Record<string, any> = {};
     
-    // Simulate tweets
-    const tweets = Array.from({ length: limit }).map((_, index) => {
-      const content = username
-        ? `Tweet #${index + 1} by ${username} ${search ? `about ${search}` : ''}`
-        : `Tweet #${index + 1} containing "${search}"`;
-        
-      return {
-        id: `tweet-${index}`,
-        content,
-        author: username || `user${Math.floor(Math.random() * 1000)}`,
-        date: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString(),
-        likes: Math.floor(Math.random() * 500),
-        retweets: Math.floor(Math.random() * 100),
-        replies: Math.floor(Math.random() * 30),
-        sentiment: analyzeSentiment(content).score,
-        url: `https://twitter.com/status/${Math.floor(Math.random() * 1000000000)}`
-      };
+    platforms.forEach(platform => {
+      const isFound = Math.random() > 0.3; // 70% chance to be found
+      
+      if (isFound) {
+        switch (platform) {
+          case 'twitter':
+            foundPlatforms[platform] = {
+              found: true,
+              followers: Math.floor(Math.random() * 10000),
+              following: Math.floor(Math.random() * 2000),
+              posts: Math.floor(Math.random() * 5000),
+              joinDate: `201${Math.floor(Math.random() * 9)}-${String(Math.floor(Math.random() * 12) + 1).padStart(2, '0')}-${String(Math.floor(Math.random() * 28) + 1).padStart(2, '0')}`
+            };
+            break;
+          case 'instagram':
+            foundPlatforms[platform] = {
+              found: true,
+              followers: Math.floor(Math.random() * 20000),
+              following: Math.floor(Math.random() * 1000),
+              posts: Math.floor(Math.random() * 500),
+              bio: 'This is a randomly generated bio for demonstration purposes'
+            };
+            break;
+          case 'facebook':
+            foundPlatforms[platform] = {
+              found: true,
+              url: `facebook.com/${username}`
+            };
+            break;
+          case 'linkedin':
+            foundPlatforms[platform] = {
+              found: true,
+              title: `Professional at ${['Tech Corp', 'Marketing Inc', 'Design Co', 'Research Lab'][Math.floor(Math.random() * 4)]}`,
+              location: `${['New York', 'Los Angeles', 'Chicago', 'San Francisco'][Math.floor(Math.random() * 4)]}, ${['NY', 'CA', 'IL', 'CA'][Math.floor(Math.random() * 4)]}`
+            };
+            break;
+          case 'github':
+            foundPlatforms[platform] = {
+              found: true,
+              repos: Math.floor(Math.random() * 50),
+              gists: Math.floor(Math.random() * 20),
+              joined: `201${Math.floor(Math.random() * 9)}-${String(Math.floor(Math.random() * 12) + 1).padStart(2, '0')}-${String(Math.floor(Math.random() * 28) + 1).padStart(2, '0')}`
+            };
+            break;
+          default:
+            foundPlatforms[platform] = { found: true };
+        }
+      } else {
+        foundPlatforms[platform] = { found: false };
+      }
     });
     
-    return {
-      success: true,
-      data: {
-        tweets,
-        username,
-        search,
-        total: tweets.length
-      },
-      simulatedData: true
-    };
-  } catch (error) {
-    console.error('Twint error:', error);
-    return {
-      success: false,
-      data: null,
-      error: error instanceof Error ? error.message : 'Unknown error',
-      simulatedData: true
+    userData = {
+      username,
+      platforms: foundPlatforms
     };
   }
+  
+  // Format results
+  const results = platforms.map(platform => {
+    const platformData = userData.platforms[platform] || { found: false };
+    
+    return {
+      platform,
+      username: userData.username,
+      accountFound: platformData.found,
+      url: platformData.found ? `https://${platform}.com/${userData.username}` : '',
+      followers: platformData.followers,
+      following: platformData.following,
+      posts: platformData.posts,
+      profileName: userData.username,
+      bio: platformData.bio,
+      lastUpdated: new Date().toISOString()
+    };
+  });
+  
+  // Return simulated scan result
+  return {
+    success: true,
+    timestamp: new Date().toISOString(),
+    total: platforms.length,
+    found: results.filter(r => r.accountFound).length,
+    data: { results, username: userData.username },
+    results,
+    simulatedData: true
+  };
 };
 
-// Generic OSINT search function
-export const executeOSINT = async (target: string, options: any = {}) => {
-  // Simulate API response with a delay
-  await new Promise(resolve => setTimeout(resolve, 1000));
+/**
+ * Execute Twitter OSINT tool (Twint alternative)
+ */
+export const executeTwint = async (params: any): Promise<ScanResult> => {
+  console.log('Executing Twint with params:', params);
+  await simulateNetworkDelay(1000, 3000);
   
-  try {
-    return {
-      success: true,
-      data: {
-        target,
-        results: [
-          { source: 'social', type: 'profile', platform: 'twitter', url: `https://twitter.com/${target}` },
-          { source: 'social', type: 'profile', platform: 'instagram', url: `https://instagram.com/${target}` },
-          { source: 'domain', type: 'whois', data: { registrar: 'Example Registrar', created: '2020-01-01' } },
-          { source: 'email', type: 'breach', data: { breached: Math.random() > 0.5, sources: ['Example Breach'] } }
-        ],
-        options
-      },
-      simulatedData: true
-    };
-  } catch (error) {
-    console.error('OSINT error:', error);
-    return {
-      success: false,
-      data: null,
-      error: error instanceof Error ? error.message : 'Unknown error',
-      simulatedData: true
-    };
+  const { username, query, limit = 10 } = params;
+  
+  // Generate mock Twitter posts
+  const mockPosts: SocialPostData[] = [];
+  const postCount = Math.min(Math.floor(Math.random() * 15) + 5, limit);
+  
+  for (let i = 0; i < postCount; i++) {
+    const createdAt = new Date();
+    createdAt.setDate(createdAt.getDate() - Math.floor(Math.random() * 30)); // Random date within last 30 days
+    
+    mockPosts.push({
+      id: `tw-${Date.now()}-${i}`,
+      platform: 'twitter',
+      username: username || 'random_user',
+      content: `This is a mock Twitter post #${i + 1} ${query ? 'containing ' + query : ''} for demonstration purposes.`,
+      timestamp: createdAt.toISOString(),
+      likes: Math.floor(Math.random() * 100),
+      shares: Math.floor(Math.random() * 30),
+      comments: Math.floor(Math.random() * 20),
+      url: `https://twitter.com/user/status/${Date.now()}${i}`,
+      media: Math.random() > 0.5 ? [{
+        type: Math.random() > 0.7 ? 'video' : 'image',
+        url: `https://example.com/media/${Date.now()}${i}.jpg`
+      }] : undefined
+    });
   }
+  
+  // Return simulated scan result
+  return {
+    success: true,
+    timestamp: new Date().toISOString(),
+    total: postCount,
+    found: postCount,
+    data: { posts: mockPosts, query, username },
+    results: mockPosts,
+    simulatedData: true
+  };
+};
+
+/**
+ * Generic OSINT tool implementation
+ */
+export const executeOSINT = async (params: any): Promise<ScanResult> => {
+  console.log('Executing OSINT with params:', params);
+  await simulateNetworkDelay(1200, 2500);
+  
+  const { target, type = 'generic' } = params;
+  
+  // Generate mock OSINT results
+  const mockResults = [];
+  const resultCount = Math.floor(Math.random() * 10) + 3;
+  
+  for (let i = 0; i < resultCount; i++) {
+    mockResults.push({
+      id: `osint-${Date.now()}-${i}`,
+      type,
+      source: `Source ${i + 1}`,
+      content: `OSINT result for ${target}: ${Math.random().toString(36).substring(2, 15)}`,
+      timestamp: new Date().toISOString(),
+      metadata: {
+        confidence: Math.floor(Math.random() * 100),
+        relevance: Math.floor(Math.random() * 100),
+        category: ['social', 'web', 'network', 'document'][Math.floor(Math.random() * 4)]
+      }
+    });
+  }
+  
+  // Return simulated scan result
+  return {
+    success: true,
+    timestamp: new Date().toISOString(),
+    total: resultCount,
+    found: resultCount,
+    data: { results: mockResults, target, type },
+    results: mockResults,
+    simulatedData: true
+  };
 };

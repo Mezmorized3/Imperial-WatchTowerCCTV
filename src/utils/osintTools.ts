@@ -83,7 +83,7 @@ export {
   applyMotionDetection
 };
 
-// Export other tools
+// Export social tools
 export {
   executeUsernameSearch,
   executeTwint,

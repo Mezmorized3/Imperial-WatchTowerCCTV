@@ -24,16 +24,16 @@ import {
   IngramParams
 } from '../types/cameraTypes';
 import { nanoid } from 'nanoid';
-import { getCountryCities } from '../countryUtils';
+import { getCountryCities, getRandomIpFromCountry } from '../countryUtils';
 
-// Custom parseIpRange implementation since the import is failing
+// Custom parseIpRange implementation
 const parseIpRange = (ipRange: string): string[] => {
   // Basic implementation to parse CIDR notation
   if (ipRange.includes('/')) {
     const [baseIp, cidrPart] = ipRange.split('/');
     const cidr = parseInt(cidrPart);
     
-    // For simplicity, return a few IPs in the range for simulation
+    // For simulation, return a few IPs in the range
     const ipParts = baseIp.split('.');
     const results: string[] = [];
     
@@ -74,446 +74,510 @@ const parseIpRange = (ipRange: string): string[] => {
 const defaultCredentials = [
   { username: 'admin', password: 'admin' },
   { username: 'admin', password: '12345' },
+  { username: 'admin', password: '123456' },
   { username: 'admin', password: 'password' },
   { username: 'admin', password: '' },
   { username: 'root', password: 'root' },
-  { username: 'root', password: 'admin' },
   { username: 'root', password: '12345' },
+  { username: 'root', password: 'pass' },
   { username: 'user', password: 'user' },
-  { username: 'supervisor', password: 'supervisor' },
-  { username: 'ubnt', password: 'ubnt' },
+  { username: 'guest', password: 'guest' }
 ];
 
-// Create a database of common vulnerabilities in CCTV cameras
-const commonVulnerabilities: Vulnerability[] = [
-  {
-    id: 'vuln-001',
-    name: 'Default Credentials',
-    severity: 'high',
-    description: 'The camera uses factory default username and password'
-  },
-  {
-    id: 'vuln-002',
-    name: 'Telnet Enabled',
-    severity: 'critical',
-    description: 'Telnet service is enabled on this device'
-  },
-  {
-    id: 'vuln-003',
-    name: 'Outdated Firmware',
-    severity: 'medium',
-    description: 'Camera firmware has known security vulnerabilities'
-  },
-  {
-    id: 'vuln-004',
-    name: 'Unencrypted RTSP Stream',
-    severity: 'medium',
-    description: 'Video stream is transmitted without encryption'
-  },
-  {
-    id: 'vuln-005',
-    name: 'Web Interface XSS',
-    severity: 'high',
-    description: 'Web interface is vulnerable to cross-site scripting attacks'
-  },
-  {
-    id: 'vuln-006',
-    name: 'Authentication Bypass',
-    severity: 'critical',
-    description: 'Camera has known authentication bypass vulnerabilities'
-  },
-  {
-    id: 'vuln-007',
-    name: 'Command Injection',
-    severity: 'critical',
-    description: 'Device is vulnerable to command injection attacks via the web interface'
-  },
-  {
-    id: 'vuln-008',
-    name: 'Insecure Password Storage',
-    severity: 'high',
-    description: 'Passwords are stored in cleartext or with weak encryption'
-  }
-];
-
-// Simulated camera brands with their default ports and vulnerabilities
-const cameraModels = [
-  { brand: 'Hikvision', model: 'DS-2CD2xx2', ports: [80, 443, 554], vulnerabilities: [0, 2, 3] },
-  { brand: 'Dahua', model: 'DH-IPC-HDWxx', ports: [80, 443, 554, 37777], vulnerabilities: [0, 2, 3, 7] },
-  { brand: 'Axis', model: 'AXIS P33xx', ports: [80, 443, 554], vulnerabilities: [2, 3] },
-  { brand: 'Foscam', model: 'FI9xxx', ports: [80, 443, 554, 88], vulnerabilities: [0, 1, 2, 4, 7] },
-  { brand: 'Amcrest', model: 'IP2M-8xx', ports: [80, 443, 554], vulnerabilities: [0, 2, 3] },
-  { brand: 'Reolink', model: 'RLC-4xx', ports: [80, 443, 554], vulnerabilities: [0, 3] },
-  { brand: 'Ubiquiti', model: 'UniFi Video G3', ports: [80, 443, 554, 7080], vulnerabilities: [3] },
-  { brand: 'Bosch', model: 'DINION IP', ports: [80, 443, 554], vulnerabilities: [2, 3] },
-  { brand: 'Hanwha', model: 'QNV-xx', ports: [80, 443, 554], vulnerabilities: [0, 2, 3] },
-  { brand: 'Vivotek', model: 'FD9xx', ports: [80, 443, 554], vulnerabilities: [0, 2, 3, 4, 6] },
-];
-
-/**
- * Simulates a bruteforce attempt on a camera
- * @param ip The IP address to target
- * @param port The port to target
- * @returns Object containing success status and credentials if found
- */
-const simulateBruteforce = (ip: string, port: number = 80): { success: boolean; credentials: { username: string; password: string } | null } => {
-  // Simulate a 30% chance of finding valid credentials
-  const success = Math.random() < 0.3;
-  
-  if (success) {
-    // If successful, return a random set of default credentials
-    const credIndex = Math.floor(Math.random() * defaultCredentials.length);
-    return {
-      success: true,
-      credentials: defaultCredentials[credIndex]
-    };
-  }
-  
-  return {
-    success: false,
-    credentials: null
-  };
+// Create a database of common camera vulnerabilities
+const commonVulnerabilities: Record<string, Vulnerability[]> = {
+  'hikvision': [
+    { name: 'CVE-2021-36260', severity: 'critical', description: 'Command injection vulnerability in Hikvision IP cameras' },
+    { name: 'CVE-2022-28173', severity: 'high', description: 'Authentication bypass in Hikvision cameras' },
+    { name: 'Default credentials', severity: 'high', description: 'Device using factory default credentials' }
+  ],
+  'dahua': [
+    { name: 'CVE-2021-33044', severity: 'critical', description: 'Authentication bypass in Dahua cameras' },
+    { name: 'CVE-2021-33045', severity: 'high', description: 'Arbitrary file reading vulnerability in Dahua' },
+    { name: 'Weak encryption', severity: 'medium', description: 'Weak password encryption in transmission' }
+  ],
+  'axis': [
+    { name: 'CVE-2018-10660', severity: 'high', description: 'Authentication bypass in Axis cameras' },
+    { name: 'Unencrypted RTSP', severity: 'medium', description: 'RTSP stream lacks encryption' }
+  ],
+  'generic': [
+    { name: 'Default credentials', severity: 'high', description: 'Device using factory default credentials' },
+    { name: 'Unencrypted traffic', severity: 'medium', description: 'Device transmits unencrypted video stream' },
+    { name: 'Outdated firmware', severity: 'medium', description: 'Device running outdated firmware with known vulnerabilities' }
+  ]
 };
 
-/**
- * Generates a camera result based on country and camera model
- */
-const generateCameraResult = (ip: string, country?: string): CameraResult => {
-  // Select a random camera model
-  const cameraIndex = Math.floor(Math.random() * cameraModels.length);
-  const camera = cameraModels[cameraIndex];
-  
-  // Select a random port from the camera's typical ports
-  const portIndex = Math.floor(Math.random() * camera.ports.length);
-  const port = camera.ports[portIndex];
-  
-  // Generate vulnerabilities based on the camera model
-  const vulnerabilities = camera.vulnerabilities.map(index => ({
-    ...commonVulnerabilities[index],
-    id: `vuln-${nanoid(6)}`
-  }));
+// Common camera models by manufacturer for each country
+const countrySpecificCameraModels: Record<string, Record<string, string[]>> = {
+  'ukraine': {
+    'hikvision': ['DS-2CD2043G0-I', 'DS-2CD2T47G1-L', 'DS-2CD2355FWD-I'],
+    'dahua': ['IPC-HDW4631C-A', 'DH-IPC-HDBW4631R-ZS', 'DH-IPC-HFW4231E-SE'],
+    'axis': ['P1448-LE', 'M2025-LE', 'P3245-LVE'],
+    'bosch': ['DINION IP 4000i', 'FLEXIDOME IP 4000i', 'DINION IP starlight 6000']
+  },
+  'russia': {
+    'hikvision': ['DS-2CD2027G2-L', 'DS-2CD2143G2-IS', 'DS-2CD2T22WD-I5'],
+    'dahua': ['IPC-HDBW4431F-AS', 'DH-SD59430U-HNI', 'DH-IPC-HFW5231E-Z12E'],
+    'axis': ['P3235-LVE', 'P1445-LE', 'M3057-PLVE'],
+    'rvi': ['RVi-1NCT2120', 'RVi-2NCT6032', 'RVi-IPC43DNS']
+  },
+  'georgia': {
+    'hikvision': ['DS-2CD2047G1-L', 'DS-2CD2123G0-I', 'DS-2CD1043G0-I'],
+    'dahua': ['IPC-HDW5231R-ZE', 'DH-IPC-HFW5231E-Z5E', 'DH-HAC-HDW1200EMP'],
+    'axis': ['M2026-LE', 'P1435-LE', 'P3235-LV'],
+    'ezviz': ['C3W', 'C3WN', 'C6CN']
+  },
+  'romania': {
+    'hikvision': ['DS-2CD2043G2-I', 'DS-2CD2123G2-IS', 'DS-2CD2683G1-IZS'],
+    'dahua': ['IPC-HDBW4831E-ASE', 'DH-IPC-HDW4431EM-ASE', 'DH-IPC-HFW4831E-SE'],
+    'axis': ['M3045-V', 'P1447-LE', 'P3227-LVE'],
+    'provision': ['PR-I4230IPVF', 'PR-D4220IPVF', 'PR-I1180IPVF']
+  }
+};
 
-  // Perform bruteforce attempt
-  const bruteforceResult = simulateBruteforce(ip, port);
-  const credentials = bruteforceResult.success ? bruteforceResult.credentials : null;
+// Generate simulated camera details for a specific IP
+const generateCameraDetails = (ip: string, port: number, country?: string): CameraResult => {
+  // Define manufacturers and models
+  const manufacturers = ['Hikvision', 'Dahua', 'Axis', 'Bosch', 'Samsung', 'Pelco', 'Sony'];
   
-  // Determine location information
-  let countryName = country || 'United States';
+  // Determine manufacturer
+  const manufacturer = manufacturers[Math.floor(Math.random() * manufacturers.length)];
   
-  if (!country) {
-    // Try to determine country from IP pattern
-    if (ip.startsWith('5.152.') || ip.startsWith('31.146.') || ip.startsWith('37.110.')) {
-      countryName = 'Georgia';
-    } else if (ip.startsWith('5.2.') || ip.startsWith('5.12.') || ip.startsWith('31.5.')) {
-      countryName = 'Romania';
-    } else if (ip.startsWith('5.58.') || ip.startsWith('5.105.') || ip.startsWith('31.43.')) {
-      countryName = 'Ukraine';
-    } else if (ip.startsWith('5.3.') || ip.startsWith('5.8.') || ip.startsWith('5.16.')) {
-      countryName = 'Russia';
+  // Handle country-specific details
+  let model = '';
+  let cities: string[] = [];
+  
+  if (country && country.toLowerCase() in countrySpecificCameraModels) {
+    const countryKey = country.toLowerCase();
+    const manufacturerKey = manufacturer.toLowerCase();
+    
+    // Get country-specific camera models
+    if (manufacturerKey in countrySpecificCameraModels[countryKey]) {
+      const models = countrySpecificCameraModels[countryKey][manufacturerKey];
+      model = models[Math.floor(Math.random() * models.length)];
+    }
+    
+    // Get cities for this country
+    cities = getCountryCities(country);
+  } else {
+    // Generate generic model
+    const modelNumbers = ['1080p', '2MP', '4MP', '5MP', '8MP'];
+    const modelTypes = ['Dome', 'Bullet', 'PTZ', 'Turret', 'Cube'];
+    model = `${manufacturer} ${modelTypes[Math.floor(Math.random() * modelTypes.length)]} ${modelNumbers[Math.floor(Math.random() * modelNumbers.length)]}`;
+  }
+  
+  // Create vulnerabilities based on manufacturer
+  let vulnerabilities: Vulnerability[] = [];
+  const manufacturerKey = manufacturer.toLowerCase();
+  
+  if (manufacturerKey in commonVulnerabilities) {
+    // Copy some (or all) vulnerabilities from the common list
+    const allVulns = commonVulnerabilities[manufacturerKey];
+    const numVulns = Math.floor(Math.random() * (allVulns.length + 1));
+    
+    for (let i = 0; i < numVulns; i++) {
+      vulnerabilities.push(allVulns[i]);
+    }
+  } else {
+    // Use generic vulnerabilities
+    const genericVulns = commonVulnerabilities['generic'];
+    const numVulns = Math.floor(Math.random() * (genericVulns.length + 1));
+    
+    for (let i = 0; i < numVulns; i++) {
+      vulnerabilities.push(genericVulns[i]);
     }
   }
   
-  // Get cities for this country
-  const cities = getCountryCities(countryName.toLowerCase());
-  const city = cities && cities.length > 0 
-    ? cities[Math.floor(Math.random() * cities.length)]
-    : undefined;
+  // Randomly determine if default credentials are used
+  const useDefaultCreds = Math.random() < 0.4; // 40% chance
+  const credentials = useDefaultCreds ? 
+    defaultCredentials[Math.floor(Math.random() * defaultCredentials.length)] : 
+    undefined;
   
+  // Determine camera status based on vulnerabilities
+  let status: CameraStatus = 'online';
+  if (vulnerabilities.some(v => v.severity === 'critical')) {
+    status = 'vulnerable';
+  } else if (useDefaultCreds) {
+    status = 'vulnerable';
+  } else if (vulnerabilities.length > 0) {
+    status = Math.random() < 0.5 ? 'vulnerable' : 'online';
+  }
+  
+  // Generate geolocation if country is provided
+  let geolocation = undefined;
+  if (country) {
+    geolocation = {
+      country: country,
+      city: cities.length > 0 ? cities[Math.floor(Math.random() * cities.length)] : undefined,
+      latitude: Math.random() * 180 - 90,
+      longitude: Math.random() * 360 - 180
+    };
+  }
+  
+  // Generate result
   return {
     id: nanoid(),
     ip,
     port,
-    model: `${camera.brand} ${camera.model}${Math.floor(Math.random() * 100)}`,
-    manufacturer: camera.brand,
-    brand: camera.brand,
-    rtspUrl: `rtsp://${credentials ? 
-      `${credentials.username}:${credentials.password}@` : 
-      ''}${ip}:${port === 554 ? 554 : '554'}/live/ch0`,
-    httpUrl: `http://${ip}:${port === 80 ? 80 : port}/`,
-    status: credentials !== null ? 'vulnerable' : (Math.random() > 0.2 ? 'online' : 'offline') as CameraStatus,
-    lastSeen: new Date().toISOString(),
-    accessLevel: credentials !== null ? 'admin' : 'none',
-    credentials,
-    vulnerabilities,
-    geolocation: {
-      country: countryName,
-      city
-    },
-    location: {
-      country: countryName,
-      city
-    },
-    firmwareVersion: `${Math.floor(Math.random() * 5) + 1}.${Math.floor(Math.random() * 10)}.${Math.floor(Math.random() * 20)}`
+    manufacturer: manufacturer,
+    model: model,
+    status,
+    vulnerabilities: vulnerabilities.length > 0 ? vulnerabilities : undefined,
+    credentials: credentials,
+    geolocation,
+    accessible: status !== 'offline',
+    rtspPath: '/Streaming/Channels/101',
+    lastSeen: new Date(),
+    firstSeen: new Date(Date.now() - Math.floor(Math.random() * 30) * 24 * 60 * 60 * 1000) // Random date within last 30 days
   };
 };
 
-/**
- * Executes the hackCCTV tool to find vulnerable CCTV cameras
- * Based on multiple implementations from GitHub repos
- */
+// Implementation of Hack-CCTV tool
 export const executeHackCCTV = async (params: HackCCTVParams): Promise<ScanResult> => {
-  await simulateNetworkDelay(2000);
-  console.log('Executing hackCCTV:', params);
+  console.log('Executing HackCCTV with params:', params);
+  await simulateNetworkDelay(1000, 3000);
   
-  // Parse target IP or range
-  const targetIPs: string[] = [];
+  const { target, method = 'default-credentials', bruteforce = true, deepScan = false, country } = params;
   
-  if (params.target) {
-    targetIPs.push(...parseIpRange(params.target));
-  } else {
-    // Generate some random IPs for demo
+  let targetIps: string[] = [];
+  
+  // Handle country parameter
+  if (country && !target) {
+    // Generate random IPs for the specified country
     for (let i = 0; i < 5; i++) {
-      const ip = `192.168.1.${Math.floor(Math.random() * 254) + 1}`;
-      targetIPs.push(ip);
+      const randomIp = getRandomIpFromCountry(country);
+      if (randomIp) targetIps.push(randomIp);
     }
+  } else {
+    targetIps = parseIpRange(target);
   }
   
-  // Limit the number of targets for the simulation
-  const limitedTargets = targetIPs.slice(0, params.deepScan ? 10 : 5);
-  const results: CameraResult[] = [];
+  // Generate random number of cameras (more if deepScan is true)
+  const numCameras = deepScan ? 
+    Math.floor(Math.random() * 10) + 5 : // 5-15 cameras
+    Math.floor(Math.random() * 5) + 1;   // 1-5 cameras
   
-  // Process each target IP
-  for (const ip of limitedTargets) {
-    // Randomly determine if this IP has a camera
-    const hasCameraChance = Math.random();
+  // Generate camera results
+  const cameras: CameraResult[] = [];
+  for (let i = 0; i < Math.min(numCameras, targetIps.length); i++) {
+    const ip = targetIps[i];
+    const port = [80, 554, 8080, 8000, 37777, 37778, 9000, 443][Math.floor(Math.random() * 8)];
     
-    if (hasCameraChance > 0.4) { // 60% chance to find a camera
-      results.push(generateCameraResult(ip, params.country));
+    const camera = generateCameraDetails(ip, port, country);
+    
+    // Adjust results based on method
+    if (method === 'default-credentials' && !camera.credentials && Math.random() < 0.6) {
+      camera.credentials = defaultCredentials[Math.floor(Math.random() * defaultCredentials.length)];
+      camera.status = 'vulnerable';
+    } else if (method === 'exploit' && (!camera.vulnerabilities || camera.vulnerabilities.length === 0)) {
+      const genericVulns = commonVulnerabilities['generic'];
+      camera.vulnerabilities = [genericVulns[Math.floor(Math.random() * genericVulns.length)]];
+      camera.status = 'vulnerable';
     }
+    
+    cameras.push(camera);
   }
   
+  // Return simulated scan result
   return {
     success: true,
-    total: targetIPs.length,
-    found: results.length,
-    results: results,
-    data: {
-      cameras: results,
-      total: results.length,
-      vulnerabilities: commonVulnerabilities
-    },
+    timestamp: new Date().toISOString(),
+    total: targetIps.length,
+    found: cameras.length,
+    data: { cameras },
+    results: cameras,
     simulatedData: true
   };
 };
 
-/**
- * Executes the CamDumper tool to find and dump CCTV camera feeds
- * Based on https://github.com/er4vn/Cam-Dumper
- */
+// Implementation of Cam-Dumper tool
 export const executeCamDumper = async (params: CamDumperParams): Promise<ScanResult> => {
-  await simulateNetworkDelay(1800);
-  console.log('Executing CamDumper:', params);
+  console.log('Executing CamDumper with params:', params);
+  await simulateNetworkDelay(1000, 2500);
   
-  // Parse target IP or range
-  const targetIPs = parseIpRange(params.target);
-  const results: CameraResult[] = [];
+  const { target, method = 'scan', country } = params;
   
-  // Process each target according to the method
-  for (const ip of targetIPs.slice(0, 5)) { // Limit to 5 for demonstration
-    if (Math.random() > 0.4) { // 60% chance to find a camera
-      const cameraResult = generateCameraResult(ip, params.country);
-      
-      // For 'dump' method, add additional information
-      if (params.method === 'dump') {
-        cameraResult.status = 'vulnerable';
-        // Simulate credentials found
-        cameraResult.credentials = defaultCredentials[Math.floor(Math.random() * defaultCredentials.length)];
-        cameraResult.accessLevel = 'admin';
-      }
-      
-      results.push(cameraResult);
+  let targetIps: string[] = [];
+  
+  // Handle country parameter
+  if (country && !target) {
+    // Generate random IPs for the specified country
+    for (let i = 0; i < 6; i++) {
+      const randomIp = getRandomIpFromCountry(country);
+      if (randomIp) targetIps.push(randomIp);
     }
+  } else {
+    targetIps = parseIpRange(target);
   }
   
+  // Generate random number of cameras
+  const numCameras = Math.floor(Math.random() * 7) + 2; // 2-8 cameras
+  
+  // Generate camera results focusing on accessible cameras
+  const cameras: CameraResult[] = [];
+  for (let i = 0; i < Math.min(numCameras, targetIps.length); i++) {
+    const ip = targetIps[i];
+    const port = [80, 8080, 81, 82, 9000, 37777][Math.floor(Math.random() * 6)];
+    
+    const camera = generateCameraDetails(ip, port, country);
+    
+    // Cam-Dumper focuses on web accessible cameras, ensure they're accessible
+    camera.accessible = true;
+    if (!camera.credentials) {
+      camera.credentials = defaultCredentials[Math.floor(Math.random() * defaultCredentials.length)];
+    }
+    
+    cameras.push(camera);
+  }
+  
+  // Return simulated scan result
   return {
     success: true,
-    total: targetIPs.length,
-    found: results.length,
-    results: results,
-    data: {
-      cameras: results,
-      total: results.length,
-      method: params.method,
-      outputDir: params.outputDir || './output'
-    },
+    timestamp: new Date().toISOString(),
+    total: targetIps.length,
+    found: cameras.length,
+    data: { cameras },
+    results: cameras,
     simulatedData: true
   };
 };
 
-/**
- * Executes the OpenCCTV tool for automated discovery and access to CCTV systems
- * Based on https://github.com/nak0823/OpenCCTV
- */
+// Implementation of OpenCCTV tool
 export const executeOpenCCTV = async (params: OpenCCTVParams): Promise<ScanResult> => {
-  await simulateNetworkDelay(2200);
-  console.log('Executing OpenCCTV:', params);
+  console.log('Executing OpenCCTV with params:', params);
+  await simulateNetworkDelay(1500, 3000);
   
-  // Parse target IP or range
-  const targetIPs = parseIpRange(params.target);
-  const results: CameraResult[] = [];
+  const { target, scanMode = 'quick' } = params;
   
-  // The number of cameras to find depends on scan mode
-  const cameraCount = 
-    params.scanMode === 'deep' ? 8 :
-    params.scanMode === 'quick' ? 3 : 5;
+  // Parse target
+  const targetIps = parseIpRange(target);
   
-  // Generate camera results based on scan mode
-  for (const ip of targetIPs.slice(0, cameraCount)) {
-    const cameraResult = generateCameraResult(ip);
-    
-    // Deep scan mode finds more vulnerabilities
-    if (params.scanMode === 'deep') {
-      cameraResult.vulnerabilities = commonVulnerabilities
-        .filter(() => Math.random() > 0.5)
-        .map(vuln => ({...vuln, id: `vuln-${nanoid(6)}`}));
-    }
-    
-    // Stealth mode tends to be more cautious with access
-    if (params.scanMode === 'stealth') {
-      cameraResult.status = 'online';
-      cameraResult.accessLevel = 'none';
-      cameraResult.credentials = null;
-    }
-    
-    results.push(cameraResult);
+  // Determine number of cameras based on scan mode
+  let numCameras: number;
+  switch (scanMode) {
+    case 'deep':
+      numCameras = Math.floor(Math.random() * 12) + 8; // 8-20 cameras
+      break;
+    case 'stealth':
+      numCameras = Math.floor(Math.random() * 5) + 3; // 3-8 cameras
+      break;
+    case 'quick':
+    default:
+      numCameras = Math.floor(Math.random() * 6) + 2; // 2-8 cameras
+      break;
   }
   
+  // Generate camera results
+  const cameras: CameraResult[] = [];
+  for (let i = 0; i < Math.min(numCameras, targetIps.length); i++) {
+    const ip = targetIps[i];
+    
+    // OpenCCTV is focused on RTSP, so prioritize port 554
+    const port = Math.random() < 0.7 ? 554 : [80, 8080, 8000, 37777][Math.floor(Math.random() * 4)];
+    
+    // Infer country from IP address (simplified)
+    let country: string | undefined;
+    if (ip.startsWith('5.58.') || ip.startsWith('31.43.') || ip.startsWith('91.197.')) {
+      country = 'Ukraine';
+    } else if (ip.startsWith('5.3.') || ip.startsWith('5.8.') || ip.startsWith('5.16.')) {
+      country = 'Russia';
+    } else if (ip.startsWith('5.152.') || ip.startsWith('31.146.') || ip.startsWith('37.110.')) {
+      country = 'Georgia';
+    } else if (ip.startsWith('5.2.') || ip.startsWith('5.12.') || ip.startsWith('31.5.')) {
+      country = 'Romania';
+    }
+    
+    const camera = generateCameraDetails(ip, port, country);
+    
+    // For deep scan, ensure more complete details
+    if (scanMode === 'deep') {
+      if (!camera.credentials && Math.random() < 0.6) {
+        camera.credentials = defaultCredentials[Math.floor(Math.random() * defaultCredentials.length)];
+      }
+      
+      if (!camera.vulnerabilities || camera.vulnerabilities.length === 0) {
+        const genericVulns = commonVulnerabilities['generic'];
+        const randomVuln = genericVulns[Math.floor(Math.random() * genericVulns.length)];
+        camera.vulnerabilities = [randomVuln];
+      }
+    }
+    
+    // For stealth mode, remove some identifiable info
+    if (scanMode === 'stealth') {
+      camera.manufacturer = 'Unknown';
+      camera.model = 'Unknown';
+      delete camera.credentials;
+    }
+    
+    cameras.push(camera);
+  }
+  
+  // Return simulated scan result
   return {
     success: true,
-    total: targetIPs.length,
-    found: results.length,
-    results: results,
-    data: {
-      cameras: results,
-      total: results.length,
-      scanMode: params.scanMode
-    },
+    timestamp: new Date().toISOString(),
+    total: targetIps.length,
+    found: cameras.length,
+    data: { cameras },
+    results: cameras,
     simulatedData: true
   };
 };
 
-/**
- * Executes the EyePwn tool to find and exploit CCTV cameras
- * Based on https://github.com/Hasan-Malek/EyePwn
- */
+// Implementation of EyePwn tool
 export const executeEyePwn = async (params: EyePwnParams): Promise<ScanResult> => {
-  await simulateNetworkDelay(2500);
-  console.log('Executing EyePwn:', params);
+  console.log('Executing EyePwn with params:', params);
+  await simulateNetworkDelay(1200, 2800);
   
-  const targetIPs = parseIpRange(params.target);
-  const results: CameraResult[] = [];
+  const { target, method = 'all', bruteforce = true, country } = params;
   
-  // Determine which cameras to find based on method
-  for (const ip of targetIPs.slice(0, 7)) {
-    // Skip some IPs to simulate not finding cameras on all IPs
-    if (Math.random() > 0.4) {
-      const cameraResult = generateCameraResult(ip, params.country);
+  let targetIps: string[] = [];
+  
+  // Handle country parameter
+  if (country && !target) {
+    // Generate random IPs for the specified country
+    for (let i = 0; i < 7; i++) {
+      const randomIp = getRandomIpFromCountry(country);
+      if (randomIp) targetIps.push(randomIp);
+    }
+  } else {
+    targetIps = parseIpRange(target);
+  }
+  
+  // Generate random number of cameras
+  const numCameras = Math.floor(Math.random() * 8) + 3; // 3-10 cameras
+  
+  // Generate camera results
+  const cameras: CameraResult[] = [];
+  for (let i = 0; i < Math.min(numCameras, targetIps.length); i++) {
+    const ip = targetIps[i];
+    const port = [80, 554, 8080, 8000, 37777, 443][Math.floor(Math.random() * 6)];
+    
+    const camera = generateCameraDetails(ip, port, country);
+    
+    // EyePwn focuses on vulnerabilities and exploitation
+    if (!camera.vulnerabilities || camera.vulnerabilities.length === 0) {
+      const manufacturerKey = camera.manufacturer.toLowerCase();
       
-      // Adjust results based on method
-      if (params.method === 'rtsp') {
-        cameraResult.port = 554;
-        cameraResult.rtspUrl = `rtsp://${ip}:554/live/ch0`;
-      } else if (params.method === 'onvif') {
-        cameraResult.port = 80;
-        cameraResult.rtspUrl = `rtsp://${ip}:554/onvif/media`;
-      } else if (params.method === 'web') {
-        cameraResult.port = 80;
-        cameraResult.httpUrl = `http://${ip}:80/`;
+      if (manufacturerKey in commonVulnerabilities) {
+        const vulns = commonVulnerabilities[manufacturerKey];
+        const numVulns = Math.floor(Math.random() * 3) + 1; // 1-3 vulnerabilities
+        
+        camera.vulnerabilities = [];
+        for (let v = 0; v < numVulns && v < vulns.length; v++) {
+          camera.vulnerabilities.push(vulns[v]);
+        }
+      } else {
+        const genericVulns = commonVulnerabilities['generic'];
+        const vulnIndex = Math.floor(Math.random() * genericVulns.length);
+        camera.vulnerabilities = [genericVulns[vulnIndex]];
+      }
+    }
+    
+    // If bruteforce is enabled, add credentials
+    if (bruteforce && !camera.credentials && Math.random() < 0.7) {
+      camera.credentials = defaultCredentials[Math.floor(Math.random() * defaultCredentials.length)];
+    }
+    
+    // Mark as vulnerable
+    camera.status = 'vulnerable';
+    
+    cameras.push(camera);
+  }
+  
+  // Return simulated scan result
+  return {
+    success: true,
+    timestamp: new Date().toISOString(),
+    total: targetIps.length,
+    found: cameras.length,
+    data: { cameras },
+    results: cameras,
+    simulatedData: true
+  };
+};
+
+// Implementation of Ingram tool
+export const executeIngram = async (params: IngramParams): Promise<ScanResult> => {
+  console.log('Executing Ingram with params:', params);
+  await simulateNetworkDelay(1500, 3500);
+  
+  const { target, scanType = 'quick', country } = params;
+  
+  let targetIps: string[] = [];
+  
+  // Handle country parameter
+  if (country && !target) {
+    // Generate random IPs for the specified country
+    for (let i = 0; i < 8; i++) {
+      const randomIp = getRandomIpFromCountry(country);
+      if (randomIp) targetIps.push(randomIp);
+    }
+  } else {
+    targetIps = parseIpRange(target);
+  }
+  
+  // Determine number of cameras based on scan type
+  let numCameras: number;
+  switch (scanType) {
+    case 'full':
+      numCameras = Math.floor(Math.random() * 15) + 5; // 5-20 cameras
+      break;
+    case 'stealth':
+      numCameras = Math.floor(Math.random() * 4) + 1; // 1-5 cameras
+      break;
+    case 'quick':
+    default:
+      numCameras = Math.floor(Math.random() * 7) + 2; // 2-9 cameras
+      break;
+  }
+  
+  // Generate camera results
+  const cameras: CameraResult[] = [];
+  for (let i = 0; i < Math.min(numCameras, targetIps.length); i++) {
+    const ip = targetIps[i];
+    const port = [80, 554, 8080, 8000, 81, 37777, 443][Math.floor(Math.random() * 7)];
+    
+    const camera = generateCameraDetails(ip, port, country);
+    
+    // Ingram is focused on detailed analysis
+    if (scanType === 'full') {
+      // Ensure full details
+      if (!camera.credentials && Math.random() < 0.5) {
+        camera.credentials = defaultCredentials[Math.floor(Math.random() * defaultCredentials.length)];
       }
       
-      // If bruteforce was requested, attempt to find credentials
-      if (params.bruteforce) {
-        const bruteforceResult = simulateBruteforce(ip, cameraResult.port);
-        if (bruteforceResult.success) {
-          cameraResult.credentials = bruteforceResult.credentials;
-          cameraResult.status = 'vulnerable';
-          cameraResult.accessLevel = 'admin';
+      if (!camera.vulnerabilities || camera.vulnerabilities.length === 0) {
+        const manufacturerKey = camera.manufacturer.toLowerCase();
+        
+        if (manufacturerKey in commonVulnerabilities) {
+          camera.vulnerabilities = [...commonVulnerabilities[manufacturerKey]];
+        } else {
+          camera.vulnerabilities = [...commonVulnerabilities['generic']];
         }
       }
       
-      results.push(cameraResult);
+      camera.status = 'vulnerable';
+    } else if (scanType === 'stealth') {
+      // Minimal footprint for stealth
+      delete camera.credentials;
+      delete camera.vulnerabilities;
+      camera.manufacturer = 'Unknown';
+      camera.model = 'Unknown';
     }
+    
+    cameras.push(camera);
   }
   
+  // Return simulated scan result
   return {
     success: true,
-    total: targetIPs.length,
-    found: results.length,
-    results: results,
-    data: {
-      cameras: results,
-      total: results.length,
-      method: params.method,
-      bruteforceAttempts: params.bruteforce ? targetIPs.length : 0
-    },
-    simulatedData: true
-  };
-};
-
-/**
- * Executes the Ingram tool for advanced CCTV discovery and analysis
- * Based on https://github.com/jorhelp/Ingram
- */
-export const executeIngram = async (params: IngramParams): Promise<ScanResult> => {
-  await simulateNetworkDelay(2800);
-  console.log('Executing Ingram:', params);
-  
-  const targetIPs = parseIpRange(params.target);
-  const results: CameraResult[] = [];
-  
-  // Determine scan depth based on scan type
-  const scanDepth = 
-    params.scanType === 'deep' ? 10 :
-    params.scanType === 'quick' ? 3 : 5;
-  
-  // Generate camera results
-  for (const ip of targetIPs.slice(0, scanDepth)) {
-    if (Math.random() > 0.3) {
-      const cameraResult = generateCameraResult(ip, params.country);
-      
-      // Deep scans find more information
-      if (params.scanType === 'deep') {
-        // Add more detailed firmware info
-        const firmwareVersion = `${Math.floor(Math.random() * 5) + 1}.${Math.floor(Math.random() * 10)}.${Math.floor(Math.random() * 20)}`;
-        cameraResult.firmwareVersion = firmwareVersion;
-        
-        // Add network service discovery
-        cameraResult.services = [
-          'RTSP (554/tcp)',
-          'HTTP (80/tcp)',
-          'HTTPS (443/tcp)',
-          'ONVIF (8000/tcp)',
-          'SSH (22/tcp)',
-          'Telnet (23/tcp)'
-        ].filter(() => Math.random() > 0.5);
-      }
-      
-      // Stealth scans avoid triggering security measures
-      if (params.scanType === 'stealth') {
-        cameraResult.status = 'online';
-        // Limited information gathered
-        cameraResult.vulnerabilities = cameraResult.vulnerabilities?.slice(0, 1);
-      }
-      
-      // Include response time for performance analysis
-      cameraResult.responseTime = Math.floor(Math.random() * 500);
-      
-      results.push(cameraResult);
-    }
-  }
-  
-  return {
-    success: true,
-    total: targetIPs.length,
-    found: results.length,
-    results: results,
-    data: {
-      cameras: results,
-      total: results.length,
-      scanType: params.scanType,
-      includeSnapshots: params.includeSnapshots,
-      outputFormat: params.outputFormat || 'json'
-    },
+    timestamp: new Date().toISOString(),
+    total: targetIps.length,
+    found: cameras.length,
+    data: { cameras },
+    results: cameras,
     simulatedData: true
   };
 };
