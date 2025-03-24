@@ -1,27 +1,35 @@
-
 /**
- * Network OSINT tools implementations
- * These will later be replaced with real implementations from the GitHub repos:
- * - github.com/DedSecInside/TorBot
- * - github.com/AngelSecurityTeam/BotExploits
+ * Implementation of network-based OSINT tools
  */
 
 import { simulateNetworkDelay } from '../networkUtils';
 import { 
-  ToolResult,
-  TorBotParams,
+  TorBotParams, 
   BotExploitsParams,
-  ImperialOculusParams
-} from '../osintToolTypes';
+  ImperialOculusParams 
+} from '../types/networkToolTypes';
 
 /**
- * Execute TorBot tool
- * Real implementation will use github.com/DedSecInside/TorBot
+ * Execute TorBot tool for dark web OSINT
  */
-export const executeTorBot = async (params: TorBotParams): Promise<ToolResult> => {
-  await simulateNetworkDelay(3500);
-  console.log('Executing TorBot:', params);
-
+export const executeTorBot = async (params: TorBotParams): Promise<any> => {
+  console.log('Executing TorBot with params:', params);
+  
+  // Simulate network delay
+  await simulateNetworkDelay(2000, 5000);
+  
+  // Validate parameters
+  if (!params.url) {
+    return {
+      success: false,
+      error: 'URL is required',
+      simulatedData: true
+    };
+  }
+  
+  // Limit depth for performance
+  const depth = params.depth && parseInt(params.depth.toString()) < 5 ? params.depth : 2;
+  
   // Simulated results - will be replaced with real implementation
   return {
     success: true,
@@ -45,40 +53,26 @@ export const executeTorBot = async (params: TorBotParams): Promise<ToolResult> =
 };
 
 /**
- * Execute Imperial Oculus network scanner
- * Will be implemented as a custom tool or use an existing one
+ * Execute BotExploits tool for finding bot tokens and API keys
  */
-export const executeImperialOculus = async (params: ImperialOculusParams): Promise<ToolResult> => {
-  await simulateNetworkDelay(2000);
-  console.log('Executing Imperial Oculus:', params);
-
-  // Simulated results - will be replaced with real implementation
-  return {
-    success: true,
-    data: { 
-      target: params.target,
-      services: [
-        { port: 80, service: 'HTTP', banner: 'nginx/1.18.0' },
-        { port: 443, service: 'HTTPS', banner: 'nginx/1.18.0' },
-        { port: 22, service: 'SSH', banner: 'OpenSSH 8.2p1' }
-      ],
-      os: 'Linux 5.4.x',
-      response_time: '53ms',
-      open_ports: [22, 80, 443, 8080],
-      scan_time: '2.4s'
-    },
-    simulatedData: true
-  };
-};
-
-/**
- * Execute BotExploits tool
- * Real implementation will use github.com/AngelSecurityTeam/BotExploits
- */
-export const executeBotExploits = async (params: BotExploitsParams): Promise<ToolResult> => {
-  await simulateNetworkDelay(2700);
-  console.log('Executing BotExploits:', params);
-
+export const executeBotExploits = async (params: BotExploitsParams): Promise<any> => {
+  console.log('Executing BotExploits with params:', params);
+  
+  // Simulate network delay
+  await simulateNetworkDelay(1500, 3500);
+  
+  // Validate parameters
+  if (!params.target) {
+    return {
+      success: false,
+      error: 'Target is required',
+      simulatedData: true
+    };
+  }
+  
+  const botType = params.botType || 'any';
+  const scanType = params.scanType || 'all';
+  
   // Simulated results - will be replaced with real implementation
   return {
     success: true,
@@ -93,6 +87,34 @@ export const executeBotExploits = async (params: BotExploitsParams): Promise<Too
         shell_access: params.attackType === 'full',
         bot_type: 'Generic IoT Device'
       }
+    },
+    simulatedData: true
+  };
+};
+
+/**
+ * Execute Imperial Oculus network reconnaissance tool
+ */
+export const executeImperialOculus = async (params: ImperialOculusParams): Promise<any> => {
+  console.log('Executing Imperial Oculus with params:', params);
+  
+  // Simulate network delay
+  await simulateNetworkDelay(2500, 6000);
+  
+  // Simulated results - will be replaced with real implementation
+  return {
+    success: true,
+    data: { 
+      target: params.target,
+      services: [
+        { port: 80, service: 'HTTP', banner: 'nginx/1.18.0' },
+        { port: 443, service: 'HTTPS', banner: 'nginx/1.18.0' },
+        { port: 22, service: 'SSH', banner: 'OpenSSH 8.2p1' }
+      ],
+      os: 'Linux 5.4.x',
+      response_time: '53ms',
+      open_ports: [22, 80, 443, 8080],
+      scan_time: '2.4s'
     },
     simulatedData: true
   };

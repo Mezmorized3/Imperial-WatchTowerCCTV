@@ -1,280 +1,218 @@
-
-import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import React, { useState, useEffect, useRef } from 'react';
+import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Eye, RefreshCw, Video } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
-import { executeCameradar, executeIPCamSearch, executeCCTV } from '@/utils/osintImplementations';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { CameraResult } from '@/types/scanner';
-import { CCTVParams } from '@/utils/types/cameraTypes';
-import { getProperStreamUrl } from '@/utils/rtspUtils';
-import { getCountryIpRanges } from '@/utils/ipRangeUtils';
+import { Search, Filter, MapPin, RefreshCw, Camera, Check } from 'lucide-react';
+import CountrySelector from '@/components/inputs/CountrySelector';
 
 interface CameraSearchProps {
-  setCustomRtspUrl: (url: string) => void;
-  setActiveTab: (tab: string) => void;
+  onSearch: (filters: any) => void;
+  isLoading: boolean;
+  totalCameras: number;
+  onSelectCamera?: (camera: CameraResult) => void;
+  selectedCamera?: CameraResult | null;
 }
 
-const CameraSearch: React.FC<CameraSearchProps> = ({ 
-  setCustomRtspUrl, 
-  setActiveTab 
+const CameraSearch: React.FC<CameraSearchProps> = ({
+  onSearch,
+  isLoading,
+  totalCameras,
+  onSelectCamera,
+  selectedCamera
 }) => {
-  const [searchResults, setSearchResults] = useState<CameraResult[]>([]);
-  const [isSearching, setIsSearching] = useState<boolean>(false);
-  const [searchType, setSearchType] = useState<string>('cameradar');
-  const [searchInput, setSearchInput] = useState<string>('');
-  const [selectedCountry, setSelectedCountry] = useState<string>('');
-  const { toast } = useToast();
+  const [searchType, setSearchType] = useState('ip');
+  const [searchValue, setSearchValue] = useState('');
+  const [selectedCountries, setSelectedCountries] = useState<string[]>([]);
+  const [accessibleOnly, setAccessibleOnly] = useState(false);
+  const [vulnerableOnly, setVulnerableOnly] = useState(false);
+  const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
+  const [selectedPorts, setSelectedPorts] = useState<string[]>([]);
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
 
-  // Add countries with flags for better UI
-  const countries = [
-    { value: '', label: 'Any Country' },
-    { value: 'ua', label: '🇺🇦 Ukraine' },
-    { value: 'ru', label: '🇷🇺 Russia' },
-    { value: 'ge', label: '🇬🇪 Georgia' },
-    { value: 'ro', label: '🇷🇴 Romania' },
-    { value: 'us', label: '🇺🇸 United States' },
-    { value: 'uk', label: '🇬🇧 United Kingdom' },
-    { value: 'de', label: '🇩🇪 Germany' },
-    { value: 'fr', label: '🇫🇷 France' }
-  ];
-
-  const filterCameras = (cameras: CameraResult[]) => {
-    return cameras.filter(camera => {
-      const searchTerm = searchInput.toLowerCase();
-      
-      // Filter by search term
-      if (
-        searchTerm &&
-        !camera.ip.toLowerCase().includes(searchTerm) &&
-        !(camera.model?.toLowerCase().includes(searchTerm)) &&
-        // Handle undefined manufacturer
-        !(camera.manufacturer?.toLowerCase().includes(searchTerm))
-      ) {
-        return false;
+  const handleSearch = () => {
+    onSearch({
+      type: searchType,
+      value: searchValue,
+      filters: {
+        countries: selectedCountries,
+        accessibleOnly,
+        vulnerableOnly,
+        brands: selectedBrands,
+        ports: selectedPorts
       }
-
-      return true;
     });
   };
 
-  const handleSearch = async () => {
-    if (!searchInput && !selectedCountry) {
-      toast({
-        title: "Error",
-        description: "Please enter an IP address/range or select a country",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    setIsSearching(true);
-    setSearchResults([]);
-    
-    try {
-      let results: any;
-      
-      // If country is selected, try to get IP ranges for that country
-      let targetInput = searchInput;
-      if (selectedCountry && !searchInput) {
-        const ipRanges = getCountryIpRanges(selectedCountry);
-        if (ipRanges.length > 0) {
-          // Pick a random IP range from the country
-          const randomRange = ipRanges[Math.floor(Math.random() * ipRanges.length)];
-          targetInput = randomRange.range;
-          
-          toast({
-            title: "Using Country IP Range",
-            description: `${randomRange.description}: ${randomRange.range}`,
-          });
-        } else {
-          targetInput = selectedCountry; // Use country code as fallback
-        }
-      }
-      
-      switch (searchType) {
-        case 'cameradar':
-          results = await executeCameradar({
-            target: targetInput
-          });
-          break;
-        case 'ipcamsearch':
-          results = await executeIPCamSearch({
-            subnet: targetInput,
-            protocols: []
-          });
-          break;
-        case 'cctv':
-          const cctvParams: CCTVParams = {
-            region: selectedCountry || targetInput,
-            country: selectedCountry || targetInput,
-            limit: 10
-          };
-          results = await executeCCTV(cctvParams);
-          break;
-        default:
-          results = await executeCameradar({
-            target: targetInput
-          });
-      }
-      
-      if (results && results.data && results.data.cameras) {
-        setSearchResults(filterCameras(results.data.cameras));
-        toast({
-          title: "Search Complete",
-          description: `Found ${results.data.cameras.length} camera${results.data.cameras.length !== 1 ? 's' : ''}`
-        });
-      } else {
-        toast({
-          title: "Search Complete",
-          description: "No cameras found"
-        });
-      }
-    } catch (error) {
-      console.error('Search error:', error);
-      toast({
-        title: "Search Error",
-        description: error instanceof Error ? error.message : 'Failed to search for cameras',
-        variant: "destructive"
-      });
-    } finally {
-      setIsSearching(false);
+  const selectCountry = (country: string) => {
+    if (selectedCountries.includes(country)) {
+      setSelectedCountries(selectedCountries.filter(c => c !== country));
+    } else {
+      setSelectedCountries([...selectedCountries, country]);
     }
   };
 
+  // The special Eastern European cameras for the project
+  const eastEuropeanCountries = [
+    { name: 'Ukraine', code: 'UA', flag: '🇺🇦' },
+    { name: 'Russia', code: 'RU', flag: '🇷🇺' },
+    { name: 'Georgia', code: 'GE', flag: '🇬🇪' },
+    { name: 'Romania', code: 'RO', flag: '🇷🇴' }
+  ];
+
+  const toggleFilter = () => {
+    setIsFilterOpen(!isFilterOpen);
+  };
+
+  const renderCountrySelector = () => (
+    <div className="flex flex-wrap gap-2">
+      {eastEuropeanCountries.map((country) => (
+        <Button
+          key={country.code}
+          variant={selectedCountries.includes(country.name) ? 'default' : 'outline'}
+          className={`border-gray-700 hover:bg-scanner-dark-alt ${selectedCountries.includes(country.name) ? 'bg-scanner-primary' : ''}`}
+          onClick={() => selectCountry(country.name)}
+        >
+          {country.flag} {country.name}
+        </Button>
+      ))}
+    </div>
+  );
+
+  const renderBrandSelector = () => (
+    <div className="flex flex-wrap gap-2">
+      {['Hikvision', 'Dahua', 'Axis', 'Bosch', 'Hanwha', 'Uniview'].map((brand) => (
+        <Button
+          key={brand}
+          variant={selectedBrands.includes(brand) ? 'default' : 'outline'}
+          className={`border-gray-700 hover:bg-scanner-dark-alt ${selectedBrands.includes(brand) ? 'bg-scanner-primary' : ''}`}
+          onClick={() => {
+            if (selectedBrands.includes(brand)) {
+              setSelectedBrands(selectedBrands.filter(b => b !== brand));
+            } else {
+              setSelectedBrands([...selectedBrands, brand]);
+            }
+          }}
+        >
+          {brand}
+        </Button>
+      ))}
+    </div>
+  );
+
+  const renderPortSelector = () => (
+    <div className="flex flex-wrap gap-2">
+      {['80', '554', '8000', '8080', '37777'].map((port) => (
+        <Button
+          key={port}
+          variant={selectedPorts.includes(port) ? 'default' : 'outline'}
+          className={`border-gray-700 hover:bg-scanner-dark-alt ${selectedPorts.includes(port) ? 'bg-scanner-primary' : ''}`}
+          onClick={() => {
+            if (selectedPorts.includes(port)) {
+              setSelectedPorts(selectedPorts.filter(p => p !== port));
+            } else {
+              setSelectedPorts([...selectedPorts, port]);
+            }
+          }}
+        >
+          {port}
+        </Button>
+      ))}
+    </div>
+  );
+
+  // Update the camera card location data
+  const renderCameraLocation = (camera: CameraResult) => {
+    if (!camera) return "Unknown location";
+    
+    const location = camera.location; // Use location instead of geolocation
+    
+    if (!location || (!location.country && !location.city)) {
+      return "Unknown location";
+    }
+    
+    return [location.city, location.country].filter(Boolean).join(', ');
+  };
+
   return (
-    <>
-      <Card className="bg-scanner-dark-alt border-gray-700 mb-6">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-md font-medium">Find RTSP Cameras</CardTitle>
-        </CardHeader>
-        <CardContent className="pt-2">
-          <div className="flex flex-col sm:flex-row gap-4 mb-4">
-            <div className="flex-grow space-y-2">
-              <Input
-                placeholder="Enter IP address or range (e.g. 192.168.1.0/24)"
-                value={searchInput}
-                onChange={(e) => setSearchInput(e.target.value)}
-                className="w-full"
-              />
-              
-              <div className="grid grid-cols-2 gap-2">
-                <Select value={searchType} onValueChange={setSearchType}>
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select search method" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="cameradar">Cameradar (RTSP brute-force)</SelectItem>
-                    <SelectItem value="ipcamsearch">IPCamSearch (Web interface)</SelectItem>
-                    <SelectItem value="cctv">CCTV Scanner (Stream discovery)</SelectItem>
-                  </SelectContent>
-                </Select>
-                
-                <Select value={selectedCountry} onValueChange={setSelectedCountry}>
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select country (optional)" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {countries.map(country => (
-                      <SelectItem key={country.value} value={country.value}>
-                        {country.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+    <Card className="bg-scanner-dark-alt border-gray-700">
+      <CardContent className="space-y-4">
+        <div className="flex items-center space-x-2">
+          <Select value={searchType} onValueChange={setSearchType}>
+            <SelectTrigger className="w-[120px] bg-scanner-dark-alt border-gray-700">
+              <SelectValue placeholder="Search Type" />
+            </SelectTrigger>
+            <SelectContent className="bg-scanner-dark border-gray-700">
+              <SelectItem value="ip">IP Address</SelectItem>
+              <SelectItem value="range">IP Range</SelectItem>
+              <SelectItem value="country">Country</SelectItem>
+            </SelectContent>
+          </Select>
+          <Input
+            type="text"
+            placeholder={`Enter ${searchType === 'ip' ? 'IP Address' : searchType === 'range' ? 'IP Range' : 'Country'}`}
+            value={searchValue}
+            onChange={(e) => setSearchValue(e.target.value)}
+            className="bg-scanner-dark-alt border-gray-700"
+          />
+          <Button onClick={handleSearch} disabled={isLoading} className="bg-scanner-primary">
+            <Search className="h-4 w-4 mr-2" />
+            {isLoading ? 'Searching...' : 'Search'}
+          </Button>
+        </div>
+        <div className="flex items-center justify-between">
+          <p className="text-sm text-gray-400">
+            Total Cameras Found: {totalCameras}
+          </p>
+          <Button variant="outline" size="sm" onClick={toggleFilter} className="border-gray-700 hover:bg-scanner-dark-alt">
+            <Filter className="h-4 w-4 mr-2" />
+            Filters
+          </Button>
+        </div>
+        {isFilterOpen && (
+          <div className="space-y-4 p-4 bg-scanner-dark border border-gray-700 rounded-md">
+            <div className="space-y-2">
+              <Label>Country</Label>
+              {renderCountrySelector()}
             </div>
-            <div className="self-start">
-              <Button onClick={handleSearch} disabled={isSearching}>
-                {isSearching ? (
-                  <>
-                    <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                    Searching...
-                  </>
-                ) : (
-                  <>
-                    <Eye className="h-4 w-4 mr-2" />
-                    Search Cameras
-                  </>
-                )}
-              </Button>
+            <div className="space-y-2">
+              <Label>Brand</Label>
+              {renderBrandSelector()}
+            </div>
+            <div className="space-y-2">
+              <Label>Port</Label>
+              {renderPortSelector()}
+            </div>
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="accessible"
+                checked={accessibleOnly}
+                onCheckedChange={(checked) => setAccessibleOnly(!!checked)}
+                className="peer h-5 w-5 bg-scanner-dark-alt border-gray-700"
+              />
+              <Label htmlFor="accessible" className="text-sm text-gray-400">
+                Accessible Only
+              </Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="vulnerable"
+                checked={vulnerableOnly}
+                onCheckedChange={(checked) => setVulnerableOnly(!!checked)}
+                className="peer h-5 w-5 bg-scanner-dark-alt border-gray-700"
+              />
+              <Label htmlFor="vulnerable" className="text-sm text-gray-400">
+                Vulnerable Only
+              </Label>
             </div>
           </div>
-          
-          {searchResults.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-              {searchResults.map((camera, index) => (
-                <Card 
-                  key={index} 
-                  className="bg-scanner-dark border-gray-700 hover:border-gray-600 cursor-pointer transition-colors"
-                  onClick={() => {
-                    const streamUrl = getProperStreamUrl(camera);
-                    setCustomRtspUrl(streamUrl);
-                    setActiveTab('customstream');
-                  }}
-                >
-                  <CardContent className="p-4">
-                    <div className="flex items-center gap-3">
-                      <div className="h-8 w-8 rounded-full bg-scanner-dark-alt flex items-center justify-center">
-                        <Video className="h-4 w-4 text-scanner-info" />
-                      </div>
-                      <div>
-                        <h3 className="font-medium">{camera.ip}</h3>
-                        <p className="text-sm text-gray-400">
-                          {camera.brand || camera.manufacturer || 'Unknown'} {camera.model || 'Camera'}
-                        </p>
-                        {camera.credentials && (
-                          <p className="text-xs text-green-500">
-                            Credentials found: {camera.credentials.username}:{camera.credentials.password}
-                          </p>
-                        )}
-                        {(camera.geolocation?.country || camera.location?.country) && (
-                          <p className="text-xs text-blue-400">
-                            {camera.geolocation?.country || camera.location?.country}
-                            {(camera.geolocation?.city || camera.location?.city) && 
-                              `, ${camera.geolocation?.city || camera.location?.city}`
-                            }
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          ) : isSearching ? (
-            <div className="text-center p-8">
-              <div className="animate-spin inline-block h-8 w-8 border-b-2 border-scanner-info rounded-full mb-2"></div>
-              <p className="text-gray-400">Searching for cameras on the network...</p>
-            </div>
-          ) : searchInput || selectedCountry ? (
-            <div className="text-center p-8 border border-gray-700 rounded-lg">
-              <p className="text-gray-400">
-                {searchResults.length === 0 ? 'No cameras found. Try a different network range, country, or search method.' : ''}
-              </p>
-            </div>
-          ) : null}
-        </CardContent>
-      </Card>
-      
-      <Card className="bg-scanner-dark-alt border-gray-700">
-        <CardHeader className="pb-2">
-          <CardTitle className="text-md font-medium">Quick Tips</CardTitle>
-        </CardHeader>
-        <CardContent className="text-sm text-gray-400 space-y-2">
-          <p>• Common camera networks are on 192.168.1.0/24 or 10.0.0.0/24</p>
-          <p>• Most cameras use ports 554, 80, or 8080</p>
-          <p>• Try different search methods if one doesn't find your camera</p>
-          <p>• For cameras in specific countries, try using their IP ranges</p>
-          <p>• Ukrainian cameras often use ports 554 and 80</p>
-          <p>• Russian CCTV systems may be found on ports 8000 and 37777</p>
-          <p>• Georgian security cameras often use ports 554, 80, and 8000</p>
-          <p>• Romanian networks frequently use ports 80, 8080, and 554</p>
-        </CardContent>
-      </Card>
-    </>
+        )}
+      </CardContent>
+    </Card>
   );
 };
 

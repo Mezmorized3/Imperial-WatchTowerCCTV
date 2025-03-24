@@ -139,7 +139,7 @@ export interface CamDumperParams {
 
 export interface OpenCCTVParams {
   target: string;
-  scanMode: 'quick' | 'deep' | 'stealth';
+  scanMode: 'quick' | 'deep' | 'stealth' | 'full'; // Added 'full' to match usage
   saveOutput?: boolean;
   proxyEnabled?: boolean;
 }
@@ -154,7 +154,7 @@ export interface EyePwnParams {
 
 export interface IngramParams {
   target: string;
-  scanType: 'quick' | 'deep' | 'stealth';
+  scanType: 'quick' | 'deep' | 'stealth' | 'full'; // Added 'full' to match usage
   outputFormat?: 'json' | 'csv' | 'txt';
   includeSnapshots?: boolean;
   country?: string;

@@ -60,3 +60,6 @@ export interface ThreatAssessment {
   recommendedActions: string[];
   lastUpdated: string;
 }
+
+// Add ImperialShieldResult for compatibility with imports
+export { ImperialShieldResult } from './advancedToolTypes';

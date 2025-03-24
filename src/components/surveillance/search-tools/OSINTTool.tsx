@@ -1,10 +1,12 @@
-
 import React, { useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Search, Eye, Globe } from 'lucide-react';
+import { toast } from '@/components/ui/use-toast';
 import { executeOSINT } from '@/utils/osintTools';
-import { useToast } from '@/hooks/use-toast';
 
 export const OSINTTool: React.FC = () => {
   const [query, setQuery] = useState('');
@@ -12,7 +14,6 @@ export const OSINTTool: React.FC = () => {
   const [searchDepth, setSearchDepth] = useState('deep');
   const [results, setResults] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const { toast } = useToast();
 
   const handleSearch = async () => {
     if (!query) {
@@ -85,31 +86,44 @@ export const OSINTTool: React.FC = () => {
       </div>
 
       <Card className="bg-scanner-dark-alt border-gray-700">
+        <CardHeader>
+          <CardTitle>Search Options</CardTitle>
+        </CardHeader>
         <CardContent className="pt-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="text-sm text-gray-400">Search Type</label>
-              <select
+              <Label className="text-sm text-gray-400">Search Type</Label>
+              <Select
                 value={queryType}
                 onChange={(e) => setQueryType(e.target.value)}
                 className="w-full bg-scanner-dark border-gray-700 rounded px-4 py-2 mt-1"
               >
-                <option value="person">Person</option>
-                <option value="domain">Domain</option>
-                <option value="company">Company</option>
-              </select>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="person">Person</SelectItem>
+                  <SelectItem value="domain">Domain</SelectItem>
+                  <SelectItem value="company">Company</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
             <div>
-              <label className="text-sm text-gray-400">Search Depth</label>
-              <select
+              <Label className="text-sm text-gray-400">Search Depth</Label>
+              <Select
                 value={searchDepth}
                 onChange={(e) => setSearchDepth(e.target.value)}
                 className="w-full bg-scanner-dark border-gray-700 rounded px-4 py-2 mt-1"
               >
-                <option value="shallow">Shallow</option>
-                <option value="deep">Deep</option>
-              </select>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a depth" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="shallow">Shallow</SelectItem>
+                  <SelectItem value="deep">Deep</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
         </CardContent>

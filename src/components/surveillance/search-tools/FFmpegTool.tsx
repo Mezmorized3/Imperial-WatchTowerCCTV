@@ -1,284 +1,350 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Switch } from '@/components/ui/switch';
-import { Loader2, Play, Download, Video } from 'lucide-react';
-import { executeFFmpeg } from '@/utils/osintTools';
-import { FFmpegParams } from '@/utils/osintToolTypes';
-import { useToast } from '@/hooks/use-toast';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Video, Camera, Download, Eye } from 'lucide-react';
+import { toast } from '@/components/ui/use-toast';
+import { executeFFmpeg, ffmpegConvertRtspToHls, ffmpegRecordStream, applyMotionDetection } from '@/utils/osintTools';
 
-const ffmpegConvertRtspToHls = async (inputStream: string) => {
-  const params: FFmpegParams = {
-    input: inputStream,
-    output: `output_${Date.now()}.m3u8`,
-    videoCodec: 'h264',
-    outputFormat: 'hls'
-  };
-  return executeFFmpeg(params);
-};
+interface FFmpegToolProps {
+  onProcessComplete?: (outputPath: string) => void;
+}
 
-const ffmpegRecordStream = async (inputStream: string) => {
-  const params: FFmpegParams = {
-    input: inputStream,
-    output: `recording_${Date.now()}.mp4`,
-    videoCodec: 'h264',
-    outputFormat: 'mp4'
-  };
-  return executeFFmpeg(params);
-};
-
-const applyMotionDetection = async (inputStream: string) => {
-  const params: FFmpegParams = {
-    input: inputStream,
-    output: `motion_${Date.now()}.mp4`,
-    filters: ['motion=0.5'],
-    options: { detectMotion: true }
-  };
-  return executeFFmpeg(params);
-};
-
-const FFmpegTool: React.FC = () => {
-  const [inputStream, setInputStream] = useState<string>('rtsp://admin:admin@192.168.1.10:554/stream1');
-  const [outputFormat, setOutputFormat] = useState<string>('mp4');
-  const [isConverting, setIsConverting] = useState<boolean>(false);
-  const [isRecording, setIsRecording] = useState<boolean>(false);
-  const [isDetectingMotion, setIsDetectingMotion] = useState<boolean>(false);
-  const [results, setResults] = useState<string | null>(null);
-  const [enableHighQuality, setEnableHighQuality] = useState<boolean>(false);
-  const { toast } = useToast();
-
-  const handleConvertStream = async () => {
+const FFmpegTool: React.FC<FFmpegToolProps> = ({ onProcessComplete }) => {
+  const [rtspUrl, setRtspUrl] = useState('');
+  const [hlsOutput, setHlsOutput] = useState('output.m3u8');
+  const [recordOutput, setRecordOutput] = useState('recorded_stream.mp4');
+  const [customInput, setCustomInput] = useState('');
+  const [customOutput, setCustomOutput] = useState('');
+  const [customOptions, setCustomOptions] = useState('');
+  const [videoCodec, setVideoCodec] = useState('libx264');
+  const [audioCodec, setAudioCodec] = useState('aac');
+  const [customFormat, setCustomFormat] = useState('mp4');
+  const [isLoading, setIsLoading] = useState(false);
+  const [results, setResults] = useState<any>(null);
+  
+  const handleConvertRtspToHls = async () => {
+    if (!rtspUrl) {
+      toast({
+        title: "Error",
+        description: "Please enter an RTSP URL",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    setIsLoading(true);
+    
     try {
-      setIsConverting(true);
-      setResults(null);
+      const result = await ffmpegConvertRtspToHls({
+        input: rtspUrl,
+        output: hlsOutput || "output.m3u8",
+        format: "hls",
+        options: [`-c:v ${videoCodec}`, `-c:a ${audioCodec}`]
+      });
       
-      const result = await ffmpegConvertRtspToHls(inputStream);
-      
-      if (result.success) {
+      if (result && result.success) {
+        setResults(result.data);
+        
+        if (onProcessComplete) {
+          onProcessComplete(hlsOutput || "output.m3u8");
+        }
+        
         toast({
-          title: "Conversion Started",
-          description: "Stream conversion to HLS format initiated",
+          title: "Conversion Complete",
+          description: `RTSP stream converted to HLS successfully`
         });
-        setResults(JSON.stringify(result.data, null, 2));
       } else {
         toast({
           title: "Conversion Failed",
-          description: result.error || "An error occurred",
-          variant: "destructive",
+          description: result?.error || "Unknown error occurred",
+          variant: "destructive"
         });
       }
     } catch (error) {
-      console.error("Error converting stream:", error);
+      console.error("Error during conversion:", error);
       toast({
         title: "Conversion Error",
-        description: error instanceof Error ? error.message : "An unexpected error occurred",
-        variant: "destructive",
+        description: error instanceof Error ? error.message : "An unknown error occurred",
+        variant: "destructive"
       });
     } finally {
-      setIsConverting(false);
+      setIsLoading(false);
     }
   };
-
-  const handleRecordStream = async () => {
+  
+  const handleRecord = async () => {
+    if (!rtspUrl) {
+      toast({
+        title: "Error",
+        description: "Please enter an RTSP URL",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    setIsLoading(true);
+    
     try {
-      setIsRecording(true);
-      setResults(null);
+      const result = await ffmpegRecordStream({
+        input: rtspUrl,
+        output: recordOutput || "recorded_stream.mp4",
+        options: ["detectMotion" as any] // Use a string option
+      });
       
-      const result = await ffmpegRecordStream(inputStream);
-      
-      if (result.success) {
+      if (result && result.success) {
+        setResults(result.data);
+        
+        if (onProcessComplete) {
+          onProcessComplete(recordOutput || "recorded_stream.mp4");
+        }
+        
         toast({
-          title: "Recording Started",
-          description: "Stream recording initiated",
+          title: "Recording Complete",
+          description: `Stream recorded successfully`
         });
-        setResults(JSON.stringify(result.data, null, 2));
       } else {
         toast({
           title: "Recording Failed",
-          description: result.error || "An error occurred",
-          variant: "destructive",
+          description: result?.error || "Unknown error occurred",
+          variant: "destructive"
         });
       }
     } catch (error) {
-      console.error("Error recording stream:", error);
+      console.error("Error during recording:", error);
       toast({
         title: "Recording Error",
-        description: error instanceof Error ? error.message : "An unexpected error occurred",
-        variant: "destructive",
+        description: error instanceof Error ? error.message : "An unknown error occurred",
+        variant: "destructive"
       });
     } finally {
-      setIsRecording(false);
+      setIsLoading(false);
     }
   };
-
-  const handleMotionDetection = async () => {
+  
+  const handleCustomCommand = async () => {
+    if (!customInput || !customOutput) {
+      toast({
+        title: "Error",
+        description: "Please enter both input and output paths",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    setIsLoading(true);
+    
     try {
-      setIsDetectingMotion(true);
-      setResults(null);
+      const result = await executeFFmpeg({
+        input: customInput,
+        output: customOutput,
+        options: customOptions.split(' '),
+        videoCodec,
+        audioCodec,
+        format: customFormat
+        // Remove bitrate property
+      });
       
-      const result = await applyMotionDetection(inputStream);
-      
-      if (result.success) {
+      if (result && result.success) {
+        setResults(result.data);
+        
+        if (onProcessComplete) {
+          onProcessComplete(customOutput);
+        }
+        
         toast({
-          title: "Motion Detection Active",
-          description: "Motion detection analysis started",
+          title: "FFmpeg Command Complete",
+          description: `Command executed successfully`
         });
-        setResults(JSON.stringify(result.data, null, 2));
       } else {
         toast({
-          title: "Motion Detection Failed",
-          description: result.error || "An error occurred",
-          variant: "destructive",
+          title: "Command Failed",
+          description: result?.error || "Unknown error occurred",
+          variant: "destructive"
         });
       }
     } catch (error) {
-      console.error("Error with motion detection:", error);
+      console.error("Error during command execution:", error);
       toast({
-        title: "Motion Detection Error",
-        description: error instanceof Error ? error.message : "An unexpected error occurred",
-        variant: "destructive",
+        title: "Command Error",
+        description: error instanceof Error ? error.message : "An unknown error occurred",
+        variant: "destructive"
       });
     } finally {
-      setIsDetectingMotion(false);
-    }
-  };
-
-  const handleCustomFFmpeg = async () => {
-    try {
-      setIsConverting(true);
-      setResults(null);
-      
-      const params: FFmpegParams = {
-        input: inputStream,
-        output: `output_${Date.now()}.${outputFormat}`,
-        videoCodec: enableHighQuality ? 'libx264' : 'h264_nvenc',
-        bitrate: enableHighQuality ? '2000k' : '800k'
-      };
-      
-      const result = await executeFFmpeg(params);
-      
-      if (result.success) {
-        toast({
-          title: "FFmpeg Execution Started",
-          description: "Custom FFmpeg command execution initiated",
-        });
-        setResults(JSON.stringify(result.data, null, 2));
-      } else {
-        toast({
-          title: "FFmpeg Execution Failed",
-          description: result.error || "An error occurred",
-          variant: "destructive",
-        });
-      }
-    } catch (error) {
-      console.error("Error executing FFmpeg:", error);
-      toast({
-        title: "FFmpeg Error",
-        description: error instanceof Error ? error.message : "An unexpected error occurred",
-        variant: "destructive",
-      });
-    } finally {
-      setIsConverting(false);
+      setIsLoading(false);
     }
   };
 
   return (
-    <Card className="border-gray-700 bg-scanner-dark-alt">
+    <Card className="border-gray-700 bg-scanner-dark shadow-lg">
       <CardHeader>
-        <CardTitle className="text-scanner-primary flex items-center">
-          <Video className="mr-2 h-5 w-5" />
-          FFmpeg Video Tools
+        <CardTitle className="flex items-center">
+          <Video className="h-5 w-5 text-scanner-success mr-2" />
+          FFmpeg Tool
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="space-y-2">
-          <Label htmlFor="inputStream">RTSP Stream URL</Label>
+          <Label htmlFor="rtsp-url">RTSP URL</Label>
           <Input
-            id="inputStream"
-            placeholder="rtsp://username:password@192.168.1.10:554/stream1"
-            className="bg-scanner-dark border-gray-700"
-            value={inputStream}
-            onChange={(e) => setInputStream(e.target.value)}
+            id="rtsp-url"
+            placeholder="rtsp://example.com/live"
+            value={rtspUrl}
+            onChange={(e) => setRtspUrl(e.target.value)}
+            className="bg-scanner-dark-alt border-gray-700"
           />
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="outputFormat">Output Format</Label>
-            <Select value={outputFormat} onValueChange={setOutputFormat}>
-              <SelectTrigger className="w-full bg-scanner-dark border-gray-700">
-                <SelectValue placeholder="Select format" />
+          <div>
+            <Label htmlFor="hls-output">HLS Output</Label>
+            <Input
+              id="hls-output"
+              placeholder="output.m3u8"
+              value={hlsOutput}
+              onChange={(e) => setHlsOutput(e.target.value)}
+              className="bg-scanner-dark-alt border-gray-700"
+            />
+          </div>
+          
+          <div>
+            <Label htmlFor="record-output">Record Output</Label>
+            <Input
+              id="record-output"
+              placeholder="recorded_stream.mp4"
+              value={recordOutput}
+              onChange={(e) => setRecordOutput(e.target.value)}
+              className="bg-scanner-dark-alt border-gray-700"
+            />
+          </div>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <Label htmlFor="video-codec">Video Codec</Label>
+            <Select value={videoCodec} onValueChange={setVideoCodec}>
+              <SelectTrigger className="bg-scanner-dark-alt border-gray-700">
+                <SelectValue placeholder="Select video codec" />
               </SelectTrigger>
-              <SelectContent className="bg-scanner-dark text-white border-gray-700">
-                <SelectItem value="mp4">MP4</SelectItem>
-                <SelectItem value="mkv">MKV</SelectItem>
-                <SelectItem value="avi">AVI</SelectItem>
-                <SelectItem value="mov">MOV</SelectItem>
-                <SelectItem value="hls">HLS</SelectItem>
+              <SelectContent className="bg-scanner-dark border-gray-700">
+                <SelectItem value="libx264">H.264 (libx264)</SelectItem>
+                <SelectItem value="libx265">H.265 (libx265)</SelectItem>
+                <SelectItem value="copy">Copy</SelectItem>
               </SelectContent>
             </Select>
           </div>
           
-          <div className="flex items-center space-x-2 pt-6">
-            <Switch 
-              id="high-quality" 
-              checked={enableHighQuality}
-              onCheckedChange={setEnableHighQuality}
-            />
-            <Label htmlFor="high-quality">High Quality Encoding</Label>
+          <div>
+            <Label htmlFor="audio-codec">Audio Codec</Label>
+            <Select value={audioCodec} onValueChange={setAudioCodec}>
+              <SelectTrigger className="bg-scanner-dark-alt border-gray-700">
+                <SelectValue placeholder="Select audio codec" />
+              </SelectTrigger>
+              <SelectContent className="bg-scanner-dark border-gray-700">
+                <SelectItem value="aac">AAC</SelectItem>
+                <SelectItem value="mp3">MP3</SelectItem>
+                <SelectItem value="copy">Copy</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2">
+        <div className="flex flex-wrap gap-2">
           <Button
             variant="outline"
-            onClick={handleConvertStream}
-            disabled={isConverting || !inputStream}
-            className={`${isConverting ? 'bg-scanner-info/20' : 'bg-scanner-dark-alt'} border-scanner-info text-scanner-info`}
+            className="border-gray-700 hover:bg-scanner-dark-alt"
+            onClick={handleConvertRtspToHls}
+            disabled={isLoading}
           >
-            {isConverting ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Play className="h-4 w-4 mr-2" />}
+            <Eye className="h-4 w-4 mr-2" />
             Convert to HLS
           </Button>
           
           <Button
             variant="outline"
-            onClick={handleRecordStream}
-            disabled={isRecording || !inputStream}
-            className={`${isRecording ? 'bg-scanner-info/20' : 'bg-scanner-dark-alt'} border-scanner-info text-scanner-info`}
+            className="border-gray-700 hover:bg-scanner-dark-alt"
+            onClick={handleRecord}
+            disabled={isLoading}
           >
-            {isRecording ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Download className="h-4 w-4 mr-2" />}
+            <Camera className="h-4 w-4 mr-2" />
             Record Stream
           </Button>
+        </div>
+        
+        <div className="pt-4 border-t border-gray-700">
+          <h3 className="text-sm font-semibold mb-2">Custom Command</h3>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="custom-input">Input Path</Label>
+              <Input
+                id="custom-input"
+                placeholder="/path/to/input"
+                value={customInput}
+                onChange={(e) => setCustomInput(e.target.value)}
+                className="bg-scanner-dark-alt border-gray-700"
+              />
+            </div>
+            
+            <div>
+              <Label htmlFor="custom-output">Output Path</Label>
+              <Input
+                id="custom-output"
+                placeholder="/path/to/output"
+                value={customOutput}
+                onChange={(e) => setCustomOutput(e.target.value)}
+                className="bg-scanner-dark-alt border-gray-700"
+              />
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="custom-format">Format</Label>
+              <Select value={customFormat} onValueChange={setCustomFormat}>
+                <SelectTrigger className="bg-scanner-dark-alt border-gray-700">
+                  <SelectValue placeholder="Select format" />
+                </SelectTrigger>
+                <SelectContent className="bg-scanner-dark border-gray-700">
+                  <SelectItem value="mp4">MP4</SelectItem>
+                  <SelectItem value="avi">AVI</SelectItem>
+                  <SelectItem value="mkv">MKV</SelectItem>
+                  <SelectItem value="flv">FLV</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          
+          <div>
+            <Label htmlFor="custom-options">Options</Label>
+            <Input
+              id="custom-options"
+              placeholder="-c:v libx264 -c:a aac"
+              value={customOptions}
+              onChange={(e) => setCustomOptions(e.target.value)}
+              className="bg-scanner-dark-alt border-gray-700"
+            />
+          </div>
           
           <Button
-            variant="outline"
-            onClick={handleMotionDetection}
-            disabled={isDetectingMotion || !inputStream}
-            className={`${isDetectingMotion ? 'bg-scanner-info/20' : 'bg-scanner-dark-alt'} border-scanner-info text-scanner-info`}
+            variant="default"
+            className="bg-scanner-primary"
+            onClick={handleCustomCommand}
+            disabled={isLoading}
           >
-            {isDetectingMotion ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Video className="h-4 w-4 mr-2" />}
-            Motion Detection
-          </Button>
-          
-          <Button
-            variant="outline"
-            onClick={handleCustomFFmpeg}
-            disabled={isConverting || !inputStream}
-            className={`${isConverting ? 'bg-scanner-info/20' : 'bg-scanner-dark-alt'} border-scanner-info text-scanner-info`}
-          >
-            {isConverting ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Play className="h-4 w-4 mr-2" />}
-            Custom FFmpeg
+            <Download className="h-4 w-4 mr-2" />
+            Execute Command
           </Button>
         </div>
         
         {results && (
           <div className="mt-4">
-            <h3 className="text-sm font-medium mb-2">Result:</h3>
-            <pre className="bg-scanner-dark p-3 rounded text-xs overflow-x-auto">
-              {results}
+            <h3 className="text-sm font-semibold mb-2">Results</h3>
+            <pre className="text-xs text-gray-400 bg-scanner-dark-alt border border-gray-700 rounded-md p-2">
+              {JSON.stringify(results, null, 2)}
             </pre>
           </div>
         )}

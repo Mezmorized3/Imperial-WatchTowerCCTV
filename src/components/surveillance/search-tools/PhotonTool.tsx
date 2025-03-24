@@ -1,76 +1,70 @@
 import React, { useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Slider } from '@/components/ui/slider';
 import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
-import { Search, Link2, Mail, Key } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Globe, Search, Link2 } from 'lucide-react';
+import { toast } from '@/components/ui/use-toast';
 import { executePhoton } from '@/utils/osintTools';
-import { useToast } from '@/hooks/use-toast';
-import { ScrollArea } from '@/components/ui/scroll-area';
 
 export const PhotonTool: React.FC = () => {
   const [url, setUrl] = useState('');
   const [depth, setDepth] = useState(2);
   const [timeout, setTimeout] = useState(10);
-  const [isScanning, setIsScanning] = useState(false);
+  const [threads, setThreads] = useState(5);
+  const [delay, setDelay] = useState(1000);
+  const [userAgent, setUserAgent] = useState('');
+  const [saveResults, setSaveResults] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [results, setResults] = useState<any>(null);
-  const { toast } = useToast();
 
   const handleScan = async () => {
     if (!url) {
       toast({
-        title: "URL Required",
-        description: "Please enter a URL to scan",
+        title: "Error",
+        description: "Please enter a URL",
         variant: "destructive"
       });
       return;
     }
     
-    // Validate URL format
-    try {
-      new URL(url.startsWith('http') ? url : `https://${url}`);
-    } catch (e) {
-      toast({
-        title: "Invalid URL",
-        description: "Please enter a valid URL",
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    setIsScanning(true);
-    toast({
-      title: "Photon Crawler Initiated",
-      description: `Crawling ${url} with depth ${depth}...`,
-    });
+    setIsLoading(true);
     
     try {
-      const formattedUrl = url.startsWith('http') ? url : `https://${url}`;
-      const scanResults = await executePhoton({
-        url: formattedUrl,
-        depth,
-        timeout
+      const result = await executePhoton({
+        url,
+        depth: parseInt(depth),
+        timeout: parseInt(timeout),
+        threads: parseInt(threads),
+        delay: parseInt(delay),
+        userAgent,
+        saveResults
       });
       
-      setResults(scanResults);
-      toast({
-        title: "Crawl Complete",
-        description: scanResults?.simulatedData 
-          ? "Showing simulated results (dev mode)" 
-          : "Website crawled successfully",
-      });
+      if (result && result.success) {
+        setResults(result.data);
+        toast({
+          title: "Scan Complete",
+          description: `Found ${result.data?.urls?.length || 0} URLs.`
+        });
+      } else {
+        toast({
+          title: "Scan Failed",
+          description: result?.error || "Unknown error occurred",
+          variant: "destructive"
+        });
+      }
     } catch (error) {
-      console.error('Photon scan error:', error);
+      console.error("Error during scan:", error);
       toast({
-        title: "Scan Failed",
+        title: "Scan Error",
         description: error instanceof Error ? error.message : "An unknown error occurred",
         variant: "destructive"
       });
     } finally {
-      setIsScanning(false);
+      setIsLoading(false);
     }
   };
 
@@ -88,10 +82,10 @@ export const PhotonTool: React.FC = () => {
         <div>
           <Button 
             onClick={handleScan} 
-            disabled={isScanning || !url}
+            disabled={isLoading || !url}
             className="w-full"
           >
-            {isScanning ? (
+            {isLoading ? (
               <>Crawling...</>
             ) : (
               <>
@@ -104,6 +98,9 @@ export const PhotonTool: React.FC = () => {
       </div>
       
       <Card className="bg-scanner-dark-alt border-gray-700">
+        <CardHeader>
+          <CardTitle>Crawl Settings</CardTitle>
+        </CardHeader>
         <CardContent className="pt-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
             <div className="space-y-4">
@@ -135,6 +132,59 @@ export const PhotonTool: React.FC = () => {
                   onValueChange={(value) => setTimeout(value[0])}
                 />
                 <p className="text-xs text-gray-400">Maximum time to wait for each request</p>
+              </div>
+              
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="threads-slider">Threads: {threads}</Label>
+                </div>
+                <Slider 
+                  id="threads-slider"
+                  min={1} 
+                  max={10} 
+                  step={1} 
+                  value={[threads]} 
+                  onValueChange={(value) => setThreads(value[0])}
+                />
+                <p className="text-xs text-gray-400">Number of concurrent requests</p>
+              </div>
+              
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="delay-slider">Delay: {delay}ms</Label>
+                </div>
+                <Slider 
+                  id="delay-slider"
+                  min={1000} 
+                  max={5000} 
+                  step={1000} 
+                  value={[delay]} 
+                  onValueChange={(value) => setDelay(value[0])}
+                />
+                <p className="text-xs text-gray-400">Delay between requests</p>
+              </div>
+              
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="user-agent">User-Agent</Label>
+                </div>
+                <Input 
+                  id="user-agent"
+                  value={userAgent}
+                  onChange={(e) => setUserAgent(e.target.value)}
+                  className="bg-scanner-dark"
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="save-results">Save Results</Label>
+                </div>
+                <Checkbox 
+                  id="save-results"
+                  checked={saveResults}
+                  onChange={(e) => setSaveResults(e.target.checked)}
+                />
               </div>
             </div>
           </div>

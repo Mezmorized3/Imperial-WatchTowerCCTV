@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -14,11 +13,11 @@ const AdditionalTools: React.FC<AdditionalToolsProps> = ({ isRealmode }) => {
   const handleSecurityAdmin = async () => {
     try {
       const result = await executeSecurityAdmin({
-        tool: 'security-admin', // Added missing tool property
+        tool: 'security-admin',
         command: 'scan',
-        scanType: 'basic',
+        scanType: 'permissions',
+        target: 'localhost',
         options: {
-          target: 'localhost',
           ports: '1-1000'
         }
       });

@@ -1,11 +1,10 @@
-
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Shield, HardDrive, Server } from 'lucide-react';
 import ThreatReputation from './ThreatReputation';
 import FirmwareDetails from './FirmwareDetails';
 import ServerStatus from '../ServerStatus';
-import { ThreatIntelData } from '@/types/scanner';
+import { ThreatIntelData } from '@/utils/types/threatIntelTypes';
 
 // Define CameraData interface to be compatible with both scanner and OSINT camera types
 export interface CameraData {

@@ -1,17 +1,18 @@
-
 /**
  * Implementation of web-based OSINT tools
  */
 
-import { WebCheckParams, WebhackParams } from '@/utils/types/webToolTypes';
-import { BackHackParams } from '@/utils/types/baseTypes';
+import { simulateNetworkDelay } from '../networkUtils';
+import { WebCheckParams, WebHackParams } from '@/utils/types/webToolTypes';
+import { BackHackParams } from '@/utils/types/cameraTypes';
+import { PhotonParams } from '@/utils/types/webToolTypes';
 
 // Simulate WebCheck tool
 export const executeWebCheck = async (params: WebCheckParams) => {
   const { url, checkSecurity = true, checkWhois = true } = params;
   
   // Simulate API response with a delay
-  await new Promise(resolve => setTimeout(resolve, 1000));
+  await simulateNetworkDelay(1000);
   
   try {
     // Simulate data
@@ -56,11 +57,11 @@ export const executeWebCheck = async (params: WebCheckParams) => {
 };
 
 // Simulate Webhack tool
-export const executeWebhack = async (params: WebhackParams) => {
+export const executeWebhack = async (params: WebHackParams) => {
   const { target, method = 'scan', timeout = 30 } = params;
   
   // Simulate API response with a delay
-  await new Promise(resolve => setTimeout(resolve, 1500));
+  await simulateNetworkDelay(1500);
   
   try {
     // Simulate vulnerabilities
@@ -121,7 +122,7 @@ export const executePhoton = async (url: string, options: any = {}) => {
   const { depth = 2, timeout = 30, exclude = [] } = options;
   
   // Simulate API response with a delay
-  await new Promise(resolve => setTimeout(resolve, 2000));
+  await simulateNetworkDelay(2000);
   
   try {
     // Simulate data
@@ -166,7 +167,7 @@ export const executeBackHack = async (params: BackHackParams) => {
   const { target, url, scanType = 'basic', timeout = 30, extractData = false } = params;
   
   // Simulate API response with a delay
-  await new Promise(resolve => setTimeout(resolve, 1800));
+  await simulateNetworkDelay(1800);
   
   try {
     // Determine the target URL (use either target or url)

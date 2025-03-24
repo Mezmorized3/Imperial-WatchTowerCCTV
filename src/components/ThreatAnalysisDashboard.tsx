@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { CameraResult } from '@/utils/types/cameraTypes';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -49,7 +48,12 @@ const ThreatAnalysisDashboard: React.FC<ThreatAnalysisDashboardProps> = ({ camer
         : new Date().toISOString(),
     accessLevel: camera.accessLevel === 'unknown' ? 'none' : camera.accessLevel,
     threatIntel: camera.threatIntel,
-    firmware: camera.firmware
+    firmware: camera.firmware ? {
+      version: camera.firmware.version,
+      vulnerabilities: camera.firmware.vulnerabilities?.map(v => typeof v === 'string' ? v : v.id),
+      updateAvailable: camera.firmware.updateAvailable,
+      lastChecked: camera.firmware.lastChecked
+    } : undefined
   };
 
   const overallRisk = calculateOverallRisk();

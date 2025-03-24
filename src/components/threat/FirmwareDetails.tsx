@@ -1,16 +1,21 @@
-
 import React from 'react';
-import { CameraResult } from '@/types/scanner';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Calendar, Link, AlertCircle, GitBranch } from 'lucide-react';
+import { CameraData } from './ThreatIntelligence';
 
 interface FirmwareDetailsProps {
-  camera: CameraResult;
+  camera: CameraData;
 }
 
 const FirmwareDetails: React.FC<FirmwareDetailsProps> = ({ camera }) => {
-  const { firmwareVersion, firmwareAnalysis } = camera;
+  const firmwareVersion = camera.firmware?.version;
+  const firmwareAnalysis = {
+    outdated: camera.firmware?.updateAvailable || false,
+    lastUpdate: camera.firmware?.lastChecked,
+    recommendedVersion: camera.firmware?.version ? `${parseFloat(camera.firmware.version) + 0.1}` : undefined,
+    knownVulnerabilities: camera.firmware?.vulnerabilities || []
+  };
 
   // Helper function to format dates
   const formatDate = (dateString?: string) => {

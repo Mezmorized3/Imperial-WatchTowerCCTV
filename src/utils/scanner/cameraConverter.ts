@@ -3,7 +3,7 @@
  * Utility to convert between different camera result formats
  */
 
-import { CameraResult as OsintCameraResult, Vulnerability } from '../types/cameraTypes';
+import { CameraResult as OsintCameraResult } from '../types/cameraTypes';
 import { CameraResult as ScannerCameraResult } from '@/types/scanner';
 
 /**
@@ -41,7 +41,12 @@ export const convertToScannerFormat = (camera: OsintCameraResult): ScannerCamera
     location: camera.geolocation 
       ? { country: camera.geolocation.country, city: camera.geolocation.city || '' } 
       : { country: 'Unknown', city: '' },
-    ...(camera.firmware && { firmware: camera.firmware }),
+    firmware: camera.firmware ? {
+      version: camera.firmware.version,
+      vulnerabilities: camera.firmware.vulnerabilities?.map(v => typeof v === 'string' ? v : v.id),
+      updateAvailable: camera.firmware.updateAvailable,
+      lastChecked: camera.firmware.lastChecked
+    } : undefined,
     ...(camera.threatIntel && { threatIntel: camera.threatIntel })
   };
 };
@@ -77,16 +82,16 @@ export const convertToOsintFormat = (camera: ScannerCameraResult): OsintCameraRe
       country: camera.location?.country || 'Unknown',
       city: camera.location?.city 
     },
-    ...(camera.firmware && { firmware: camera.firmware }),
+    firmware: camera.firmware ? {
+      version: camera.firmware.version || 'Unknown',
+      updateAvailable: camera.firmware.updateAvailable,
+      lastChecked: camera.firmware.lastChecked
+    } : undefined,
     threatIntel: camera.threatIntel ? {
       ipReputation: camera.threatIntel.ipReputation,
       confidenceScore: camera.threatIntel.confidenceScore,
       source: camera.threatIntel.source as any,
       associatedMalware: camera.threatIntel.associatedMalware || [],
-      lastReportedMalicious: camera.threatIntel.lastReportedMalicious,
-      reportedBy: camera.threatIntel.reportedBy,
-      firstSeen: camera.threatIntel.firstSeen,
-      tags: camera.threatIntel.tags,
       lastUpdated: camera.threatIntel.lastUpdated || new Date().toISOString()
     } : undefined
   };

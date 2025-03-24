@@ -1,65 +1,75 @@
-
 import React, { useState } from 'react';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { executeImperialOculus } from '@/utils/osintImplementations';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Separator } from '@/components/ui/separator';
-import { Badge } from '@/components/ui/badge';
-import { ArrowRight, Server, AlertCircle, Shield, Wifi } from 'lucide-react';
-import { toast } from 'sonner';
-import { Progress } from '@/components/ui/progress';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Eye, Network, Shield } from 'lucide-react';
+import { toast } from '@/components/ui/use-toast';
+import { executeImperialOculus } from '@/utils/osintTools';
 
-export const ImperialOculusTool = () => {
+interface ImperialOculusToolProps {
+  onScanComplete?: (results: any) => void;
+}
+
+const ImperialOculusTool: React.FC<ImperialOculusToolProps> = ({ onScanComplete }) => {
   const [target, setTarget] = useState('');
   const [scanType, setScanType] = useState<'basic' | 'full' | 'stealth'>('basic');
   const [isScanning, setIsScanning] = useState(false);
   const [results, setResults] = useState<any>(null);
   const [progress, setProgress] = useState(0);
+  const [saveResults, setSaveResults] = useState(false);
+  const [timeout, setTimeout] = useState('60');
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleScan = async () => {
     if (!target) {
-      toast.error('Please enter a target network to scan');
+      toast({
+        title: "Error",
+        description: "Please enter a target",
+        variant: "destructive"
+      });
       return;
     }
-
+    
+    setIsLoading(true);
+    
     try {
-      setIsScanning(true);
-      setProgress(0);
-      setResults(null);
-
-      // Simulate progress
-      const interval = setInterval(() => {
-        setProgress(prev => {
-          if (prev >= 95) {
-            clearInterval(interval);
-            return 95;
-          }
-          return prev + Math.floor(Math.random() * 5) + 1;
-        });
-      }, 300);
-
-      const response = await executeImperialOculus({
+      const result = await executeImperialOculus({
         target,
-        scanType,
+        scanType: scanType as 'full' | 'quick' | 'stealth',
+        saveResults,
+        timeout: parseInt(timeout)
       });
-
-      clearInterval(interval);
-      setProgress(100);
-
-      if (response.success) {
-        setResults(response.data);
-        toast.success('Network scan completed successfully');
+      
+      if (result && result.success) {
+        setResults(result.data);
+        
+        if (onScanComplete) {
+          onScanComplete(result.data);
+        }
+        
+        toast({
+          title: "Scan Complete",
+          description: `Scan completed successfully`
+        });
       } else {
-        toast.error(response.error || 'An error occurred during the scan');
+        toast({
+          title: "Scan Failed",
+          description: result?.error || "Unknown error occurred",
+          variant: "destructive"
+        });
       }
     } catch (error) {
-      toast.error('Failed to perform network scan');
-      console.error('Oculus scan error:', error);
+      console.error("Error during scan:", error);
+      toast({
+        title: "Scan Error",
+        description: error instanceof Error ? error.message : "An unknown error occurred",
+        variant: "destructive"
+      });
     } finally {
-      setIsScanning(false);
+      setIsLoading(false);
     }
   };
 
@@ -144,6 +154,27 @@ export const ImperialOculusTool = () => {
                 <SelectItem value="stealth">Stealth (Low Detection)</SelectItem>
               </SelectContent>
             </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="saveResults">Save Results</Label>
+            <Checkbox
+              id="saveResults"
+              checked={saveResults}
+              onCheckedChange={setSaveResults}
+              disabled={isScanning}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="timeout">Timeout (seconds)</Label>
+            <Input
+              id="timeout"
+              type="number"
+              value={timeout}
+              onChange={(e) => setTimeout(e.target.value)}
+              disabled={isScanning}
+            />
           </div>
 
           {isScanning && (

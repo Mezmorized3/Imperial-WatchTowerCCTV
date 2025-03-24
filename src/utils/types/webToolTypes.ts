@@ -55,3 +55,9 @@ export interface PhotonParams {
   cookies?: string;
   saveResults?: boolean;
 }
+
+// Add alias for backward compatibility
+export type WebhackParams = WebHackParams;
+
+// Re-export BackHackParams from cameraTypes
+export { BackHackParams } from './cameraTypes';

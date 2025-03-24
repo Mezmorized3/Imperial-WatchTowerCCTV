@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -30,7 +29,6 @@ const SqliPayloadsTab: React.FC<SqliPayloadsTabProps> = ({
   const [sqliTarget, setSqliTarget] = useState('');
   const [copySuccess, setCopySuccess] = useState<string | null>(null);
   
-  // SQLi Payloads 
   const sqliPayloads = {
     'basic-auth-bypass': `' OR 1=1 --`,
     'union-select': `' UNION SELECT username, password FROM users --`,
@@ -63,7 +61,6 @@ const SqliPayloadsTab: React.FC<SqliPayloadsTabProps> = ({
       
       const result = await executeHackingTool({
         tool: 'sqlmap',
-        category: 'web',
         options: {
           url: sqliTarget,
           data: payload,

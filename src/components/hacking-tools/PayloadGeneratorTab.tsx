@@ -20,8 +20,8 @@ const PayloadGeneratorTab: React.FC<PayloadGeneratorTabProps> = ({
 }) => {
   const [customIp, setCustomIp] = useState('0.0.0.0');
   const [customPort, setCustomPort] = useState('4444');
-  const [targetOS, setTargetOS] = useState('windows');
-  const [payloadType, setPayloadType] = useState('meterpreter/reverse_tcp');
+  const [targetOS, setTargetOS] = useState<'windows' | 'linux' | 'macos' | 'android' | 'web'>('windows');
+  const [payloadType, setPayloadType] = useState<'windows' | 'linux' | 'macos' | 'android' | 'web'>('windows');
   const [payloadOutput, setPayloadOutput] = useState('');
   const [payloadFormat, setPayloadFormat] = useState('raw');
   const [copySuccess, setCopySuccess] = useState<string | null>(null);
@@ -48,10 +48,10 @@ const PayloadGeneratorTab: React.FC<PayloadGeneratorTabProps> = ({
         platform: targetOS,
         payloadType,
         format: payloadFormat,
-        options: {
-          lhost: customIp,
-          lport: parseInt(customPort)
-        }
+        lhost: customIp,
+        lport: parseInt(customPort),
+        encode: false,
+        encryption: "none"
       });
       
       if (result.success) {

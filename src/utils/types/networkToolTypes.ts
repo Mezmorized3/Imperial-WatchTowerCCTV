@@ -30,6 +30,9 @@ export interface BotExploitsParams {
   scanType?: 'keys' | 'tokens' | 'all';
   timeout?: number;
   saveResults?: boolean;
+  // Add missing properties used in code
+  port?: number;
+  attackType?: string;
 }
 
 export interface ChromeExtensionParams {
@@ -41,7 +44,7 @@ export interface ChromeExtensionParams {
 
 export interface ImperialOculusParams {
   target: string;
-  scanType: 'full' | 'quick' | 'stealth';
+  scanType: 'full' | 'quick' | 'stealth' | 'basic'; // Added 'basic' to match usage
   saveResults?: boolean;
   timeout?: number;
 }

@@ -4,7 +4,7 @@
  */
 
 export interface RapidPayloadParams {
-  platform: string;
+  platform: 'windows' | 'linux' | 'macos' | 'android' | 'web';
   targetOS: 'windows' | 'linux' | 'macos' | 'android' | 'web';
   payloadType: 'windows' | 'linux' | 'macos' | 'android' | 'web';
   format: string;
@@ -12,6 +12,7 @@ export interface RapidPayloadParams {
   lport: number;
   encode: boolean;
   encryption: string;
+  options?: Record<string, any>; // Add options field to match usage
 }
 
 export interface HackingToolParams {
@@ -20,15 +21,17 @@ export interface HackingToolParams {
   options?: Record<string, any>;
   silent?: boolean;
   saveResults?: boolean;
+  category?: string; // Add category field to match usage
 }
 
 export interface SecurityAdminParams {
   tool: string;
   command: string;
-  scanType: 'full' | 'users' | 'permissions' | 'services';
+  scanType: 'full' | 'users' | 'permissions' | 'services' | 'basic'; // Added 'basic' to match usage
   target: string;
   fixVulnerabilities?: boolean;
   reportFormat?: 'html' | 'text' | 'json';
+  options?: Record<string, any>; // Add options field to match usage
 }
 
 export interface FFmpegParams {
@@ -42,6 +45,14 @@ export interface FFmpegParams {
   audioBitrate?: string;
   resolution?: string;
   overwrite?: boolean;
+  // Add missing properties used in code
+  inputStream?: string;
+  outputPath?: string;
+  outputFormat?: string;
+  bitrate?: string;
+  framerate?: string;
+  filters?: string[];
+  duration?: number;
 }
 
 export interface ImperialShieldResult {

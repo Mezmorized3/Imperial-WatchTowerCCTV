@@ -1,55 +1,60 @@
-
 import React, { useState } from 'react';
 import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from '@/components/ui/use-toast';
-import { Copy, Check, Lock, FileText, Play } from 'lucide-react';
+import { Copy, Check, Key, Unlock } from 'lucide-react';
 import { executeHackingTool } from '@/utils/osintTools';
 
 interface PasswordCrackerTabProps {
-  isRealmode: boolean;
   isExecuting: boolean;
   setIsExecuting: (isExecuting: boolean) => void;
+  toolOutput: string | null;
   setToolOutput: (output: string | null) => void;
+  executeSelectedTool: (toolType: string) => void;
 }
 
 const PasswordCrackerTab: React.FC<PasswordCrackerTabProps> = ({ 
-  isRealmode, 
   isExecuting, 
   setIsExecuting, 
-  setToolOutput 
+  toolOutput, 
+  setToolOutput,
+  executeSelectedTool 
 }) => {
-  const [hashType, setHashType] = useState('md5');
-  const [hashValue, setHashValue] = useState('');
-  const [wordlistType, setWordlistType] = useState('common');
-  const [wordlistSize, setWordlistSize] = useState('medium');
-  const [customWords, setCustomWords] = useState('');
-  const [mode, setMode] = useState('crack'); // 'crack' or 'generate'
+  const [selectedHashType, setSelectedHashType] = useState('md5');
+  const [customHash, setCustomHash] = useState('');
+  const [selectedWordlist, setSelectedWordlist] = useState('rockyou');
+  const [customRules, setCustomRules] = useState('');
   const [copySuccess, setCopySuccess] = useState<string | null>(null);
+  
+  const [selectedCharset, setSelectedCharset] = useState('alphanum');
+  const [customTemplate, setCustomTemplate] = useState('');
+  const [customLength, setCustomLength] = useState('8');
   
   const hashTypes = {
     'md5': 'MD5',
     'sha1': 'SHA1',
     'sha256': 'SHA256',
-    'ntlm': 'NTLM',
-    'bcrypt': 'BCrypt'
+    'ntlm': 'NTLM (Windows)',
+    'bcrypt': 'bcrypt',
+    'wpa': 'WPA/WPA2'
   };
   
-  const wordlistTypes = {
-    'common': 'Common Passwords',
-    'names': 'Names',
-    'digits': 'Digits & Special Characters',
-    'mixed': 'Mixed Alphanumeric',
-    'custom': 'Custom Pattern'
+  const wordlists = {
+    'rockyou': 'RockYou (14 million)',
+    'darkweb2017': 'Dark Web 2017 (10 million)',
+    'crackstation': 'CrackStation (1.5 billion)',
+    'custom': 'Custom Wordlist'
   };
   
-  const wordlistSizes = {
-    'small': 'Small (~1,000 words)',
-    'medium': 'Medium (~10,000 words)',
-    'large': 'Large (~100,000 words)'
+  const charsets = {
+    'alpha': 'Alphabetic (a-zA-Z)',
+    'alphanum': 'Alphanumeric (a-zA-Z0-9)',
+    'full': 'Full (a-zA-Z0-9!@#$%^&*)',
+    'numeric': 'Numeric (0-9)',
+    'custom': 'Custom Charset'
   };
   
   const handleCopyToClipboard = (text: string, type: string) => {
@@ -63,66 +68,35 @@ const PasswordCrackerTab: React.FC<PasswordCrackerTabProps> = ({
     });
   };
   
-  const executeHashCracker = async () => {
-    if (!hashValue) {
-      toast({
-        title: "Missing Input",
-        description: "Please enter a hash value to crack",
-        variant: "destructive"
-      });
-      return;
-    }
-    
+  const handleHashCrack = async () => {
     setIsExecuting(true);
     setToolOutput(null);
     
     try {
-      if (!isRealmode) {
-        // Simulate hash cracking in demo mode
-        setTimeout(() => {
-          let simulatedResult;
-          
-          // Simple simulation logic based on hash type
-          if (hashType === 'md5' && hashValue.toLowerCase() === '5f4dcc3b5aa765d61d8327deb882cf99') {
-            simulatedResult = "Found password: 'password'";
-          } else if (hashType === 'sha1' && hashValue.toLowerCase() === '5baa61e4c9b93f3f0682250b6cf8331b7ee68fd8') {
-            simulatedResult = "Found password: 'password'";
-          } else if (hashValue.length < 8) {
-            simulatedResult = "Error: Invalid hash length for " + hashTypes[hashType as keyof typeof hashTypes];
-          } else {
-            simulatedResult = "No password found. Try a different wordlist or hash type.";
-          }
-          
-          setToolOutput(simulatedResult);
-          setIsExecuting(false);
-          
-          toast({
-            title: "Simulation Mode",
-            description: "Hash cracking simulated (demo only)",
-          });
-        }, 1500);
-        return;
-      }
-      
-      // Real mode execution
+      // Execute hash cracking tool
       const result = await executeHackingTool({
         tool: 'hashcat',
-        category: 'cracking',
         options: {
-          hash: hashValue,
-          hashType: hashType,
-          wordlist: wordlistType,
-          wordlistSize: wordlistSize
+          hashType: selectedHashType,
+          hashValue: customHash,
+          wordlist: selectedWordlist,
+          rules: customRules,
+          mode: 'crack'
         }
       });
       
       toast({
-        title: "Hash Cracker Executed",
-        description: `Attempted to crack ${hashTypes[hashType as keyof typeof hashTypes]} hash`,
+        title: "Hash Cracking Started",
+        description: `Attempting to crack ${selectedHashType} hash`,
       });
       
       if (result?.data) {
-        setToolOutput(typeof result.data === 'string' ? result.data : JSON.stringify(result.data, null, 2));
+        // Format and display the tool output
+        const formattedOutput = typeof result.data === 'string' ? 
+          result.data : 
+          JSON.stringify(result.data, null, 2);
+        
+        setToolOutput(formattedOutput);
       } else if (result?.error) {
         setToolOutput(`Error: ${result.error}`);
       }
@@ -140,54 +114,34 @@ const PasswordCrackerTab: React.FC<PasswordCrackerTabProps> = ({
     }
   };
   
-  const generateWordlist = async () => {
+  const handleDictGenerate = async () => {
     setIsExecuting(true);
     setToolOutput(null);
     
     try {
-      if (!isRealmode) {
-        // Simulate wordlist generation in demo mode
-        setTimeout(() => {
-          const wordCount = wordlistSize === 'small' ? 1000 : wordlistSize === 'medium' ? 10000 : 100000;
-          
-          const simulatedResult = 
-            `Generated ${wordlistType} wordlist with ${wordCount} entries.\n` +
-            `Sample entries:\n` +
-            `${wordlistType === 'common' ? 'password123\nadmin123\nqwerty\n123456' : 
-              wordlistType === 'names' ? 'john\nsmith\njane\ndoe' : 
-              wordlistType === 'digits' ? '1234\n9876\n!@#$\n1111' : 
-              'a1b2c3\npassword123\nP@ssw0rd\nAdmin!'}\n` +
-            `... (${wordCount - 4} more entries)`;
-          
-          setToolOutput(simulatedResult);
-          setIsExecuting(false);
-          
-          toast({
-            title: "Simulation Mode",
-            description: "Wordlist generation simulated (demo only)",
-          });
-        }, 1500);
-        return;
-      }
-      
-      // Real mode execution
+      // Execute wordlist generator tool
       const result = await executeHackingTool({
         tool: 'wordlist-generator',
-        category: 'cracking',
         options: {
-          type: wordlistType,
-          size: wordlistSize,
-          customPattern: customWords
+          template: customTemplate,
+          length: customLength,
+          charset: selectedCharset,
+          mode: 'generate'
         }
       });
       
       toast({
-        title: "Wordlist Generator Executed",
-        description: `Generated ${wordlistTypes[wordlistType as keyof typeof wordlistTypes]} wordlist`,
+        title: "Wordlist Generator Started",
+        description: `Generating wordlist with template: ${customTemplate || 'default'}`,
       });
       
       if (result?.data) {
-        setToolOutput(typeof result.data === 'string' ? result.data : JSON.stringify(result.data, null, 2));
+        // Format and display the tool output
+        const formattedOutput = typeof result.data === 'string' ? 
+          result.data : 
+          JSON.stringify(result.data, null, 2);
+        
+        setToolOutput(formattedOutput);
       } else if (result?.error) {
         setToolOutput(`Error: ${result.error}`);
       }
@@ -207,34 +161,15 @@ const PasswordCrackerTab: React.FC<PasswordCrackerTabProps> = ({
 
   return (
     <div className="space-y-4">
-      <div className="flex space-x-2 mb-4">
-        <Button
-          variant={mode === 'crack' ? 'default' : 'outline'}
-          className={mode === 'crack' ? 'bg-scanner-primary' : 'border-gray-700 hover:bg-scanner-dark-alt'}
-          onClick={() => setMode('crack')}
-        >
-          <Lock className="h-4 w-4 mr-2" />
-          Hash Cracker
-        </Button>
-        <Button
-          variant={mode === 'generate' ? 'default' : 'outline'}
-          className={mode === 'generate' ? 'bg-scanner-primary' : 'border-gray-700 hover:bg-scanner-dark-alt'}
-          onClick={() => setMode('generate')}
-        >
-          <FileText className="h-4 w-4 mr-2" />
-          Wordlist Generator
-        </Button>
-      </div>
-      
-      {mode === 'crack' ? (
-        <>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="space-y-4">
           <div>
             <Label htmlFor="hash-type">Hash Type</Label>
             <Select 
-              value={hashType} 
-              onValueChange={setHashType}
+              value={selectedHashType} 
+              onValueChange={setSelectedHashType}
             >
-              <SelectTrigger className="bg-scanner-dark-alt border-gray-700">
+              <SelectTrigger id="hash-type" className="bg-scanner-dark-alt border-gray-700">
                 <SelectValue placeholder="Select a hash type" />
               </SelectTrigger>
               <SelectContent className="bg-scanner-dark border-gray-700">
@@ -247,26 +182,26 @@ const PasswordCrackerTab: React.FC<PasswordCrackerTabProps> = ({
           
           <div>
             <Label htmlFor="hash-value">Hash Value</Label>
-            <Input 
+            <Textarea 
               id="hash-value" 
-              value={hashValue} 
-              onChange={(e) => setHashValue(e.target.value)}
-              className="bg-scanner-dark-alt border-gray-700 font-mono"
-              placeholder="Enter hash to crack (e.g., 5f4dcc3b5aa765d61d8327deb882cf99)"
+              placeholder="Enter hash to crack" 
+              value={customHash} 
+              onChange={(e) => setCustomHash(e.target.value)}
+              className="min-h-24 font-mono text-sm bg-scanner-dark-alt border-gray-700"
             />
           </div>
           
           <div>
-            <Label htmlFor="wordlist-type">Wordlist Type</Label>
+            <Label htmlFor="wordlist">Wordlist</Label>
             <Select 
-              value={wordlistType} 
-              onValueChange={setWordlistType}
+              value={selectedWordlist} 
+              onValueChange={setSelectedWordlist}
             >
-              <SelectTrigger className="bg-scanner-dark-alt border-gray-700">
-                <SelectValue placeholder="Select a wordlist type" />
+              <SelectTrigger id="wordlist" className="bg-scanner-dark-alt border-gray-700">
+                <SelectValue placeholder="Select a wordlist" />
               </SelectTrigger>
               <SelectContent className="bg-scanner-dark border-gray-700">
-                {Object.entries(wordlistTypes).map(([key, value]) => (
+                {Object.entries(wordlists).map(([key, value]) => (
                   <SelectItem key={key} value={key}>{value}</SelectItem>
                 ))}
               </SelectContent>
@@ -274,45 +209,39 @@ const PasswordCrackerTab: React.FC<PasswordCrackerTabProps> = ({
           </div>
           
           <div>
-            <Label htmlFor="wordlist-size">Wordlist Size</Label>
-            <Select 
-              value={wordlistSize} 
-              onValueChange={setWordlistSize}
-            >
-              <SelectTrigger className="bg-scanner-dark-alt border-gray-700">
-                <SelectValue placeholder="Select a wordlist size" />
-              </SelectTrigger>
-              <SelectContent className="bg-scanner-dark border-gray-700">
-                {Object.entries(wordlistSizes).map(([key, value]) => (
-                  <SelectItem key={key} value={key}>{value}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Label htmlFor="rules">Custom Rules (Optional)</Label>
+            <Input
+              id="rules"
+              placeholder="e.g., -r best64.rule"
+              value={customRules}
+              onChange={(e) => setCustomRules(e.target.value)}
+              className="bg-scanner-dark-alt border-gray-700"
+            />
           </div>
           
           <Button
-            onClick={executeHashCracker}
-            disabled={isExecuting || !hashValue}
+            onClick={handleHashCrack}
+            disabled={isExecuting || !customHash}
             variant="default"
             className="bg-scanner-primary"
           >
-            <Play className="h-4 w-4 mr-2" />
+            <Key className="h-4 w-4 mr-2" />
             {isExecuting ? "Cracking..." : "Crack Hash"}
           </Button>
-        </>
-      ) : (
-        <>
+        </div>
+        
+        <div className="space-y-4">
           <div>
-            <Label htmlFor="wordlist-type">Wordlist Type</Label>
+            <Label htmlFor="charset">Character Set</Label>
             <Select 
-              value={wordlistType} 
-              onValueChange={setWordlistType}
+              value={selectedCharset} 
+              onValueChange={setSelectedCharset}
             >
-              <SelectTrigger className="bg-scanner-dark-alt border-gray-700">
-                <SelectValue placeholder="Select a wordlist type" />
+              <SelectTrigger id="charset" className="bg-scanner-dark-alt border-gray-700">
+                <SelectValue placeholder="Select a character set" />
               </SelectTrigger>
               <SelectContent className="bg-scanner-dark border-gray-700">
-                {Object.entries(wordlistTypes).map(([key, value]) => (
+                {Object.entries(charsets).map(([key, value]) => (
                   <SelectItem key={key} value={key}>{value}</SelectItem>
                 ))}
               </SelectContent>
@@ -320,45 +249,68 @@ const PasswordCrackerTab: React.FC<PasswordCrackerTabProps> = ({
           </div>
           
           <div>
-            <Label htmlFor="wordlist-size">Wordlist Size</Label>
-            <Select 
-              value={wordlistSize} 
-              onValueChange={setWordlistSize}
-            >
-              <SelectTrigger className="bg-scanner-dark-alt border-gray-700">
-                <SelectValue placeholder="Select a wordlist size" />
-              </SelectTrigger>
-              <SelectContent className="bg-scanner-dark border-gray-700">
-                {Object.entries(wordlistSizes).map(([key, value]) => (
-                  <SelectItem key={key} value={key}>{value}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Label htmlFor="template">Template (Optional)</Label>
+            <Input
+              id="template"
+              placeholder="e.g., password?d?d?d"
+              value={customTemplate}
+              onChange={(e) => setCustomTemplate(e.target.value)}
+              className="bg-scanner-dark-alt border-gray-700"
+            />
+            <p className="text-gray-400 text-xs mt-1">
+              Use ?l for lowercase, ?u for uppercase, ?d for digits, ?s for special
+            </p>
           </div>
           
-          {wordlistType === 'custom' && (
-            <div>
-              <Label htmlFor="custom-pattern">Custom Pattern (one per line)</Label>
-              <Textarea 
-                id="custom-pattern" 
-                value={customWords} 
-                onChange={(e) => setCustomWords(e.target.value)}
-                className="bg-scanner-dark-alt border-gray-700 font-mono min-h-24"
-                placeholder="Enter custom patterns (e.g., pass{0-9}{0-9}{0-9})"
-              />
-            </div>
-          )}
+          <div>
+            <Label htmlFor="length">Length</Label>
+            <Input
+              id="length"
+              type="number"
+              min="1"
+              max="16"
+              placeholder="8"
+              value={customLength}
+              onChange={(e) => setCustomLength(e.target.value)}
+              className="bg-scanner-dark-alt border-gray-700"
+            />
+          </div>
           
           <Button
-            onClick={generateWordlist}
-            disabled={isExecuting || (wordlistType === 'custom' && !customWords)}
+            onClick={handleDictGenerate}
+            disabled={isExecuting}
             variant="default"
-            className="bg-scanner-primary"
+            className="bg-scanner-primary mt-6"
           >
-            <FileText className="h-4 w-4 mr-2" />
+            <Unlock className="h-4 w-4 mr-2" />
             {isExecuting ? "Generating..." : "Generate Wordlist"}
           </Button>
-        </>
+        </div>
+      </div>
+      
+      {toolOutput && (
+        <div className="mt-4">
+          <Label>Tool Output</Label>
+          <div className="relative mt-1.5">
+            <Textarea 
+              readOnly 
+              value={toolOutput}
+              className="min-h-32 font-mono text-sm bg-scanner-dark-alt border-gray-700"
+            />
+            <Button 
+              size="sm" 
+              variant="outline" 
+              className="absolute right-2 top-2 h-8 border-gray-700 hover:bg-scanner-dark-alt"
+              onClick={() => handleCopyToClipboard(toolOutput, 'tool output')}
+            >
+              {copySuccess === 'tool output' ? (
+                <Check className="h-4 w-4" />
+              ) : (
+                <Copy className="h-4 w-4" />
+              )}
+            </Button>
+          </div>
+        </div>
       )}
     </div>
   );

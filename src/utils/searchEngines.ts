@@ -3,6 +3,8 @@ import { getComprehensiveThreatIntel, analyzeFirmware } from './threatIntelligen
 import { simulateNetworkDelay } from './networkUtils';
 import { ThreatIntelData } from './types/threatIntelTypes';
 import { getIpPrefixByCountry, getCountryName, getCountryCities, getCountryCoordinates } from './countryUtils';
+import { getRandomGeoLocation } from './osintUtils';
+import { getCountryIpRanges, getRandomIpInRange } from './ipRangeUtils';
 
 /**
  * Generate a search query for Shodan
@@ -375,3 +377,148 @@ export async function searchThreatFoxCameras(
   
   return { total: resultCount, results };
 }
+
+/**
+ * Search engines implementation for security camera discovery
+ * This is a mock implementation with simulated data for demonstration purposes
+ */
+
+/**
+ * Search cameras by country
+ */
+export const searchCamerasByCountry = async (
+  country: string,
+  limit: number = 10,
+  includeVulnerable: boolean = false
+): Promise<CameraResult[]> => {
+  await simulateNetworkDelay(800, 2000);
+  
+  // Special handling for our target countries
+  const isTargetCountry = EASTERN_EUROPEAN_COUNTRIES.includes(country.toLowerCase());
+  
+  // Get IP ranges for the country
+  const ipRanges = getCountryIpRanges(country.toLowerCase());
+  
+  // Increase camera count for target countries
+  const cameraCount = isTargetCountry ? limit * 2 : limit;
+  
+  const cameras: CameraResult[] = [];
+  
+  for (let i = 0; i < cameraCount; i++) {
+    // Select a random IP range from the country
+    const randomRangeIndex = Math.floor(Math.random() * ipRanges.length);
+    let ip = '';
+    
+    if (ipRanges.length > 0) {
+      ip = getRandomIpInRange(ipRanges[randomRangeIndex]);
+    } else {
+      // Fallback to random IP if no ranges found
+      ip = `${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}`;
+    }
+    
+    // Get random location within the country
+    const location = getRandomGeoLocation(country);
+    
+    // Random camera details
+    const manufacturers = ['Hikvision', 'Dahua', 'Axis', 'Bosch', 'Hanwha', 'Uniview'];
+    const ports = [80, 554, 8000, 8080, 37777];
+    
+    // For target countries, use more specific models
+    let manufacturer = '';
+    let model = '';
+    let vulnerabilities: Vulnerability[] = [];
+    
+    if (isTargetCountry) {
+      // Country-specific manufacturers
+      if (country.toLowerCase() === 'russia') {
+        manufacturer = ['Hikvision', 'RVi', 'Trassir', 'ActiveCam'][Math.floor(Math.random() * 4)];
+      } else if (country.toLowerCase() === 'ukraine') {
+        manufacturer = ['Hikvision', 'Dahua', 'Ezviz', 'Uniview'][Math.floor(Math.random() * 4)];
+      } else if (country.toLowerCase() === 'georgia') {
+        manufacturer = ['Hikvision', 'Dahua', 'TVT'][Math.floor(Math.random() * 3)];
+      } else if (country.toLowerCase() === 'romania') {
+        manufacturer = ['Hikvision', 'Dahua', 'Mobotix', 'Axis'][Math.floor(Math.random() * 4)];
+      } else {
+        manufacturer = manufacturers[Math.floor(Math.random() * manufacturers.length)];
+      }
+      
+      // Generate a model number based on manufacturer
+      if (manufacturer === 'Hikvision') {
+        model = `DS-2CD${Math.floor(Math.random() * 9000) + 1000}`;
+      } else if (manufacturer === 'Dahua') {
+        model = `IPC-HDW${Math.floor(Math.random() * 9000) + 1000}`;
+      } else if (manufacturer === 'Axis') {
+        model = `P${Math.floor(Math.random() * 9000) + 1000}`;
+      } else {
+        model = `Model-${Math.floor(Math.random() * 9000) + 1000}`;
+      }
+      
+      // Add ID to vulnerabilities for target countries
+      if (manufacturer === 'Hikvision') {
+        vulnerabilities = [
+          { id: 'CVE-2021-36260', name: 'Authentication Bypass', severity: 'critical', description: 'Command injection vulnerability' },
+          { id: 'CVE-2017-7921', name: 'Default Credentials', severity: 'critical', description: 'Default admin credentials remain active' }
+        ];
+      } else if (manufacturer === 'Dahua') {
+        vulnerabilities = [
+          { id: 'CVE-2021-33044', name: 'Backdoor Access', severity: 'high', description: 'Backdoor access in firmware' },
+          { id: 'CVE-2018-10088', name: 'Command Injection', severity: 'high', description: 'Remote code execution possible' }
+        ];
+      }
+    } else {
+      manufacturer = manufacturers[Math.floor(Math.random() * manufacturers.length)];
+      model = `Model-${Math.floor(Math.random() * 9000) + 1000}`;
+      
+      // Add some generic vulnerabilities with IDs
+      if (includeVulnerable && Math.random() > 0.5) {
+        vulnerabilities = [
+          { id: `VULN-${Math.floor(Math.random() * 1000)}`, name: 'Security Weakness', severity: 'high', description: 'Generic security vulnerability' }
+        ];
+      }
+    }
+    
+    // Determine if the camera is vulnerable (more likely for target countries)
+    const vulnerable = isTargetCountry ? Math.random() > 0.3 : Math.random() > 0.7;
+    const status = vulnerable ? 'vulnerable' as CameraStatus : 'online' as CameraStatus;
+    
+    // Generate threat intelligence data for the camera
+    const threatIntel: ThreatIntelData = {
+      ipReputation: Math.floor(Math.random() * 100),
+      confidenceScore: Math.floor(Math.random() * 100),
+      source: ['virustotal', 'abuseipdb', 'threatfox', 'other'][Math.floor(Math.random() * 4)] as any,
+      associatedMalware: [],
+      lastUpdated: new Date().toISOString()
+    };
+    
+    // Create the camera object
+    const camera: CameraResult = {
+      id: `search-${Date.now()}-${i}`,
+      ip,
+      port: ports[Math.floor(Math.random() * ports.length)],
+      brand: manufacturer,
+      model,
+      status,
+      location: {
+        country: location.country,
+        city: location.city,
+        latitude: location.latitude,
+        longitude: location.longitude
+      },
+      vulnerabilities,
+      lastSeen: new Date().toISOString(),
+      accessLevel: ['none', 'view', 'control', 'admin'][Math.floor(Math.random() * 4)] as any,
+      threatIntel,
+      firmware: {
+        version: `v${Math.floor(Math.random() * 10)}.${Math.floor(Math.random() * 10)}.${Math.floor(Math.random() * 10)}`,
+        updateAvailable: Math.random() > 0.5,
+        lastChecked: new Date().toISOString(),
+        vulnerabilities: vulnerabilities.map(v => v.id) // Convert to string array
+      }
+    };
+    
+    cameras.push(camera);
+  }
+  
+  return cameras;
+};
+

@@ -1,61 +1,59 @@
 import React, { useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Card, CardContent } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import { FileWarning, Search, Shield, Server } from 'lucide-react';
-import { executeBackHack } from '@/utils/osintImplementations';
-import { useToast } from '@/hooks/use-toast';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { ArrowLeft, ExternalLink, RotateCw } from 'lucide-react';
+import { toast } from '@/components/ui/use-toast';
+import { executeBackHack } from '@/utils/osintTools';
 
-export const BackHackTool: React.FC = () => {
+const BackHackTool = () => {
+  const [target, setTarget] = useState('');
   const [targetUrl, setTargetUrl] = useState('');
   const [scanType, setScanType] = useState('basic');
-  const [isScanning, setIsScanning] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [results, setResults] = useState<any>(null);
-  const { toast } = useToast();
-
-  const handleScan = async () => {
-    if (!targetUrl) {
-      toast({
-        title: "Target Required",
-        description: "Please enter a target URL or IP to scan",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    setIsScanning(true);
-    toast({
-      title: "BackHack Scan Initiated",
-      description: `Scanning ${targetUrl}...`,
-    });
-
+  
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    
     try {
+      let urlValue = '';
+      if (targetUrl) {
+        urlValue = targetUrl.startsWith('http') ? targetUrl : `https://${targetUrl}`;
+      }
+      
       const result = await executeBackHack({
-        target: url,
-        url: url,
-        scanType: scanType as 'basic' | 'full'
+        target,
+        url: urlValue,
+        scanType: scanType as 'basic' | 'full',
+        timeout: 30000
       });
-
-      setResults(result);
-      toast({
-        title: "Scan Complete",
-        description: result?.simulatedData
-          ? "Showing simulated results (dev mode)"
-          : "BackHack scan completed successfully",
-      });
+      
+      if (result && result.success) {
+        setResults(result.data);
+        toast({
+          title: "Scan Complete",
+          description: `Found ${result.data?.cameras?.length || 0} cameras.`
+        });
+      } else {
+        toast({
+          title: "Scan Failed",
+          description: result?.error || "Unknown error occurred",
+          variant: "destructive"
+        });
+      }
     } catch (error) {
-      console.error('BackHack scan error:', error);
+      console.error("Error during scan:", error);
       toast({
-        title: "Scan Failed",
+        title: "Scan Error",
         description: error instanceof Error ? error.message : "An unknown error occurred",
         variant: "destructive"
       });
     } finally {
-      setIsScanning(false);
+      setIsLoading(false);
     }
   };
 
@@ -72,11 +70,11 @@ export const BackHackTool: React.FC = () => {
         </div>
         <div>
           <Button
-            onClick={handleScan}
-            disabled={isScanning || !targetUrl}
+            onClick={handleSubmit}
+            disabled={isLoading || !targetUrl}
             className="w-full"
           >
-            {isScanning ? (
+            {isLoading ? (
               <>Scanning...</>
             ) : (
               <>
@@ -188,3 +186,5 @@ export const BackHackTool: React.FC = () => {
     </div>
   );
 };
+
+export default BackHackTool;

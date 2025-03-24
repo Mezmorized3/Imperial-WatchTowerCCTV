@@ -1,4 +1,3 @@
-
 /**
  * Implementation of social media OSINT tools
  */
@@ -150,15 +149,13 @@ export const executeUsernameSearch = async (params: SocialSearchParams): Promise
 /**
  * Execute Twitter OSINT tool (Twint alternative)
  */
-export const executeTwint = async (params: any): Promise<ScanResult> => {
-  console.log('Executing Twint with params:', params);
+export const executeTwint = async (): Promise<ScanResult> => {
+  console.log('Executing Twint');
   await simulateNetworkDelay(1000, 3000);
-  
-  const { username, query, limit = 10 } = params;
   
   // Generate mock Twitter posts
   const mockPosts: SocialPostData[] = [];
-  const postCount = Math.min(Math.floor(Math.random() * 15) + 5, limit);
+  const postCount = Math.floor(Math.random() * 15) + 5;
   
   for (let i = 0; i < postCount; i++) {
     const createdAt = new Date();
@@ -167,8 +164,8 @@ export const executeTwint = async (params: any): Promise<ScanResult> => {
     mockPosts.push({
       id: `tw-${Date.now()}-${i}`,
       platform: 'twitter',
-      username: username || 'random_user',
-      content: `This is a mock Twitter post #${i + 1} ${query ? 'containing ' + query : ''} for demonstration purposes.`,
+      username: 'random_user',
+      content: `This is a mock Twitter post #${i + 1} for demonstration purposes.`,
       timestamp: createdAt.toISOString(),
       likes: Math.floor(Math.random() * 100),
       shares: Math.floor(Math.random() * 30),
@@ -187,7 +184,7 @@ export const executeTwint = async (params: any): Promise<ScanResult> => {
     timestamp: new Date().toISOString(),
     total: postCount,
     found: postCount,
-    data: { posts: mockPosts, query, username },
+    data: { posts: mockPosts },
     results: mockPosts,
     simulatedData: true
   };
@@ -196,11 +193,9 @@ export const executeTwint = async (params: any): Promise<ScanResult> => {
 /**
  * Generic OSINT tool implementation
  */
-export const executeOSINT = async (params: any): Promise<ScanResult> => {
-  console.log('Executing OSINT with params:', params);
+export const executeOSINT = async (): Promise<ScanResult> => {
+  console.log('Executing OSINT');
   await simulateNetworkDelay(1200, 2500);
-  
-  const { target, type = 'generic' } = params;
   
   // Generate mock OSINT results
   const mockResults = [];
@@ -209,9 +204,9 @@ export const executeOSINT = async (params: any): Promise<ScanResult> => {
   for (let i = 0; i < resultCount; i++) {
     mockResults.push({
       id: `osint-${Date.now()}-${i}`,
-      type,
+      type: 'generic',
       source: `Source ${i + 1}`,
-      content: `OSINT result for ${target}: ${Math.random().toString(36).substring(2, 15)}`,
+      content: `OSINT result: ${Math.random().toString(36).substring(2, 15)}`,
       timestamp: new Date().toISOString(),
       metadata: {
         confidence: Math.floor(Math.random() * 100),
@@ -227,7 +222,7 @@ export const executeOSINT = async (params: any): Promise<ScanResult> => {
     timestamp: new Date().toISOString(),
     total: resultCount,
     found: resultCount,
-    data: { results: mockResults, target, type },
+    data: { results: mockResults },
     results: mockResults,
     simulatedData: true
   };

@@ -1,203 +1,202 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Switch } from '@/components/ui/switch';
-import { Loader2, Terminal, ArrowRight, Shield } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Code, AlertTriangle, Terminal } from 'lucide-react';
+import { toast } from '@/components/ui/use-toast';
 import { executeRapidPayload } from '@/utils/osintTools';
-import { RapidPayloadParams } from '@/utils/osintToolTypes';
-import { useToast } from '@/hooks/use-toast';
 
-const RapidPayloadTool: React.FC = () => {
-  const [payloadType, setPayloadType] = useState<'windows' | 'android' | 'linux' | 'macos' | 'web'>('windows');
-  const [format, setFormat] = useState<string>('exe');
-  const [lhost, setLhost] = useState<string>('192.168.1.100');
-  const [lport, setLport] = useState<number>(4444);
-  const [encode, setEncode] = useState<boolean>(true);
-  const [encryption, setEncryption] = useState<string>('base64');
-  const [isGenerating, setIsGenerating] = useState<boolean>(false);
-  const [results, setResults] = useState<string | null>(null);
-  const { toast } = useToast();
+interface RapidPayloadToolProps {
+  onPayloadGenerated?: (payload: string) => void;
+}
 
-  const formatOptions = {
-    windows: ['exe', 'dll', 'ps1', 'bat', 'vbs'],
-    android: ['apk', 'jar'],
-    linux: ['elf', 'sh', 'py'],
-    macos: ['macho', 'app', 'sh', 'py'],
-    web: ['js', 'php', 'jsp', 'war']
-  };
-
-  const encryptionOptions = ['base64', 'xor', 'aes', 'hex', 'caesar', 'blowfish'];
-
+const RapidPayloadTool: React.FC<RapidPayloadToolProps> = ({ onPayloadGenerated }) => {
+  const [targetOS, setTargetOS] = useState('windows');
+  const [payloadFormat, setPayloadFormat] = useState('raw');
+  const [ipAddress, setIpAddress] = useState('0.0.0.0');
+  const [port, setPort] = useState('4444');
+  const [encodePayload, setEncodePayload] = useState(false);
+  const [encryptionType, setEncryptionType] = useState('none');
+  const [payloadOutput, setPayloadOutput] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  
   const handleGeneratePayload = async () => {
+    if (!ipAddress || !port) {
+      toast({
+        title: "Error",
+        description: "Please enter both IP address and port",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    setIsLoading(true);
+    
     try {
-      setIsGenerating(true);
-      setResults(null);
+      const result = await executeRapidPayload({
+        platform: targetOS as 'windows' | 'linux' | 'macos' | 'android' | 'web', // Add platform property
+        targetOS: targetOS as 'windows' | 'linux' | 'macos' | 'android' | 'web',
+        payloadType: targetOS as 'windows' | 'linux' | 'macos' | 'android' | 'web',
+        format: payloadFormat,
+        lhost: ipAddress,
+        lport: parseInt(port),
+        encode: encodePayload,
+        encryption: encryptionType
+      });
       
-      const params: RapidPayloadParams = {
-        targetOS: payloadType,
-        payloadType: payloadType,
-        format: format,
-        lhost: lhost,
-        lport: lport,
-        encode: encode,
-        encryption: encryption
-      };
-      
-      const result = await executeRapidPayload(params);
-      
-      if (result.success) {
+      if (result && result.success) {
+        setPayloadOutput(result.data?.payload || JSON.stringify(result.data, null, 2));
         toast({
           title: "Payload Generated",
-          description: `${payloadType} payload generated successfully`,
+          description: `${targetOS} payload created successfully`
         });
-        setResults(JSON.stringify(result.data, null, 2));
       } else {
         toast({
           title: "Generation Failed",
-          description: result.error || "An error occurred during payload generation",
-          variant: "destructive",
+          description: result?.error || "Unknown error occurred",
+          variant: "destructive"
         });
       }
     } catch (error) {
-      console.error("Error generating payload:", error);
+      console.error("Error during payload generation:", error);
       toast({
         title: "Generation Error",
-        description: error instanceof Error ? error.message : "An unexpected error occurred",
-        variant: "destructive",
+        description: error instanceof Error ? error.message : "An unknown error occurred",
+        variant: "destructive"
       });
     } finally {
-      setIsGenerating(false);
+      setIsLoading(false);
     }
   };
 
   return (
-    <Card className="border-gray-700 bg-scanner-dark-alt">
+    <Card className="border-gray-700 bg-scanner-dark shadow-lg">
       <CardHeader>
-        <CardTitle className="text-scanner-primary flex items-center">
-          <Terminal className="mr-2 h-5 w-5" />
-          RapidPayload Generator
+        <CardTitle className="flex items-center">
+          <Code className="h-5 w-5 text-scanner-success mr-2" />
+          Rapid Payload Generator
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="payloadType">Payload Platform</Label>
-            <Select 
-              value={payloadType} 
-              onValueChange={(value: 'windows' | 'android' | 'linux' | 'macos' | 'web') => {
-                setPayloadType(value);
-                setFormat(formatOptions[value][0]);
-              }}
-            >
-              <SelectTrigger className="w-full bg-scanner-dark border-gray-700">
-                <SelectValue placeholder="Select platform" />
+          <div>
+            <Label htmlFor="target-os">Target OS</Label>
+            <Select value={targetOS} onValueChange={setTargetOS}>
+              <SelectTrigger id="target-os" className="bg-scanner-dark-alt border-gray-700">
+                <SelectValue placeholder="Select target OS" />
               </SelectTrigger>
-              <SelectContent className="bg-scanner-dark text-white border-gray-700">
+              <SelectContent className="bg-scanner-dark border-gray-700">
                 <SelectItem value="windows">Windows</SelectItem>
-                <SelectItem value="android">Android</SelectItem>
                 <SelectItem value="linux">Linux</SelectItem>
                 <SelectItem value="macos">macOS</SelectItem>
+                <SelectItem value="android">Android</SelectItem>
                 <SelectItem value="web">Web</SelectItem>
               </SelectContent>
             </Select>
           </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="format">Payload Format</Label>
-            <Select value={format} onValueChange={setFormat}>
-              <SelectTrigger className="w-full bg-scanner-dark border-gray-700">
-                <SelectValue placeholder="Select format" />
+          <div>
+            <Label htmlFor="payload-format">Payload Format</Label>
+            <Select value={payloadFormat} onValueChange={setPayloadFormat}>
+              <SelectTrigger id="payload-format" className="bg-scanner-dark-alt border-gray-700">
+                <SelectValue placeholder="Select payload format" />
               </SelectTrigger>
-              <SelectContent className="bg-scanner-dark text-white border-gray-700">
-                {formatOptions[payloadType].map((fmt) => (
-                  <SelectItem key={fmt} value={fmt}>{fmt.toUpperCase()}</SelectItem>
-                ))}
+              <SelectContent className="bg-scanner-dark border-gray-700">
+                <SelectItem value="raw">Raw</SelectItem>
+                <SelectItem value="exe">Executable (.exe)</SelectItem>
+                <SelectItem value="elf">ELF</SelectItem>
+                <SelectItem value="python">Python</SelectItem>
+                <SelectItem value="powershell">PowerShell</SelectItem>
+                <SelectItem value="bash">Bash</SelectItem>
               </SelectContent>
             </Select>
           </div>
         </div>
-        
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="lhost">LHOST (Listening Host)</Label>
+          <div>
+            <Label htmlFor="ip-address">IP Address</Label>
             <Input
-              id="lhost"
-              placeholder="192.168.1.100"
-              className="bg-scanner-dark border-gray-700"
-              value={lhost}
-              onChange={(e) => setLhost(e.target.value)}
+              id="ip-address"
+              placeholder="0.0.0.0"
+              value={ipAddress}
+              onChange={(e) => setIpAddress(e.target.value)}
+              className="bg-scanner-dark-alt border-gray-700"
             />
           </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="lport">LPORT (Listening Port)</Label>
+          <div>
+            <Label htmlFor="port">Port</Label>
             <Input
-              id="lport"
-              type="number"
+              id="port"
               placeholder="4444"
-              className="bg-scanner-dark border-gray-700"
-              value={lport}
-              onChange={(e) => setLport(parseInt(e.target.value))}
+              value={port}
+              onChange={(e) => setPort(e.target.value)}
+              className="bg-scanner-dark-alt border-gray-700"
             />
           </div>
         </div>
-        
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <Label htmlFor="encode">Encode Payload</Label>
-              <Switch 
-                id="encode" 
-                checked={encode}
-                onCheckedChange={setEncode}
-              />
-            </div>
+          <div>
+            <Label htmlFor="encode-payload">Encode Payload</Label>
+            <Checkbox
+              id="encode-payload"
+              checked={encodePayload}
+              onCheckedChange={setEncodePayload}
+            />
           </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="encryption">Encryption Method</Label>
-            <Select value={encryption} onValueChange={setEncryption} disabled={!encode}>
-              <SelectTrigger className="w-full bg-scanner-dark border-gray-700">
+          <div>
+            <Label htmlFor="encryption-type">Encryption Type</Label>
+            <Select value={encryptionType} onValueChange={setEncryptionType}>
+              <SelectTrigger id="encryption-type" className="bg-scanner-dark-alt border-gray-700">
                 <SelectValue placeholder="Select encryption" />
               </SelectTrigger>
-              <SelectContent className="bg-scanner-dark text-white border-gray-700">
-                {encryptionOptions.map((enc) => (
-                  <SelectItem key={enc} value={enc}>{enc.toUpperCase()}</SelectItem>
-                ))}
+              <SelectContent className="bg-scanner-dark border-gray-700">
+                <SelectItem value="none">None</SelectItem>
+                <SelectItem value="aes">AES</SelectItem>
+                <SelectItem value="rsa">RSA</SelectItem>
               </SelectContent>
             </Select>
           </div>
         </div>
-        
         <Button
           onClick={handleGeneratePayload}
-          disabled={isGenerating}
-          className="w-full bg-scanner-primary hover:bg-scanner-primary/90"
+          disabled={isLoading}
+          variant="default"
+          className="bg-scanner-primary"
         >
-          {isGenerating ? (
-            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+          {isLoading ? (
+            <>
+              <Terminal className="h-4 w-4 mr-2 animate-spin" />
+              Generating...
+            </>
           ) : (
-            <ArrowRight className="h-4 w-4 mr-2" />
+            <>
+              <Terminal className="h-4 w-4 mr-2" />
+              Generate Payload
+            </>
           )}
-          Generate Payload
         </Button>
-        
-        {results && (
+        {payloadOutput && (
           <div className="mt-4">
-            <Label>Generated Payload Info</Label>
-            <div className="bg-black rounded p-2 mt-1 overflow-auto max-h-60 text-xs font-mono">
-              <pre>{results}</pre>
+            <Label>Generated Payload</Label>
+            <div className="relative mt-1.5">
+              <Input
+                readOnly
+                value={payloadOutput}
+                className="font-mono text-sm bg-scanner-dark-alt border-gray-700"
+              />
+              <Button
+                size="sm"
+                variant="outline"
+                className="absolute right-2 top-2 h-8 border-gray-700 hover:bg-scanner-dark-alt"
+                onClick={() => navigator.clipboard.writeText(payloadOutput)}
+              >
+                Copy
+              </Button>
             </div>
           </div>
         )}
-        
-        <div className="mt-2 text-xs text-gray-400">
-          <Shield className="h-3 w-3 inline mr-1" />
-          <span>For educational purposes only. Ensure you have proper authorization before use.</span>
-        </div>
       </CardContent>
     </Card>
   );

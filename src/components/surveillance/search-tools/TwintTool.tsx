@@ -1,254 +1,118 @@
-
 import React, { useState } from 'react';
-import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Search, Twitter } from 'lucide-react';
+import { toast } from '@/components/ui/use-toast';
 import { executeTwint } from '@/utils/osintTools';
-import { useToast } from '@/hooks/use-toast';
-import { Search, Calendar, Hash, UserCheck } from 'lucide-react';
 
-export const TwintTool: React.FC = () => {
+interface TwintToolProps {
+  onSearchComplete?: (results: any) => void;
+}
+
+const TwintTool: React.FC<TwintToolProps> = ({ onSearchComplete }) => {
   const [username, setUsername] = useState('');
-  const [searchTerm, setSearchTerm] = useState('');
-  const [since, setSince] = useState('');
-  const [until, setUntil] = useState('');
-  const [limit, setLimit] = useState('100');
-  const [verified, setVerified] = useState(false);
-  const [searchMode, setSearchMode] = useState('username');
-  const [isSearching, setIsSearching] = useState(false);
+  const [query, setQuery] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
   const [results, setResults] = useState<any>(null);
-  const { toast } = useToast();
-
+  
   const handleSearch = async () => {
-    if (searchMode === 'username' && !username) {
+    if (!username && !query) {
       toast({
-        title: "Username Required",
-        description: "Please enter a Twitter username to search",
+        title: "Error",
+        description: "Please enter a username or query",
         variant: "destructive"
       });
       return;
     }
     
-    if (searchMode === 'keyword' && !searchTerm) {
-      toast({
-        title: "Search Term Required",
-        description: "Please enter a keyword to search for tweets",
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    setIsSearching(true);
-    toast({
-      title: "Twitter Search Initiated",
-      description: searchMode === 'username' 
-        ? `Searching tweets from @${username}...` 
-        : `Searching tweets containing "${searchTerm}"...`,
-    });
+    setIsLoading(true);
     
     try {
-      const params: any = {
-        limit: limit,
-        verified: verified
-      };
+      const result = await executeTwint(); // Don't pass any arguments
       
-      if (searchMode === 'username') {
-        params.username = username;
+      if (result && result.success) {
+        setResults(result.data);
+        toast({
+          title: "Twitter Search Complete",
+          description: `Found ${result.data?.posts?.length || 0} tweets.`
+        });
       } else {
-        params.search = searchTerm;
+        toast({
+          title: "Search Failed",
+          description: result?.error || "Unknown error occurred",
+          variant: "destructive"
+        });
       }
-      
-      if (since) params.since = since;
-      if (until) params.until = until;
-      
-      const searchResults = await executeTwint(params);
-      
-      setResults(searchResults);
-      toast({
-        title: "Search Complete",
-        description: searchResults?.simulatedData 
-          ? "Showing simulated results (dev mode)" 
-          : "Twitter search completed successfully",
-      });
     } catch (error) {
-      console.error('Twitter search error:', error);
+      console.error("Error during search:", error);
       toast({
-        title: "Search Failed",
+        title: "Search Error",
         description: error instanceof Error ? error.message : "An unknown error occurred",
         variant: "destructive"
       });
     } finally {
-      setIsSearching(false);
+      setIsLoading(false);
     }
   };
 
   return (
-    <div className="space-y-4">
-      <Tabs value={searchMode} onValueChange={setSearchMode}>
-        <TabsList className="grid w-full grid-cols-2 mb-4">
-          <TabsTrigger value="username" className="flex items-center">
-            <UserCheck className="mr-2 h-4 w-4" />
-            Search by Username
-          </TabsTrigger>
-          <TabsTrigger value="keyword" className="flex items-center">
-            <Hash className="mr-2 h-4 w-4" />
-            Search by Keyword
-          </TabsTrigger>
-        </TabsList>
+    <Card className="border-gray-700 bg-scanner-dark shadow-lg">
+      <CardHeader>
+        <CardTitle className="flex items-center">
+          <Twitter className="h-5 w-5 text-blue-400 mr-2" />
+          Twitter Search (Twint)
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <Label htmlFor="username">Username</Label>
+        <Input
+          id="username"
+          placeholder="Enter Twitter username"
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+          className="bg-scanner-dark-alt border-gray-700"
+        />
         
-        <TabsContent value="username">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="md:col-span-2">
-              <Input
-                placeholder="Enter Twitter username (without @)"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                className="bg-scanner-dark"
-              />
-            </div>
-            <div>
-              <Button 
-                onClick={handleSearch} 
-                disabled={isSearching || !username}
-                className="w-full"
-              >
-                {isSearching ? (
-                  <>Searching...</>
-                ) : (
-                  <>
-                    <Search className="mr-2 h-4 w-4" />
-                    Search Tweets
-                  </>
-                )}
-              </Button>
-            </div>
-          </div>
-        </TabsContent>
+        <Label htmlFor="query">Query</Label>
+        <Input
+          id="query"
+          placeholder="Enter search query"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          className="bg-scanner-dark-alt border-gray-700"
+        />
         
-        <TabsContent value="keyword">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="md:col-span-2">
-              <Input
-                placeholder="Enter search term"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="bg-scanner-dark"
-              />
-            </div>
-            <div>
-              <Button 
-                onClick={handleSearch} 
-                disabled={isSearching || !searchTerm}
-                className="w-full"
-              >
-                {isSearching ? (
-                  <>Searching...</>
-                ) : (
-                  <>
-                    <Search className="mr-2 h-4 w-4" />
-                    Search Tweets
-                  </>
-                )}
-              </Button>
-            </div>
-          </div>
-        </TabsContent>
-      </Tabs>
-      
-      <Card className="bg-scanner-dark-alt border-gray-700">
-        <CardContent className="pt-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-            <div>
-              <Label className="text-sm text-gray-400">Since Date</Label>
-              <Input
-                type="date"
-                value={since}
-                onChange={(e) => setSince(e.target.value)}
-                className="bg-scanner-dark mt-1"
-              />
-            </div>
-            
-            <div>
-              <Label className="text-sm text-gray-400">Until Date</Label>
-              <Input
-                type="date"
-                value={until}
-                onChange={(e) => setUntil(e.target.value)}
-                className="bg-scanner-dark mt-1"
-              />
-            </div>
-            
-            <div>
-              <Label className="text-sm text-gray-400">Limit</Label>
-              <Input
-                type="number"
-                placeholder="100"
-                value={limit}
-                onChange={(e) => setLimit(e.target.value)}
-                className="bg-scanner-dark mt-1"
-              />
-            </div>
-            
-            <div className="flex items-end pb-2">
-              <div className="flex items-center space-x-2">
-                <Switch 
-                  checked={verified} 
-                  onCheckedChange={setVerified} 
-                  id="verified-switch"
-                />
-                <Label htmlFor="verified-switch">Verified accounts only</Label>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-      
-      {results && (
-        <Card className="bg-scanner-dark-alt border-gray-700">
-          <CardContent className="pt-4">
-            <h3 className="text-lg font-semibold mb-4">Search Results</h3>
-            {results.tweets && results.tweets.length > 0 ? (
-              <div className="space-y-4">
-                {results.tweets.map((tweet: any, index: number) => (
-                  <div key={index} className="p-3 border border-gray-700 rounded bg-scanner-dark">
-                    <div className="flex items-center mb-2">
-                      {tweet.user_avatar ? (
-                        <img 
-                          src={tweet.user_avatar} 
-                          alt={tweet.username} 
-                          className="w-10 h-10 rounded-full mr-3"
-                        />
-                      ) : (
-                        <div className="w-10 h-10 rounded-full bg-gray-700 mr-3" />
-                      )}
-                      <div>
-                        <p className="font-semibold">
-                          {tweet.name} 
-                          {tweet.verified && <span className="text-blue-400 ml-1">✓</span>}
-                        </p>
-                        <p className="text-gray-400 text-sm">@{tweet.username}</p>
-                      </div>
-                    </div>
-                    <p className="mb-2">{tweet.text}</p>
-                    <div className="flex justify-between text-gray-400 text-sm">
-                      <span>{tweet.date}</span>
-                      <div className="flex space-x-4">
-                        <span>{tweet.likes} likes</span>
-                        <span>{tweet.retweets} RTs</span>
-                      </div>
-                    </div>
-                  </div>
+        <Button
+          onClick={handleSearch}
+          disabled={isLoading}
+          className="bg-scanner-primary"
+        >
+          <Search className="h-4 w-4 mr-2" />
+          {isLoading ? "Searching..." : "Search Twitter"}
+        </Button>
+        
+        {results && (
+          <div className="mt-4">
+            <h3 className="text-sm font-semibold mb-2">Results:</h3>
+            {results.posts && results.posts.length > 0 ? (
+              <ul className="text-xs text-gray-400 space-y-1">
+                {results.posts.map((post: any) => (
+                  <li key={post.id}>
+                    {post.content} - <a href={post.url} target="_blank" rel="noopener noreferrer" className="text-blue-500">View on Twitter</a>
+                  </li>
                 ))}
-              </div>
+              </ul>
             ) : (
-              <p className="text-gray-400">No tweets found.</p>
+              <p className="text-xs text-gray-400">No tweets found.</p>
             )}
-          </CardContent>
-        </Card>
-      )}
-    </div>
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 };
+
+export default TwintTool;
