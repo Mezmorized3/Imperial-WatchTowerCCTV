@@ -16,17 +16,22 @@ export const convertToScannerFormat = (camera: OsintCameraResult): ScannerCamera
     port: camera.port,
     model: camera.model || '',
     manufacturer: camera.manufacturer || '',
-    status: camera.status || 'unknown',
-    lastSeen: typeof camera.lastSeen === 'object' && camera.lastSeen instanceof Date 
-      ? camera.lastSeen.toISOString() 
-      : camera.lastSeen,
+    status: camera.status as any, // Type casting needed due to different status enums
+    lastSeen: typeof camera.lastSeen === 'string' 
+      ? camera.lastSeen 
+      : camera.lastSeen instanceof Date 
+        ? camera.lastSeen.toISOString() 
+        : camera.lastSeen || '',
     accessLevel: camera.accessLevel || 'none',
-    rtspUrl: camera.rtspUrl,
-    httpUrl: camera.httpUrl,
+    rtspUrl: camera.rtspUrl || '',
+    httpUrl: camera.httpUrl || '',
     credentials: camera.credentials,
-    vulnerabilities: camera.vulnerabilities,
-    geolocation: camera.geolocation || { country: 'Unknown' },
-    firmware: camera.firmware
+    vulnerabilities: camera.vulnerabilities || [],
+    location: camera.geolocation 
+      ? { country: camera.geolocation.country, city: camera.geolocation.city || '' } 
+      : { country: 'Unknown', city: '' },
+    firmware: camera.firmware || undefined,
+    threatIntel: camera.threatIntel
   };
 };
 
@@ -39,17 +44,19 @@ export const convertToOsintFormat = (camera: ScannerCameraResult): OsintCameraRe
     ip: camera.ip,
     port: camera.port,
     model: camera.model,
-    manufacturer: camera.manufacturer,
-    status: camera.status as any,
+    manufacturer: camera.manufacturer || '',
+    status: camera.status as any, // Type casting needed due to different status enums
     lastSeen: camera.lastSeen,
-    accessLevel: camera.accessLevel as any,
-    rtspUrl: camera.rtspUrl,
-    httpUrl: camera.httpUrl,
+    accessLevel: camera.accessLevel as any, // Type casting needed due to different access level enums
+    rtspUrl: camera.rtspUrl || '',
+    httpUrl: camera.httpUrl || '',
     credentials: camera.credentials,
-    vulnerabilities: camera.vulnerabilities,
-    geolocation: typeof camera.geolocation === 'object' 
-      ? camera.geolocation 
-      : { country: camera.geolocation || 'Unknown' },
-    firmware: camera.firmware
+    vulnerabilities: camera.vulnerabilities || [],
+    geolocation: { 
+      country: camera.location?.country || 'Unknown',
+      city: camera.location?.city 
+    },
+    firmware: camera.firmware,
+    threatIntel: camera.threatIntel
   };
 };

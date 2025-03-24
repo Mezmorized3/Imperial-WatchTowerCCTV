@@ -1,17 +1,45 @@
 
 /**
- * Types for camera-related tools
+ * Camera types for OSINT and camera discovery
  */
 
-import { ToolParams } from './baseTypes';
+import { ThreatIntelData, FirmwareData } from './threatIntelTypes';
 
-// Camera status types
-export type CameraStatus = 'online' | 'offline' | 'vulnerable' | 'secure' | 'unknown';
+export type CameraStatus = 'online' | 'offline' | 'unknown' | 'vulnerable' | 'secure' | 'compromised';
+export type AccessLevel = 'none' | 'limited' | 'full' | 'admin' | 'unknown';
 
-// Camera access level types
-export type CameraAccessLevel = 'none' | 'view' | 'control' | 'admin';
+export interface Credentials {
+  username?: string;
+  password?: string;
+  isDefault?: boolean;
+}
 
-// Camera result type
+export interface Vulnerability {
+  id: string;
+  name: string;
+  severity: 'low' | 'medium' | 'high' | 'critical';
+  description: string;
+  cve?: string;
+  exploitable?: boolean;
+  details?: string;
+}
+
+export interface Geolocation {
+  country: string;
+  city?: string;
+  latitude?: number;
+  longitude?: number;
+}
+
+export interface CCTVParams {
+  country: string;
+  region?: string;
+  city?: string;
+  limit?: number;
+  brand?: string;
+  saveResults?: boolean;
+}
+
 export interface CameraResult {
   id: string;
   ip: string;
@@ -19,102 +47,29 @@ export interface CameraResult {
   model?: string;
   manufacturer?: string;
   status: CameraStatus;
-  lastSeen: string;
-  accessLevel: CameraAccessLevel;
+  lastSeen?: string | Date;
+  accessLevel: AccessLevel;
   rtspUrl?: string;
   httpUrl?: string;
-  credentials?: {
-    username: string;
-    password: string;
-  };
-  vulnerabilities?: Array<{
-    name: string;
-    severity: 'low' | 'medium' | 'high' | 'critical';
-    description: string;
-  }>;
-  geolocation?: {
-    country: string;
-    city?: string;
-    latitude?: number;
-    longitude?: number;
-  };
-  location?: string;
-  firmware?: {
-    version: string;
-    updateAvailable: boolean;
-    vulnerabilities: any[];
-    lastChecked: string;
-  };
+  credentials?: Credentials;
+  vulnerabilities?: Vulnerability[];
+  geolocation?: Geolocation;
+  firmware?: FirmwareData;
+  threatIntel?: ThreatIntelData;
+  accessible?: boolean; // Flag indicating if the camera is directly accessible
 }
 
-// Basic scan parameters
-export interface CameradarParams extends ToolParams {
+export interface BackHackParams {
   target: string;
-  ports?: string;
+  url?: string;
+  scanType?: 'basic' | 'full';
   timeout?: number;
-  threads?: number;
-  bruteforce?: boolean;
-  dictionary?: boolean;
+  userAgent?: string;
 }
 
-// IP Camera search parameters
-export interface IPCamSearchParams extends ToolParams {
-  subnet: string;
-  protocols?: string[];
-  timeout?: number;
-  onvif?: boolean;
-}
-
-// Camerattack parameters
-export interface CamerattackParams extends ToolParams {
-  target: string;
-  port?: number;
-  username?: string;
-  password?: string;
-  timeout?: number;
-}
-
-// CCTV tool parameters
-export interface CCTVParams extends ToolParams {
-  region: string;
+export interface CCTVExplorerParams {
   country: string;
+  region?: string;
   limit?: number;
-  type?: string;
-}
-
-// Speed camera parameters
-export interface SpeedCameraParams extends ToolParams {
-  location: string;
-  range?: number;
-  type?: string;
-}
-
-// HackCCTV parameters
-export interface HackCCTVParams extends ToolParams {
-  target: string;
-  bruteforce?: boolean;
-  deepScan?: boolean;
-  usernames?: string[];
-  passwords?: string[];
   saveResults?: boolean;
-  timeout?: number;
 }
-
-// Scanner result type
-export interface ScanResult {
-  success: boolean;
-  total: number;
-  found: number;
-  results: any[];
-  data: {
-    cameras: CameraResult[];
-    total: number;
-    vulnerabilities?: any[];
-    [key: string]: any;
-  };
-  error?: string;
-  simulatedData?: boolean;
-}
-
-// Export type for compatibility with TypeScript's "isolatedModules" mode
-export type { CameraResult as CameraResultType };

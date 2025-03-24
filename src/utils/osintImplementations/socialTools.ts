@@ -1,115 +1,122 @@
-
 /**
- * Social OSINT tools implementations
- * These will later be replaced with real implementations from the GitHub repos:
- * - github.com/sherlock-project/sherlock
- * - github.com/twintproject/twint
- * - github.com/sinwindie/OSINT
+ * Social media tools implementations for OSINT
  */
 
-import { simulateNetworkDelay } from '../networkUtils';
-import { 
-  UsernameResult,
-  ToolResult,
-  TwintParams,
-  OSINTParams
-} from '../osintToolTypes';
+import { SocialPostData, SocialSearchParams } from '../types/socialToolTypes';
+import { calculateSentiment } from '../sentimentAnalysis';
 
-/**
- * Execute username search across platforms
- * Real implementation will use github.com/sherlock-project/sherlock
- */
-export const executeUsernameSearch = async (username: string): Promise<UsernameResult> => {
-  await simulateNetworkDelay(4000);
-  console.log('Executing Username Search:', username);
+// Sherlock implementation (placeholder)
+export const searchSherlock = async (params: SocialSearchParams): Promise<SocialPostData[]> => {
+  // Placeholder implementation
+  console.log('Sherlock search called with params:', params);
+  return Promise.resolve([
+    {
+      id: 'sherlock-1',
+      platform: 'unknown',
+      content: `Placeholder Sherlock result for ${params.query}`,
+      author: 'Sherlock',
+      date: new Date().toISOString(),
+      url: 'https://example.com/sherlock',
+      likes: 10,
+      shares: 5,
+      comments: 2,
+      location: 'Unknown',
+      hashtags: [],
+      mentions: [],
+      sentiment: 'neutral',
+      attachments: []
+    }
+  ]);
+};
 
-  // Social media platforms to check
-  const platforms = [
-    'Twitter', 'Instagram', 'GitHub', 'Facebook', 'LinkedIn', 
-    'Reddit', 'Pinterest', 'YouTube', 'Twitch', 'TikTok'
-  ];
+// Twint implementation (placeholder)
+export const searchTwint = async (params: SocialSearchParams): Promise<SocialPostData[]> => {
+  // Placeholder implementation
+  console.log('Twint search called with params:', params);
+  return Promise.resolve([
+    {
+      id: 'twint-1',
+      platform: 'twitter',
+      content: `Placeholder Twint result for ${params.query}`,
+      author: 'Twint',
+      date: new Date().toISOString(),
+      url: 'https://example.com/twint',
+      likes: 20,
+      shares: 8,
+      comments: 3,
+      location: 'Unknown',
+      hashtags: [],
+      mentions: [],
+      sentiment: 'neutral',
+      attachments: []
+    }
+  ]);
+};
+
+// Imperial Oculus implementation (placeholder)
+export const searchImperialOculus = async (params: SocialSearchParams): Promise<SocialPostData[]> => {
+  // Placeholder implementation
+  console.log('Imperial Oculus search called with params:', params);
+  return Promise.resolve([
+    {
+      id: 'imperial-oculus-1',
+      platform: 'unknown',
+      content: `Placeholder Imperial Oculus result for ${params.query}`,
+      author: 'Imperial Oculus',
+      date: new Date().toISOString(),
+      url: 'https://example.com/imperial-oculus',
+      likes: 15,
+      shares: 7,
+      comments: 4,
+      location: 'Unknown',
+      hashtags: [],
+      mentions: [],
+      sentiment: 'neutral',
+      attachments: []
+    }
+  ]);
+};
+
+// Fix the comparison issues
+export const parseTwinData = (data: any, maxResults = 10): SocialPostData[] => {
+  if (!data || !Array.isArray(data.tweets)) {
+    return [];
+  }
   
-  // Simulate results - 60-70% chance of finding an account on each platform
-  const results = platforms.map(platform => {
-    const found = Math.random() > 0.3;
-    return {
-      name: platform,
-      url: `https://${platform.toLowerCase()}.com/${username}`,
-      found,
-      accountUrl: found ? `https://${platform.toLowerCase()}.com/${username}` : undefined
-    };
-  });
-  
-  const totalFound = results.filter(r => r.found).length;
-
-  // Simulated results - will be replaced with real implementation
-  return {
-    success: true,
-    data: { 
-      sites: results,
-      totalFound
-    },
-    simulatedData: true
-  };
+  return data.tweets
+    .slice(0, maxResults)
+    .map((tweet: any) => {
+      // Fix numeric comparisons by ensuring we're comparing numbers
+      const likes = typeof tweet.likes === 'string' ? parseInt(tweet.likes, 10) : tweet.likes || 0;
+      const retweets = typeof tweet.retweets === 'string' ? parseInt(tweet.retweets, 10) : tweet.retweets || 0;
+      
+      return {
+        id: tweet.id || tweet.tweet_id || `tweet-${Math.random().toString(36).substr(2, 9)}`,
+        platform: 'twitter',
+        content: tweet.tweet || tweet.content || '',
+        author: tweet.username || tweet.user || '',
+        date: tweet.date || new Date().toISOString(),
+        url: tweet.link || '',
+        likes: likes,
+        shares: retweets,
+        comments: 0,
+        location: tweet.location || tweet.geo || '',
+        hashtags: tweet.hashtags || [],
+        mentions: tweet.mentions || [],
+        sentiment: calculateSentiment(tweet.tweet || tweet.content || ''),
+        attachments: tweet.photos ? tweet.photos.map((photo: string) => ({ type: 'image', url: photo })) : []
+      };
+    });
 };
 
-/**
- * Execute Twitter Intelligence tool
- * Real implementation will use github.com/twintproject/twint
- */
-export const executeTwint = async (params: TwintParams): Promise<ToolResult> => {
-  await simulateNetworkDelay(3000);
-  console.log('Executing Twint:', params);
+// Example usage of sentiment analysis
+const examplePosts = [
+  "This is an amazing day!",
+  "I am feeling very sad today.",
+  "The weather is okay, nothing special."
+];
 
-  // Simulated results - will be replaced with real implementation
-  return {
-    success: true,
-    data: { 
-      username: params.username,
-      search: params.search,
-      tweets: Array(params.limit || 5).fill(0).map((_, i) => ({
-        id: `tweet-${i}`,
-        text: `This is a simulated tweet #${i} about ${params.search || 'topics'}`,
-        date: new Date(Date.now() - i * 86400000).toISOString(),
-        likes: Math.floor(Math.random() * 100),
-        retweets: Math.floor(Math.random() * 20)
-      })),
-      total: params.limit || 5
-    },
-    simulatedData: true
-  };
-};
-
-/**
- * Execute OSINT framework tools
- * Real implementation will use github.com/sinwindie/OSINT
- */
-export const executeOSINT = async (params: OSINTParams): Promise<ToolResult> => {
-  await simulateNetworkDelay(5000);
-  console.log('Executing OSINT:', params);
-
-  // Simulated results - will be replaced with real implementation
-  return {
-    success: true,
-    data: { 
-      target: params.target,
-      type: params.type || 'person',
-      results: {
-        emails: ['contact@example.com', 'info@example.com'],
-        phones: ['+1234567890'],
-        social: [
-          { platform: 'Twitter', username: 'example' },
-          { platform: 'LinkedIn', url: 'linkedin.com/in/example' }
-        ],
-        addresses: params.depth === 'deep' ? ['123 Example St, City, Country'] : [],
-        domains: params.type === 'company' ? ['example.com', 'example.org'] : [],
-        related_people: params.depth === 'deep' && params.type === 'person' ? [
-          { name: 'Related Person 1', relationship: 'colleague' },
-          { name: 'Related Person 2', relationship: 'family' }
-        ] : []
-      },
-      depth: params.depth || 'shallow'
-    },
-    simulatedData: true
-  };
-};
+examplePosts.forEach(post => {
+  const sentiment = calculateSentiment(post);
+  console.log(`Post: ${post} - Sentiment: ${sentiment}`);
+});

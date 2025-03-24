@@ -62,3 +62,15 @@ export interface ChromeExtensionParams extends ToolParams {
     [key: string]: any;
   };
 }
+
+// Specifically for hacking CCTV cameras
+export interface HackCCTVParams extends ToolParams {
+  target: string;
+  method: 'default-credentials' | 'exploit' | 'brute-force' | 'rtsp-discovery';
+  timeout?: number;
+  proxy?: string;
+  userAgent?: string;
+  country?: string;
+  manufacturer?: string;
+  saveResults?: boolean;
+}

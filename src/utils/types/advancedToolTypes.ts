@@ -62,3 +62,19 @@ export interface ImperialShieldParams extends ToolParams {
     [key: string]: any;
   };
 }
+
+// Add additional tool types for the imported hacking tools
+export interface CamDumperParams extends ToolParams {
+  target: string;
+  method: 'scan' | 'exploit' | 'dump';
+  outputDir?: string;
+  timeout?: number;
+  country?: string;
+}
+
+export interface OpenCCTVParams extends ToolParams {
+  target: string;
+  scanMode: 'quick' | 'deep' | 'stealth';
+  saveOutput?: boolean;
+  proxyEnabled?: boolean;
+}

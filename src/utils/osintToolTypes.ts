@@ -25,5 +25,6 @@ export * from './types/advancedToolTypes';
 // Re-export threat intel types
 export * from './types/threatIntelTypes';
 
-// Note: ImperialOculusParams is exported from both social and network tool types
+// Note: Some types are exported from multiple modules
 // We're acknowledging this overlap for backward compatibility
+// If you encounter ambiguity errors, import directly from the specific module

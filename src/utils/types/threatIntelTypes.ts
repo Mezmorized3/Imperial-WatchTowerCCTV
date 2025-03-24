@@ -12,7 +12,7 @@ export interface ThreatIntelData {
   reportedBy?: string[];
   firstSeen?: string;
   tags?: string[];
-  lastUpdated?: string;
+  lastUpdated: string;
 }
 
 export interface FirmwareData {
@@ -42,4 +42,19 @@ export interface ExploitData {
   status: 'verified' | 'unverified' | 'patched';
   details?: string;
   references?: string[];
+}
+
+// Add ImperialShieldResult type required by imperialShieldUtils.ts
+export interface ImperialShieldResult {
+  id: string;
+  target: string;
+  status: 'vulnerable' | 'secure' | 'unknown';
+  timestamp: string;
+  findings: Array<{
+    severity: 'low' | 'medium' | 'high' | 'critical';
+    description: string;
+    remediation?: string;
+  }>;
+  score: number;
+  mode: 'analyze' | 'defend' | 'monitor' | 'test';
 }
