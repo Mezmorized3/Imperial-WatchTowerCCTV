@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
@@ -82,7 +83,10 @@ const PayloadGeneratorTab: React.FC<PayloadGeneratorTabProps> = ({
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <Label htmlFor="target-os">Target OS</Label>
-          <Select value={targetOS} onValueChange={setTargetOS}>
+          <Select 
+            value={targetOS} 
+            onValueChange={(value: 'windows' | 'linux' | 'macos' | 'android' | 'web') => setTargetOS(value)}
+          >
             <SelectTrigger id="target-os" className="bg-scanner-dark-alt border-gray-700">
               <SelectValue placeholder="Select target OS" />
             </SelectTrigger>
@@ -97,7 +101,10 @@ const PayloadGeneratorTab: React.FC<PayloadGeneratorTabProps> = ({
         
         <div>
           <Label htmlFor="payload-type">Payload Type</Label>
-          <Select value={payloadType} onValueChange={setPayloadType}>
+          <Select 
+            value={payloadType} 
+            onValueChange={(value: 'windows' | 'linux' | 'macos' | 'android' | 'web') => setPayloadType(value)}
+          >
             <SelectTrigger id="payload-type" className="bg-scanner-dark-alt border-gray-700">
               <SelectValue placeholder="Select payload type" />
             </SelectTrigger>

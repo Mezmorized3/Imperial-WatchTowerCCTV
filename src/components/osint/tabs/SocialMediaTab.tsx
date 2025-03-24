@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { UsernameSearchTool } from '@/components/surveillance/search-tools/UsernameSearchTool';
-import { TwintTool } from '@/components/surveillance/search-tools/TwintTool';
+import TwintTool from '@/components/surveillance/search-tools/TwintTool';
 
 const SocialMediaTab: React.FC = () => {
   const [activeSocialTool, setActiveSocialTool] = useState<string | null>(null);

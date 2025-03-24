@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -37,7 +38,7 @@ const RapidPayloadTool: React.FC<RapidPayloadToolProps> = ({ onPayloadGenerated 
     
     try {
       const result = await executeRapidPayload({
-        platform: targetOS as 'windows' | 'linux' | 'macos' | 'android' | 'web', // Add platform property
+        platform: targetOS as 'windows' | 'linux' | 'macos' | 'android' | 'web',
         targetOS: targetOS as 'windows' | 'linux' | 'macos' | 'android' | 'web',
         payloadType: targetOS as 'windows' | 'linux' | 'macos' | 'android' | 'web',
         format: payloadFormat,
@@ -142,7 +143,7 @@ const RapidPayloadTool: React.FC<RapidPayloadToolProps> = ({ onPayloadGenerated 
             <Checkbox
               id="encode-payload"
               checked={encodePayload}
-              onCheckedChange={setEncodePayload}
+              onCheckedChange={(checked) => setEncodePayload(checked === true)}
             />
           </div>
           <div>

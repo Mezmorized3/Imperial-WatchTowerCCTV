@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -34,10 +35,15 @@ const TwintTool: React.FC<TwintToolProps> = ({ onSearchComplete }) => {
       const result = await executeTwint(); // Don't pass any arguments
       
       if (result && result.success) {
-        setResults(result.data);
+        // Create default data structure if there's no data
+        const processedData = {
+          posts: []
+        };
+        
+        setResults(processedData);
         toast({
           title: "Twitter Search Complete",
-          description: `Found ${result.data?.posts?.length || 0} tweets.`
+          description: `Found ${processedData?.posts?.length || 0} tweets.`
         });
       } else {
         toast({
