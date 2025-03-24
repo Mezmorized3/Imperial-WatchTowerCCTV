@@ -1,202 +1,224 @@
 
-/**
- * FFmpeg service for handling video processing
- * In a production environment, this would use the actual FFmpeg executable
- * through a server-side API or Electron's Node.js integration
- */
-
-import { simulateNetworkDelay } from '../networkUtils';
-import { ToolResult, FFmpegParams } from '../osintToolTypes';
-import { imperialServerService } from '../imperialServerService';
+import { FFmpegParams, ToolResult } from '@/utils/osintToolTypes';
+import { simulateNetworkDelay } from '@/utils/networkUtils';
 
 /**
- * Execute an FFmpeg command with the given parameters
+ * Execute FFmpeg commands
+ * In a real-world implementation, this would connect to a backend service
+ * that can execute the actual FFmpeg binary
  */
 export const executeFFmpeg = async (params: FFmpegParams): Promise<ToolResult> => {
-  console.log('Executing FFmpeg:', params);
+  console.log('Executing FFmpeg with params:', params);
   
-  try {
-    // Try to use the real FFmpeg through the server API
-    const response = await imperialServerService.executeOsintTool('ffmpeg', params);
-    
-    if (response && response.success) {
-      return response;
-    }
-    
-    // Fallback to simulated behavior if server-side execution fails
-    await simulateNetworkDelay(2000);
-    
-    // Check required parameters
-    if (!params.input && !params.inputStream) {
-      return {
-        success: false,
-        error: 'Input file or stream is required',
-        simulatedData: true,
-        data: null
-      };
-    }
-    
-    const input = params.input || params.inputStream;
-    const outputFormat = params.outputFormat || 'mp4';
-    const outputPath = params.outputPath || params.output || `output.${outputFormat}`;
-    
-    return {
-      success: true,
-      data: {
-        output: `FFmpeg command executed successfully. Output saved to ${outputPath}`,
-        outputFile: outputPath,
-        command: `ffmpeg -i ${input} -c:v ${params.videoCodec || 'libx264'} -c:a ${params.audioCodec || 'aac'} ${outputPath}`
-      },
-      simulatedData: true
-    };
-  } catch (error) {
-    console.error('FFmpeg execution error:', error);
+  // Simulate network delay
+  await simulateNetworkDelay(1500);
+  
+  // Form the FFmpeg command
+  let command = 'ffmpeg';
+  
+  if (params.input) {
+    command += ` -i "${params.input}"`;
+  } else if (params.inputStream) {
+    command += ` -i "${params.inputStream}"`;
+  } else {
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Unknown FFmpeg error',
-      simulatedData: true,
-      data: null
+      error: 'No input specified',
+      data: null,
+      simulatedData: true
     };
   }
+  
+  // Add codec options if specified
+  if (params.videoCodec) {
+    command += ` -c:v ${params.videoCodec}`;
+  }
+  
+  if (params.audioCodec) {
+    command += ` -c:a ${params.audioCodec}`;
+  }
+  
+  if (params.resolution) {
+    command += ` -s ${params.resolution}`;
+  }
+  
+  if (params.bitrate) {
+    command += ` -b:v ${params.bitrate}`;
+  }
+  
+  if (params.framerate) {
+    command += ` -r ${params.framerate}`;
+  }
+  
+  if (params.filters && params.filters.length > 0) {
+    command += ` -vf "${params.filters.join(',')}"`;
+  }
+  
+  // Add output path
+  command += ` "${params.output || params.outputPath || 'output.' + (params.outputFormat || 'mp4')}"`;
+  
+  console.log('Simulated FFmpeg command:', command);
+  
+  // In a real implementation, this would execute the command
+  return {
+    success: true,
+    data: {
+      command,
+      output: 'FFmpeg command executed successfully',
+      duration: Math.floor(Math.random() * 10) + 2,
+      exitCode: 0
+    },
+    simulatedData: true
+  };
 };
 
 /**
- * Convert an RTSP stream to HLS format for web viewing
+ * Convert RTSP stream to HLS format
  */
 export const ffmpegConvertRtspToHls = async (params: FFmpegParams): Promise<ToolResult> => {
   console.log('Converting RTSP to HLS:', params);
   
-  try {
-    // Try to use the real FFmpeg through the server API
-    const response = await imperialServerService.executeOsintTool('ffmpeg-rtsp-hls', params);
-    
-    if (response && response.success) {
-      return response;
-    }
-    
-    // Fallback to simulated behavior if server-side execution fails
-    await simulateNetworkDelay(2500);
-    
-    // Check required parameters
-    if (!params.input && !params.inputStream) {
-      return {
-        success: false,
-        error: 'RTSP URL is required',
-        simulatedData: true,
-        data: null
-      };
-    }
-    
-    const rtspUrl = params.input || params.inputStream;
-    const outputDir = params.outputPath || params.output || 'streams/output';
-    
-    return {
-      success: true,
-      data: {
-        hlsUrl: `${outputDir}/playlist.m3u8`,
-        command: `ffmpeg -i ${rtspUrl} -c:v h264 -c:a aac -hls_time 4 -hls_list_size 5 -hls_flags delete_segments -hls_segment_filename ${outputDir}/segment_%d.ts ${outputDir}/playlist.m3u8`,
-        message: 'RTSP stream converted to HLS successfully'
-      },
-      simulatedData: true
-    };
-  } catch (error) {
-    console.error('RTSP to HLS conversion error:', error);
+  // Simulate network delay
+  await simulateNetworkDelay(2000);
+  
+  if (!params.input && !params.inputStream) {
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Unknown conversion error',
-      simulatedData: true,
-      data: null
+      error: 'No RTSP URL provided',
+      data: null,
+      simulatedData: true
     };
   }
+  
+  // Form the FFmpeg command for HLS conversion
+  let command = 'ffmpeg';
+  command += ` -i "${params.input || params.inputStream}"`;
+  command += ' -c:v libx264 -c:a aac -hls_time 4 -hls_playlist_type event';
+  
+  if (params.videoCodec) {
+    command += ` -c:v ${params.videoCodec}`;
+  }
+  
+  if (params.audioCodec) {
+    command += ` -c:a ${params.audioCodec}`;
+  }
+  
+  if (params.resolution) {
+    command += ` -s ${params.resolution}`;
+  }
+  
+  if (params.bitrate) {
+    command += ` -b:v ${params.bitrate}`;
+  }
+  
+  if (params.framerate) {
+    command += ` -r ${params.framerate}`;
+  }
+  
+  if (params.filters && params.filters.length > 0) {
+    command += ` -vf "${params.filters.join(',')}"`;
+  }
+  
+  // Add output path
+  const outputPath = params.output || params.outputPath || 'stream.m3u8';
+  command += ` "${outputPath}"`;
+  
+  console.log('Simulated FFmpeg HLS command:', command);
+  
+  // In a real implementation, this would execute the command
+  return {
+    success: true,
+    data: {
+      command,
+      output: 'FFmpeg HLS conversion started',
+      outputUrl: `http://localhost:8080/${outputPath}`,
+      exitCode: 0
+    },
+    simulatedData: true
+  };
 };
 
 /**
- * Record a video stream to a file
+ * Record a stream for a specified duration
  */
-export const ffmpegRecordStream = async (params: FFmpegParams): Promise<ToolResult> => {
-  console.log('Recording stream:', params);
+export const ffmpegRecordStream = async (params: FFmpegParams, duration = 60): Promise<ToolResult> => {
+  console.log('Recording stream:', params, 'for', duration, 'seconds');
   
-  try {
-    // Try to use the real FFmpeg through the server API
-    const response = await imperialServerService.executeOsintTool('ffmpeg-record', params);
-    
-    if (response && response.success) {
-      return response;
-    }
-    
-    // Fallback to simulated behavior if server-side execution fails
-    await simulateNetworkDelay(1500);
-    
-    // Check required parameters
-    if (!params.input && !params.inputStream) {
-      return {
-        success: false,
-        error: 'Stream URL is required',
-        simulatedData: true,
-        data: null
-      };
-    }
-    
-    const streamUrl = params.input || params.inputStream;
-    const outputFile = params.outputPath || params.output || 'recordings/output.mp4';
-    
-    return {
-      success: true,
-      data: {
-        outputFile,
-        command: `ffmpeg -i ${streamUrl} -c:v copy -c:a copy ${outputFile}`,
-        duration: '00:10:00',
-        status: 'Recording complete'
-      },
-      simulatedData: true
-    };
-  } catch (error) {
-    console.error('Stream recording error:', error);
+  // Simulate network delay
+  await simulateNetworkDelay(1000);
+  
+  if (!params.input && !params.inputStream) {
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Unknown recording error',
-      simulatedData: true,
-      data: null
+      error: 'No stream URL provided',
+      data: null,
+      simulatedData: true
     };
   }
+  
+  // Form the FFmpeg command for recording
+  let command = 'ffmpeg';
+  command += ` -i "${params.input || params.inputStream}"`;
+  command += ` -t ${duration}`;
+  command += ' -c:v copy -c:a copy';
+  
+  // Add output path
+  const outputPath = params.output || params.outputPath || `recording_${Date.now()}.mp4`;
+  command += ` "${outputPath}"`;
+  
+  console.log('Simulated FFmpeg recording command:', command);
+  
+  // In a real implementation, this would execute the command
+  return {
+    success: true,
+    data: {
+      command,
+      output: `Recording saved to ${outputPath}`,
+      duration: duration,
+      exitCode: 0
+    },
+    simulatedData: true
+  };
 };
 
 /**
- * Apply motion detection to a video stream
+ * Apply motion detection filter to stream
  */
-export const applyMotionDetection = async (streamUrl: string, options: any = {}): Promise<any> => {
-  console.log('Applying motion detection:', streamUrl, options);
+export const applyMotionDetection = async (params: FFmpegParams): Promise<ToolResult> => {
+  console.log('Applying motion detection:', params);
   
-  try {
-    // Try to use the real motion detection through the server API
-    const response = await imperialServerService.executeOsintTool('motion-detection', {
-      input: streamUrl,
-      sensitivity: options.sensitivity || 0.5,
-      threshold: options.threshold || 0.3,
-      region: options.region || { x: 0, y: 0, width: 100, height: 100 }
-    });
-    
-    if (response && response.success) {
-      return response.data;
-    }
-    
-    // Fallback to simulated behavior if server-side execution fails
-    await simulateNetworkDelay(800);
-    
-    // Simulate motion detection results
-    const motionDetected = Math.random() > 0.5;
-    const objects = motionDetected ? 
-      ['person', 'car', 'bicycle'].filter(() => Math.random() > 0.5) : 
-      [];
-    
+  // Simulate network delay
+  await simulateNetworkDelay(1500);
+  
+  if (!params.input && !params.inputStream) {
     return {
-      motionDetected,
-      confidence: Math.random(),
-      objects,
-      timestamp: new Date().toISOString()
+      success: false,
+      error: 'No stream URL provided',
+      data: null,
+      simulatedData: true
     };
-  } catch (error) {
-    console.error('Motion detection error:', error);
-    throw error;
   }
+  
+  // Form the FFmpeg command with motion detection filters
+  let command = 'ffmpeg';
+  command += ` -i "${params.input || params.inputStream}"`;
+  command += ' -vf "select=\'gt(scene,0.003)\',metadata=print" -preset ultrafast';
+  
+  // Add output path
+  const outputPath = params.output || params.outputPath || `motion_${Date.now()}.mp4`;
+  command += ` "${outputPath}"`;
+  
+  console.log('Simulated FFmpeg motion detection command:', command);
+  
+  // In a real implementation, this would execute the command
+  return {
+    success: true,
+    data: {
+      command,
+      output: 'Motion detection applied',
+      detectionThreshold: 0.003,
+      exitCode: 0
+    },
+    simulatedData: true
+  };
 };

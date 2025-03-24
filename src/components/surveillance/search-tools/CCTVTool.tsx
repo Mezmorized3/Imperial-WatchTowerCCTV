@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { executeCCTV } from '@/utils/osintTools';
 import { useToast } from '@/hooks/use-toast';
+import { ToolResult } from '@/utils/osintToolTypes';
 
 export const CCTVTool: React.FC = () => {
   const [country, setCountry] = useState('');
@@ -35,7 +36,6 @@ export const CCTVTool: React.FC = () => {
         region: country,
         limit: parseInt(limit),
         type: cameraType,
-        // Add the country property required by the tool
         country: country
       });
       

@@ -1,9 +1,10 @@
+
 import React from 'react';
-import { CameraResult } from '@/types/scanner';
+import { CameraResult } from '@/utils/osintToolTypes';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Shield, AlertTriangle, CheckCircle, Info } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
-import ThreatIntelligence from './ThreatIntelligence';
+import ThreatIntelligence from './threat/ThreatIntelligence';
 import FirmwareAnalysis from './FirmwareAnalysis';
 
 interface ThreatAnalysisDashboardProps {

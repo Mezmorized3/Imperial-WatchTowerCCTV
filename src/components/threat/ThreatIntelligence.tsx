@@ -1,13 +1,13 @@
 
 import React from 'react';
-import { CameraResult } from '@/types/scanner';
+import { CameraResult } from '@/utils/osintToolTypes';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Shield, HardDrive, Server } from 'lucide-react';
 import ThreatReputation from './ThreatReputation';
 import FirmwareDetails from './FirmwareDetails';
 import ServerStatus from '../ServerStatus';
 
-interface ThreatIntelligenceProps {
+export interface ThreatIntelligenceProps {
   camera: CameraResult | null;
 }
 
@@ -43,8 +43,8 @@ const ThreatIntelligence: React.FC<ThreatIntelligenceProps> = ({ camera }) => {
             Firmware Analysis
           </CardTitle>
           <CardDescription>
-            {camera.firmwareVersion 
-              ? `Analysis of firmware version ${camera.firmwareVersion}`
+            {camera.firmware?.version 
+              ? `Analysis of firmware version ${camera.firmware.version}`
               : 'No firmware version detected'}
           </CardDescription>
         </CardHeader>

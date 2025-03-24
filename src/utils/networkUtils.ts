@@ -52,6 +52,92 @@ export const fetchDnsRecords = async (domain: string, recordType = 'A'): Promise
 };
 
 /**
+ * Parses an IP range in CIDR notation to start and end IPs
+ */
+export const parseIpRange = (cidrRange: string): { startIp: string; endIp: string; count: number } => {
+  try {
+    const [baseIp, prefixBits] = cidrRange.split('/');
+    const prefixSize = parseInt(prefixBits, 10);
+    
+    if (isNaN(prefixSize) || prefixSize < 0 || prefixSize > 32) {
+      throw new Error('Invalid prefix size in CIDR range');
+    }
+    
+    const ipNum = ipToNumber(baseIp);
+    const mask = ~(0xFFFFFFFF >>> prefixSize);
+    const startIpNum = ipNum & mask;
+    const endIpNum = startIpNum | ~mask;
+    
+    return {
+      startIp: numberToIp(startIpNum),
+      endIp: numberToIp(endIpNum),
+      count: endIpNum - startIpNum + 1
+    };
+  } catch (error) {
+    console.error('Error parsing IP range:', error);
+    throw error;
+  }
+};
+
+/**
+ * Analyzes a website for various security and performance metrics
+ */
+export const analyzeWebsite = async (domain: string): Promise<any> => {
+  try {
+    await simulateNetworkDelay(2000);
+    
+    // In a real implementation, this would connect to an API or use a headless browser
+    return {
+      performance: {
+        score: Math.floor(Math.random() * 100),
+        loadTime: Math.floor(Math.random() * 5000) + 500,
+        resourceSize: Math.floor(Math.random() * 10000) + 100,
+        requests: Math.floor(Math.random() * 100) + 10
+      },
+      security: {
+        score: Math.floor(Math.random() * 100),
+        ssl: {
+          valid: Math.random() > 0.2,
+          grade: ['A+', 'A', 'B', 'C'][Math.floor(Math.random() * 4)],
+          expiresOn: new Date(Date.now() + Math.random() * 31536000000).toISOString(),
+          issuer: ['Let\'s Encrypt', 'DigiCert', 'Comodo', 'GeoTrust'][Math.floor(Math.random() * 4)]
+        },
+        headers: {
+          xssProtection: Math.random() > 0.5,
+          contentSecurity: Math.random() > 0.6,
+          frameOptions: Math.random() > 0.4,
+          hsts: Math.random() > 0.7
+        },
+        vulnerabilities: Math.random() > 0.7 ? [] : [
+          { name: 'XSS', severity: 'high', url: '/contact' },
+          { name: 'CSRF', severity: 'medium', url: '/login' },
+          { name: 'Outdated Library', severity: 'low', url: '/js/jquery.js' }
+        ]
+      },
+      seo: {
+        score: Math.floor(Math.random() * 100),
+        title: Math.random() > 0.2,
+        description: Math.random() > 0.3,
+        headings: Math.random() > 0.4,
+        responseTime: Math.floor(Math.random() * 500) + 50
+      },
+      technologies: [
+        'WordPress',
+        'PHP',
+        'jQuery',
+        'Apache',
+        'MySQL',
+        'Bootstrap',
+        'Google Analytics'
+      ].filter(() => Math.random() > 0.5)
+    };
+  } catch (error) {
+    console.error('Error analyzing website:', error);
+    throw error;
+  }
+};
+
+/**
  * Calculates the subnet size from a CIDR notation
  */
 export const calculateSubnetSize = (cidr: string): number => {

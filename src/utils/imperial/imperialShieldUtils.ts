@@ -54,6 +54,11 @@ export const requestThroughImperialShield = async (
     if (!imperialShieldEnabled) {
       return {
         success: false,
+        data: {
+          vulnerabilities: [],
+          score: 0,
+          recommendations: []
+        },
         error: 'Imperial Shield Protocol is not enabled in settings',
         shieldStatus: 'inactive',
         securityRating: 0
@@ -70,10 +75,13 @@ export const requestThroughImperialShield = async (
         shieldStatus: 'active',
         securityRating: Math.floor(Math.random() * 30) + 70, // 70-100
         data: {
+          vulnerabilities: [],
+          score: Math.floor(Math.random() * 30) + 70,
+          recommendations: ["Enable 2FA", "Update firmware", "Change default credentials"],
           message: 'Successfully connected through Imperial Shield',
           timestamp: new Date().toISOString(),
           protocol: 'Imperial Shield Matrix v1.0',
-          target: params.targetUrl
+          target: params.target
         }
       };
     } else {
@@ -88,14 +96,24 @@ export const requestThroughImperialShield = async (
       
       return {
         success: false,
+        data: {
+          vulnerabilities: [],
+          score: 0,
+          recommendations: []
+        },
         error: errorModes[Math.floor(Math.random() * errorModes.length)],
-        shieldStatus: Math.random() > 0.5 ? 'inactive' : 'breached',
+        shieldStatus: 'inactive',
         securityRating: Math.floor(Math.random() * 40) + 30 // 30-70
       };
     }
   } catch (error) {
     return {
       success: false,
+      data: {
+        vulnerabilities: [],
+        score: 0,
+        recommendations: []
+      },
       error: error instanceof Error ? error.message : 'Unknown error',
       shieldStatus: 'inactive',
       securityRating: 0
@@ -136,7 +154,8 @@ export const testImperialShieldConnection = async (
   await simulateNetworkDelay(2000);
   
   const testParams: ImperialShieldParams = {
-    targetUrl,
+    target: targetUrl,
+    mode: "test",
     protocol: targetUrl.startsWith('https') ? 'https' : 'http',
     validateCert: true
   };

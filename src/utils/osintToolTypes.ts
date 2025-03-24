@@ -13,12 +13,18 @@ export interface ToolResult {
   data: any;
   error?: string;
   simulatedData?: boolean;
+  shieldStatus?: string;
+  securityRating?: number;
 }
 
 export interface ScanResult {
+  success: boolean;
   total: number;
   found: number;
   results: any[];
+  data?: any;
+  simulatedData?: boolean;
+  cameras?: CameraResult[];
 }
 
 export interface UsernameResult {
@@ -27,6 +33,7 @@ export interface UsernameResult {
   error?: string;
   totalFound?: number;
   simulatedData?: boolean;
+  data?: any;
 }
 
 export interface CameraResult {
@@ -64,6 +71,7 @@ export interface CameraResult {
     version?: string;
     vulnerabilities?: string[];
     updateAvailable?: boolean;
+    lastChecked?: string;
   };
   // Required by some implementations
   threatIntel?: {
@@ -72,6 +80,68 @@ export interface CameraResult {
     lastUpdated?: string;
   };
   country?: string;
+  brand?: string;
+  accessLevel?: 'none' | 'view' | 'control' | 'admin';
+  lastSeen?: Date | string;
+  url?: string;
+  snapshotUrl?: string;
+}
+
+// Proxy configuration for tools that need to hide their identity
+export interface ProxyConfig {
+  type: 'http' | 'socks4' | 'socks5' | 'tor';
+  host?: string;
+  port?: number;
+  username?: string;
+  password?: string;
+  useTor?: boolean;
+  enabled?: boolean;
+  useAuthentication?: boolean;
+  rotationEnabled?: boolean;
+  rotationInterval?: number;
+  proxyList?: string[];
+  dnsProtection?: boolean;
+  forceTls?: boolean;
+  autoReconnect?: boolean;
+  connectionTimeout?: number;
+  maxRetries?: number;
+  lastKnownExternalIp?: string;
+}
+
+// Add ImperialShield interfaces
+export interface ImperialShieldParams {
+  target: string;
+  mode: string;
+  targetUrl?: string;
+  protocol?: string;
+  validateCert?: boolean;
+  options?: Record<string, any>;
+}
+
+export interface ImperialShieldResult extends ToolResult {
+  data: {
+    vulnerabilities: any[];
+    score: number;
+    recommendations: string[];
+    message?: string;
+    timestamp?: string;
+    protocol?: string;
+    target?: string;
+  };
+  shieldStatus?: string;
+  securityRating?: number;
+  responseTime?: number;
+}
+
+// Additional interfaces for new tools
+export interface HackCCTVParams {
+  target: string;
+  mode?: string;
+  region?: string;
+  country?: string;
+  limit?: number;
+  timeout?: number;
+  scanType?: string;
 }
 
 // Specific tool parameter interfaces
@@ -88,12 +158,14 @@ export interface TorBotParams {
   level?: number;
   dumpData?: boolean;
   mode?: string;
+  depth?: number;
 }
 
 export interface WebHackParams {
   target: string;
   mode?: string;
   url?: string;
+  scanType?: string;
 }
 
 export interface SpeedCameraParams {
@@ -132,6 +204,7 @@ export interface BotExploitsParams {
   port?: number;
   attackType?: string;
   scanType?: string;
+  timeout?: number;
 }
 
 export interface CamerattackParams {
@@ -139,12 +212,14 @@ export interface CamerattackParams {
   sessions?: number;
   timeout?: number;
   mode?: string;
+  rate?: number;
 }
 
 export interface BackHackParams {
   url: string;
   extractData?: boolean;
   target?: string;
+  scanType?: string;
 }
 
 export interface ImperialOculusParams {
@@ -158,6 +233,7 @@ export interface RapidPayloadParams {
   payloadType: string;
   options?: Record<string, any>;
   format?: string;
+  lhost?: string;
 }
 
 export interface HackingToolParams {
@@ -171,6 +247,7 @@ export interface SecurityAdminParams {
   command: string;
   options?: Record<string, any>;
   scanType?: string;
+  target?: string;
 }
 
 export interface FFmpegParams {
@@ -185,50 +262,7 @@ export interface FFmpegParams {
   bitrate?: string;
   framerate?: string;
   filters?: string[];
-}
-
-export interface ImperialShieldParams {
-  target: string;
-  mode: string;
   options?: Record<string, any>;
-}
-
-export interface ImperialShieldResult extends ToolResult {
-  data: {
-    vulnerabilities: any[];
-    score: number;
-    recommendations: string[];
-  };
-}
-
-// For web scraping tools
-export interface ScrapyParams {
-  url: string;
-  depth?: number;
-  follow?: boolean;
-  outputFormat?: 'json' | 'csv' | 'xml';
-}
-
-export interface ScrapyResult extends ToolResult {
-  data: {
-    urls: string[];
-    items: any[];
-    stats: {
-      pagesCrawled: number;
-      itemsScraped: number;
-      timeElapsed: string;
-    };
-  };
-}
-
-// Proxy configuration for tools that need to hide their identity
-export interface ProxyConfig {
-  type: 'http' | 'socks4' | 'socks5' | 'tor';
-  host?: string;
-  port?: number;
-  username?: string;
-  password?: string;
-  useTor?: boolean;
 }
 
 // Additional type for threat intelligence data

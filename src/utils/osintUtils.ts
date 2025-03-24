@@ -1,10 +1,9 @@
-
 /**
  * Utility functions for OSINT operations
  */
 
 import { CameraResult } from './osintToolTypes';
-import { simulateNetworkDelay } from './networkUtils';
+import { simulateNetworkDelay } from '@/utils/networkUtils';
 import { imperialServerService } from './imperialServerService';
 
 /**
@@ -53,59 +52,64 @@ export const enrichCameraData = async (camera: CameraResult): Promise<CameraResu
 };
 
 /**
- * Gets the geolocation information for an IP address
+ * Gets geolocation information for an IP address
  */
 export const getIpGeolocation = async (ip: string): Promise<any> => {
-  console.log('Getting geolocation for', ip);
-  
   try {
-    // Try to use a real IP geolocation API
-    const response = await fetch(`https://ipapi.co/${ip}/json/`);
-    if (!response.ok) {
-      throw new Error(`IP Geolocation API returned status: ${response.status}`);
-    }
+    await simulateNetworkDelay(500);
     
-    const data = await response.json();
+    // In a real implementation, this would connect to a geolocation API service
+    const countries = ["United States", "United Kingdom", "Germany", "France", "Japan", "Canada", "Australia", "Brazil", "China", "Russia", "India", "South Africa"];
+    const cities = {
+      "United States": ["New York", "Los Angeles", "Chicago", "Houston", "Phoenix"],
+      "United Kingdom": ["London", "Manchester", "Birmingham", "Leeds", "Glasgow"],
+      "Germany": ["Berlin", "Munich", "Hamburg", "Frankfurt", "Cologne"],
+      "France": ["Paris", "Marseille", "Lyon", "Toulouse", "Nice"],
+      "Japan": ["Tokyo", "Osaka", "Kyoto", "Yokohama", "Sapporo"]
+    };
+    
+    const randomCountry = countries[Math.floor(Math.random() * countries.length)];
+    const countryCities = cities[randomCountry as keyof typeof cities] || ["Unknown City"];
+    const randomCity = countryCities[Math.floor(Math.random() * countryCities.length)];
+    
     return {
       ip,
-      country: data.country_name,
-      city: data.city,
-      coordinates: [data.latitude, data.longitude],
-      isp: data.org,
-      timezone: data.timezone
+      country: randomCountry,
+      city: randomCity,
+      latitude: (Math.random() * 180) - 90,
+      longitude: (Math.random() * 360) - 180,
+      timezone: "UTC",
+      isp: ["Comcast", "AT&T", "Verizon", "Deutsche Telekom", "BT Group"][Math.floor(Math.random() * 5)]
     };
   } catch (error) {
     console.error('Error getting IP geolocation:', error);
-    
-    // Fallback to simulated data
-    await simulateNetworkDelay(500);
-    
-    const countries = ['United States', 'Germany', 'Japan', 'Brazil', 'Australia', 'Canada', 'France'];
-    const cities = [
-      ['New York', 'Los Angeles', 'Chicago', 'Houston'],
-      ['Berlin', 'Munich', 'Hamburg', 'Frankfurt'],
-      ['Tokyo', 'Osaka', 'Kyoto', 'Yokohama'],
-      ['Sao Paulo', 'Rio de Janeiro', 'Brasilia', 'Salvador'],
-      ['Sydney', 'Melbourne', 'Brisbane', 'Perth'],
-      ['Toronto', 'Vancouver', 'Montreal', 'Calgary'],
-      ['Paris', 'Marseille', 'Lyon', 'Toulouse']
-    ];
-    
-    const countryIndex = Math.floor(Math.random() * countries.length);
-    const cityIndex = Math.floor(Math.random() * cities[countryIndex].length);
-    
-    return {
-      ip,
-      country: countries[countryIndex],
-      city: cities[countryIndex][cityIndex],
-      coordinates: [
-        (Math.random() * 180) - 90,
-        (Math.random() * 360) - 180
-      ],
-      isp: ['Comcast', 'AT&T', 'Verizon', 'Deutsche Telekom', 'NTT'][Math.floor(Math.random() * 5)],
-      timezone: ['America/New_York', 'Europe/Berlin', 'Asia/Tokyo', 'America/Sao_Paulo', 'Australia/Sydney'][countryIndex]
-    };
+    throw error;
   }
+};
+
+/**
+ * Generates random geolocation data
+ */
+export const getRandomGeoLocation = (): any => {
+  const countries = ["United States", "United Kingdom", "Germany", "France", "Japan", "Canada", "Australia", "Brazil", "China", "Russia", "India", "South Africa"];
+  const cities = {
+    "United States": ["New York", "Los Angeles", "Chicago", "Houston", "Phoenix"],
+    "United Kingdom": ["London", "Manchester", "Birmingham", "Leeds", "Glasgow"],
+    "Germany": ["Berlin", "Munich", "Hamburg", "Frankfurt", "Cologne"],
+    "France": ["Paris", "Marseille", "Lyon", "Toulouse", "Nice"],
+    "Japan": ["Tokyo", "Osaka", "Kyoto", "Yokohama", "Sapporo"]
+  };
+  
+  const randomCountry = countries[Math.floor(Math.random() * countries.length)];
+  const countryCities = cities[randomCountry as keyof typeof cities] || ["Unknown City"];
+  const randomCity = countryCities[Math.floor(Math.random() * countryCities.length)];
+  
+  return {
+    country: randomCountry,
+    city: randomCity,
+    latitude: (Math.random() * 180) - 90,
+    longitude: (Math.random() * 360) - 180
+  };
 };
 
 /**
@@ -248,4 +252,18 @@ export const fetchDnsRecords = async (domain: string, recordType = 'A'): Promise
     
     return records[recordType as keyof typeof records] || [];
   }
+};
+
+/**
+ * Analyze firmware version
+ */
+export const analyzeFirmware = (firmwareVersion: string, manufacturer: string): any => {
+  return {
+    version: firmwareVersion,
+    vulnerabilities: Math.random() > 0.5 ? 
+      ["CVE-2022-1234", "CVE-2022-5678", "CVE-2021-9101"] : 
+      [],
+    updateAvailable: Math.random() > 0.7,
+    lastChecked: new Date().toISOString()
+  };
 };
