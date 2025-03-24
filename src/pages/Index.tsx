@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { ScanProgress, CameraResult } from '@/types/scanner';
 import { Toaster } from '@/components/ui/toaster';
@@ -120,8 +119,12 @@ const Index = () => {
       
       // Try to connect to real-time after server start
       if (success) {
-        setTimeout(() => {
-          connect();
+        setTimeout(async () => {
+          try {
+            await connect();
+          } catch (error) {
+            console.error("Failed to connect to WebSocket:", error);
+          }
         }, 2000); // Give server time to start up
       }
       

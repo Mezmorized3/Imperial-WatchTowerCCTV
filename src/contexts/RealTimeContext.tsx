@@ -29,7 +29,7 @@ interface RealTimeContextValue {
   // Connection state
   isConnected: boolean;
   connectionState: string;
-  connect: () => Promise<void>;
+  connect: () => Promise<boolean>;  // Modified to return a Promise<boolean>
   disconnect: () => void;
   
   // Real-time data
@@ -48,7 +48,7 @@ interface RealTimeContextValue {
 const defaultContext: RealTimeContextValue = {
   isConnected: false,
   connectionState: 'disconnected',
-  connect: async () => {},
+  connect: async () => false,  // Default now returns false
   disconnect: () => {},
   
   serverStatus: {
@@ -125,8 +125,8 @@ export const RealTimeProvider: React.FC<RealTimeProviderProps> = ({
   });
   
   // Connect to the WebSocket server
-  const connect = async () => {
-    await connectToServer();
+  const connect = async (): Promise<boolean> => {
+    return await connectToServer();
   };
   
   // Subscribe to WebSocket events when connected

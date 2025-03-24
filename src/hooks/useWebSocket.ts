@@ -52,7 +52,7 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
   }, [autoConnect, serverUrl]);
   
   // Connect to WebSocket server
-  const connectToServer = useCallback(async () => {
+  const connectToServer = useCallback(async (): Promise<boolean> => {
     try {
       const success = await websocketService.connect(serverUrl);
       setIsConnected(success);
@@ -61,11 +61,13 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
       } else if (!success && onClose) {
         onClose();
       }
+      return success;
     } catch (error) {
       console.error('Error connecting to WebSocket server:', error);
       if (onError) {
         onError(error);
       }
+      return false;
     }
   }, [serverUrl, onOpen, onClose, onError]);
   

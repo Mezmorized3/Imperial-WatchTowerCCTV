@@ -31,6 +31,12 @@ const RealTimeStatus: React.FC = () => {
     }
   };
 
+  const handleConnect = async () => {
+    if (!isConnected) {
+      await connect();
+    }
+  };
+
   return (
     <TooltipProvider>
       <Tooltip>
@@ -39,9 +45,7 @@ const RealTimeStatus: React.FC = () => {
             <Badge 
               variant="outline" 
               className={`px-2 py-1 ${getStatusColor()} text-white cursor-pointer hover:opacity-80`}
-              onClick={() => {
-                if (!isConnected) connect();
-              }}
+              onClick={handleConnect}
             >
               {isConnected ? (
                 <Wifi className="w-3.5 h-3.5 mr-1" />
