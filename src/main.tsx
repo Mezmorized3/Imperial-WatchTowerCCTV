@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
 import App from './App.tsx'
 import './index.css'
+import { RealTimeProvider } from './contexts/RealTimeContext'
 
 // Function to start the server via the electron API if available
 const startImperialServer = () => {
@@ -41,7 +42,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
 createRoot(document.getElementById("root")!).render(
   <BrowserRouter>
-    <App />
+    <RealTimeProvider>
+      <App />
+    </RealTimeProvider>
   </BrowserRouter>
 );
 

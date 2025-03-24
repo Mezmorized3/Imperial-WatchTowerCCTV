@@ -7,6 +7,8 @@ import { Button } from '@/components/ui/button';
 import { Play } from 'lucide-react';
 import CommandPalette from '@/components/CommandPalette';
 import { toast } from '@/components/ui/use-toast';
+import { useRealTime } from '@/contexts/RealTimeContext';
+import RealTimeStatus from '@/components/RealTimeStatus';
 
 // Import refactored components
 import ScanController from '@/components/dashboard/ScanController';
@@ -15,6 +17,15 @@ import ScanNotifications from '@/components/dashboard/ScanNotifications';
 import ScanPanel from '@/components/dashboard/ScanPanel';
 
 const Index = () => {
+  // Get real-time data from context
+  const { 
+    isConnected, 
+    connect,
+    scanProgress: realtimeScanProgress, 
+    cameras: realtimeCameras,
+    startScan: realtimeStartScan 
+  } = useRealTime();
+  
   const [results, setResults] = useState<CameraResult[]>([]);
   const [scanProgress, setScanProgress] = useState<ScanProgress>({
     status: 'idle',
@@ -37,6 +48,19 @@ const Index = () => {
     ╚═╝╚═╝     ╚═╝╚═╝     ╚══════╝╚═╝  ╚═╝╚═╝╚═╝  ╚═╝╚══════╝    ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝     ╚═╝   ╚═╝   
   `;
 
+  // Sync with real-time data when available
+  useEffect(() => {
+    if (isConnected) {
+      setScanProgress(realtimeScanProgress);
+    }
+  }, [isConnected, realtimeScanProgress]);
+
+  useEffect(() => {
+    if (isConnected && realtimeCameras.length > 0) {
+      setResults(realtimeCameras);
+    }
+  }, [isConnected, realtimeCameras]);
+
   useEffect(() => {
     setActiveTab('map');
   }, []);
@@ -48,10 +72,28 @@ const Index = () => {
   }, [scanProgress.status]);
 
   const { handleStartScan } = ScanController({
-    onScanProgressUpdate: setScanProgress,
-    onResultsUpdate: setResults,
+    onScanProgressUpdate: (progress) => {
+      setScanProgress(progress);
+      // If we're connected to real-time, send scan progress update
+      if (isConnected) {
+        // This would be handled by the real-time context
+      }
+    },
+    onResultsUpdate: (newResults) => {
+      setResults(newResults);
+    },
     onErrorOccurred: setError
   });
+
+  const handleRealTimeStartScan = (options: any) => {
+    // If connected to real-time, use that for starting scan
+    if (isConnected) {
+      realtimeStartScan(options);
+    } else {
+      // Fall back to regular method
+      handleStartScan();
+    }
+  };
 
   const toggleAscii = () => {
     setShowAscii(!showAscii);
@@ -75,6 +117,14 @@ const Index = () => {
     if (window.startImperialServer) {
       const success = window.startImperialServer();
       setServerStarted(true);
+      
+      // Try to connect to real-time after server start
+      if (success) {
+        setTimeout(() => {
+          connect();
+        }, 2000); // Give server time to start up
+      }
+      
       toast({
         title: success ? "Imperial Server Started" : "Server Start Failed",
         description: success 
@@ -103,8 +153,11 @@ const Index = () => {
           </div>
         )}
         
-        {/* Navigation Menu moved under the ASCII banner */}
-        <DashboardHeader />
+        {/* Header with real-time status */}
+        <div className="flex justify-between items-center mb-4">
+          <DashboardHeader />
+          <RealTimeStatus />
+        </div>
         
         {/* Startup Button */}
         <div className="flex justify-center mt-4 mb-6">
@@ -123,7 +176,7 @@ const Index = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
           <div className="lg:col-span-1">
             <ScanPanel 
-              onStartScan={handleStartScan}
+              onStartScan={handleRealTimeStartScan}
               isScanning={scanProgress.status === 'running'} 
               scanProgress={scanProgress}
             />
