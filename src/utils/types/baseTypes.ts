@@ -3,8 +3,6 @@
  * Base types for OSINT and camera discovery tools
  */
 
-import { CameraResult as ScannerCameraResult } from '@/types/scanner';
-
 // Basic tool parameter and result interfaces
 export interface ToolParams {
   [key: string]: any;
@@ -25,12 +23,12 @@ export interface ScanResult {
   found: number;
   results: any[];
   data?: {
-    cameras?: ScannerCameraResult[];
+    cameras?: any[];
     total?: number;
     vulnerabilities?: any[];
   };
   simulatedData?: boolean;
-  cameras?: ScannerCameraResult[];
+  cameras?: any[];
 }
 
 export interface UsernameResult {
@@ -72,7 +70,7 @@ export interface ThreatIntelData {
   firstSeen?: string; // ISO date string
   tags?: string[]; // Tags associated with the IP
   confidenceScore: number; // 0-100
-  source: string; // Source of the threat intel
+  source: 'virustotal' | 'abuseipdb' | 'threatfox' | 'other';
   lastUpdated: string; // Last update timestamp
 }
 

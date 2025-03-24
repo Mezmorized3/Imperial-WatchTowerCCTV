@@ -1,11 +1,13 @@
+
 import { useState, useRef, useEffect } from 'react';
 import { useToast } from '@/components/ui/use-toast';
-import scanNetwork, { ScanSettings as NetworkScanSettings } from '@/utils/networkScanner';
+import scanNetwork from '@/utils/networkScanner';
 import { ScanTarget, ScanProgress, CameraResult, ScanSettings } from '@/types/scanner';
 import { getIpGeolocation } from '@/utils/osintUtils';
 import { ProxyConfig } from '@/utils/types/baseTypes';
 import { CameraResult as OsintCameraResult } from '@/utils/types/cameraTypes';
 import { getCountryIpRanges, getRandomIpInRange } from '@/utils/ipRangeUtils';
+import { convertToScannerFormat } from '@/utils/scanner/cameraConverter';
 
 interface ScanControllerProps {
   onScanProgressUpdate: (progress: ScanProgress) => void;
@@ -13,52 +15,6 @@ interface ScanControllerProps {
   onErrorOccurred: (error: string | null) => void;
   proxyConfig?: ProxyConfig;
 }
-
-const convertCameraResult = (camera: OsintCameraResult): CameraResult => {
-  const mapSeverity = (sev: string): 'low' | 'medium' | 'high' | 'critical' => {
-    switch (sev.toLowerCase()) {
-      case 'critical': return 'critical';
-      case 'high': return 'high';
-      case 'medium': return 'medium';
-      default: return 'low';
-    }
-  };
-
-  const mapAccessLevel = (level?: string): 'none' | 'view' | 'control' | 'admin' => {
-    switch (level?.toLowerCase()) {
-      case 'admin': return 'admin';
-      case 'control': return 'control';
-      case 'view': return 'view';
-      default: return 'none';
-    }
-  };
-
-  return {
-    id: camera.id,
-    ip: camera.ip,
-    port: camera.port || 0,
-    brand: camera.manufacturer,
-    model: camera.model,
-    url: camera.rtspUrl,
-    status: (camera.status as any) || 'unknown',
-    credentials: camera.credentials,
-    vulnerabilities: camera.vulnerabilities ? camera.vulnerabilities.map(v => ({
-      name: v.name,
-      severity: mapSeverity(v.severity),
-      description: v.description
-    })) : undefined,
-    location: camera.geolocation ? {
-      country: camera.geolocation.country,
-      city: camera.geolocation.city,
-      latitude: camera.geolocation.coordinates ? camera.geolocation.coordinates[0] : undefined,
-      longitude: camera.geolocation.coordinates ? camera.geolocation.coordinates[1] : undefined,
-    } : undefined,
-    lastSeen: camera.lastSeen ? (typeof camera.lastSeen === 'string' ? camera.lastSeen : camera.lastSeen.toISOString()) : new Date().toISOString(),
-    accessLevel: mapAccessLevel(camera.accessLevel),
-    firmwareVersion: camera.firmware?.version,
-    threatIntel: camera.threatIntelligence as any,
-  };
-};
 
 const ScanController = ({ 
   onScanProgressUpdate, 
@@ -235,10 +191,9 @@ const ScanController = ({
         scanInProgressRef.current = false;
       };
       
-      const networkSettings: NetworkScanSettings = {
+      const networkSettings = {
         ...settings,
         regionFilter: Array.isArray(settings.regionFilter) ? settings.regionFilter : [settings.regionFilter],
-        targetSubnet: ipRange
       };
       
       const scanResult = await scanNetwork(
@@ -258,7 +213,12 @@ const ScanController = ({
         (camera) => {
           if (abortController.signal.aborted) return;
           
-          const convertedCamera = convertCameraResult(camera);
+          const convertedCamera = typeof camera.lastSeen === 'object' && camera.lastSeen instanceof Date 
+            ? {
+                ...camera,
+                lastSeen: camera.lastSeen.toISOString()
+              }
+            : camera;
           
           const newResults = [...results, convertedCamera];
           setResults(newResults);
@@ -288,7 +248,17 @@ const ScanController = ({
         onScanProgressUpdate(completedProgress);
         setScanProgress(completedProgress);
         
-        const convertedCameras = scanResult.data.cameras ? scanResult.data.cameras.map((camera: any) => convertCameraResult(camera)) : [];
+        const convertedCameras: CameraResult[] = scanResult.data.cameras 
+          ? scanResult.data.cameras.map((camera: any) => {
+              if (typeof camera.lastSeen === 'object' && camera.lastSeen instanceof Date) {
+                return {
+                  ...camera,
+                  lastSeen: camera.lastSeen.toISOString()
+                };
+              }
+              return camera;
+            })
+          : [];
         
         setResults(convertedCameras);
         onResultsUpdate(convertedCameras);

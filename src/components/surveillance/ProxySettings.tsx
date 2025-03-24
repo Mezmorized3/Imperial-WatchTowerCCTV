@@ -1,226 +1,219 @@
 
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
-import { ProxyConfig } from "@/utils/types/baseTypes";
-import { useToast } from "@/components/ui/use-toast";
-import { testProxyConnection } from "@/utils/networkScanner";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
+import { testProxyConnection } from '@/utils/networkScanner';
+import { useToast } from '@/components/ui/use-toast';
+import { ProxyConfig } from '@/utils/types/baseTypes';
 
 interface ProxySettingsProps {
-  onProxyChange: (config: ProxyConfig) => void;
-  initialConfig: ProxyConfig;
+  proxyConfig: ProxyConfig;
+  onProxyConfigChange: (config: ProxyConfig) => void;
 }
 
-const ProxySettings: React.FC<ProxySettingsProps> = ({ onProxyChange, initialConfig }) => {
-  const [proxyConfig, setProxyConfig] = useState<ProxyConfig>(initialConfig);
+const ProxySettings: React.FC<ProxySettingsProps> = ({ proxyConfig, onProxyConfigChange }) => {
   const { toast } = useToast();
+  const [localConfig, setLocalConfig] = useState<ProxyConfig>(proxyConfig);
+  const [testing, setTesting] = useState(false);
 
   useEffect(() => {
-    setProxyConfig(initialConfig);
-  }, [initialConfig]);
+    setLocalConfig(proxyConfig);
+  }, [proxyConfig]);
 
-  useEffect(() => {
-    localStorage.setItem('proxyConfig', JSON.stringify(proxyConfig));
-    onProxyChange(proxyConfig);
-  }, [proxyConfig, onProxyChange]);
+  const handleEnableChange = (checked: boolean) => {
+    setLocalConfig(prev => ({ ...prev, enabled: checked }));
+  };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
+  const handleTypeChange = (value: string) => {
+    setLocalConfig(prev => ({ ...prev, type: value as 'http' | 'socks4' | 'socks5' | 'tor' }));
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value, type } = e.target;
     
-    setProxyConfig(prevConfig => ({
-      ...prevConfig,
-      [name]: value,
-    }));
+    if (type === 'number') {
+      setLocalConfig(prev => ({ ...prev, [name]: parseInt(value) }));
+    } else if (type === 'checkbox') {
+      setLocalConfig(prev => ({ ...prev, [name]: (e.target as HTMLInputElement).checked }));
+    } else {
+      setLocalConfig(prev => ({ ...prev, [name]: value }));
+    }
   };
 
-  const handleSwitchChange = (name: string, checked: boolean) => {
-    setProxyConfig(prevConfig => ({
-      ...prevConfig,
-      [name]: checked,
-    }));
+  const handleSave = () => {
+    onProxyConfigChange(localConfig);
+    toast({
+      title: "Proxy Settings Updated",
+      description: `Proxy ${localConfig.enabled ? 'enabled' : 'disabled'}`,
+    });
   };
 
-  const handleProxyListChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+  const handleTest = async () => {
+    setTesting(true);
+    
     try {
-      const proxyList = e.target.value.split('\n').map(proxy => proxy.trim()).filter(proxy => proxy !== '');
-      setProxyConfig(prevConfig => ({
-        ...prevConfig,
-        proxyList: proxyList,
-      }));
+      const result = await testProxyConnection(localConfig);
+      
+      if (result.success) {
+        toast({
+          title: "Proxy Connection Successful",
+          description: `Connected via ${localConfig.type.toUpperCase()} - ${result.externalIp}`,
+        });
+        
+        // Update the last known external IP
+        setLocalConfig(prev => ({ 
+          ...prev, 
+          lastKnownExternalIp: result.externalIp,
+        }));
+      } else {
+        toast({
+          title: "Proxy Connection Failed",
+          description: result.error,
+          variant: "destructive",
+        });
+      }
     } catch (error) {
-      console.error("Error parsing proxy list:", error);
+      console.error('Error testing proxy:', error);
       toast({
-        title: "Error Parsing Proxy List",
-        description: "Please ensure each proxy is on a new line.",
+        title: "Proxy Test Error",
+        description: error instanceof Error ? error.message : "Unknown error occurred",
         variant: "destructive",
       });
+    } finally {
+      setTesting(false);
     }
   };
 
   return (
-    <CardContent className="space-y-4">
-      <div className="grid gap-4">
-        <div>
-          <Label htmlFor="proxy-enabled" className="text-sm">Enable Proxy</Label>
-          <Switch
-            id="proxy-enabled"
-            checked={proxyConfig.enabled || false}
-            onCheckedChange={(checked) => handleSwitchChange('enabled', checked)}
+    <Card className="w-full bg-scanner-dark border-gray-700">
+      <CardHeader>
+        <CardTitle className="text-scanner-info">Proxy Settings</CardTitle>
+        <CardDescription>Configure proxy settings for anonymous scanning</CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="flex items-center space-x-2">
+          <Switch 
+            checked={localConfig.enabled} 
+            onCheckedChange={handleEnableChange}
+            id="enable-proxy"
           />
+          <Label htmlFor="enable-proxy" className="cursor-pointer">
+            Enable Proxy
+          </Label>
         </div>
-
+        
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
+          <div className="space-y-2">
             <Label htmlFor="proxy-type">Proxy Type</Label>
-            <Select
-              value={proxyConfig.type}
-              onValueChange={(value) => setProxyConfig(prev => ({ ...prev, type: value as ProxyConfig['type'] }))}
+            <Select 
+              value={localConfig.type} 
+              onValueChange={handleTypeChange}
             >
-              <SelectTrigger className="bg-scanner-dark">
-                <SelectValue placeholder="Select proxy type" />
+              <SelectTrigger className="bg-scanner-dark-alt border-gray-700 w-full">
+                <SelectValue placeholder="Select Proxy Type" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="bg-scanner-dark border-gray-700">
                 <SelectItem value="http">HTTP</SelectItem>
                 <SelectItem value="socks4">SOCKS4</SelectItem>
                 <SelectItem value="socks5">SOCKS5</SelectItem>
-                <SelectItem value="tor">Tor</SelectItem>
+                <SelectItem value="tor">TOR</SelectItem>
               </SelectContent>
             </Select>
           </div>
-
-          <div>
-            <Label htmlFor="proxy-host">Host</Label>
-            <Input
-              type="text"
-              id="proxy-host"
-              name="host"
-              value={proxyConfig.host || ''}
-              onChange={handleInputChange}
-              className="bg-scanner-dark"
-            />
-          </div>
-
-          <div>
-            <Label htmlFor="proxy-port">Port</Label>
-            <Input
-              type="number"
-              id="proxy-port"
-              name="port"
-              value={proxyConfig.port || 8080}
-              onChange={handleInputChange}
-              className="bg-scanner-dark"
-            />
-          </div>
-
-          <div>
-            <Label htmlFor="proxy-auth">Authentication</Label>
-            <Switch
-              id="proxy-auth"
-              checked={proxyConfig.useAuthentication || false}
-              onCheckedChange={(checked) => handleSwitchChange('useAuthentication', checked)}
-            />
-          </div>
+          
+          {localConfig.type !== 'tor' && (
+            <>
+              <div className="space-y-2">
+                <Label htmlFor="host">Host</Label>
+                <Input
+                  id="host"
+                  name="host"
+                  value={localConfig.host || ''}
+                  onChange={handleInputChange}
+                  placeholder="proxy.example.com"
+                  className="bg-scanner-dark-alt border-gray-700"
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="port">Port</Label>
+                <Input
+                  id="port"
+                  name="port"
+                  type="number"
+                  value={localConfig.port || ''}
+                  onChange={handleInputChange}
+                  placeholder="8080"
+                  className="bg-scanner-dark-alt border-gray-700"
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <div className="flex items-center space-x-2 mb-2">
+                  <Switch 
+                    checked={localConfig.useAuthentication || false} 
+                    onCheckedChange={(checked) => setLocalConfig(prev => ({ ...prev, useAuthentication: checked }))}
+                    id="use-auth"
+                  />
+                  <Label htmlFor="use-auth" className="cursor-pointer">
+                    Use Authentication
+                  </Label>
+                </div>
+                
+                {localConfig.useAuthentication && (
+                  <div className="space-y-2">
+                    <Input
+                      name="username"
+                      value={localConfig.username || ''}
+                      onChange={handleInputChange}
+                      placeholder="Username"
+                      className="bg-scanner-dark-alt border-gray-700 mb-2"
+                    />
+                    <Input
+                      name="password"
+                      type="password"
+                      value={localConfig.password || ''}
+                      onChange={handleInputChange}
+                      placeholder="Password"
+                      className="bg-scanner-dark-alt border-gray-700"
+                    />
+                  </div>
+                )}
+              </div>
+            </>
+          )}
         </div>
-
-        {proxyConfig.useAuthentication && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="proxy-username">Username</Label>
-              <Input
-                type="text"
-                id="proxy-username"
-                name="username"
-                value={proxyConfig.username || ''}
-                onChange={handleInputChange}
-                className="bg-scanner-dark"
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="proxy-password">Password</Label>
-              <Input
-                type="password"
-                id="proxy-password"
-                name="password"
-                value={proxyConfig.password || ''}
-                onChange={handleInputChange}
-                className="bg-scanner-dark"
-              />
-            </div>
+        
+        <div className="flex justify-end space-x-2 pt-4">
+          <Button 
+            variant="outline" 
+            onClick={handleTest} 
+            disabled={testing || !localConfig.enabled}
+            className="border-scanner-info text-scanner-info"
+          >
+            {testing ? "Testing..." : "Test Connection"}
+          </Button>
+          <Button 
+            onClick={handleSave}
+            className="bg-scanner-info hover:bg-scanner-info/80 text-black"
+          >
+            Save Settings
+          </Button>
+        </div>
+        
+        {localConfig.lastKnownExternalIp && (
+          <div className="mt-4 p-2 rounded bg-scanner-dark-alt border border-gray-700">
+            <p className="text-sm">
+              Last detected external IP: <span className="font-mono">{localConfig.lastKnownExternalIp}</span>
+            </p>
           </div>
         )}
-
-        <div>
-          <Label htmlFor="proxy-rotation">Auto-Rotation</Label>
-          <Switch
-            id="proxy-rotation"
-            checked={proxyConfig.rotationEnabled || false}
-            onCheckedChange={(checked) => handleSwitchChange('rotationEnabled', checked)}
-          />
-        </div>
-
-        {proxyConfig.rotationEnabled && (
-          <>
-            <div>
-              <Label htmlFor="proxy-rotation-interval">Rotation Interval (seconds)</Label>
-              <Input
-                type="number"
-                id="proxy-rotation-interval"
-                name="rotationInterval"
-                value={proxyConfig.rotationInterval || 300}
-                onChange={handleInputChange}
-                className="bg-scanner-dark"
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="proxy-list">Proxy List (one per line)</Label>
-              <Textarea
-                id="proxy-list"
-                name="proxyList"
-                value={(proxyConfig.proxyList || []).join('\n')}
-                onChange={handleProxyListChange}
-                className="bg-scanner-dark"
-              />
-            </div>
-          </>
-        )}
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <Label htmlFor="dns-protection">DNS Leak Protection</Label>
-            <Switch
-              id="dns-protection"
-              checked={proxyConfig.dnsProtection || false}
-              onCheckedChange={(checked) => handleSwitchChange('dnsProtection', checked)}
-            />
-          </div>
-
-          <div>
-            <Label htmlFor="force-tls">Force TLS Encryption</Label>
-            <Switch
-              id="force-tls"
-              checked={proxyConfig.forceTls || false}
-              onCheckedChange={(checked) => handleSwitchChange('forceTls', checked)}
-            />
-          </div>
-
-          <div>
-            <Label htmlFor="auto-reconnect">Auto Reconnect</Label>
-            <Switch
-              id="auto-reconnect"
-              checked={proxyConfig.autoReconnect || false}
-              onCheckedChange={(checked) => handleSwitchChange('autoReconnect', checked)}
-            />
-          </div>
-        </div>
-      </div>
-    </CardContent>
+      </CardContent>
+    </Card>
   );
 };
 

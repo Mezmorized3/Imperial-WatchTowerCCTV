@@ -1,45 +1,41 @@
 
 /**
- * Network-related tool types for OSINT tools
+ * Network tools types for OSINT and network discovery
  */
 
-export interface BotExploitsParams {
+import { ToolParams } from './baseTypes';
+
+export interface TorBotParams extends ToolParams {
+  url: string;
+  depth?: number;
+  saveResults?: boolean;
+  proxy?: string;
+  limit?: number;
+}
+
+export interface BotExploitsParams extends ToolParams {
   target: string;
-  port?: number;
-  attackType?: string;
-  scanType?: string;
+  exploitType?: string;
   timeout?: number;
+  proxy?: string;
+  useWordlist?: boolean;
+  wordlistPath?: string;
 }
 
-export interface ImperialOculusParams {
+export interface ImperialOculusParams extends ToolParams {
   target: string;
-  ports?: string;
+  mode?: string;
+  depth?: number;
+  timeout?: number;
+  proxy?: string;
+  saveResults?: boolean;
+}
+
+export interface ShieldAIParams extends ToolParams {
+  target: string;
+  mode?: string;
   scanType?: string;
-}
-
-export interface ImperialShieldParams {
-  target: string;
-  mode: string;
-  targetUrl?: string;
-  protocol?: string;
-  validateCert?: boolean;
-  options?: Record<string, any>;
-}
-
-export interface ImperialShieldResult {
-  data: {
-    vulnerabilities: any[];
-    score: number;
-    recommendations: string[];
-    message?: string;
-    timestamp?: string;
-    protocol?: string;
-    target?: string;
+  options?: {
+    [key: string]: any;
   };
-  shieldStatus: 'active' | 'inactive' | 'breached';
-  securityRating: number;
-  responseTime?: number;
-  success: boolean;
-  error?: string;
-  simulatedData?: boolean;
 }

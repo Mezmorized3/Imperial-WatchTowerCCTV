@@ -1,23 +1,30 @@
 
 /**
- * Social media and OSINT tool types
+ * Social tools types for OSINT and social media discovery
  */
 
-export interface TwintParams {
+import { ToolParams } from './baseTypes';
+
+export interface UsernameParams extends ToolParams {
+  username: string;
+  platforms?: string[];
+  timeout?: number;
+  proxy?: string;
+}
+
+export interface TwintParams extends ToolParams {
   username?: string;
   search?: string;
   limit?: number;
+  since?: string;
+  until?: string;
+  saveResults?: boolean;
 }
 
-export interface OSINTParams {
-  target: string;
-  type?: string;
-  depth?: string;
-}
-
-export interface ShieldAIParams {
+export interface OSINTParams extends ToolParams {
   target: string;
   mode?: string;
-  depth?: string;
-  aiModel?: string;
+  saveResults?: boolean;
+  depth?: number;
+  timeout?: number;
 }

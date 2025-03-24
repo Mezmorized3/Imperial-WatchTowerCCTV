@@ -1,35 +1,32 @@
 
 /**
- * Web-related tool types for OSINT tools
+ * Web tools types for OSINT and web scanning
  */
 
-export interface WebCheckParams {
+import { ToolParams } from './baseTypes';
+
+export interface WebCheckParams extends ToolParams {
   domain: string;
-  checks?: string[];
+  checkSsl?: boolean;
+  checkDns?: boolean;
+  checkHeaders?: boolean;
+  checkTechnologies?: boolean;
 }
 
-export interface WebHackParams {
+export interface WebHackParams extends ToolParams {
+  target: string;
+  scanType?: string;
+  depth?: number;
+  cookies?: string;
+  headers?: Record<string, string>;
+  proxy?: string;
+}
+
+export interface BackHackParams extends ToolParams {
   target: string;
   mode?: string;
-  url?: string;
-  scanType?: string;
-  findVulnerabilities?: boolean;
-  checkHeaders?: boolean;
-  testXss?: boolean;
-  testSql?: boolean;
-}
-
-export interface TorBotParams {
-  url: string;
-  level?: number;
-  dumpData?: boolean;
-  mode?: string;
   depth?: number;
-}
-
-export interface BackHackParams {
-  url: string;
-  extractData?: boolean;
-  target?: string;
-  scanType?: string;
+  proxy?: string;
+  checkFirewall?: boolean;
+  saveResults?: boolean;
 }

@@ -4,6 +4,7 @@
  */
 
 import { ThreatIntelData } from './baseTypes';
+import { ScanResult } from './baseTypes';
 
 export interface CameraResult {
   id: string;
@@ -16,7 +17,7 @@ export interface CameraResult {
     city?: string;
     coordinates?: [number, number];
   };
-  status?: string;
+  status: string;
   type?: string;
   protocol?: string;
   rtspUrl?: string;
@@ -50,6 +51,9 @@ export interface CameraResult {
   url?: string;
   snapshotUrl?: string;
 }
+
+// Re-export ScanResult from baseTypes
+export { ScanResult } from './baseTypes';
 
 // Camera tool parameters
 export interface CCTVParams {

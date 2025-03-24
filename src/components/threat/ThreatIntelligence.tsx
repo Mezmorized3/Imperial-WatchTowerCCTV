@@ -7,26 +7,28 @@ import FirmwareDetails from './FirmwareDetails';
 import ServerStatus from '../ServerStatus';
 import { ThreatIntelData } from '@/types/scanner';
 
-// Add port, status, lastSeen, accessLevel to fix type compatibility
+// Define CameraData interface to be compatible with both scanner and OSINT camera types
+export interface CameraData {
+  id: string;
+  ip: string;
+  model?: string;
+  manufacturer?: string;
+  port: number;
+  status: string;
+  lastSeen: string;
+  accessLevel: 'none' | 'view' | 'control' | 'admin';
+  threatIntelligence?: ThreatIntelData;
+  threatIntel?: ThreatIntelData;
+  firmware?: {
+    version?: string;
+    vulnerabilities?: string[];
+    updateAvailable?: boolean;
+    lastChecked?: string;
+  }
+}
+
 export interface ThreatIntelligenceProps {
-  camera: {
-    id: string;
-    ip: string;
-    model?: string;
-    manufacturer?: string;
-    port?: number;
-    status?: string;
-    lastSeen?: string;
-    accessLevel?: 'none' | 'view' | 'control' | 'admin';
-    threatIntelligence?: ThreatIntelData;
-    threatIntel?: ThreatIntelData;
-    firmware?: {
-      version?: string;
-      vulnerabilities?: string[];
-      updateAvailable?: boolean;
-      lastChecked?: string;
-    }
-  } | null;
+  camera: CameraData | null;
 }
 
 const ThreatIntelligence: React.FC<ThreatIntelligenceProps> = ({ camera }) => {

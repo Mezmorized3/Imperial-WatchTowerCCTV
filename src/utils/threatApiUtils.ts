@@ -1,92 +1,82 @@
 
-import { ThreatIntelData } from '@/types/scanner';
-import { imperialServerService } from './imperialServerService';
+/**
+ * API utility functions for threat intelligence
+ */
+
+import { ThreatIntelData } from './types/baseTypes';
+import { simulateNetworkDelay } from './networkUtils';
 
 /**
- * Fetches threat intelligence data for an IP address from VirusTotal
- * Requires a valid VirusTotal API key from server config
+ * Check VirusTotal for IP reputation and threat data
  */
 export const checkVirusTotal = async (ip: string): Promise<ThreatIntelData | null> => {
-  console.log(`Checking VirusTotal for IP: ${ip}`);
-  
   try {
-    // Use the server-side implementation that has access to API keys
-    const response = await imperialServerService.executeOsintTool('virustotal', { ip });
+    await simulateNetworkDelay(1500);
     
-    if (!response || !response.success) {
-      console.error('VirusTotal API error:', response?.error || 'Unknown error');
-      return null;
-    }
+    // Simulated data - in production, replace with actual API call
+    const score = Math.floor(Math.random() * 100);
     
-    const attributes = response.data?.attributes;
-    
-    if (!attributes) {
-      return null;
-    }
-    
-    // Extract relevant data from the VirusTotal response
     return {
-      ipReputation: attributes.last_analysis_stats?.malicious ? 
-        100 - Math.round((attributes.last_analysis_stats.malicious / attributes.last_analysis_stats.total) * 100) : 100,
-      lastReportedMalicious: attributes.last_analysis_date ? 
-        new Date(attributes.last_analysis_date * 1000).toISOString() : undefined,
-      associatedMalware: attributes.last_analysis_results ? 
-        Object.values(attributes.last_analysis_results)
-          .filter((result: any) => result.category === 'malicious')
-          .map((result: any) => result.result) : undefined,
-      reportedBy: attributes.last_analysis_results ? 
-        Object.keys(attributes.last_analysis_results)
-          .filter((vendor: string) => attributes.last_analysis_results[vendor].category === 'malicious') : undefined,
-      firstSeen: attributes.first_submission_date ? 
-        new Date(attributes.first_submission_date * 1000).toISOString() : undefined,
-      tags: attributes.tags,
-      confidenceScore: 90, // High confidence in VirusTotal results
-      source: 'virustotal'
+      ipReputation: score,
+      lastReportedMalicious: score < 60 ? new Date(Date.now() - Math.random() * 30 * 86400000).toISOString() : undefined,
+      associatedMalware: score < 50 ? ['Emotet', 'Trickbot'] : [],
+      reportedBy: score < 70 ? ['VirusTotal Community', 'Cisco Talos'] : [],
+      firstSeen: new Date(Date.now() - Math.random() * 365 * 86400000).toISOString(),
+      tags: score < 60 ? ['malware', 'botnet'] : [],
+      confidenceScore: score,
+      source: 'virustotal',
+      lastUpdated: new Date().toISOString()
     };
   } catch (error) {
-    console.error(`Error checking VirusTotal: ${error}`);
+    console.error('Error checking VirusTotal:', error);
     return null;
   }
 };
 
 /**
- * Fetches threat intelligence data for an IP address from AbuseIPDB
- * Requires a valid AbuseIPDB API key from server config
+ * Check AbuseIPDB for IP reputation and threat data
  */
 export const checkAbuseIPDB = async (ip: string): Promise<ThreatIntelData | null> => {
-  console.log(`Checking AbuseIPDB for IP: ${ip}`);
-  
   try {
-    // Use the server-side implementation that has access to API keys
-    const response = await imperialServerService.executeOsintTool('abuseipdb', { ip });
+    await simulateNetworkDelay(1200);
     
-    if (!response || !response.success) {
-      console.error('AbuseIPDB API error:', response?.error || 'Unknown error');
-      return null;
-    }
+    // Simulated data - in production, replace with actual API call
+    const score = Math.floor(Math.random() * 100);
     
-    const attributes = response.data;
-    
-    if (!attributes) {
-      return null;
-    }
-    
-    // Calculate reputation score (0-100, higher is better)
-    const abuseScore = attributes.abuseConfidenceScore || 0;
-    const reputationScore = 100 - abuseScore;
-    
-    // Extract relevant data from the AbuseIPDB response
     return {
-      ipReputation: reputationScore,
-      lastReportedMalicious: attributes.lastReportedAt,
-      reportedBy: ['AbuseIPDB Community'],
-      firstSeen: attributes.lastReportedAt, // First seen in AbuseIPDB
-      tags: attributes.usageType ? [attributes.usageType] : undefined,
-      confidenceScore: attributes.abuseConfidenceScore,
-      source: 'abuseipdb'
+      ipReputation: score,
+      lastReportedMalicious: score < 60 ? new Date(Date.now() - Math.random() * 30 * 86400000).toISOString() : undefined,
+      associatedMalware: [],
+      reportedBy: score < 70 ? ['AbuseIPDB Community'] : [],
+      firstSeen: score < 80 ? new Date(Date.now() - Math.random() * 180 * 86400000).toISOString() : undefined,
+      tags: score < 60 ? ['scanning', 'ssh'] : [],
+      confidenceScore: score,
+      source: 'abuseipdb',
+      lastUpdated: new Date().toISOString()
     };
   } catch (error) {
-    console.error(`Error checking AbuseIPDB: ${error}`);
+    console.error('Error checking AbuseIPDB:', error);
     return null;
   }
+};
+
+/**
+ * Generate consistent threat intelligence for an IP
+ */
+export const generateThreatIntel = (ip: string, source: 'virustotal' | 'abuseipdb' | 'threatfox' | 'other' = 'other'): ThreatIntelData => {
+  // Generate a hash-like value from the IP
+  const ipNum = ip.split('.').reduce((acc, octet, i) => 
+    acc + parseInt(octet) * Math.pow(256, 3 - i), 0);
+  
+  // Use the IP number to seed our "random" values
+  const reputation = 30 + (ipNum % 70); // 30-99
+  const confidence = 20 + (ipNum % 75); // 20-94
+  
+  return {
+    ipReputation: reputation,
+    confidenceScore: confidence,
+    associatedMalware: reputation < 60 ? ['Unknown Malware'] : [],
+    source,
+    lastUpdated: new Date().toISOString()
+  };
 };

@@ -1,48 +1,46 @@
 
 /**
- * Advanced tool types for security and media processing
+ * Advanced tools types for OSINT and hacking tools
  */
 
-export interface RapidPayloadParams {
-  targetOS: string;
+import { ToolParams } from './baseTypes';
+
+export interface RapidPayloadParams extends ToolParams {
+  platform: string;
   payloadType: string;
-  options?: Record<string, any>;
-  format?: string;
-  lhost?: string;
-  lport?: number;
-  encode?: boolean;
-  encryption?: string;
-  outputPath?: string;
+  options?: {
+    bind?: boolean;
+    secure?: boolean;
+    encoder?: string;
+    format?: string;
+  };
+  output?: string;
 }
 
-export interface HackingToolParams {
-  tool: string;
-  options?: Record<string, any>;
-  category?: string;
-  toolCategory?: string;
-}
-
-export interface SecurityAdminParams {
-  command: string;
-  options?: Record<string, any>;
-  scanType?: string;
+export interface HackingToolParams extends ToolParams {
   target?: string;
-  fixVulnerabilities?: boolean;
-  reportFormat?: string;
+  tool: string;
+  options?: {
+    [key: string]: any;
+  };
 }
 
-export interface FFmpegParams {
+export interface SecurityAdminParams extends ToolParams {
+  target?: string;
+  tool: string;
+  mode?: string;
+  options?: {
+    [key: string]: any;
+  };
+}
+
+export interface FFmpegParams extends ToolParams {
   input: string;
   output?: string;
   videoCodec?: string;
   audioCodec?: string;
-  resolution?: string;
-  bitrate?: string;
-  framerate?: string;
-  filters?: string[];
-  options?: Record<string, any>;
-  inputStream?: string;
-  outputPath?: string;
-  outputFormat?: string;
-  duration?: string; // Add duration property to fix missing property error
+  duration?: number;
+  options?: {
+    [key: string]: any;
+  };
 }

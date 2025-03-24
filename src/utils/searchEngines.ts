@@ -1,6 +1,144 @@
-
 import { CameraResult, CameraStatus } from '@/types/scanner';
 import { getComprehensiveThreatIntel, analyzeFirmware } from './threatIntelligence';
+import { simulateNetworkDelay } from './networkUtils';
+import { CameraResult } from '@/types/scanner';
+import { ThreatIntelData } from './types/baseTypes';
+
+/**
+ * Generate a search query for Shodan
+ */
+export const generateShodanQuery = (params: { 
+  country?: string, 
+  port?: number | string,
+  product?: string,
+  os?: string
+}): string => {
+  const parts = [];
+  
+  if (params.country) parts.push(`country:${params.country}`);
+  if (params.port) parts.push(`port:${params.port}`);
+  if (params.product) parts.push(`product:${params.product}`);
+  if (params.os) parts.push(`os:${params.os}`);
+  
+  // Default to webcams if no specific query
+  if (parts.length === 0) parts.push('webcams');
+  
+  return parts.join(' ');
+};
+
+/**
+ * Search Shodan for cameras - this is a simulation that will be 
+ * replaced with actual Shodan API integration
+ */
+export const searchShodan = async (query: string, limit = 10): Promise<CameraResult[]> => {
+  console.log(`[Shodan Search] Query: ${query}, Limit: ${limit}`);
+  
+  // Simulate network delay
+  await simulateNetworkDelay(2000);
+  
+  // Parse country codes from query
+  let countryCode = 'US';
+  const countryMatch = query.match(/country:([a-zA-Z]{2})/i);
+  if (countryMatch && countryMatch[1]) {
+    countryCode = countryMatch[1].toUpperCase();
+  }
+  
+  // Generate simulated results
+  const results: CameraResult[] = [];
+  const count = Math.min(limit, 25);
+  
+  // Mapping of product name patterns based on query
+  const productRegex = /product:"?([^"]+)"?/i;
+  const productMatch = query.match(productRegex);
+  let productName = productMatch ? productMatch[1] : '';
+  
+  if (!productName) {
+    if (query.includes('hikvision')) productName = 'Hikvision';
+    else if (query.includes('dahua')) productName = 'Dahua';
+    else if (query.includes('axis')) productName = 'Axis';
+    else if (query.includes('vivotek')) productName = 'Vivotek';
+    else if (query.includes('webcam')) productName = 'Generic Webcam';
+    else if (query.includes('rtsp')) productName = 'RTSP Camera';
+    else if (query.includes('web server')) productName = 'IP Camera';
+    else productName = 'Surveillance Camera';
+  }
+  
+  // Parse port from query
+  let port = 80;
+  const portMatch = query.match(/port:(\d+)/i);
+  if (portMatch && portMatch[1]) {
+    port = parseInt(portMatch[1]);
+  }
+  
+  // Generate IP addresses
+  const ipPrefix = getIpPrefixByCountry(countryCode);
+  
+  for (let i = 0; i < count; i++) {
+    // Random IP within the country's range
+    const ip = `${ipPrefix}.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}`;
+    
+    // Generate a vulns array for some results
+    const vulns = Math.random() > 0.7 ? [
+      { 
+        name: `${productName} Default Credentials`, 
+        severity: (Math.random() > 0.5 ? 'high' : 'critical') as 'high' | 'critical', 
+        description: 'Device uses factory default credentials' 
+      }
+    ] : [];
+    
+    // Generate location data
+    const country = getCountryName(countryCode);
+    const cities = getCountryCities(countryCode);
+    const city = cities[Math.floor(Math.random() * cities.length)];
+    
+    // Geo coordinates with some randomization
+    const coords = getCountryCoordinates(countryCode);
+    const latitude = coords[0] + (Math.random() * 5) - 2.5;
+    const longitude = coords[1] + (Math.random() * 5) - 2.5;
+    
+    // Threat intelligence data
+    const threatIntelData: ThreatIntelData = {
+      ipReputation: Math.floor(Math.random() * 100),
+      lastReportedMalicious: Math.random() > 0.7 ? new Date(Date.now() - Math.random() * 30 * 86400000).toISOString() : undefined,
+      associatedMalware: Math.random() > 0.8 ? ['TrickBot', 'Mirai'] : [],
+      reportedBy: Math.random() > 0.7 ? ['ThreatFox Community'] : undefined,
+      firstSeen: new Date(Date.now() - Math.random() * 180 * 86400000).toISOString(),
+      tags: Math.random() > 0.6 ? ['iot', 'camera'] : [],
+      confidenceScore: Math.floor(Math.random() * 100),
+      source: 'threatfox',
+      lastUpdated: new Date().toISOString()
+    };
+    
+    // Create the camera result
+    results.push({
+      id: `shodan-${i}-${Date.now()}`,
+      ip,
+      port,
+      brand: productName.split(' ')[0],
+      model: `${productName} P${1000 + i}`,
+      url: `rtsp://${ip}:${port}/stream`,
+      snapshotUrl: `http://${ip}:${port}/snapshot.jpg`,
+      status: Math.random() > 0.3 ? 'online' : 'unknown',
+      vulnerabilities: vulns,
+      location: {
+        country,
+        city,
+        latitude,
+        longitude
+      },
+      credentials: Math.random() > 0.7 ? {
+        username: 'admin',
+        password: Math.random() > 0.5 ? 'admin' : '12345'
+      } : null,
+      lastSeen: new Date().toISOString(),
+      accessLevel: Math.random() > 0.7 ? 'admin' : (Math.random() > 0.5 ? 'view' : 'none'),
+      responseTime: Math.floor(Math.random() * 500),
+      threatIntel: threatIntelData
+    });
+  }
+  
+  return results;
+};
 
 // Mock function for ZoomEye API
 export const searchZoomEye = async (query: string): Promise<CameraResult[]> => {

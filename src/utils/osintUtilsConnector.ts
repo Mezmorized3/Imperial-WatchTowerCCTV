@@ -1,359 +1,453 @@
 /**
- * OSINT Tools Connector
- * This module provides bridges between our frontend and real external tools.
+ * Connector between UI components and OSINT tool implementations
+ * Provides a unified interface for executing OSINT tools
  */
+
+import { toast } from '@/components/ui/use-toast';
 
 import { 
-  ToolResult,
-  ProxyConfig
-} from './types/baseTypes';
+  executeUsernameSearch, 
+  executeCameradar, 
+  executeIPCamSearch,
+  executeWebCheck, 
+  executeCCTV, 
+  executeTorBot,
+  executeWebhack, 
+  executeSpeedCamera, 
+  executeTwint,
+  executePhoton, 
+  executeOSINT, 
+  executeShieldAI,
+  executeBotExploits, 
+  executeCamerattack, 
+  executeBackHack,
+  executeImperialOculus,
+  executeHackCCTV,
+  executeRapidPayload,
+  executeHackingTool,
+  executeSecurityAdmin,
+  executeFFmpeg
+} from './osintImplementations';
 
-import {
-  CCTVParams,
-  SpeedCameraParams,
-  CamerattackParams
-} from './types/cameraTypes';
+// Import tool types
+import { ToolParams, ToolResult, ProxyConfig } from './types/baseTypes';
+import { HackCCTVParams } from './types/cameraTypes';
+import { TorBotParams, BotExploitsParams, ImperialOculusParams } from './types/networkToolTypes';
+import { WebCheckParams, WebHackParams, BackHackParams } from './types/webToolTypes';
+import { UsernameParams, TwintParams, OSINTParams } from './types/socialToolTypes';
+import { RapidPayloadParams, HackingToolParams, SecurityAdminParams, FFmpegParams } from './types/advancedToolTypes';
+import { CCTVParams, SpeedCameraParams, CamerattackParams } from './types/cameraTypes';
+import { ShieldAIParams } from './types/networkToolTypes';
 
-import {
-  TorBotParams,
-  BotExploitsParams,
-  ImperialOculusParams
-} from './types/networkTypes';
-
-import {
-  WebHackParams,
-  WebCheckParams,
-  BackHackParams
-} from './types/webTypes';
-
-import {
-  TwintParams,
-  OSINTParams
-} from './types/socialTypes';
-
-import {
-  ShieldAIParams,
-  RapidPayloadParams,
-  HackingToolParams,
-  FFmpegParams,
-  SecurityAdminParams
-} from './types/advancedToolTypes';
-
-import {
-  executeExternalTool,
-  checkToolAvailability,
-  setupTool
-} from './github/externalToolsConnector';
-
-import { imperialServerService } from './imperialServerService';
-
-// Fix: Define ToolExecutionResult interface to match expected structure
+// Define a generic result type for tool execution
 interface ToolExecutionResult<T> {
   success: boolean;
-  data: T;
   error?: string;
+  data?: T;
+  simulatedData?: boolean;
 }
 
-/**
- * Base function to execute any OSINT tool through the server API
- */
-const executeToolThroughAPI = async <T extends object>(
-  toolName: string, 
-  params: T
-): Promise<ToolResult> => {
+// Function to execute a username search tool
+export async function executeUsernameTool(
+  username: string,
+  toolParams?: any,
+  proxyConfig?: ProxyConfig
+): Promise<ToolResult> {
+  // Check if username is provided
+  if (!username) {
+    return {
+      success: false,
+      error: 'Username is required',
+      data: null,
+      simulatedData: true
+    };
+  }
+  
   try {
-    // Try to execute the tool through the server API
-    const response = await imperialServerService.executeOsintTool(toolName, params);
+    // For username-based tools, show a toast notification
+    toast({
+      title: `Searching for username ${username}`,
+      description: `This may take a few moments...`,
+    });
     
-    if (response && response.success) {
-      return {
-        success: true,
-        data: response.data,
-        simulatedData: false
-      };
+    // Execute the username search tool
+    const result = await executeUsernameSearch({
+      username,
+      ...(toolParams || {})
+    });
+    
+    return {
+      success: result.success,
+      data: result.data || {},
+      simulatedData: result.simulatedData
+    };
+  } catch (error) {
+    console.error('Error executing username tool:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error executing username tool',
+      data: {},
+      simulatedData: true
+    };
+  }
+}
+
+// Function to execute a web check tool
+export async function executeWebTool(
+  domain: string,
+  toolName: string,
+  toolParams?: any,
+  proxyConfig?: ProxyConfig
+): Promise<ToolResult> {
+  // Check if domain is provided
+  if (!domain) {
+    return {
+      success: false,
+      error: 'Domain is required',
+      data: null,
+      simulatedData: true
+    };
+  }
+  
+  try {
+    // For web-based tools, show a toast notification
+    toast({
+      title: `Analyzing ${domain}`,
+      description: `Using ${toolName}. This may take a few moments...`,
+    });
+    
+    let result: ToolExecutionResult<any>;
+    
+    // Execute the appropriate web tool based on toolName
+    switch (toolName) {
+      case 'webcheck':
+        result = await executeWebCheck({
+          domain,
+          ...(toolParams || {})
+        });
+        break;
+      case 'webhack':
+        result = await executeWebhack({
+          target: domain,
+          ...(toolParams || {})
+        });
+        break;
+      case 'photon':
+        result = await executePhoton({
+          url: domain,
+          ...(toolParams || {})
+        });
+        break;
+      case 'backhack':
+        result = await executeBackHack({
+          target: domain,
+          ...(toolParams || {})
+        });
+        break;
+      default:
+        throw new Error(`Unknown web tool: ${toolName}`);
     }
     
-    // If server API fails, try to execute the tool locally
-    console.log(`Server API execution failed for ${toolName}, trying local execution...`);
-    return await executeToolLocallyIfAvailable(toolName, params);
+    return {
+      success: result.success,
+      data: result.data || {},
+      simulatedData: result.simulatedData
+    };
   } catch (error) {
     console.error(`Error executing ${toolName}:`, error);
     return {
       success: false,
-      data: null,
-      error: error instanceof Error ? error.message : `Failed to execute ${toolName}`,
-      simulatedData: false
-    };
-  }
-};
-
-/**
- * Try to execute a tool locally if available
- */
-const executeToolLocallyIfAvailable = async <T extends object>(
-  toolName: string, 
-  params: T
-): Promise<ToolResult> => {
-  // Check if tool is available locally
-  const isAvailable = await checkToolAvailability(toolName);
-  
-  if (isAvailable) {
-    // Convert params to array of args for command-line style execution
-    const args: string[] = [];
-    
-    Object.entries(params).forEach(([key, value]) => {
-      if (typeof value === 'boolean' && value) {
-        args.push(`--${key}`);
-      } else if (value !== undefined && value !== null && value !== '') {
-        args.push(`--${key}`, value.toString());
-      }
-    });
-    
-    // Fix: Handle the case when data might be undefined in ToolExecutionResult
-    const result = await executeExternalTool(toolName, args);
-    return {
-      success: result.success,
-      data: result.data || {}, // Ensure data is always defined
-      error: result.error,
-      simulatedData: false
-    };
-  }
-  
-  // If tool is not available, try to set it up
-  const setupSuccess = await setupTool(toolName);
-  
-  if (setupSuccess) {
-    console.log(`Successfully set up ${toolName}, trying execution again...`);
-    return executeToolLocallyIfAvailable(toolName, params);
-  }
-  
-  console.error(`Tool ${toolName} is not available and could not be set up`);
-  return {
-    success: false,
-    data: null,
-    error: `Tool ${toolName} is not available and could not be set up automatically.`,
-    simulatedData: false
-  };
-};
-
-// Camera tools with real implementations
-export const executeCameradarReal = async (params: { target: string, ports?: string }): Promise<ToolResult> => {
-  return executeToolThroughAPI('cameradar', params);
-};
-
-export const executeIPCamSearchReal = async (params: { subnet: string, protocols?: string[] }): Promise<ToolResult> => {
-  return executeToolThroughAPI('ipcam_search', params);
-};
-
-export const executeCCTVReal = async (params: CCTVParams): Promise<ToolResult> => {
-  return executeToolThroughAPI('cctv', params);
-};
-
-export const executeSpeedCameraReal = async (params: SpeedCameraParams): Promise<ToolResult> => {
-  return executeToolThroughAPI('speed-camera', params);
-};
-
-export const executeCamerattackReal = async (params: CamerattackParams): Promise<ToolResult> => {
-  return executeToolThroughAPI('camerattack', params);
-};
-
-// Web tools with real implementations
-export const executeWebCheckReal = async (params: WebCheckParams): Promise<ToolResult> => {
-  return executeToolThroughAPI('web-check', params);
-};
-
-export const executeWebhackReal = async (params: WebHackParams): Promise<ToolResult> => {
-  return executeToolThroughAPI('webhack', params);
-};
-
-export const executePhotonReal = async (params: { url: string, depth?: number, timeout?: number }): Promise<ToolResult> => {
-  return executeToolThroughAPI('photon', params);
-};
-
-export const executeBackHackReal = async (params: BackHackParams): Promise<ToolResult> => {
-  return executeToolThroughAPI('backhack', params);
-};
-
-// Network tools with real implementations
-export const executeTorBotReal = async (params: TorBotParams): Promise<ToolResult> => {
-  return executeToolThroughAPI('torbot', params);
-};
-
-export const executeImperialOculusReal = async (params: ImperialOculusParams): Promise<ToolResult> => {
-  return executeToolThroughAPI('imperial-oculus', params);
-};
-
-export const executeBotExploitsReal = async (params: BotExploitsParams): Promise<ToolResult> => {
-  return executeToolThroughAPI('botexploits', params);
-};
-
-// Social tools with real implementations
-export const executeUsernameSearchReal = async (username: string): Promise<ToolResult> => {
-  return executeToolThroughAPI('sherlock', { username });
-};
-
-export const executeTwintReal = async (params: TwintParams): Promise<ToolResult> => {
-  return executeToolThroughAPI('twint', params);
-};
-
-export const executeOSINTReal = async (params: OSINTParams): Promise<ToolResult> => {
-  return executeToolThroughAPI('osint', params);
-};
-
-// Advanced tools with real implementations
-export const executeShieldAIReal = async (params: ShieldAIParams): Promise<ToolResult> => {
-  return executeToolThroughAPI('shield-ai', params);
-};
-
-export const executeRapidPayloadReal = async (params: RapidPayloadParams): Promise<ToolResult> => {
-  return executeToolThroughAPI('rapidpayload', params);
-};
-
-export const executeHackingToolReal = async (params: HackingToolParams): Promise<ToolResult> => {
-  return executeToolThroughAPI('hackingtool', params);
-};
-
-export const executeFFmpegReal = async (params: FFmpegParams): Promise<ToolResult> => {
-  return executeToolThroughAPI('ffmpeg', params);
-};
-
-export const executeSecurityAdminReal = async (params: SecurityAdminParams): Promise<ToolResult> => {
-  return executeToolThroughAPI('security-admin', params);
-};
-
-/**
- * Setup all external tools from their GitHub repositories
- * @returns Promise resolving to setup results
- */
-export const setupAllTools = async (): Promise<{
-  success: boolean;
-  results: Record<string, boolean>;
-}> => {
-  console.log('Setting up all external tools...');
-  
-  try {
-    // First, try using the server API to set up tools
-    const response = await imperialServerService.executeOsintTool('setup-tools', {
-      tools: [
-        'cameradar', 'ipcam_search', 'speed-camera', 'cctv', 'camerattack',
-        'web-check', 'webhack', 'photon', 'backhack',
-        'torbot', 'botexploits',
-        'sherlock', 'twint', 'osint',
-        'shield-ai', 'hackingtool', 'security-admin',
-        'ffmpeg', 'shinobi'
-      ]
-    });
-    
-    if (response && response.success) {
-      return response.data;
-    }
-  } catch (error) {
-    console.error('Error using server API to set up tools:', error);
-  }
-  
-  // Fallback to local setup if server API fails
-  const results: Record<string, boolean> = {};
-  let allSuccess = true;
-  
-  // Set up each tool
-  for (const toolName of [
-    'cameradar', 'ipcam_search', 'speed-camera', 'cctv', 'camerattack',
-    'web-check', 'webhack', 'photon', 'backhack',
-    'torbot', 'botexploits',
-    'sherlock', 'twint', 'osint',
-    'shield-ai', 'hackingtool', 'security-admin',
-    'ffmpeg', 'shinobi'
-  ]) {
-    console.log(`Setting up ${toolName}...`);
-    const success = await setupTool(toolName);
-    results[toolName] = success;
-    
-    if (!success) {
-      allSuccess = false;
-    }
-  }
-  
-  return {
-    success: allSuccess,
-    results
-  };
-};
-
-/**
- * Get real implementation of a tool
- */
-export const getRealImplementation = <T extends Function>(
-  toolName: string,
-  realImplementation: T
-): T => {
-  console.log(`Using real implementation for ${toolName}`);
-  return realImplementation;
-};
-
-/**
- * Execute a tool by name
- */
-export const executeToolByName = async (toolName: string, params: any): Promise<ToolResult> => {
-  try {
-    const result = await simulateToolExecution(toolName, params);
-    return {
-      success: result?.success || false,
-      data: result?.data || {},
-      error: result?.error,
+      error: error instanceof Error ? error.message : `Unknown error executing ${toolName}`,
+      data: {},
       simulatedData: true
     };
-  } catch (error) {
+  }
+}
+
+// Function to execute a camera tool
+export async function executeCameraTool(
+  target: string,
+  toolName: string,
+  toolParams?: any,
+  proxyConfig?: ProxyConfig
+): Promise<ToolResult> {
+  // Check if target is provided
+  if (!target) {
     return {
       success: false,
-      data: {},
-      error: error instanceof Error ? error.message : 'Unknown error occurred',
+      error: 'Target is required',
+      data: null,
       simulatedData: true
     };
   }
-};
-
-/**
- * Simulate tool execution
- */
-const simulateToolExecution = async (toolName: string, params: any): Promise<ToolResult> => {
-  // Check if tool is available locally
-  const isAvailable = await checkToolAvailability(toolName);
   
-  if (isAvailable) {
-    // Convert params to array of args for command-line style execution
-    const args: string[] = [];
-    
-    Object.entries(params).forEach(([key, value]) => {
-      if (typeof value === 'boolean' && value) {
-        args.push(`--${key}`);
-      } else if (value !== undefined && value !== null && value !== '') {
-        args.push(`--${key}`, value.toString());
-      }
+  try {
+    // For camera-based tools, show a toast notification
+    toast({
+      title: `Scanning ${target}`,
+      description: `Using ${toolName}. This may take a few moments...`,
     });
     
-    // Fix: Handle the case when data might be undefined in ToolExecutionResult
-    const result = await executeExternalTool(toolName, args);
+    let result: ToolExecutionResult<any>;
+    
+    // Execute the appropriate camera tool based on toolName
+    switch (toolName) {
+      case 'cameradar':
+        result = await executeCameradar({
+          target,
+          ...(toolParams || {})
+        });
+        break;
+      case 'ipcamsearch':
+        result = await executeIPCamSearch({
+          subnet: target,
+          ...(toolParams || {})
+        });
+        break;
+      case 'cctv':
+        result = await executeCCTV({
+          region: target,
+          ...(toolParams || {})
+        });
+        break;
+      case 'speedcamera':
+        result = await executeSpeedCamera({
+          rtspUrl: target,
+          ...(toolParams || {})
+        });
+        break;
+      case 'camerattack':
+        result = await executeCamerattack({
+          target,
+          ...(toolParams || {})
+        });
+        break;
+      case 'hackcctv':
+        result = await executeHackCCTV({
+          target,
+          ...(toolParams || {})
+        });
+        break;
+      default:
+        throw new Error(`Unknown camera tool: ${toolName}`);
+    }
+    
     return {
       success: result.success,
-      data: result.data || {}, // Ensure data is always defined
-      error: result.error,
-      simulatedData: false
+      data: result.data || {},
+      simulatedData: result.simulatedData
+    };
+  } catch (error) {
+    console.error(`Error executing ${toolName}:`, error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : `Unknown error executing ${toolName}`,
+      data: {},
+      simulatedData: true
+    };
+  }
+}
+
+// Function to execute a network tool
+export async function executeNetworkTool(
+  target: string,
+  toolName: string,
+  toolParams?: any,
+  proxyConfig?: ProxyConfig
+): Promise<ToolResult> {
+  // Check if target is provided
+  if (!target) {
+    return {
+      success: false,
+      error: 'Target is required',
+      data: null,
+      simulatedData: true
     };
   }
   
-  // If tool is not available, try to set it up
-  const setupSuccess = await setupTool(toolName);
-  
-  if (setupSuccess) {
-    console.log(`Successfully set up ${toolName}, trying execution again...`);
-    return simulateToolExecution(toolName, params);
+  try {
+    // For network-based tools, show a toast notification
+    toast({
+      title: `Scanning ${target}`,
+      description: `Using ${toolName}. This may take a few moments...`,
+    });
+    
+    let result: ToolExecutionResult<any>;
+    
+    // Execute the appropriate network tool based on toolName
+    switch (toolName) {
+      case 'torbot':
+        result = await executeTorBot({
+          url: target,
+          ...(toolParams || {})
+        });
+        break;
+      case 'imperialoculus':
+        result = await executeImperialOculus({
+          target,
+          ...(toolParams || {})
+        });
+        break;
+      case 'botexploits':
+        result = await executeBotExploits({
+          target,
+          ...(toolParams || {})
+        });
+        break;
+      case 'shieldai':
+        result = await executeShieldAI({
+          target,
+          ...(toolParams || {})
+        });
+        break;
+      default:
+        throw new Error(`Unknown network tool: ${toolName}`);
+    }
+    
+    return {
+      success: result.success,
+      data: result.data || {},
+      simulatedData: result.simulatedData
+    };
+  } catch (error) {
+    console.error(`Error executing ${toolName}:`, error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : `Unknown error executing ${toolName}`,
+      data: {},
+      simulatedData: true
+    };
+  }
+}
+
+// Function to execute a social tool
+export async function executeSocialTool(
+  target: string,
+  toolName: string,
+  toolParams?: any,
+  proxyConfig?: ProxyConfig
+): Promise<ToolResult> {
+  // Check if target is provided
+  if (!target) {
+    return {
+      success: false,
+      error: 'Target is required',
+      data: null,
+      simulatedData: true
+    };
   }
   
-  console.error(`Tool ${toolName} is not available and could not be set up`);
-  return {
-    success: false,
-    data: null,
-    error: `Tool ${toolName} is not available and could not be set up automatically.`,
-    simulatedData: false
-  };
-};
+  try {
+    // For social-based tools, show a toast notification
+    toast({
+      title: `Scanning ${target}`,
+      description: `Using ${toolName}. This may take a few moments...`,
+    });
+    
+    let result: ToolExecutionResult<any>;
+    
+    // Execute the appropriate social tool based on toolName
+    switch (toolName) {
+      case 'twint':
+        result = await executeTwint({
+          username: target,
+          ...(toolParams || {})
+        });
+        break;
+      case 'osint':
+        result = await executeOSINT({
+          target,
+          ...(toolParams || {})
+        });
+        break;
+      default:
+        throw new Error(`Unknown social tool: ${toolName}`);
+    }
+    
+    return {
+      success: result.success,
+      data: result.data || {},
+      simulatedData: result.simulatedData
+    };
+  } catch (error) {
+    console.error(`Error executing ${toolName}:`, error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : `Unknown error executing ${toolName}`,
+      data: {},
+      simulatedData: true
+    };
+  }
+}
+
+// Function to execute an advanced tool
+export async function executeAdvancedTool(
+  target: string,
+  toolName: string,
+  toolParams?: any,
+  proxyConfig?: ProxyConfig
+): Promise<ToolResult> {
+  // Check if target is provided
+  if (!target) {
+    return {
+      success: false,
+      error: 'Target is required',
+      data: null,
+      simulatedData: true
+    };
+  }
+  
+  try {
+    // For advanced tools, show a toast notification
+    toast({
+      title: `Executing ${toolName}`,
+      description: `This may take a few moments...`,
+    });
+    
+    let result: ToolExecutionResult<any>;
+    
+    // Execute the appropriate advanced tool based on toolName
+    switch (toolName) {
+      case 'rapidpayload':
+        result = await executeRapidPayload({
+          platform: target,
+          ...(toolParams || {})
+        });
+        break;
+      case 'hackingtool':
+        result = await executeHackingTool({
+          target,
+          ...(toolParams || {})
+        });
+        break;
+      case 'securityadmin':
+        result = await executeSecurityAdmin({
+          target,
+          ...(toolParams || {})
+        });
+        break;
+      case 'ffmpeg':
+        result = await executeFFmpeg({
+          input: target,
+          ...(toolParams || {})
+        });
+        break;
+      default:
+        throw new Error(`Unknown advanced tool: ${toolName}`);
+    }
+    
+    return {
+      success: result.success,
+      data: result.data || {},
+      simulatedData: result.simulatedData
+    };
+  } catch (error) {
+    console.error(`Error executing ${toolName}:`, error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : `Unknown error executing ${toolName}`,
+      data: {},
+      simulatedData: true
+    };
+  }
+}
