@@ -5,7 +5,8 @@ import { Shield, HardDrive, Server } from 'lucide-react';
 import ThreatReputation from './ThreatReputation';
 import FirmwareDetails from './FirmwareDetails';
 import ServerStatus from '../ServerStatus';
-import { ThreatIntelData } from '@/utils/osintToolTypes';
+import { ThreatIntelData } from '@/utils/types/baseTypes';
+import { CameraResult } from '@/utils/types/cameraTypes';
 
 export interface ThreatIntelligenceProps {
   camera: {

@@ -1,4 +1,5 @@
-import { ProxyConfig } from '../osintToolTypes';
+
+import { ProxyConfig } from '../types/baseTypes';
 
 /**
  * Utility functions for generating proxy URLs based on different proxy configurations.

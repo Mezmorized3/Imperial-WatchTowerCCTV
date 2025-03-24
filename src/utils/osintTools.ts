@@ -31,7 +31,10 @@ export type {
   // Proxy configuration
   ProxyConfig,
   // Add HackCCTVParams
-  HackCCTVParams
+  HackCCTVParams,
+  // Scrapy params
+  ScrapyParams,
+  ScrapyResult
 } from './osintToolTypes';
 
 // Import function implementations from specific modules
