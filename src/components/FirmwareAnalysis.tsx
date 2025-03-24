@@ -1,12 +1,12 @@
 
 import React from 'react';
-import { CameraResult } from '@/utils/osintToolTypes';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Calendar, Link, AlertCircle, GitBranch } from 'lucide-react';
+import { CameraData } from './threat/ThreatIntelligence';
 
 export interface FirmwareAnalysisProps {
-  camera: CameraResult;
+  camera: CameraData;
 }
 
 const FirmwareAnalysis: React.FC<FirmwareAnalysisProps> = ({ camera }) => {

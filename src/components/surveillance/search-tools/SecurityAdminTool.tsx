@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -7,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Loader2, Lock, ShieldCheck, FileJson, FileText } from 'lucide-react';
-import { executeSecurityAdmin } from '@/utils/osintTools';
+import { executeSecurityAdmin } from '@/utils/osintImplementations';
 import { SecurityAdminParams } from '@/utils/osintToolTypes';
 import { useToast } from '@/hooks/use-toast';
 
@@ -25,12 +24,13 @@ const SecurityAdminTool: React.FC = () => {
       setIsScanning(true);
       setResults(null);
       
-      const params: SecurityAdminParams = {
+      const params = {
+        tool: 'security-admin',
         command: `scan_${scanType}`,
-        scanType,
+        scanType: scanType as 'full' | 'users' | 'permissions' | 'services',
         target,
         fixVulnerabilities,
-        reportFormat
+        reportFormat: 'json' as 'html' | 'text' | 'json'
       };
       
       const result = await executeSecurityAdmin(params);

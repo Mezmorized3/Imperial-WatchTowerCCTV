@@ -1,38 +1,57 @@
 
 /**
- * Social tools types for OSINT and social media discovery
+ * Social media tool types
  */
 
-import { ToolParams } from './baseTypes';
+export interface SocialPostData {
+  id: string;
+  content: string;
+  author: string;
+  platform: string;
+  date: string;
+  likes?: number;
+  shares?: number;
+  comments?: number;
+  sentiment?: number;
+  url?: string;
+}
 
-export interface UsernameParams extends ToolParams {
+export interface SocialSearchParams {
+  query: string;
+  platform?: string;
+  limit?: number;
+  dateFrom?: string;
+  dateTo?: string;
+  sentiment?: boolean;
+  includeImages?: boolean;
+  includeReplies?: boolean;
+  language?: string;
+}
+
+export interface SocialMediaAccount {
+  username: string;
+  platform: string;
+  displayName?: string;
+  bio?: string;
+  followers?: number;
+  following?: number;
+  joinDate?: string;
+  profileImage?: string;
+  url?: string;
+}
+
+export interface UsernameSearchParams {
   username: string;
   platforms?: string[];
   timeout?: number;
-  proxy?: string;
+  includeSummary?: boolean;
 }
 
-export interface TwintParams extends ToolParams {
+export interface TwintParams {
   username?: string;
   search?: string;
   limit?: number;
   since?: string;
   until?: string;
-  saveResults?: boolean;
-}
-
-export interface OSINTParams extends ToolParams {
-  target: string;
-  mode?: string;
-  saveResults?: boolean;
-  depth?: number;
-  timeout?: number;
-}
-
-export interface ImperialOculusParams extends ToolParams {
-  target: string;
-  mode?: 'scan' | 'monitor' | 'analyze';
-  scanDepth?: 'surface' | 'deep' | 'royal';
-  collectEvidence?: boolean;
-  timeoutSeconds?: number;
+  format?: 'csv' | 'json';
 }

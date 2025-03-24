@@ -4,27 +4,28 @@
  * This file is maintained for backward compatibility
  */
 
-// Re-export base types
-export * from './types/baseTypes';
+// Import types directly to avoid namespace conflicts
+import { ToolParams, ToolResult, UsernameResult } from './types/baseTypes';
+import { CameraResult, CCTVParams, CCTVExplorerParams } from './types/cameraTypes';
+import { NetworkScanParams, TorBotParams } from './types/networkToolTypes';
+import { WebCheckParams, WebhackParams } from './types/webToolTypes';
+import { SocialSearchParams, SocialPostData } from './types/socialToolTypes';
 
-// Re-export camera types
-export * from './types/cameraTypes';
+// Export all imported types
+export {
+  ToolParams,
+  ToolResult,
+  UsernameResult,
+  CameraResult,
+  CCTVParams,
+  CCTVExplorerParams,
+  NetworkScanParams,
+  TorBotParams,
+  WebCheckParams,
+  WebhackParams,
+  SocialSearchParams,
+  SocialPostData
+};
 
-// Re-export network types
-export * from './types/networkToolTypes';
-
-// Re-export web types
-export * from './types/webToolTypes';
-
-// Re-export social types
-export * from './types/socialToolTypes';
-
-// Re-export advanced types
-export * from './types/advancedToolTypes';
-
-// Re-export threat intel types
-export * from './types/threatIntelTypes';
-
-// Note: Some types are exported from multiple modules
-// We're acknowledging this overlap for backward compatibility
-// If you encounter ambiguity errors, import directly from the specific module
+// Note: We're not re-exporting all types to avoid ambiguity errors
+// For full type access, import directly from the specific module

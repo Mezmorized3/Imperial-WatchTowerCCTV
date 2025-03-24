@@ -1,4 +1,3 @@
-
 /**
  * Camera types for OSINT and camera discovery
  */
@@ -29,6 +28,7 @@ export interface Geolocation {
   city?: string;
   latitude?: number;
   longitude?: number;
+  coordinates?: [number, number]; // Added to support cameraSearchUtils
 }
 
 export interface CCTVParams {

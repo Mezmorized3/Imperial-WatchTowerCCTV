@@ -1,15 +1,19 @@
-
 export interface CameraResult {
   id: string;
   ip: string;
   port?: number;
   model?: string;
   manufacturer?: string;
-  location?: string;
+  location?: {
+    country: string;
+    city?: string;
+    coordinates?: [number, number];
+  };
   status?: string;
   type?: string;
   protocol?: string;
   rtspUrl?: string;
+  httpUrl?: string;
   credentials?: {
     username: string;
     password: string;
@@ -20,6 +24,7 @@ export interface CameraResult {
     coordinates?: [number, number];
   };
   vulnerabilities?: Array<{
+    id?: string;
     name: string;
     severity: 'low' | 'medium' | 'high' | 'critical';
     description: string;
@@ -34,7 +39,10 @@ export interface CameraResult {
     version?: string;
     vulnerabilities?: string[];
     updateAvailable?: boolean;
+    lastChecked?: string;
   };
+  lastSeen?: string;
+  accessLevel?: 'none' | 'view' | 'control' | 'admin';
 }
 
 export interface ScanSettings {

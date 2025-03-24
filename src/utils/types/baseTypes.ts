@@ -15,6 +15,8 @@ export interface ToolResult {
   simulatedData?: boolean;
   shieldStatus?: 'active' | 'inactive' | 'breached';
   securityRating?: number;
+  externalIp?: string; // Added for ProxySettings
+  latency?: number;
 }
 
 export interface ScanResult {
@@ -59,6 +61,7 @@ export interface ProxyConfig {
   connectionTimeout?: number;
   maxRetries?: number;
   lastKnownExternalIp?: string;
+  externalIp?: string; // Added for ProxySettings
 }
 
 // Additional type for threat intelligence data
@@ -83,4 +86,37 @@ export interface ScrapyParams {
 
 export interface ScrapyResult extends ScanResult {
   data: any;
+}
+
+// Add SecurityAdminParams interface
+export interface SecurityAdminParams {
+  tool: string;
+  command: string;
+  scanType: string;
+  options?: {
+    target: string;
+    ports: string;
+  };
+}
+
+// Add BackHackParams with additional properties
+export interface BackHackParams {
+  target: string;
+  url?: string;
+  scanType?: 'basic' | 'full';
+  timeout?: number;
+  userAgent?: string;
+  extractData?: boolean;
+}
+
+// Add RapidPayloadParams
+export interface RapidPayloadParams {
+  targetOS: string;
+  platform: string;
+  payloadType: string;
+  format: string;
+  options: {
+    lhost: string;
+    lport: string | number;
+  };
 }

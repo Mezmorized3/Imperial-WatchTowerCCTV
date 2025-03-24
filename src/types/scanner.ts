@@ -1,3 +1,4 @@
+
 export type ScanTarget = {
   type: 'ip' | 'range' | 'file' | 'shodan' | 'zoomeye' | 'censys';
   value: string;
@@ -28,6 +29,7 @@ export type ThreatIntelData = {
   confidenceScore: number;
   source: 'virustotal' | 'abuseipdb' | 'threatfox' | 'other';
   lastUpdated: string;
+  externalIp?: string; // Added this property for ProxySettings
 };
 
 export type CameraResult = {
@@ -36,14 +38,18 @@ export type CameraResult = {
   port: number;
   brand?: string;
   model?: string;
+  manufacturer?: string; // Added this field
   url?: string;
   snapshotUrl?: string;
   status: CameraStatus;
+  rtspUrl?: string; // Added this field
+  httpUrl?: string; // Added this field
   credentials?: {
     username: string;
     password: string;
   } | null;
   vulnerabilities?: {
+    id?: string; // Made id optional
     name: string;
     severity: 'low' | 'medium' | 'high' | 'critical';
     description: string;
@@ -59,12 +65,11 @@ export type CameraResult = {
   responseTime?: number;
   monitoringEnabled?: boolean;
   threatIntel?: ThreatIntelData;
-  firmwareVersion?: string;
-  firmwareAnalysis?: {
-    knownVulnerabilities: string[];
-    outdated: boolean;
-    lastUpdate?: string;
-    recommendedVersion?: string;
+  firmware?: {
+    version?: string;
+    vulnerabilities?: string[];
+    updateAvailable?: boolean;
+    lastChecked?: string;
   };
   services?: string[];
   firstSeen?: string;

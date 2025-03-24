@@ -44,7 +44,7 @@ export interface ExploitData {
   references?: string[];
 }
 
-// Add ImperialShieldResult type required by imperialShieldUtils.ts
+// Updated ImperialShieldResult to include all needed properties
 export interface ImperialShieldResult {
   id: string;
   target: string;
@@ -57,4 +57,9 @@ export interface ImperialShieldResult {
   }>;
   score: number;
   mode: 'analyze' | 'defend' | 'monitor' | 'test';
+  // Add missing properties needed by ImperialShieldMatrix component
+  shieldStatus?: 'active' | 'inactive' | 'breached';
+  securityRating?: number;
+  success?: boolean;
+  error?: string;
 }

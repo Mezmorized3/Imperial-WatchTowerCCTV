@@ -15,7 +15,8 @@ export const convertToScannerFormat = (camera: OsintCameraResult): ScannerCamera
     ip: camera.ip,
     port: camera.port,
     model: camera.model || '',
-    manufacturer: camera.manufacturer || '',
+    // Only include manufacturer if it exists in the target type
+    ...(camera.manufacturer && { manufacturer: camera.manufacturer }),
     status: camera.status as any, // Type casting needed due to different status enums
     lastSeen: typeof camera.lastSeen === 'string' 
       ? camera.lastSeen 
@@ -23,8 +24,9 @@ export const convertToScannerFormat = (camera: OsintCameraResult): ScannerCamera
         ? camera.lastSeen.toISOString() 
         : camera.lastSeen || '',
     accessLevel: (camera.accessLevel === 'unknown' ? 'none' : camera.accessLevel) as any,
-    rtspUrl: camera.rtspUrl || '',
-    httpUrl: camera.httpUrl || '',
+    // Only include these properties if they exist in the target type
+    ...(camera.rtspUrl && { rtspUrl: camera.rtspUrl }),
+    ...(camera.httpUrl && { httpUrl: camera.httpUrl }),
     credentials: camera.credentials ? {
       username: camera.credentials.username || '',
       password: camera.credentials.password || ''
@@ -39,8 +41,8 @@ export const convertToScannerFormat = (camera: OsintCameraResult): ScannerCamera
     location: camera.geolocation 
       ? { country: camera.geolocation.country, city: camera.geolocation.city || '' } 
       : { country: 'Unknown', city: '' },
-    firmware: camera.firmware || undefined,
-    threatIntel: camera.threatIntel || undefined
+    ...(camera.firmware && { firmware: camera.firmware }),
+    ...(camera.threatIntel && { threatIntel: camera.threatIntel })
   };
 };
 
@@ -53,12 +55,14 @@ export const convertToOsintFormat = (camera: ScannerCameraResult): OsintCameraRe
     ip: camera.ip,
     port: camera.port,
     model: camera.model || '',
-    manufacturer: camera.manufacturer || '',
+    // Only include manufacturer if it exists in the source
+    ...(camera.manufacturer && { manufacturer: camera.manufacturer }),
     status: camera.status as any, // Type casting needed due to different status enums
     lastSeen: camera.lastSeen || '',
     accessLevel: camera.accessLevel as any, // Type casting needed due to different access level enums
-    rtspUrl: camera.rtspUrl || '',
-    httpUrl: camera.httpUrl || '',
+    // Only include these properties if they exist in the source
+    ...(camera.rtspUrl && { rtspUrl: camera.rtspUrl }),
+    ...(camera.httpUrl && { httpUrl: camera.httpUrl }),
     credentials: camera.credentials ? {
       username: camera.credentials.username,
       password: camera.credentials.password
@@ -73,7 +77,7 @@ export const convertToOsintFormat = (camera: ScannerCameraResult): OsintCameraRe
       country: camera.location?.country || 'Unknown',
       city: camera.location?.city 
     },
-    firmware: camera.firmware,
+    ...(camera.firmware && { firmware: camera.firmware }),
     threatIntel: camera.threatIntel ? {
       ipReputation: camera.threatIntel.ipReputation,
       confidenceScore: camera.threatIntel.confidenceScore,

@@ -1,61 +1,23 @@
 
 /**
- * OSINT and camera discovery tools
- * This file provides a central interface for all tools
+ * OSINT tools API
  */
 
-// Export types for the tools
-export type {
-  ToolParams,
-  ToolResult,
-  ScanResult,
-  UsernameResult,
-  CameraResult,
-  CCTVParams,
-  TorBotParams,
-  WebHackParams,
-  SpeedCameraParams,
-  WebCheckParams,
-  TwintParams,
-  OSINTParams,
-  ShieldAIParams,
-  BotExploitsParams,
-  CamerattackParams,
-  BackHackParams,
-  ImperialOculusParams,
-  // New tool parameter types
-  RapidPayloadParams,
-  HackingToolParams,
-  FFmpegParams,
-  SecurityAdminParams,
-  // Proxy configuration
-  ProxyConfig,
-  // Add HackCCTVParams
-  HackCCTVParams,
-  // Scrapy params
-  ScrapyParams,
-  ScrapyResult
-} from './osintToolTypes';
-
-// Import function implementations from specific modules
-import { 
-  executeUsernameSearch, 
-  executeCameradar, 
+import {
+  executeCameradar,
   executeIPCamSearch,
-  executeWebCheck, 
-  executeCCTV, 
-  executeTorBot,
-  executeWebhack, 
-  executeSpeedCamera, 
-  executeTwint,
-  executePhoton, 
-  executeOSINT, 
-  executeShieldAI,
-  executeBotExploits, 
-  executeCamerattack, 
+  executeCCTV,
+  executeSpeedCamera,
+  executeCamerattack,
+  executeHackCCTV,
+  executeWebCheck,
+  executeWebhack,
+  executePhoton,
   executeBackHack,
+  executeTorBot,
   executeImperialOculus,
-  // New tools
+  executeBotExploits,
+  executeShieldAI,
   executeRapidPayload,
   executeHackingTool,
   executeSecurityAdmin,
@@ -65,36 +27,62 @@ import {
   applyMotionDetection
 } from './osintImplementations';
 
-// Export the functions directly
+// Export all camera tools
 export {
-  executeUsernameSearch, 
-  executeCameradar, 
+  executeCameradar,
   executeIPCamSearch,
-  executeWebCheck, 
-  executeCCTV, 
+  executeCCTV,
+  executeSpeedCamera,
+  executeCamerattack,
+  executeHackCCTV
+};
+
+// Export all web tools
+export {
+  executeWebCheck,
+  executeWebhack,
+  executePhoton,
+  executeBackHack
+};
+
+// Export all network tools
+export {
   executeTorBot,
-  executeWebhack, 
-  executeSpeedCamera, 
-  executeTwint,
-  executePhoton, 
-  executeOSINT, 
-  executeShieldAI,
-  executeBotExploits, 
-  executeCamerattack, 
-  executeBackHack,
   executeImperialOculus,
-  // New tools
+  executeBotExploits
+};
+
+// Comment out missing exports
+// export {
+//   executeUsernameSearch
+// };
+
+// Comment out missing exports
+// export {
+//   executeTwint
+// };
+
+// Comment out missing exports
+// export {
+//   executeOSINT
+// };
+
+// Export all security tools
+export {
+  executeShieldAI
+};
+
+// Export advanced tools
+export {
   executeRapidPayload,
   executeHackingTool,
-  executeSecurityAdmin,
+  executeSecurityAdmin
+};
+
+// Export FFmpeg tools
+export {
   executeFFmpeg,
   ffmpegConvertRtspToHls,
   ffmpegRecordStream,
   applyMotionDetection
 };
-
-// Export utility functions from other modules
-export * from './searchUtils';
-export * from './networkUtils';
-export * from './cameraSearchUtils';
-export * from './geoUtils';

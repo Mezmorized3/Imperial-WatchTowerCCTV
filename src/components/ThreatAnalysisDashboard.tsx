@@ -4,7 +4,7 @@ import { CameraResult } from '@/utils/types/cameraTypes';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Shield, AlertTriangle, CheckCircle, Info } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
-import ThreatIntelligence from './threat/ThreatIntelligence';
+import ThreatIntelligence, { CameraData } from './threat/ThreatIntelligence';
 import FirmwareAnalysis from './FirmwareAnalysis';
 
 interface ThreatAnalysisDashboardProps {
@@ -31,6 +31,25 @@ const ThreatAnalysisDashboard: React.FC<ThreatAnalysisDashboardProps> = ({ camer
     }
 
     return Math.min(risk, 100);
+  };
+
+  // Convert camera to CameraData type
+  const cameraData: CameraData = {
+    id: camera.id,
+    ip: camera.ip,
+    port: camera.port,
+    model: camera.model,
+    manufacturer: camera.manufacturer,
+    status: camera.status,
+    // Convert Date to string if needed
+    lastSeen: typeof camera.lastSeen === 'string' 
+      ? camera.lastSeen 
+      : camera.lastSeen instanceof Date 
+        ? camera.lastSeen.toISOString() 
+        : new Date().toISOString(),
+    accessLevel: camera.accessLevel === 'unknown' ? 'none' : camera.accessLevel,
+    threatIntel: camera.threatIntel,
+    firmware: camera.firmware
   };
 
   const overallRisk = calculateOverallRisk();
@@ -112,7 +131,7 @@ const ThreatAnalysisDashboard: React.FC<ThreatAnalysisDashboardProps> = ({ camer
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <ThreatIntelligence camera={camera} />
+            <ThreatIntelligence camera={cameraData} />
           </CardContent>
         </Card>
 
@@ -123,7 +142,7 @@ const ThreatAnalysisDashboard: React.FC<ThreatAnalysisDashboardProps> = ({ camer
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <FirmwareAnalysis camera={camera} />
+            <FirmwareAnalysis camera={cameraData} />
           </CardContent>
         </Card>
       </div>

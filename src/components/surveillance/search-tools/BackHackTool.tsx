@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { FileWarning, Search, Shield, Server } from 'lucide-react';
-import { executeBackHack } from '@/utils/osintTools';
+import { executeBackHack } from '@/utils/osintImplementations';
 import { useToast } from '@/hooks/use-toast';
 
 export const BackHackTool: React.FC = () => {
@@ -33,15 +34,16 @@ export const BackHackTool: React.FC = () => {
     });
 
     try {
-      const scanResults = await executeBackHack({
-        url: targetUrl,
-        scanType: scanType as 'basic' | 'full',
+      const result = await executeBackHack({
+        target: url,
+        url: url,
+        scanType: scanType as 'basic' | 'full'
       });
 
-      setResults(scanResults);
+      setResults(result);
       toast({
         title: "Scan Complete",
-        description: scanResults?.simulatedData
+        description: result?.simulatedData
           ? "Showing simulated results (dev mode)"
           : "BackHack scan completed successfully",
       });

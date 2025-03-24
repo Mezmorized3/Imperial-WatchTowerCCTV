@@ -1,164 +1,138 @@
 
 /**
- * Imperial Shield Protocol Utilities
- * These functions handle the client-side authentication needed to 
- * communicate with servers protected by the Imperial Shield Matrix.
+ * Imperial Shield utilities
  */
 
-import { ImperialShieldParams, ImperialShieldResult } from '@/utils/osintToolTypes';
-import { simulateNetworkDelay } from '@/utils/networkUtils';
+import { ImperialShieldResult } from '../types/threatIntelTypes';
 
 /**
- * Creates a blood oath token for Imperial Shield Protocol authentication
- * (In a real implementation, this would use actual cryptography)
+ * Configure Imperial Shield settings
  */
-export const createBloodOath = (cipher: string): string => {
-  if (!cipher) return '';
-  
-  // In a real implementation, this would use the Fernet encryption from the protocol
-  // Here we just create a simulated encrypted token
-  const currentHour = new Date().toISOString().slice(0, 13);
-  const encodedData = btoa(`${currentHour}|${cipher.substring(0, 8)}`);
-  return encodedData;
-};
-
-/**
- * Gets the current sigil (HMAC token) for Imperial Shield Protocol
- * In real implementation, this would be synchronized with server
- */
-export const getCurrentSigil = (): string => {
-  // Simulate a sigil that would be generated from the server
-  const timestamp = Math.floor(Date.now() / 3600000); // Current hour
-  return Array.from(
-    crypto.getRandomValues(new Uint8Array(16))
-  ).map(b => b.toString(16).padStart(2, '0')).join('');
-};
-
-/**
- * Makes a request to a server protected by Imperial Shield Protocol
- */
-export const requestThroughImperialShield = async (
-  params: ImperialShieldParams
-): Promise<ImperialShieldResult> => {
-  // In a real implementation, this would make actual HTTP requests
-  // with the proper Imperial Shield Protocol headers
-  
-  // Simulate network delay
-  await simulateNetworkDelay(1500);
-  
-  try {
-    // Get Imperial Shield config from localStorage
-    const cipherKey = localStorage.getItem('imperialCipherKey') || '';
-    const imperialShieldEnabled = localStorage.getItem('imperialShieldEnabled') === 'true';
-    
-    if (!imperialShieldEnabled) {
-      return {
-        success: false,
-        data: {
-          vulnerabilities: [],
-          score: 0,
-          recommendations: []
-        },
-        error: 'Imperial Shield Protocol is not enabled in settings',
-        shieldStatus: 'inactive',
-        securityRating: 0
-      };
-    }
-    
-    // Simulate successful connection through Imperial Shield
-    const randomSuccess = Math.random() > 0.2; // 80% success rate
-    
-    if (randomSuccess) {
-      return {
-        success: true,
-        responseTime: Math.floor(Math.random() * 500) + 100,
-        shieldStatus: 'active',
-        securityRating: Math.floor(Math.random() * 30) + 70, // 70-100
-        data: {
-          vulnerabilities: [],
-          score: Math.floor(Math.random() * 30) + 70,
-          recommendations: ["Enable 2FA", "Update firmware", "Change default credentials"],
-          message: 'Successfully connected through Imperial Shield',
-          timestamp: new Date().toISOString(),
-          protocol: 'Imperial Shield Matrix v1.0',
-          target: params.target
-        }
-      };
-    } else {
-      // Simulate various failure modes
-      const errorModes = [
-        'Invalid blood oath token',
-        'Temporal signature mismatch',
-        'Celestial sigil expired',
-        'Forbidden realm detected',
-        'Quantum tunnel collapse'
-      ];
-      
-      return {
-        success: false,
-        data: {
-          vulnerabilities: [],
-          score: 0,
-          recommendations: []
-        },
-        error: errorModes[Math.floor(Math.random() * errorModes.length)],
-        shieldStatus: 'inactive',
-        securityRating: Math.floor(Math.random() * 40) + 30 // 30-70
-      };
-    }
-  } catch (error) {
-    return {
-      success: false,
-      data: {
-        vulnerabilities: [],
-        score: 0,
-        recommendations: []
-      },
-      error: error instanceof Error ? error.message : 'Unknown error',
-      shieldStatus: 'inactive',
-      securityRating: 0
-    };
-  }
-};
-
-/**
- * Configures Imperial Shield Protocol
- */
-export const configureImperialShield = (
+export function configureImperialShield(
   enabled: boolean,
   emperorPort: string,
   shieldPorts: string,
   trustedNetworks: string,
   cipherKey: string
-): boolean => {
-  try {
-    localStorage.setItem('imperialShieldEnabled', enabled.toString());
-    localStorage.setItem('imperialPort', emperorPort);
-    localStorage.setItem('shieldPorts', shieldPorts);
-    localStorage.setItem('trustedNetworks', trustedNetworks);
-    localStorage.setItem('imperialCipherKey', cipherKey);
-    
-    return true;
-  } catch (error) {
-    console.error('Failed to configure Imperial Shield:', error);
-    return false;
-  }
-};
+): boolean {
+  // This is a simulation function - in a real implementation, this would
+  // configure actual security settings
+  
+  console.log('Configuring Imperial Shield:', {
+    enabled,
+    emperorPort,
+    shieldPorts,
+    trustedNetworks,
+    cipherKey: cipherKey ? '****' : 'None'
+  });
+  
+  // Simulate a successful configuration
+  return true;
+}
 
 /**
- * Tests connection to an Imperial Shield protected server
+ * Test connection to Imperial Shield
  */
-export const testImperialShieldConnection = async (
-  targetUrl: string
-): Promise<ImperialShieldResult> => {
-  await simulateNetworkDelay(2000);
+export async function testImperialShieldConnection(
+  endpoint: string
+): Promise<ImperialShieldResult> {
+  // Simulate a connection test with some delay
+  await new Promise(resolve => setTimeout(resolve, 1000));
   
-  const testParams: ImperialShieldParams = {
-    target: targetUrl,
-    mode: "test",
-    protocol: targetUrl.startsWith('https') ? 'https' : 'http',
-    validateCert: true
+  // 80% chance of successful connection
+  const isSuccessful = Math.random() > 0.2;
+  
+  if (isSuccessful) {
+    return {
+      id: `shield-test-${Date.now()}`,
+      target: endpoint,
+      status: 'secure',
+      timestamp: new Date().toISOString(),
+      findings: [],
+      score: Math.floor(Math.random() * 40) + 60, // 60-100 score
+      mode: 'test',
+      shieldStatus: 'active',
+      securityRating: Math.floor(Math.random() * 40) + 60,
+      success: true // Add the success property
+    };
+  } else {
+    return {
+      id: `shield-test-${Date.now()}`,
+      target: endpoint,
+      status: 'vulnerable',
+      timestamp: new Date().toISOString(),
+      findings: [
+        {
+          severity: 'medium',
+          description: 'Connection timeout or rejected',
+          remediation: 'Check Shield services are running and firewall settings'
+        }
+      ],
+      score: Math.floor(Math.random() * 30) + 20, // 20-50 score
+      mode: 'test',
+      shieldStatus: 'inactive',
+      securityRating: Math.floor(Math.random() * 30) + 20,
+      success: false, // Add the success property
+      error: 'Connection timeout or rejected' // Add the error property
+    };
+  }
+}
+
+/**
+ * Check Imperial Shield Status
+ */
+export async function checkImperialShieldStatus(): Promise<ImperialShieldResult> {
+  // Simulate a status check with some delay
+  await new Promise(resolve => setTimeout(resolve, 800));
+  
+  // Generate random status (80% chance of active)
+  const status = Math.random() > 0.2 ? 'active' : Math.random() > 0.5 ? 'inactive' : 'breached';
+  const securityScore = status === 'active' 
+    ? Math.floor(Math.random() * 30) + 70
+    : status === 'inactive'
+      ? Math.floor(Math.random() * 30) + 30
+      : Math.floor(Math.random() * 20) + 10;
+  
+  return {
+    id: `shield-status-${Date.now()}`,
+    target: 'imperial.shield.local',
+    status: status === 'active' ? 'secure' : status === 'inactive' ? 'unknown' : 'vulnerable',
+    timestamp: new Date().toISOString(),
+    findings: status === 'breached' ? [
+      {
+        severity: 'critical',
+        description: 'Shield breach detected',
+        remediation: 'Reset shield matrix and scan for intrusions'
+      }
+    ] : [],
+    score: securityScore,
+    mode: 'monitor',
+    shieldStatus: status as 'active' | 'inactive' | 'breached',
+    securityRating: securityScore,
+    success: status !== 'breached' // Add the success property
   };
+}
+
+/**
+ * Activate Imperial Shield (Simulated)
+ */
+export async function activateImperialShield(): Promise<ImperialShieldResult> {
+  // Simulate activation with delay
+  await new Promise(resolve => setTimeout(resolve, 1500));
   
-  return requestThroughImperialShield(testParams);
-};
+  // 90% chance of successful activation
+  const success = Math.random() > 0.1;
+  
+  return {
+    id: `shield-activate-${Date.now()}`,
+    target: 'imperial-matrix',
+    status: success ? 'secure' : 'unknown',
+    timestamp: new Date().toISOString(),
+    findings: [],
+    score: success ? 85 : 40,
+    mode: 'defend',
+    shieldStatus: success ? 'active' : 'inactive',
+    securityRating: success ? 85 : 40,
+    success // Add the success property
+  };
+}

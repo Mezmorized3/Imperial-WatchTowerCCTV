@@ -14,6 +14,7 @@ const AdditionalTools: React.FC<AdditionalToolsProps> = ({ isRealmode }) => {
   const handleSecurityAdmin = async () => {
     try {
       const result = await executeSecurityAdmin({
+        tool: 'security-admin', // Added missing tool property
         command: 'scan',
         scanType: 'basic',
         options: {

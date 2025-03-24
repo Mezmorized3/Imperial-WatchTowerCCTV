@@ -1,4 +1,4 @@
-import { CameraResult as ScannerCameraResult, CameraStatus } from '@/types/scanner';
+import { CameraResult } from '@/utils/types/cameraTypes';
 import { getComprehensiveThreatIntel, analyzeFirmware } from './threatIntelligence';
 import { simulateNetworkDelay } from './networkUtils';
 import { ThreatIntelData } from './types/threatIntelTypes';
@@ -30,7 +30,10 @@ export const generateShodanQuery = (params: {
  * Search Shodan for cameras - this is a simulation that will be 
  * replaced with actual Shodan API integration
  */
-export const searchShodan = async (query: string, limit = 10): Promise<ScannerCameraResult[]> => {
+export async function searchShodanCameras(
+  query: string,
+  limit: number = 10
+): Promise<{ total: number, results: CameraResult[] }> {
   console.log(`[Shodan Search] Query: ${query}, Limit: ${limit}`);
   
   // Simulate network delay
@@ -44,7 +47,7 @@ export const searchShodan = async (query: string, limit = 10): Promise<ScannerCa
   }
   
   // Generate simulated results
-  const results: ScannerCameraResult[] = [];
+  const results: CameraResult[] = [];
   const count = Math.min(limit, 25);
   
   // Mapping of product name patterns based on query
@@ -102,13 +105,13 @@ export const searchShodan = async (query: string, limit = 10): Promise<ScannerCa
     }
   }
   
-  return results;
-};
+  return { total: count, results };
+}
 
 /**
  * Helper function to generate a camera result
  */
-function generateCameraResult(results: ScannerCameraResult[], ip: string, port: number, productName: string, countryCode: string) {
+function generateCameraResult(results: CameraResult[], ip: string, port: number, productName: string, countryCode: string) {
   // Generate a vulns array for some results
   const vulns = Math.random() > 0.7 ? [
     { 
@@ -181,7 +184,10 @@ function generateCameraResult(results: ScannerCameraResult[], ip: string, port: 
 /**
  * Search ZoomEye for cameras
  */
-export const searchZoomEye = async (query: string): Promise<CameraResult[]> => {
+export async function searchZoomEyeCameras(
+  query: string,
+  limit: number = 10
+): Promise<{ total: number, results: CameraResult[] }> {
   console.log(`Searching ZoomEye for: ${query}`);
   
   // Simulate API delay
@@ -227,13 +233,16 @@ export const searchZoomEye = async (query: string): Promise<CameraResult[]> => {
     });
   }
   
-  return results;
+  return { total: resultCount, results };
 };
 
 /**
  * Search Censys for cameras
  */
-export const searchCensys = async (query: string): Promise<CameraResult[]> => {
+export async function searchCensysCameras(
+  query: string,
+  limit: number = 10
+): Promise<{ total: number, results: CameraResult[] }> {
   console.log(`Searching Censys for: ${query}`);
   
   // Simulate API delay
@@ -288,14 +297,17 @@ export const searchCensys = async (query: string): Promise<CameraResult[]> => {
     });
   }
   
-  return results;
+  return { total: resultCount, results };
 };
 
 /**
  * Function to search for CCTV cameras using ThreatFox API
  * This is a mock implementation for demonstration purposes
  */
-export const searchThreatFox = async (query: string): Promise<CameraResult[]> => {
+export async function searchThreatFoxCameras(
+  query: string,
+  limit: number = 10
+): Promise<{ total: number, results: CameraResult[] }> {
   console.log(`Searching ThreatFox for: ${query}`);
   
   // Simulate API delay
@@ -361,5 +373,5 @@ export const searchThreatFox = async (query: string): Promise<CameraResult[]> =>
     });
   }
   
-  return results;
-};
+  return { total: resultCount, results };
+}

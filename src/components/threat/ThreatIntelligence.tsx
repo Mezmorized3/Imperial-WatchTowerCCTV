@@ -16,7 +16,7 @@ export interface CameraData {
   port: number;
   status: string;
   lastSeen: string;
-  accessLevel: 'none' | 'view' | 'control' | 'admin';
+  accessLevel: 'none' | 'view' | 'control' | 'admin' | 'limited' | 'full' | 'unknown';
   threatIntelligence?: ThreatIntelData;
   threatIntel?: ThreatIntelData;
   firmware?: {

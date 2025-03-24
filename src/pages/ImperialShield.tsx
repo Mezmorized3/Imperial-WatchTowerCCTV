@@ -5,15 +5,18 @@ import { Shield, AlertTriangle, Server } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import ThreatIntelligence from '@/components/threat/ThreatIntelligence';
 import FirmwareAnalysis from '@/components/FirmwareAnalysis';
+import { CameraData } from '@/components/threat/ThreatIntelligence';
 
 // Create a default camera for the FirmwareAnalysis component
-const defaultCamera = {
+const defaultCamera: CameraData = {
   id: 'default-camera',
   ip: '192.168.1.100',
   port: 554,
   model: 'Imperial Security Cam',
   manufacturer: 'Imperial Tech',
   status: 'online',
+  lastSeen: new Date().toISOString(),
+  accessLevel: 'admin',
   firmware: {
     version: '2.0.4',
     vulnerabilities: [],

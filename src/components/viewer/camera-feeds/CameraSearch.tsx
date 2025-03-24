@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -25,6 +24,25 @@ const CameraSearch: React.FC<CameraSearchProps> = ({
   const [searchType, setSearchType] = useState<string>('cameradar');
   const [searchInput, setSearchInput] = useState<string>('');
   const { toast } = useToast();
+
+  const filterCameras = (cameras: CameraResult[]) => {
+    return cameras.filter(camera => {
+      const searchTerm = searchInput.toLowerCase();
+      
+      // Filter by search term
+      if (
+        searchTerm &&
+        !camera.ip.toLowerCase().includes(searchTerm) &&
+        !(camera.model?.toLowerCase().includes(searchTerm)) &&
+        // Handle undefined manufacturer
+        !(camera.manufacturer?.toLowerCase().includes(searchTerm))
+      ) {
+        return false;
+      }
+
+      return true;
+    });
+  };
 
   const handleSearch = async () => {
     if (!searchInput) {
@@ -69,7 +87,7 @@ const CameraSearch: React.FC<CameraSearchProps> = ({
       }
       
       if (results && results.data && results.data.cameras) {
-        setSearchResults(results.data.cameras);
+        setSearchResults(filterCameras(results.data.cameras));
         toast({
           title: "Search Complete",
           description: `Found ${results.data.cameras.length} camera${results.data.cameras.length !== 1 ? 's' : ''}`

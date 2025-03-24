@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
@@ -46,11 +45,12 @@ const PayloadGeneratorTab: React.FC<PayloadGeneratorTabProps> = ({
       // Execute payload generator for the selected OS and payload type
       const result = await executeRapidPayload({
         targetOS,
+        platform: targetOS,
         payloadType,
         format: payloadFormat,
         options: {
           lhost: customIp,
-          lport: customPort
+          lport: parseInt(customPort)
         }
       });
       
