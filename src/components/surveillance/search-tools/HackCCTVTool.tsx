@@ -1,341 +1,333 @@
 
 import React, { useState } from 'react';
-import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { 
-  Shield, 
-  Eye, 
-  Search, 
-  Lock, 
-  AlertTriangle, 
-  Clock, 
-  Radio, 
-  RefreshCw, 
-  Globe
-} from 'lucide-react';
+import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import { executeHackCCTV } from '@/utils/osintImplementations';
-import { HackCCTVParams, CameraResult } from '@/utils/types/cameraTypes';
+import { Loader2, Search, ShieldAlert, Lock } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { HackCCTVParams } from '@/utils/types/cameraTypes';
 
 const HackCCTVTool: React.FC = () => {
-  const [target, setTarget] = useState<string>('');
-  const [method, setMethod] = useState<string>('default-credentials');
-  const [bruteforce, setBruteforce] = useState<boolean>(true);
-  const [deepScan, setDeepScan] = useState<boolean>(false);
-  const [country, setCountry] = useState<string>('');
-  const [results, setResults] = useState<CameraResult[]>([]);
-  const [scanning, setScanning] = useState<boolean>(false);
-  const [activeTab, setActiveTab] = useState<string>('scan');
   const { toast } = useToast();
+  const [target, setTarget] = useState<string>('');
+  const [country, setCountry] = useState<string>('');
+  const [loading, setLoading] = useState<boolean>(false);
+  const [results, setResults] = useState<any[]>([]);
+  const [deepScan, setDeepScan] = useState<boolean>(false);
+  const [bruteforce, setBruteforce] = useState<boolean>(true);
+  const [manufacturer, setManufacturer] = useState<string>('');
+  const [scanMethod, setScanMethod] = useState<string>('default-credentials');
 
-  const handleScan = async () => {
+  const countries = [
+    { value: '', label: 'All Countries' },
+    { value: 'georgia', label: 'Georgia' },
+    { value: 'romania', label: 'Romania' },
+    { value: 'ukraine', label: 'Ukraine' },
+    { value: 'russia', label: 'Russia' },
+    { value: 'us', label: 'United States' },
+    { value: 'uk', label: 'United Kingdom' },
+    { value: 'jp', label: 'Japan' },
+    { value: 'de', label: 'Germany' },
+    { value: 'fr', label: 'France' }
+  ];
+
+  const manufacturers = [
+    { value: '', label: 'All Manufacturers' },
+    { value: 'hikvision', label: 'Hikvision' },
+    { value: 'dahua', label: 'Dahua' },
+    { value: 'axis', label: 'Axis' },
+    { value: 'foscam', label: 'Foscam' },
+    { value: 'amcrest', label: 'Amcrest' },
+    { value: 'reolink', label: 'Reolink' },
+    { value: 'ubiquiti', label: 'Ubiquiti' },
+    { value: 'bosch', label: 'Bosch' },
+    { value: 'hanwha', label: 'Hanwha' },
+    { value: 'vivotek', label: 'Vivotek' }
+  ];
+
+  const handleSearch = async () => {
     if (!target) {
       toast({
         title: "Target Required",
-        description: "Please enter an IP address, range, or hostname",
+        description: "Please enter an IP address or range to scan",
         variant: "destructive"
       });
       return;
     }
 
-    setScanning(true);
+    setLoading(true);
     setResults([]);
-    
+
     try {
-      toast({
-        title: "Scan Initiated",
-        description: `Scanning ${target} using ${method} method...`,
-      });
-      
       const params: HackCCTVParams = {
         target,
-        method: method as any,
-        bruteforce,
+        method: scanMethod as any,
         deepScan,
-        country: country || undefined
+        bruteforce,
+        country: country || undefined,
+        manufacturer: manufacturer || undefined,
+        saveResults: true
       };
-      
+
       const response = await executeHackCCTV(params);
-      
-      if (response.success && response.data.cameras) {
+
+      if (response && response.success && response.data && response.data.cameras) {
         setResults(response.data.cameras);
-        setActiveTab('results');
-        
         toast({
-          title: "Scan Complete",
+          title: 'Scan Complete',
           description: `Found ${response.data.cameras.length} vulnerable cameras`,
         });
       } else {
         toast({
-          title: "Scan Complete",
-          description: "No vulnerable cameras found",
+          title: 'No Results',
+          description: 'No vulnerable cameras found or scan failed',
+          variant: 'destructive',
         });
       }
     } catch (error) {
-      console.error('HackCCTV error:', error);
+      console.error('CCTV hack error:', error);
       toast({
-        title: "Scan Failed",
-        description: error instanceof Error ? error.message : "An unknown error occurred",
-        variant: "destructive"
+        title: 'Error',
+        description: error instanceof Error ? error.message : 'An unknown error occurred',
+        variant: 'destructive',
       });
     } finally {
-      setScanning(false);
+      setLoading(false);
     }
   };
-  
+
+  const getSeverityColor = (severity: string) => {
+    switch (severity) {
+      case 'critical': return 'bg-red-500';
+      case 'high': return 'bg-orange-500';
+      case 'medium': return 'bg-yellow-500';
+      case 'low': return 'bg-blue-500';
+      default: return 'bg-gray-500';
+    }
+  };
+
   return (
-    <div className="space-y-4">
-      <Tabs defaultValue="scan" value={activeTab} onValueChange={setActiveTab}>
-        <TabsList>
-          <TabsTrigger value="scan">Scan</TabsTrigger>
-          <TabsTrigger value="results" disabled={results.length === 0}>Results</TabsTrigger>
-          <TabsTrigger value="about">About</TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="scan">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center">
-                <Shield className="h-5 w-5 mr-2 text-scanner-danger" />
-                CCTV Camera Vulnerability Scanner
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg font-medium">HackCCTV Tool</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <Label>Target IP, Range, or Hostname</Label>
-                <Input 
+                <Label className="mb-2 block">Target IP/Range</Label>
+                <Input
+                  placeholder="192.168.1.0/24 or single IP"
                   value={target}
                   onChange={(e) => setTarget(e.target.value)}
-                  placeholder="192.168.1.0/24 or example.com"
-                  className="bg-scanner-dark"
                 />
-                <p className="text-xs text-gray-400 mt-1">Enter a single IP (192.168.1.1), CIDR range (192.168.1.0/24), or hostname</p>
+                <p className="text-sm text-muted-foreground mt-1">Enter IP address or CIDR range</p>
               </div>
               
               <div>
-                <Label>Attack Method</Label>
-                <Select defaultValue={method} onValueChange={setMethod}>
-                  <SelectTrigger className="bg-scanner-dark">
-                    <SelectValue placeholder="Select a method" />
+                <Label className="mb-2 block">Country Filter</Label>
+                <Select value={country} onValueChange={setCountry}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select country (optional)" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {countries.map((c) => (
+                      <SelectItem key={c.value} value={c.value}>
+                        {c.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label className="mb-2 block">Manufacturer Filter</Label>
+                <Select value={manufacturer} onValueChange={setManufacturer}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select manufacturer (optional)" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {manufacturers.map((m) => (
+                      <SelectItem key={m.value} value={m.value}>
+                        {m.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div>
+                <Label className="mb-2 block">Scan Method</Label>
+                <Select value={scanMethod} onValueChange={setScanMethod}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select scan method" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="default-credentials">Default Credentials</SelectItem>
-                    <SelectItem value="exploit">Exploit Vulnerabilities</SelectItem>
+                    <SelectItem value="exploit">Known Exploits</SelectItem>
                     <SelectItem value="brute-force">Brute Force</SelectItem>
                     <SelectItem value="rtsp-discovery">RTSP Discovery</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
-              
-              <div>
-                <Label>Country (Optional)</Label>
-                <Select value={country} onValueChange={setCountry}>
-                  <SelectTrigger className="bg-scanner-dark">
-                    <SelectValue placeholder="All Countries" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="">All Countries</SelectItem>
-                    <SelectItem value="Ukraine">Ukraine</SelectItem>
-                    <SelectItem value="Russia">Russia</SelectItem>
-                    <SelectItem value="Georgia">Georgia</SelectItem>
-                    <SelectItem value="Romania">Romania</SelectItem>
-                    <SelectItem value="United States">United States</SelectItem>
-                  </SelectContent>
-                </Select>
-                <p className="text-xs text-gray-400 mt-1">Filter results by country (if available)</p>
+            </div>
+            
+            <div className="flex flex-wrap gap-4 mt-2">
+              <div className="flex items-center space-x-2">
+                <Checkbox 
+                  id="deepScan" 
+                  checked={deepScan} 
+                  onCheckedChange={(checked) => setDeepScan(checked === true)}
+                />
+                <Label htmlFor="deepScan">Deep Scan (slower but more thorough)</Label>
               </div>
               
-              <div className="flex flex-col gap-3">
-                <div className="flex items-center space-x-2">
-                  <Checkbox 
-                    id="bruteforce" 
-                    checked={bruteforce}
-                    onCheckedChange={(checked) => setBruteforce(checked as boolean)}
-                  />
-                  <Label htmlFor="bruteforce" className="cursor-pointer">Test for default credentials</Label>
-                </div>
-                
-                <div className="flex items-center space-x-2">
-                  <Checkbox 
-                    id="deepscan" 
-                    checked={deepScan}
-                    onCheckedChange={(checked) => setDeepScan(checked as boolean)}
-                  />
-                  <Label htmlFor="deepscan" className="cursor-pointer">Deep scan (slower but more thorough)</Label>
-                </div>
+              <div className="flex items-center space-x-2">
+                <Checkbox 
+                  id="bruteforce" 
+                  checked={bruteforce} 
+                  onCheckedChange={(checked) => setBruteforce(checked === true)}
+                />
+                <Label htmlFor="bruteforce">Test Default Credentials</Label>
               </div>
-              
-              <Button 
-                className="w-full"
-                onClick={handleScan}
-                disabled={scanning}
-              >
-                {scanning ? (
-                  <>
-                    <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                    Scanning...
-                  </>
-                ) : (
-                  <>
-                    <Search className="h-4 w-4 mr-2" />
-                    Scan for Vulnerable Cameras
-                  </>
-                )}
-              </Button>
-            </CardContent>
-          </Card>
-        </TabsContent>
-        
-        <TabsContent value="results">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center justify-between">
-                <div className="flex items-center">
-                  <Eye className="h-5 w-5 mr-2 text-scanner-primary" />
-                  <span>Results ({results.length} cameras found)</span>
-                </div>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={() => setActiveTab('scan')}
-                >
-                  New Scan
-                </Button>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {results.length > 0 ? (
-                <div className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {results.map((camera, index) => (
-                      <Card key={index} className="overflow-hidden bg-scanner-dark-alt">
-                        <CardContent className="p-4">
-                          <div className="flex items-center justify-between mb-2">
-                            <h3 className="font-semibold text-white">{camera.ip}:{camera.port}</h3>
-                            <Badge variant={camera.status === 'vulnerable' ? 'destructive' : 'outline'}>
-                              {camera.status}
-                            </Badge>
-                          </div>
-                          
-                          <div className="text-sm space-y-2 text-gray-300">
-                            <div className="flex items-center">
-                              <Radio className="h-3.5 w-3.5 mr-1.5 text-scanner-primary opacity-70" />
-                              <span>{camera.model || camera.manufacturer || 'Unknown Camera'}</span>
-                            </div>
-                            
-                            <div className="flex items-center">
-                              <Globe className="h-3.5 w-3.5 mr-1.5 opacity-70" />
-                              <span>{camera.geolocation?.country || 'Unknown'}, {camera.geolocation?.city || 'Unknown'}</span>
-                            </div>
-                            
-                            <div className="flex items-center">
-                              <Lock className="h-3.5 w-3.5 mr-1.5 opacity-70" />
-                              <span>Access: {camera.accessLevel}</span>
-                            </div>
-                            
-                            <div className="flex items-center">
-                              <Clock className="h-3.5 w-3.5 mr-1.5 opacity-70" />
-                              <span>Last seen: {typeof camera.lastSeen === 'string' ? new Date(camera.lastSeen).toLocaleString() : 'Unknown'}</span>
-                            </div>
-                          </div>
-                          
+            </div>
+            
+            <Button 
+              onClick={handleSearch} 
+              disabled={loading || !target}
+              className="w-full mt-2"
+            >
+              {loading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Scanning...
+                </>
+              ) : (
+                <>
+                  <Search className="mr-2 h-4 w-4" />
+                  Find Vulnerable Cameras
+                </>
+              )}
+            </Button>
+          </div>
+
+          {loading && (
+            <div className="mt-8 text-center">
+              <Loader2 className="h-10 w-10 animate-spin mx-auto mb-4" />
+              <p>Scanning for vulnerable cameras. This might take a while...</p>
+            </div>
+          )}
+
+          {results.length > 0 && (
+            <div className="mt-8">
+              <h3 className="text-lg font-medium mb-4">Results: {results.length} Cameras Found</h3>
+              <div className="space-y-4">
+                {results.map((camera, index) => (
+                  <Card key={index} className="overflow-hidden border-gray-700">
+                    <CardContent className="p-4">
+                      <div className="flex flex-col md:flex-row justify-between">
+                        <div>
+                          <h4 className="text-lg font-medium flex items-center gap-2">
+                            {camera.ip}:{camera.port} 
+                            {camera.status === 'vulnerable' && (
+                              <Badge variant="destructive" className="ml-2">
+                                Vulnerable
+                              </Badge>
+                            )}
+                          </h4>
+                          <p className="text-sm text-muted-foreground">
+                            {camera.manufacturer} {camera.model}
+                          </p>
+                          <p className="text-sm mt-1">
+                            Location: {camera.geolocation?.country || 'Unknown'}, {camera.geolocation?.city || 'Unknown'}
+                          </p>
+                        </div>
+                        
+                        <div className="mt-2 md:mt-0">
                           {camera.credentials && (
-                            <div className="mt-3 p-2 bg-scanner-dark rounded border border-scanner-danger/30">
-                              <p className="text-xs font-medium text-scanner-danger flex items-center">
-                                <AlertTriangle className="h-3.5 w-3.5 mr-1.5" />
-                                Credentials exposed
+                            <div className="text-sm bg-green-900/30 p-2 rounded">
+                              <p className="font-medium flex items-center gap-1">
+                                <Lock className="h-3 w-3" />
+                                Credentials Found:
                               </p>
-                              <code className="text-xs block mt-1">
-                                User: {camera.credentials.username} / Pass: {camera.credentials.password}
+                              <code className="text-green-300">
+                                {camera.credentials.username}:{camera.credentials.password}
                               </code>
                             </div>
                           )}
-                          
-                          {camera.vulnerabilities && camera.vulnerabilities.length > 0 && (
-                            <div className="mt-3">
-                              <p className="text-xs font-medium">Vulnerabilities:</p>
-                              <div className="mt-1 space-y-1">
-                                {camera.vulnerabilities.slice(0, 2).map((vuln, i) => (
-                                  <div key={i} className="text-xs flex items-start">
-                                    <div className={`h-2 w-2 rounded-full mt-1 mr-1.5 ${
-                                      vuln.severity === 'critical' ? 'bg-red-500' :
-                                      vuln.severity === 'high' ? 'bg-orange-500' :
-                                      vuln.severity === 'medium' ? 'bg-yellow-500' : 'bg-blue-500'
-                                    }`} />
-                                    <span className="text-gray-300">{vuln.name}</span>
-                                  </div>
-                                ))}
-                                {camera.vulnerabilities.length > 2 && (
-                                  <div className="text-xs text-gray-400">
-                                    +{camera.vulnerabilities.length - 2} more vulnerabilities
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-                          )}
-                          
-                          <div className="mt-3">
-                            <Button 
-                              size="sm" 
-                              className="w-full"
-                              variant="outline"
-                              onClick={() => {
-                                if (camera.rtspUrl) {
-                                  window.open(camera.rtspUrl);
-                                }
-                                toast({
-                                  title: "Stream URL Copied",
-                                  description: camera.rtspUrl || `rtsp://${camera.ip}:${camera.port}/stream`,
-                                });
-                              }}
-                            >
-                              <Eye className="h-3.5 w-3.5 mr-1.5" />
-                              Access Stream
-                            </Button>
+                        </div>
+                      </div>
+                      
+                      {camera.vulnerabilities && camera.vulnerabilities.length > 0 && (
+                        <div className="mt-3">
+                          <p className="text-sm font-medium flex items-center gap-1 mb-1">
+                            <ShieldAlert className="h-3 w-3 text-red-400" />
+                            Vulnerabilities:
+                          </p>
+                          <div className="flex flex-wrap gap-2">
+                            {camera.vulnerabilities.map((vuln: any, vIndex: number) => (
+                              <Badge 
+                                key={vIndex} 
+                                variant="outline"
+                                className={`${getSeverityColor(vuln.severity)} text-white`}
+                              >
+                                {vuln.name}
+                              </Badge>
+                            ))}
                           </div>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-                </div>
-              ) : (
-                <div className="text-center py-8 text-gray-400">
-                  No vulnerable cameras found
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-        
-        <TabsContent value="about">
-          <Card>
-            <CardHeader>
-              <CardTitle>About CCTV Vulnerability Scanner</CardTitle>
-            </CardHeader>
-            <CardContent className="prose prose-sm dark:prose-invert">
-              <p>
-                This tool combines several open source CCTV hacking projects to scan for vulnerable cameras:
-              </p>
-              <ul className="list-disc pl-5 space-y-1">
-                <li><a href="https://github.com/Whomrx666/Hack-cctv" target="_blank" rel="noopener noreferrer">Hack-cctv by Whomrx666</a></li>
-                <li><a href="https://github.com/akashblackhat/cctv-Hack.py" target="_blank" rel="noopener noreferrer">cctv-Hack.py by akashblackhat</a></li>
-                <li><a href="https://github.com/er4vn/Cam-Dumper" target="_blank" rel="noopener noreferrer">Cam-Dumper by er4vn</a></li>
-                <li><a href="https://github.com/nak0823/OpenCCTV" target="_blank" rel="noopener noreferrer">OpenCCTV by nak0823</a></li>
-                <li><a href="https://github.com/Rihan444/CCTV_HACKED" target="_blank" rel="noopener noreferrer">CCTV_HACKED by Rihan444</a></li>
-              </ul>
-              <p className="text-red-400 font-semibold mt-3">
-                ⚠️ Warning: This tool should only be used for educational purposes and on systems you have permission to test. Unauthorized access to camera systems is illegal in most jurisdictions.
-              </p>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+                        </div>
+                      )}
+                      
+                      {camera.rtspUrl && (
+                        <div className="mt-2 text-xs">
+                          <p className="font-medium">RTSP Stream:</p>
+                          <code className="bg-gray-800 p-1 rounded block overflow-x-auto">
+                            {camera.rtspUrl}
+                          </code>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
+          )}
+          
+          {!loading && results.length === 0 && (
+            <div className="mt-8 text-center text-muted-foreground">
+              <p>Enter target details and click search to find vulnerable cameras</p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+      
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-sm font-medium">About HackCCTV Tool</CardTitle>
+        </CardHeader>
+        <CardContent className="text-sm">
+          <p>
+            This tool implements functionality from various open-source camera discovery 
+            and security assessment tools including Hack-CCTV, CCTV-Hack.py, Cam-Dumper, 
+            OpenCCTV, and CCTV_HACKED.
+          </p>
+          <Separator className="my-2" />
+          <p className="text-red-400 font-medium">
+            Important: This tool should only be used for authorized security testing
+            and educational purposes. Unauthorized access to camera systems is illegal
+            in most jurisdictions.
+          </p>
+        </CardContent>
+      </Card>
     </div>
   );
 };

@@ -1,138 +1,124 @@
-
 /**
- * Utilities for handling IP ranges and CIDR notation
+ * Utility functions for handling IP ranges
  */
 
-import { DETAILED_COUNTRY_IP_RANGES } from './mockData';
-
-export interface IpRange {
-  range: string;
-  description: string;
-  assignDate: string;
-}
+import { COUNTRY_IP_RANGES, DETAILED_COUNTRY_IP_RANGES } from './mockData/countryIpRanges';
 
 /**
- * Convert CIDR notation to an IP range (start and end IPs)
+ * Get IP ranges for a specific country code
  */
-export const cidrToRange = (cidr: string): { start: string; end: string } => {
-  const [ip, prefixStr] = cidr.split('/');
-  const prefix = parseInt(prefixStr);
+export const getCountryIpRanges = (countryCode: string): { range: string; description: string }[] => {
+  const code = countryCode.toLowerCase();
   
-  // Convert IP to a number
-  const ipParts = ip.split('.').map(Number);
-  let ipNum = (ipParts[0] << 24) | (ipParts[1] << 16) | (ipParts[2] << 8) | ipParts[3];
+  // Return detailed country IP ranges if available
+  if (DETAILED_COUNTRY_IP_RANGES[code as keyof typeof DETAILED_COUNTRY_IP_RANGES]) {
+    return DETAILED_COUNTRY_IP_RANGES[code as keyof typeof DETAILED_COUNTRY_IP_RANGES];
+  }
   
-  // Calculate the start and end of the range
-  const mask = ~((1 << (32 - prefix)) - 1);
-  const startNum = ipNum & mask;
-  const endNum = startNum | ~mask;
+  // Convert from select format to detailed format if needed
+  if (COUNTRY_IP_RANGES[code as keyof typeof COUNTRY_IP_RANGES]) {
+    return COUNTRY_IP_RANGES[code as keyof typeof COUNTRY_IP_RANGES].map(item => ({
+      range: item.value,
+      description: item.label
+    }));
+  }
   
-  // Convert numbers back to IP strings
-  const startIp = [
-    (startNum >>> 24) & 255,
-    (startNum >>> 16) & 255,
-    (startNum >>> 8) & 255,
-    startNum & 255
-  ].join('.');
-  
-  const endIp = [
-    (endNum >>> 24) & 255,
-    (endNum >>> 16) & 255,
-    (endNum >>> 8) & 255,
-    endNum & 255
-  ].join('.');
-  
-  return { start: startIp, end: endIp };
+  return [];
 };
 
 /**
- * Convert IP range (start and end IPs) to CIDR notation
- * Note: This is a simplified version and may not be perfect for all ranges
+ * Generate a random IP address within a specific CIDR range
  */
-export const rangeToCidr = (startIp: string, endIp: string): string[] => {
-  // Convert IPs to numbers
-  const startParts = startIp.split('.').map(Number);
-  const endParts = endIp.split('.').map(Number);
+export const getRandomIpInRange = (cidr: string): string => {
+  if (!cidr.includes('/')) return cidr;
   
-  let startNum = (startParts[0] << 24) | (startParts[1] << 16) | (startParts[2] << 8) | startParts[3];
-  const endNum = (endParts[0] << 24) | (endParts[1] << 16) | (endParts[2] << 8) | endParts[3];
+  const [baseIp, cidrPart] = cidr.split('/');
+  const prefix = parseInt(cidrPart);
+  const ipParts = baseIp.split('.').map(Number);
   
+  // Calculate how many host bits we have to work with
+  const hostBits = 32 - prefix;
+  const hostAddresses = Math.pow(2, hostBits) - 2; // Subtract network and broadcast addresses
+  
+  if (hostAddresses <= 0) return baseIp;
+  
+  // Generate a random host number between 1 and hostAddresses
+  const randomHostNum = Math.floor(Math.random() * hostAddresses) + 1;
+  
+  // Convert to IP address octets
+  let remaining = randomHostNum;
+  for (let i = 3; i >= 0; i--) {
+    if (i >= 4 - Math.ceil(hostBits / 8)) {
+      const maxValueForOctet = (i === 4 - Math.ceil(hostBits / 8)) 
+        ? 255 - (256 % Math.pow(2, hostBits % 8 || 8))
+        : 255;
+      
+      const originalValue = ipParts[i];
+      const addValue = remaining % 256;
+      
+      ipParts[i] = (originalValue + addValue) % 256;
+      remaining = Math.floor(remaining / 256);
+    }
+  }
+  
+  return ipParts.join('.');
+};
+
+/**
+ * Parse CIDR notation and return a list of IP addresses in that range
+ * Limited to returning a reasonable number of IPs for large ranges
+ */
+export const parseCidrToIpList = (cidr: string, limit: number = 100): string[] => {
+  if (!cidr.includes('/')) return [cidr];
+  
+  const [baseIp, cidrPart] = cidr.split('/');
+  const prefix = parseInt(cidrPart);
+  
+  // Calculate how many host bits we have to work with
+  const hostBits = 32 - prefix;
+  const totalHosts = Math.pow(2, hostBits);
+  
+  // If the range is too large, return a limited sample
+  if (totalHosts > limit) {
+    const result: string[] = [];
+    for (let i = 0; i < limit; i++) {
+      result.push(getRandomIpInRange(cidr));
+    }
+    return result;
+  }
+  
+  // Otherwise, generate all IPs in the range
+  const ipParts = baseIp.split('.').map(Number);
   const result: string[] = [];
   
-  while (startNum <= endNum) {
-    let maxSize = 0;
-    for (let x = 0; x < 32; x++) {
-      const mask = 1 << x;
-      if ((startNum & mask) !== 0) {
-        break;
+  for (let i = 0; i < totalHosts; i++) {
+    let remaining = i;
+    const currentIpParts = [...ipParts];
+    
+    for (let j = 3; j >= 0; j--) {
+      if (j >= 4 - Math.ceil(hostBits / 8)) {
+        const addValue = remaining % 256;
+        currentIpParts[j] = (currentIpParts[j] + addValue) % 256;
+        remaining = Math.floor(remaining / 256);
       }
-      maxSize = x;
     }
     
-    let maxDiff = 32;
-    while (maxDiff > 0) {
-      const mask = 1 << (maxDiff - 1);
-      if (startNum + mask - 1 <= endNum) {
-        break;
-      }
-      maxDiff--;
-    }
-    
-    maxSize = Math.min(maxSize, maxDiff);
-    const prefix = 32 - maxSize;
-    
-    // Convert start number to IP
-    const ip = [
-      (startNum >>> 24) & 255,
-      (startNum >>> 16) & 255,
-      (startNum >>> 8) & 255,
-      startNum & 255
-    ].join('.');
-    
-    result.push(`${ip}/${prefix}`);
-    startNum += 1 << maxSize;
+    result.push(currentIpParts.join('.'));
   }
   
   return result;
 };
 
 /**
- * Get all IP ranges for a specific country
+ * Get a specific country's name from its country code
  */
-export const getCountryIpRanges = (countryCode: string): IpRange[] => {
-  const lowerCaseCode = countryCode.toLowerCase();
-  return DETAILED_COUNTRY_IP_RANGES[lowerCaseCode as keyof typeof DETAILED_COUNTRY_IP_RANGES] || [];
-};
-
-/**
- * Generate a random IP within a given CIDR range
- */
-export const getRandomIpInRange = (cidr: string): string => {
-  const { start, end } = cidrToRange(cidr);
+export const getCountryNameFromCode = (code: string): string => {
+  const countryMap: {[key: string]: string} = {
+    'ge': 'Georgia',
+    'ro': 'Romania',
+    'ua': 'Ukraine',
+    'ru': 'Russia'
+  };
   
-  // Convert IPs to numbers
-  const startParts = start.split('.').map(Number);
-  const endParts = end.split('.').map(Number);
-  
-  const startNum = (startParts[0] << 24) | (startParts[1] << 16) | (startParts[2] << 8) | startParts[3];
-  const endNum = (endParts[0] << 24) | (endParts[1] << 16) | (endParts[2] << 8) | endParts[3];
-  
-  // Generate a random number between start and end
-  const randomNum = startNum + Math.floor(Math.random() * (endNum - startNum + 1));
-  
-  // Convert back to IP string
-  return [
-    (randomNum >>> 24) & 255,
-    (randomNum >>> 16) & 255,
-    (randomNum >>> 8) & 255,
-    randomNum & 255
-  ].join('.');
-};
-
-/**
- * Calculate the number of IPs in a CIDR range
- */
-export const calculateIpsInRange = (cidr: string): number => {
-  const prefix = parseInt(cidr.split('/')[1]);
-  return Math.pow(2, 32 - prefix);
+  return countryMap[code.toLowerCase()] || code;
 };

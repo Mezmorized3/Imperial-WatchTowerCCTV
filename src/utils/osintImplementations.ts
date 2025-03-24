@@ -52,3 +52,16 @@ export {
   ffmpegRecordStream,
   applyMotionDetection
 } from './ffmpeg/ffmpegService';
+
+// Add placeholder implementations for missing functions
+export const executeUsernameSearch = async () => {
+  return { success: false, error: "Not implemented" };
+};
+
+export const executeTwint = async () => {
+  return { success: false, error: "Not implemented" };
+};
+
+export const executeOSINT = async () => {
+  return { success: false, error: "Not implemented" };
+};

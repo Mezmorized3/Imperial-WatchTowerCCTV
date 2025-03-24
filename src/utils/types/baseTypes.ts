@@ -1,122 +1,52 @@
 
 /**
- * Base types for OSINT and camera discovery tools
+ * Base types for OSINT tools
  */
 
-// Basic tool parameter and result interfaces
 export interface ToolParams {
-  [key: string]: any;
+  target?: string;
+  timeout?: number;
+  saveResults?: boolean;
+  verbose?: boolean;
 }
 
 export interface ToolResult {
   success: boolean;
-  data: any;
+  data?: any;
   error?: string;
-  simulatedData?: boolean;
-  shieldStatus?: 'active' | 'inactive' | 'breached';
-  securityRating?: number;
-  externalIp?: string; // Added for ProxySettings
-  latency?: number;
+}
+
+export interface UsernameResult {
+  platform: string;
+  username: string;
+  url: string;
+  accountFound: boolean;
+  profileName?: string;
+  profilePic?: string;
+  bio?: string;
+  followers?: number;
+  following?: number;
+  posts?: number;
+  lastUpdated?: string;
 }
 
 export interface ScanResult {
   success: boolean;
+  timestamp: string;
   total: number;
   found: number;
+  data: any;
   results: any[];
-  data?: {
-    cameras?: any[];
-    total?: number;
-    vulnerabilities?: any[];
-  };
-  simulatedData?: boolean;
-  cameras?: any[];
-}
-
-export interface UsernameResult {
-  sites?: any[];
-  success: boolean;
   error?: string;
-  totalFound?: number;
-  simulatedData?: boolean;
-  data?: any;
 }
 
-// Proxy configuration for tools that need to hide their identity
 export interface ProxyConfig {
-  type: 'http' | 'socks4' | 'socks5' | 'tor';
-  host?: string;
-  port?: number;
+  enabled: boolean;
+  type: 'http' | 'socks4' | 'socks5';
+  host: string;
+  port: number;
   username?: string;
   password?: string;
-  useTor?: boolean;
-  enabled?: boolean;
-  useAuthentication?: boolean;
-  rotationEnabled?: boolean;
-  rotationInterval?: number;
-  proxyList?: string[];
-  dnsProtection?: boolean;
-  forceTls?: boolean;
-  autoReconnect?: boolean;
-  connectionTimeout?: number;
-  maxRetries?: number;
-  lastKnownExternalIp?: string;
-  externalIp?: string; // Added for ProxySettings
-}
-
-// Additional type for threat intelligence data
-export interface ThreatIntelData {
-  ipReputation: number; // 0-100, higher is better
-  lastReportedMalicious?: string; // ISO date string
-  associatedMalware: string[]; // List of malware names
-  reportedBy?: string[]; // List of sources
-  firstSeen?: string; // ISO date string
-  tags?: string[]; // Tags associated with the IP
-  confidenceScore: number; // 0-100
-  source: 'virustotal' | 'abuseipdb' | 'threatfox' | 'other';
-  lastUpdated: string; // Last update timestamp
-}
-
-// ScrapyParams and ScrapyResult interfaces
-export interface ScrapyParams {
-  url: string;
-  depth?: number;
-  output?: string;
-}
-
-export interface ScrapyResult extends ScanResult {
-  data: any;
-}
-
-// Add SecurityAdminParams interface
-export interface SecurityAdminParams {
-  tool: string;
-  command: string;
-  scanType: string;
-  options?: {
-    target: string;
-    ports: string;
-  };
-}
-
-// Add BackHackParams with additional properties
-export interface BackHackParams {
-  target: string;
-  url?: string;
-  scanType?: 'basic' | 'full';
-  timeout?: number;
-  userAgent?: string;
-  extractData?: boolean;
-}
-
-// Add RapidPayloadParams
-export interface RapidPayloadParams {
-  targetOS: string;
-  platform: string;
-  payloadType: string;
-  format: string;
-  options: {
-    lhost: string;
-    lport: string | number;
-  };
+  country?: string;
+  testUrl?: string;
 }

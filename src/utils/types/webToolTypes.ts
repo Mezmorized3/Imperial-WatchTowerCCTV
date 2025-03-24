@@ -1,41 +1,57 @@
 
 /**
- * Web tools types for OSINT and web scanning
+ * Web tool types
  */
 
-import { ToolParams } from './baseTypes';
-
-export interface WebCheckParams extends ToolParams {
-  domain: string;
-  checkSsl?: boolean;
-  checkDns?: boolean;
+export interface WebCheckParams {
+  url: string;
+  timeout?: number;
+  checkSecurity?: boolean;
   checkHeaders?: boolean;
-  checkTechnologies?: boolean;
-}
-
-export interface WebHackParams extends ToolParams {
-  target: string;
-  scanType?: string;
-  depth?: number;
-  cookies?: string;
-  headers?: Record<string, string>;
-  proxy?: string;
-}
-
-export interface BackHackParams extends ToolParams {
-  target: string;
-  mode?: string;
-  depth?: number;
-  proxy?: string;
-  checkFirewall?: boolean;
+  checkWhois?: boolean;
+  checkTracker?: boolean;
+  checkCookies?: boolean;
+  userAgent?: string;
   saveResults?: boolean;
 }
 
-export interface ChromeExtensionParams extends ToolParams {
-  command: 'authenticate' | 'scan' | 'monitor' | 'defend';
-  extensionId?: string;
-  token?: string;
-  options?: {
-    [key: string]: any;
-  };
+export interface WebHackParams {
+  url: string;
+  scanType?: 'basic' | 'full';
+  timeout?: number;
+  checkVulnerabilities?: boolean;
+  checkSubdomains?: boolean;
+  userAgent?: string;
+  saveResults?: boolean;
+}
+
+export interface WebHackResult {
+  url: string;
+  scanType: string;
+  vulnerabilities: {
+    id: string;
+    name: string;
+    severity: 'low' | 'medium' | 'high' | 'critical';
+    description: string;
+    location?: string;
+    details?: string;
+    remediation?: string;
+  }[];
+  headers: Record<string, string>;
+  technologies: string[];
+  cookies: any[];
+  subdomains: string[];
+  ports: number[];
+  timestamp: string;
+}
+
+export interface PhotonParams {
+  url: string;
+  depth?: number;
+  timeout?: number;
+  threads?: number;
+  delay?: number;
+  userAgent?: string;
+  cookies?: string;
+  saveResults?: boolean;
 }

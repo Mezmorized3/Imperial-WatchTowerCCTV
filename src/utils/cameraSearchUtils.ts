@@ -1,18 +1,20 @@
+
 /**
  * Utility functions for camera search and discovery
  */
 
-import { CameraResult } from './types/cameraTypes';
+import { CameraResult, CameraStatus, AccessLevel, Vulnerability } from './types/cameraTypes';
+import { nanoid } from 'nanoid';
 
 /**
  * Generate a random camera result for testing purposes
  */
 export const createRandomCamera = (manufacturer?: string, model?: string): CameraResult => {
-  const id = `camera-${Math.random().toString(36).substring(2, 15)}`;
+  const id = `camera-${nanoid(8)}`;
   const ip = `${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}`;
-  const port = Math.floor(Math.random() * 65535);
-  const status = ['online', 'offline', 'unknown'][Math.floor(Math.random() * 3)];
-  const accessLevel = ['none', 'limited', 'full', 'admin'][Math.floor(Math.random() * 4)];
+  const port = [80, 443, 554, 8080, 8000, 8888][Math.floor(Math.random() * 6)];
+  const status = ['online', 'offline', 'unknown', 'vulnerable'][Math.floor(Math.random() * 4)] as CameraStatus;
+  const accessLevel = ['none', 'limited', 'full', 'admin', 'view', 'control'][Math.floor(Math.random() * 6)] as AccessLevel;
 
   return {
     id,
@@ -20,12 +22,12 @@ export const createRandomCamera = (manufacturer?: string, model?: string): Camer
     port,
     model: model || `Generic Camera Model ${Math.floor(Math.random() * 100)}`,
     manufacturer: manufacturer || 'Generic Manufacturer',
-    status: status as any,
+    status,
     lastSeen: new Date().toISOString(),
-    accessLevel: accessLevel as any,
+    accessLevel,
     accessible: Math.random() > 0.5,
     vulnerabilities: Math.random() > 0.7 ? [{
-      id: `vuln-${Math.random().toString(36).substring(2, 15)}`,
+      id: `vuln-${nanoid(6)}`,
       name: 'Example Vulnerability',
       severity: 'high',
       description: 'A simulated vulnerability for testing'
@@ -41,17 +43,66 @@ export const generateRandomCameras = (count: number, manufacturer?: string, mode
 };
 
 /**
- * Create a camera result with geolocation data
+ * Get a random country from the focus countries (Ukraine, Russia, Georgia, Romania)
+ */
+export const getRandomFocusCountry = (): string => {
+  const countries = ['Ukraine', 'Russia', 'Georgia', 'Romania'];
+  return countries[Math.floor(Math.random() * countries.length)];
+};
+
+/**
+ * Get a random city based on country
+ */
+export const getRandomCity = (country: string): string => {
+  const cities: {[key: string]: string[]} = {
+    'Ukraine': ['Kyiv', 'Lviv', 'Odesa', 'Kharkiv', 'Dnipro', 'Donetsk'],
+    'Russia': ['Moscow', 'Saint Petersburg', 'Novosibirsk', 'Yekaterinburg', 'Kazan'],
+    'Georgia': ['Tbilisi', 'Batumi', 'Kutaisi', 'Rustavi', 'Gori'],
+    'Romania': ['Bucharest', 'Cluj-Napoca', 'Timișoara', 'Iași', 'Constanța']
+  };
+  
+  const defaultCities = ['New York', 'London', 'Paris', 'Tokyo', 'Berlin'];
+  const countryCities = cities[country] || defaultCities;
+  
+  return countryCities[Math.floor(Math.random() * countryCities.length)];
+};
+
+/**
+ * Create a camera result with geolocation data for specific countries
  */
 export const createGeolocatedCamera = (
-  country: string, 
-  city: string,
-  latitude: number,
-  longitude: number,
+  country: string,
   manufacturer?: string,
   model?: string
-) => {
+): CameraResult => {
   const camera = createRandomCamera(manufacturer, model);
+  const city = getRandomCity(country);
+  
+  // Get approximate coordinates based on country
+  let latitude = 0;
+  let longitude = 0;
+  
+  switch(country) {
+    case 'Ukraine':
+      latitude = 49.0 + (Math.random() * 2);
+      longitude = 31.0 + (Math.random() * 4);
+      break;
+    case 'Russia':
+      latitude = 55.0 + (Math.random() * 5);
+      longitude = 37.0 + (Math.random() * 20);
+      break;
+    case 'Georgia':
+      latitude = 41.5 + (Math.random() * 1.5);
+      longitude = 43.5 + (Math.random() * 2);
+      break;
+    case 'Romania':
+      latitude = 45.0 + (Math.random() * 2);
+      longitude = 25.0 + (Math.random() * 3);
+      break;
+    default:
+      latitude = (Math.random() * 180) - 90;
+      longitude = (Math.random() * 360) - 180;
+  }
   
   camera.geolocation = {
     country,
@@ -64,64 +115,79 @@ export const createGeolocatedCamera = (
 };
 
 /**
- * Simulate search engine results for cameras
+ * Generate cameras specifically for focus countries
  */
-export const simulateCameraSearchResults = (query: string, count: number = 10): CameraResult[] => {
-  const cameras = generateRandomCameras(count);
-  return cameras.map(camera => ({
-    ...camera,
-    model: `Search Result: ${query} - ${camera.model}`,
-  }));
-};
-
-/**
- * Simulate a camera search with specific criteria
- */
-export const simulateAdvancedCameraSearch = (
-  country: string,
-  city?: string,
-  manufacturer?: string,
-  model?: string,
-  count: number = 5
-): CameraResult[] => {
+export const generateFocusCountryCameras = (count: number = 20): CameraResult[] => {
   const cameras: CameraResult[] = [];
-  for (let i = 0; i < count; i++) {
-    const camera = createRandomCamera(manufacturer, model);
-    camera.geolocation = {
-      country: country,
-      city: city || 'Unknown',
-      latitude: Math.random() * 180 - 90,
-      longitude: Math.random() * 360 - 180,
-    };
-    cameras.push(camera);
+  
+  // Ensure each focus country has some cameras
+  const countPerCountry = Math.max(2, Math.floor(count / 4));
+  
+  ['Ukraine', 'Russia', 'Georgia', 'Romania'].forEach(country => {
+    for (let i = 0; i < countPerCountry; i++) {
+      cameras.push(createGeolocatedCamera(country));
+    }
+  });
+  
+  // Add remaining random cameras if needed
+  const remaining = count - (countPerCountry * 4);
+  for (let i = 0; i < remaining; i++) {
+    const country = getRandomFocusCountry();
+    cameras.push(createGeolocatedCamera(country));
   }
+  
   return cameras;
-};
-
-/**
- * Simulate a camera scan result
- */
-export const simulateCameraScan = (target: string, count: number = 3): CameraResult[] => {
-  const cameras = generateRandomCameras(count);
-  return cameras.map(camera => ({
-    ...camera,
-    ip: target,
-    status: 'online' as any,
-  }));
 };
 
 /**
  * Simulate a vulnerability scan result for a camera
  */
 export const simulateVulnerabilityScan = (camera: CameraResult): CameraResult => {
-  const hasVulnerability = Math.random() > 0.5;
-  if (hasVulnerability) {
-    camera.vulnerabilities = [{
-      id: `vuln-${Math.random().toString(36).substring(2, 15)}`,
-      name: 'Simulated Vulnerability',
+  const vulnerabilityTypes: Vulnerability[] = [
+    {
+      id: `vuln-${nanoid(6)}`,
+      name: 'Default Credentials',
+      severity: 'high',
+      description: 'Camera is using factory default username and password.'
+    },
+    {
+      id: `vuln-${nanoid(6)}`,
+      name: 'Outdated Firmware',
       severity: 'medium',
-      description: 'This is a simulated vulnerability for demonstration purposes.'
-    }];
+      description: 'Camera firmware has known security vulnerabilities.'
+    },
+    {
+      id: `vuln-${nanoid(6)}`,
+      name: 'Insecure RTSP Stream',
+      severity: 'medium',
+      description: 'RTSP stream is accessible without authentication.'
+    },
+    {
+      id: `vuln-${nanoid(6)}`,
+      name: 'Command Injection',
+      severity: 'critical',
+      description: 'Web interface is vulnerable to command injection attacks.'
+    }
+  ];
+  
+  // 70% chance to have at least one vulnerability
+  if (Math.random() > 0.3) {
+    // Pick 1-3 random vulnerabilities
+    const vulnCount = Math.floor(Math.random() * 3) + 1;
+    const selectedVulns: Vulnerability[] = [];
+    
+    for (let i = 0; i < vulnCount; i++) {
+      const randomIndex = Math.floor(Math.random() * vulnerabilityTypes.length);
+      selectedVulns.push({...vulnerabilityTypes[randomIndex]});
+    }
+    
+    camera.vulnerabilities = selectedVulns;
+    
+    // If critical vulnerability found, mark as vulnerable
+    if (selectedVulns.some(v => v.severity === 'critical')) {
+      camera.status = 'vulnerable';
+    }
   }
+  
   return camera;
 };

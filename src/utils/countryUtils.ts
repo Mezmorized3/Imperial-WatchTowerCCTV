@@ -34,9 +34,15 @@ export const countryData: Record<string, CountryData> = {
       '194.44.0.0/16',
       '195.64.0.0/16',
       '212.26.0.0/16',
-      '213.111.0.0/16'
+      '213.111.0.0/16',
+      // Additional Ukrainian IP ranges
+      '5.58.0.0/16',
+      '5.105.0.0/16',
+      '31.43.0.0/16', 
+      '37.52.0.0/16',
+      '91.197.0.0/16' 
     ],
-    cities: ['Kyiv', 'Kharkiv', 'Odesa', 'Dnipro', 'Lviv', 'Donetsk', 'Zaporizhzhia'],
+    cities: ['Kyiv', 'Kharkiv', 'Odesa', 'Dnipro', 'Lviv', 'Donetsk', 'Zaporizhzhia', 'Mariupol', 'Luhansk', 'Vinnytsia'],
     coordinates: {
       latitude: 49.4871968,
       longitude: 31.2718321
@@ -62,9 +68,19 @@ export const countryData: Record<string, CountryData> = {
       '188.130.0.0/16',
       '194.85.0.0/16',
       '195.211.0.0/16',
-      '213.180.0.0/16'
+      '213.180.0.0/16',
+      // Additional Russian IP ranges
+      '5.3.0.0/16',
+      '5.8.0.0/16',
+      '5.16.0.0/16',
+      '37.9.0.0/16',
+      '91.232.0.0/16'
     ],
-    cities: ['Moscow', 'Saint Petersburg', 'Novosibirsk', 'Yekaterinburg', 'Kazan', 'Omsk', 'Samara'],
+    cities: [
+      'Moscow', 'Saint Petersburg', 'Novosibirsk', 'Yekaterinburg', 'Kazan', 
+      'Omsk', 'Samara', 'Rostov-on-Don', 'Ufa', 'Krasnoyarsk', 'Perm', 
+      'Voronezh', 'Volgograd', 'Krasnodar', 'Saratov'
+    ],
     coordinates: {
       latitude: 55.7504461,
       longitude: 37.6174943
@@ -87,9 +103,15 @@ export const countryData: Record<string, CountryData> = {
       '178.134.0.0/16',
       '188.169.0.0/16',
       '212.58.0.0/16',
-      '213.157.0.0/16'
+      '213.157.0.0/16',
+      // Additional Georgian IP ranges
+      '5.152.0.0/16',
+      '31.146.0.0/16',
+      '37.110.16.0/21',
+      '46.49.0.0/17',
+      '95.137.240.0/21'
     ],
-    cities: ['Tbilisi', 'Batumi', 'Kutaisi', 'Rustavi', 'Gori'],
+    cities: ['Tbilisi', 'Batumi', 'Kutaisi', 'Rustavi', 'Gori', 'Zugdidi', 'Poti', 'Sukhumi', 'Tskhinvali', 'Telavi'],
     coordinates: {
       latitude: 41.7151377,
       longitude: 44.827096
@@ -110,9 +132,19 @@ export const countryData: Record<string, CountryData> = {
       '194.102.0.0/16',
       '195.95.0.0/16',
       '212.146.0.0/16',
-      '213.157.0.0/16'
+      '213.157.0.0/16',
+      // Additional Romanian IP ranges
+      '5.2.0.0/16',
+      '5.12.0.0/16',
+      '31.5.0.0/16',
+      '79.112.0.0/13',
+      '109.163.224.0/19'
     ],
-    cities: ['Bucharest', 'Cluj-Napoca', 'Timișoara', 'Iași', 'Constanța', 'Craiova', 'Brașov'],
+    cities: [
+      'Bucharest', 'Cluj-Napoca', 'Timișoara', 'Iași', 'Constanța', 
+      'Craiova', 'Brașov', 'Galați', 'Ploiești', 'Oradea', 'Brăila', 
+      'Arad', 'Pitești', 'Sibiu', 'Bacău'
+    ],
     coordinates: {
       latitude: 44.4267674,
       longitude: 26.1025384
@@ -150,4 +182,47 @@ export const getCountryCities = (country: string): string[] => {
 export const getCountryCoordinates = (country: string): { latitude: number; longitude: number } | undefined => {
   const countryKey = country.toLowerCase();
   return countryData[countryKey]?.coordinates;
+};
+
+/**
+ * Helper function to generate a random IP from a country's IP prefix
+ */
+export const getRandomIpFromCountry = (country: string): string => {
+  const prefixes = getIpPrefixByCountry(country);
+  
+  if (!prefixes.length) return '';
+  
+  // Pick a random prefix
+  const prefix = prefixes[Math.floor(Math.random() * prefixes.length)];
+  
+  // Generate a random IP within that prefix
+  if (prefix.includes('/')) {
+    const [baseIp, cidrPart] = prefix.split('/');
+    const cidr = parseInt(cidrPart);
+    const ipParts = baseIp.split('.');
+    
+    // Calculate how many octets we need to randomize based on CIDR
+    const randomOctets = Math.ceil((32 - cidr) / 8);
+    
+    for (let i = 0; i < randomOctets; i++) {
+      const octetIndex = 4 - randomOctets + i;
+      if (octetIndex >= 0 && octetIndex < 4) {
+        ipParts[octetIndex] = Math.floor(Math.random() * 256).toString();
+      }
+    }
+    
+    return ipParts.join('.');
+  }
+  
+  return prefix;
+};
+
+/**
+ * Get a list of countries supported in our dataset
+ */
+export const getSupportedCountries = (): {name: string, code: string}[] => {
+  return Object.entries(countryData).map(([key, data]) => ({
+    name: data.name,
+    code: data.code
+  }));
 };

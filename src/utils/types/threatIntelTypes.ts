@@ -1,24 +1,24 @@
 
 /**
- * Threat intelligence data types
+ * Threat intelligence types
  */
 
 export interface ThreatIntelData {
   ipReputation: number;
-  confidenceScore: number;
-  source: 'virustotal' | 'abuseipdb' | 'threatfox' | 'other';
-  associatedMalware: string[];
   lastReportedMalicious?: string;
+  associatedMalware: string[];
   reportedBy?: string[];
   firstSeen?: string;
   tags?: string[];
+  confidenceScore: number;
+  source: 'virustotal' | 'abuseipdb' | 'threatfox' | 'other';
   lastUpdated: string;
+  externalIp?: string;
 }
 
 export interface FirmwareData {
   version: string;
-  releaseDate?: string;
-  vulnerabilities: Array<{
+  vulnerabilities?: {
     id: string;
     name: string;
     severity: 'low' | 'medium' | 'high' | 'critical';
@@ -26,40 +26,37 @@ export interface FirmwareData {
     cve?: string;
     published?: string;
     fixed?: boolean;
-  }>;
-  updateAvailable: boolean;
-  lastChecked: string;
+  }[];
+  updateAvailable?: boolean;
+  lastChecked?: string;
 }
 
-export interface ExploitData {
-  id: string;
-  name: string;
-  description: string;
-  cve?: string;
-  severity: 'low' | 'medium' | 'high' | 'critical';
-  published: string;
-  type: 'web' | 'firmware' | 'network' | 'hardware' | 'other';
-  status: 'verified' | 'unverified' | 'patched';
-  details?: string;
-  references?: string[];
-}
-
-// Updated ImperialShieldResult to include all needed properties
-export interface ImperialShieldResult {
-  id: string;
-  target: string;
-  status: 'vulnerable' | 'secure' | 'unknown';
-  timestamp: string;
-  findings: Array<{
+export interface FirmwareAnalysisResult {
+  version: string;
+  outdated: boolean;
+  vulnerabilityCount: number;
+  criticalVulnerabilities: number;
+  highVulnerabilities: number;
+  mediumVulnerabilities: number;
+  lowVulnerabilities: number;
+  latestVersion?: string;
+  updateUrl?: string;
+  vulnerabilities: {
+    id: string;
+    name: string;
     severity: 'low' | 'medium' | 'high' | 'critical';
     description: string;
-    remediation?: string;
-  }>;
-  score: number;
-  mode: 'analyze' | 'defend' | 'monitor' | 'test';
-  // Add missing properties needed by ImperialShieldMatrix component
-  shieldStatus?: 'active' | 'inactive' | 'breached';
-  securityRating?: number;
-  success?: boolean;
-  error?: string;
+    cve?: string;
+    published?: string;
+    fixed?: boolean;
+  }[];
+}
+
+export interface ThreatAssessment {
+  overallThreatLevel: 'low' | 'medium' | 'high' | 'critical';
+  ipReputation: number;
+  malwareIndicators: string[];
+  vulnerabilityScore: number;
+  recommendedActions: string[];
+  lastUpdated: string;
 }

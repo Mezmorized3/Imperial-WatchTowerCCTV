@@ -1,76 +1,44 @@
 
 /**
- * Network tools types for OSINT and network discovery
+ * Network tool types
  */
 
-import { ToolParams } from './baseTypes';
+export interface NetworkScanParams {
+  target: string;
+  ports?: string;
+  timeout?: number;
+  scanType?: 'tcp' | 'udp' | 'all';
+  concurrency?: number;
+  saveResults?: boolean;
+}
 
-export interface TorBotParams extends ToolParams {
+export interface TorBotParams {
   url: string;
   depth?: number;
+  timeout?: number;
   saveResults?: boolean;
-  proxy?: string;
-  limit?: number;
+  excludePattern?: string;
+  includePattern?: string;
 }
 
-export interface BotExploitsParams extends ToolParams {
+export interface BotExploitsParams {
   target: string;
-  exploitType?: string;
+  botType: 'telegram' | 'discord' | 'slack' | 'any';
+  scanType?: 'keys' | 'tokens' | 'all';
   timeout?: number;
-  proxy?: string;
-  useWordlist?: boolean;
-  wordlistPath?: string;
-}
-
-export interface ImperialOculusParams extends ToolParams {
-  target: string;
-  mode?: string;
-  depth?: number;
-  timeout?: number;
-  proxy?: string;
   saveResults?: boolean;
 }
 
-export interface ShieldAIParams extends ToolParams {
+export interface ChromeExtensionParams {
+  extensionId: string;
+  analyzePermissions?: boolean;
+  downloadSource?: boolean;
+  checkVulnerabilities?: boolean;
+}
+
+export interface ImperialOculusParams {
   target: string;
-  mode?: 'analyze' | 'defend' | 'monitor';
-  scanType?: string;
-  options?: {
-    [key: string]: any;
-  };
-}
-
-export interface ProxyRotatorParams extends ToolParams {
-  type: 'http' | 'socks4' | 'socks5' | 'tor';
-  country?: string;
-  anonymity?: 'transparent' | 'anonymous' | 'elite';
-  testUrl?: string;
-  rotationInterval?: number;
-}
-
-export interface TokenBlacklistParams extends ToolParams {
-  action: 'add' | 'check' | 'remove';
-  token: string;
-  expiry?: number;
-}
-
-export interface ChromeExtensionParams extends ToolParams {
-  command: 'authenticate' | 'scan' | 'monitor' | 'defend';
-  extensionId?: string;
-  token?: string;
-  options?: {
-    [key: string]: any;
-  };
-}
-
-// Specifically for hacking CCTV cameras
-export interface HackCCTVParams extends ToolParams {
-  target: string;
-  method: 'default-credentials' | 'exploit' | 'brute-force' | 'rtsp-discovery';
-  timeout?: number;
-  proxy?: string;
-  userAgent?: string;
-  country?: string;
-  manufacturer?: string;
+  scanType: 'full' | 'quick' | 'stealth';
   saveResults?: boolean;
+  timeout?: number;
 }

@@ -52,21 +52,6 @@ export {
   executeBotExploits
 };
 
-// Comment out missing exports
-// export {
-//   executeUsernameSearch
-// };
-
-// Comment out missing exports
-// export {
-//   executeTwint
-// };
-
-// Comment out missing exports
-// export {
-//   executeOSINT
-// };
-
 // Export all security tools
 export {
   executeShieldAI
@@ -85,4 +70,17 @@ export {
   ffmpegConvertRtspToHls,
   ffmpegRecordStream,
   applyMotionDetection
+};
+
+// Placeholder for any missing functions that might be referenced elsewhere
+export const executeUsernameSearch = async () => {
+  return { success: false, error: "Not implemented" };
+};
+
+export const executeTwint = async () => {
+  return { success: false, error: "Not implemented" };
+};
+
+export const executeOSINT = async () => {
+  return { success: false, error: "Not implemented" };
 };

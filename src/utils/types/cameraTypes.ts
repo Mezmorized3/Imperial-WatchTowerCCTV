@@ -1,3 +1,4 @@
+
 /**
  * Camera types for OSINT and camera discovery
  */
@@ -5,7 +6,7 @@
 import { ThreatIntelData, FirmwareData } from './threatIntelTypes';
 
 export type CameraStatus = 'online' | 'offline' | 'unknown' | 'vulnerable' | 'secure' | 'compromised';
-export type AccessLevel = 'none' | 'limited' | 'full' | 'admin' | 'unknown';
+export type AccessLevel = 'none' | 'limited' | 'full' | 'admin' | 'unknown' | 'view' | 'control';
 
 export interface Credentials {
   username: string;
@@ -74,6 +75,7 @@ export interface BackHackParams {
   scanType?: 'basic' | 'full';
   timeout?: number;
   userAgent?: string;
+  extractData?: boolean;
 }
 
 export interface SpeedCameraParams {
