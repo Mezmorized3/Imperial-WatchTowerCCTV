@@ -5,26 +5,82 @@
  */
 
 // Import types directly to avoid namespace conflicts
-import { ToolParams, ToolResult, UsernameResult } from './types/baseTypes';
-import { CameraResult, CCTVParams, CCTVExplorerParams } from './types/cameraTypes';
-import { NetworkScanParams, TorBotParams } from './types/networkToolTypes';
-import { WebCheckParams, WebHackParams } from './types/webToolTypes';
-import { SocialSearchParams, SocialPostData } from './types/socialToolTypes';
+import { 
+  ToolParams, 
+  ToolResult, 
+  UsernameResult, 
+  ScanResult, 
+  ProxyConfig, 
+  ThreatIntelData
+} from './types/baseTypes';
+
+import { 
+  CameraResult, 
+  CCTVParams, 
+  CCTVExplorerParams, 
+  HackCCTVParams, 
+  BackHackParams, 
+  CamDumperParams, 
+  OpenCCTVParams, 
+  EyePwnParams, 
+  IngramParams
+} from './types/cameraTypes';
+
+import { 
+  NetworkScanParams, 
+  TorBotParams, 
+  BotExploitsParams,
+  ChromeExtensionParams,
+  ImperialOculusParams
+} from './types/networkToolTypes';
+
+import { 
+  WebCheckParams, 
+  WebHackParams
+} from './types/webToolTypes';
+
+import { 
+  SocialSearchParams, 
+  SocialPostData
+} from './types/socialToolTypes';
+
+import {
+  RapidPayloadParams,
+  HackingToolParams,
+  SecurityAdminParams,
+  FFmpegParams,
+  ImperialShieldResult
+} from './types/advancedToolTypes';
 
 // Export all imported types
-export type {
+export {
   ToolParams,
   ToolResult,
   UsernameResult,
+  ScanResult,
+  ProxyConfig,
+  ThreatIntelData,
   CameraResult,
   CCTVParams,
   CCTVExplorerParams,
+  HackCCTVParams,
+  BackHackParams,
+  CamDumperParams,
+  OpenCCTVParams,
+  EyePwnParams,
+  IngramParams,
   NetworkScanParams,
   TorBotParams,
+  BotExploitsParams,
+  ChromeExtensionParams,
+  ImperialOculusParams,
   WebCheckParams,
   WebHackParams,
   SocialSearchParams,
-  SocialPostData
+  SocialPostData,
+  RapidPayloadParams,
+  HackingToolParams,
+  SecurityAdminParams,
+  FFmpegParams,
+  ImperialShieldResult
 };
-
-// Note: We're using export type to avoid ambiguity errors with isolatedModules

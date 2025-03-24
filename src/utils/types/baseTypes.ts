@@ -14,6 +14,7 @@ export interface ToolResult {
   success: boolean;
   data?: any;
   error?: string;
+  simulatedData?: boolean; // Added this for compatibility
 }
 
 export interface UsernameResult {
@@ -38,6 +39,7 @@ export interface ScanResult {
   data: any;
   results: any[];
   error?: string;
+  simulatedData?: boolean; // Added this for compatibility
 }
 
 export interface ProxyConfig {
@@ -49,4 +51,27 @@ export interface ProxyConfig {
   password?: string;
   country?: string;
   testUrl?: string;
+  // Additional properties needed for compatibility
+  useAuthentication?: boolean;
+  autoReconnect?: boolean;
+  dnsProtection?: boolean;
+  forceTls?: boolean;
+  rotationEnabled?: boolean;
+  rotationInterval?: number;
+  proxyList?: {host: string; port: number; country?: string}[];
+  useTor?: boolean;
+}
+
+// Re-export ThreatIntelData to maintain compatibility
+export interface ThreatIntelData {
+  ipReputation: number;
+  lastReportedMalicious?: string;
+  associatedMalware: string[];
+  reportedBy?: string[];
+  firstSeen?: string;
+  tags?: string[];
+  confidenceScore: number;
+  source: 'virustotal' | 'abuseipdb' | 'threatfox' | 'other';
+  lastUpdated: string;
+  externalIp?: string;
 }

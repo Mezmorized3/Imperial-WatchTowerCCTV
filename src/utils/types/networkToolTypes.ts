@@ -19,6 +19,9 @@ export interface TorBotParams {
   saveResults?: boolean;
   excludePattern?: string;
   includePattern?: string;
+  level?: string; // Added for compatibility
+  dumpData?: boolean; // Added for compatibility
+  mode?: string; // Added for compatibility
 }
 
 export interface BotExploitsParams {

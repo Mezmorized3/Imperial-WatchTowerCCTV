@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -9,6 +10,7 @@ import { executeCameradar, executeIPCamSearch, executeCCTV } from '@/utils/osint
 import { CameraResult } from '@/types/scanner';
 import { CCTVParams } from '@/utils/types/cameraTypes';
 import { getProperStreamUrl } from '@/utils/rtspUtils';
+import { getCountryIpRanges } from '@/utils/ipRangeUtils';
 
 interface CameraSearchProps {
   setCustomRtspUrl: (url: string) => void;
@@ -23,7 +25,21 @@ const CameraSearch: React.FC<CameraSearchProps> = ({
   const [isSearching, setIsSearching] = useState<boolean>(false);
   const [searchType, setSearchType] = useState<string>('cameradar');
   const [searchInput, setSearchInput] = useState<string>('');
+  const [selectedCountry, setSelectedCountry] = useState<string>('');
   const { toast } = useToast();
+
+  // Add countries with flags for better UI
+  const countries = [
+    { value: '', label: 'Any Country' },
+    { value: 'ua', label: '🇺🇦 Ukraine' },
+    { value: 'ru', label: '🇷🇺 Russia' },
+    { value: 'ge', label: '🇬🇪 Georgia' },
+    { value: 'ro', label: '🇷🇴 Romania' },
+    { value: 'us', label: '🇺🇸 United States' },
+    { value: 'uk', label: '🇬🇧 United Kingdom' },
+    { value: 'de', label: '🇩🇪 Germany' },
+    { value: 'fr', label: '🇫🇷 France' }
+  ];
 
   const filterCameras = (cameras: CameraResult[]) => {
     return cameras.filter(camera => {
@@ -45,10 +61,10 @@ const CameraSearch: React.FC<CameraSearchProps> = ({
   };
 
   const handleSearch = async () => {
-    if (!searchInput) {
+    if (!searchInput && !selectedCountry) {
       toast({
         title: "Error",
-        description: "Please enter an IP address or range to search",
+        description: "Please enter an IP address/range or select a country",
         variant: "destructive"
       });
       return;
@@ -60,29 +76,47 @@ const CameraSearch: React.FC<CameraSearchProps> = ({
     try {
       let results: any;
       
+      // If country is selected, try to get IP ranges for that country
+      let targetInput = searchInput;
+      if (selectedCountry && !searchInput) {
+        const ipRanges = getCountryIpRanges(selectedCountry);
+        if (ipRanges.length > 0) {
+          // Pick a random IP range from the country
+          const randomRange = ipRanges[Math.floor(Math.random() * ipRanges.length)];
+          targetInput = randomRange.range;
+          
+          toast({
+            title: "Using Country IP Range",
+            description: `${randomRange.description}: ${randomRange.range}`,
+          });
+        } else {
+          targetInput = selectedCountry; // Use country code as fallback
+        }
+      }
+      
       switch (searchType) {
         case 'cameradar':
           results = await executeCameradar({
-            target: searchInput
+            target: targetInput
           });
           break;
         case 'ipcamsearch':
           results = await executeIPCamSearch({
-            subnet: searchInput,
+            subnet: targetInput,
             protocols: []
           });
           break;
         case 'cctv':
           const cctvParams: CCTVParams = {
-            region: searchInput,
-            country: searchInput,
+            region: selectedCountry || targetInput,
+            country: selectedCountry || targetInput,
             limit: 10
           };
           results = await executeCCTV(cctvParams);
           break;
         default:
           results = await executeCameradar({
-            target: searchInput
+            target: targetInput
           });
       }
       
@@ -125,16 +159,32 @@ const CameraSearch: React.FC<CameraSearchProps> = ({
                 onChange={(e) => setSearchInput(e.target.value)}
                 className="w-full"
               />
-              <Select value={searchType} onValueChange={setSearchType}>
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select search method" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="cameradar">Cameradar (RTSP brute-force)</SelectItem>
-                  <SelectItem value="ipcamsearch">IPCamSearch (Web interface)</SelectItem>
-                  <SelectItem value="cctv">CCTV Scanner (Stream discovery)</SelectItem>
-                </SelectContent>
-              </Select>
+              
+              <div className="grid grid-cols-2 gap-2">
+                <Select value={searchType} onValueChange={setSearchType}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select search method" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="cameradar">Cameradar (RTSP brute-force)</SelectItem>
+                    <SelectItem value="ipcamsearch">IPCamSearch (Web interface)</SelectItem>
+                    <SelectItem value="cctv">CCTV Scanner (Stream discovery)</SelectItem>
+                  </SelectContent>
+                </Select>
+                
+                <Select value={selectedCountry} onValueChange={setSelectedCountry}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select country (optional)" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {countries.map(country => (
+                      <SelectItem key={country.value} value={country.value}>
+                        {country.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
             <div className="self-start">
               <Button onClick={handleSearch} disabled={isSearching}>
@@ -180,6 +230,14 @@ const CameraSearch: React.FC<CameraSearchProps> = ({
                             Credentials found: {camera.credentials.username}:{camera.credentials.password}
                           </p>
                         )}
+                        {(camera.geolocation?.country || camera.location?.country) && (
+                          <p className="text-xs text-blue-400">
+                            {camera.geolocation?.country || camera.location?.country}
+                            {(camera.geolocation?.city || camera.location?.city) && 
+                              `, ${camera.geolocation?.city || camera.location?.city}`
+                            }
+                          </p>
+                        )}
                       </div>
                     </div>
                   </CardContent>
@@ -191,10 +249,10 @@ const CameraSearch: React.FC<CameraSearchProps> = ({
               <div className="animate-spin inline-block h-8 w-8 border-b-2 border-scanner-info rounded-full mb-2"></div>
               <p className="text-gray-400">Searching for cameras on the network...</p>
             </div>
-          ) : searchInput ? (
+          ) : searchInput || selectedCountry ? (
             <div className="text-center p-8 border border-gray-700 rounded-lg">
               <p className="text-gray-400">
-                {searchResults.length === 0 ? 'No cameras found. Try a different network range or search method.' : ''}
+                {searchResults.length === 0 ? 'No cameras found. Try a different network range, country, or search method.' : ''}
               </p>
             </div>
           ) : null}
@@ -212,6 +270,8 @@ const CameraSearch: React.FC<CameraSearchProps> = ({
           <p>• For cameras in specific countries, try using their IP ranges</p>
           <p>• Ukrainian cameras often use ports 554 and 80</p>
           <p>• Russian CCTV systems may be found on ports 8000 and 37777</p>
+          <p>• Georgian security cameras often use ports 554, 80, and 8000</p>
+          <p>• Romanian networks frequently use ports 80, 8080, and 554</p>
         </CardContent>
       </Card>
     </>

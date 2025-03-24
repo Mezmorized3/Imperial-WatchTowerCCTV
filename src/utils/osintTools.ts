@@ -10,6 +10,10 @@ import {
   executeSpeedCamera,
   executeCamerattack,
   executeHackCCTV,
+  executeCamDumper,
+  executeOpenCCTV,
+  executeEyePwn,
+  executeIngram,
   executeWebCheck,
   executeWebhack,
   executePhoton,
@@ -24,7 +28,10 @@ import {
   executeFFmpeg,
   ffmpegConvertRtspToHls,
   ffmpegRecordStream,
-  applyMotionDetection
+  applyMotionDetection,
+  executeUsernameSearch,
+  executeTwint,
+  executeOSINT
 } from './osintImplementations';
 
 // Export all camera tools
@@ -34,7 +41,11 @@ export {
   executeCCTV,
   executeSpeedCamera,
   executeCamerattack,
-  executeHackCCTV
+  executeHackCCTV,
+  executeCamDumper,
+  executeOpenCCTV,
+  executeEyePwn,
+  executeIngram
 };
 
 // Export all web tools
@@ -72,15 +83,9 @@ export {
   applyMotionDetection
 };
 
-// Placeholder for any missing functions that might be referenced elsewhere
-export const executeUsernameSearch = async () => {
-  return { success: false, error: "Not implemented" };
-};
-
-export const executeTwint = async () => {
-  return { success: false, error: "Not implemented" };
-};
-
-export const executeOSINT = async () => {
-  return { success: false, error: "Not implemented" };
+// Export other tools
+export {
+  executeUsernameSearch,
+  executeTwint,
+  executeOSINT
 };

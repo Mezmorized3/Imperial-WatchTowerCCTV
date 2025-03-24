@@ -5,7 +5,7 @@
 
 import { ThreatIntelData, FirmwareData } from './threatIntelTypes';
 
-export type CameraStatus = 'online' | 'offline' | 'unknown' | 'vulnerable' | 'secure' | 'compromised';
+export type CameraStatus = 'online' | 'offline' | 'unknown' | 'vulnerable' | 'secure' | 'compromised' | 'authenticated';
 export type AccessLevel = 'none' | 'limited' | 'full' | 'admin' | 'unknown' | 'view' | 'control';
 
 export interface Credentials {
@@ -29,7 +29,7 @@ export interface Geolocation {
   city?: string;
   latitude?: number;
   longitude?: number;
-  coordinates?: [number, number]; // Added to support cameraSearchUtils
+  coordinates?: [number, number]; // Added for compatibility with cameraSearchUtils
 }
 
 export interface CCTVParams {
@@ -47,17 +47,32 @@ export interface CameraResult {
   port: number;
   model?: string;
   manufacturer?: string;
+  brand?: string; // Added for compatibility
   status: CameraStatus;
   lastSeen?: string | Date;
   accessLevel: AccessLevel;
   rtspUrl?: string;
   httpUrl?: string;
-  credentials?: Credentials;
+  url?: string; // Added for compatibility with scanner.ts
+  snapshotUrl?: string; // Added for compatibility with scanner.ts
+  credentials?: Credentials | null; // Made nullable for compatibility
   vulnerabilities?: Vulnerability[];
   geolocation?: Geolocation;
+  location?: { // Added for compatibility with scanner.ts
+    country: string;
+    city?: string;
+    latitude?: number;
+    longitude?: number;
+  };
   firmware?: FirmwareData;
+  firmwareVersion?: string; // Added for compatibility
+  firmwareAnalysis?: any; // Added for compatibility
   threatIntel?: ThreatIntelData;
+  responseTime?: number; // Added for compatibility
   accessible?: boolean; // Flag indicating if the camera is directly accessible
+  services?: string[]; // Added for compatibility
+  firstSeen?: string; // Added for compatibility
+  monitoringEnabled?: boolean; // Added for compatibility
 }
 
 export interface ScanResult {
@@ -67,6 +82,7 @@ export interface ScanResult {
   results: CameraResult[];
   data: any;
   simulatedData?: boolean;
+  timestamp?: string;
 }
 
 export interface BackHackParams {
@@ -90,6 +106,7 @@ export interface CamerattackParams {
   port?: number;
   method?: string;
   timeout?: number;
+  rate?: number; // Added for compatibility
 }
 
 export interface HackCCTVParams {
@@ -125,4 +142,20 @@ export interface OpenCCTVParams {
   scanMode: 'quick' | 'deep' | 'stealth';
   saveOutput?: boolean;
   proxyEnabled?: boolean;
+}
+
+export interface EyePwnParams {
+  target: string;
+  method: 'rtsp' | 'onvif' | 'web' | 'all';
+  bruteforce?: boolean;
+  timeout?: number;
+  country?: string;
+}
+
+export interface IngramParams {
+  target: string;
+  scanType: 'quick' | 'deep' | 'stealth';
+  outputFormat?: 'json' | 'csv' | 'txt';
+  includeSnapshots?: boolean;
+  country?: string;
 }

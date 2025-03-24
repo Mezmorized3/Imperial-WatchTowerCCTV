@@ -13,9 +13,13 @@ export {
   executeCamerattack
 } from './osintImplementations/cameraTools';
 
-// Export the new hackCCTV tool
+// Export the camera hacking tools
 export {
-  executeHackCCTV
+  executeHackCCTV,
+  executeCamDumper,
+  executeOpenCCTV,
+  executeEyePwn,
+  executeIngram
 } from './osintImplementations/hackCCTVTools';
 
 // Re-export all web tools
@@ -55,13 +59,13 @@ export {
 
 // Add placeholder implementations for missing functions
 export const executeUsernameSearch = async () => {
-  return { success: false, error: "Not implemented" };
+  return { success: false, error: "Not implemented", simulatedData: true };
 };
 
 export const executeTwint = async () => {
-  return { success: false, error: "Not implemented" };
+  return { success: false, error: "Not implemented", simulatedData: true };
 };
 
 export const executeOSINT = async () => {
-  return { success: false, error: "Not implemented" };
+  return { success: false, error: "Not implemented", simulatedData: true };
 };

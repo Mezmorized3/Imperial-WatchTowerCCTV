@@ -1,63 +1,85 @@
 
 /**
- * Simple sentiment analysis utility
+ * Simple sentiment analysis utilities
  */
 
-interface SentimentResult {
-  score: number;  // Range from -1 (negative) to 1 (positive)
-  comparative: number;
-  positive: string[];
-  negative: string[];
-  tokens: string[];
-}
-
-// Simple positive and negative word lists
-const positiveWords = [
-  'good', 'great', 'excellent', 'amazing', 'awesome', 'fantastic', 'wonderful',
-  'happy', 'pleased', 'satisfied', 'love', 'like', 'best', 'positive', 'recommended',
-];
-
-const negativeWords = [
-  'bad', 'terrible', 'awful', 'horrible', 'poor', 'disappointing', 'worst',
-  'hate', 'dislike', 'negative', 'avoid', 'failure', 'failed', 'broken', 'problem',
-];
-
-export function analyzeSentiment(text: string): SentimentResult {
-  if (!text) {
-    return {
-      score: 0,
-      comparative: 0,
-      positive: [],
-      negative: [],
-      tokens: []
-    };
-  }
-
-  // Convert to lowercase and tokenize
-  const tokens = text.toLowerCase()
-    .replace(/[^\w\s]/g, ' ')
-    .split(/\s+/)
-    .filter(word => word.length > 1);
-
-  // Identify positive and negative words
-  const positive = tokens.filter(word => positiveWords.includes(word));
-  const negative = tokens.filter(word => negativeWords.includes(word));
-
-  // Calculate score
-  const score = (positive.length - negative.length) / Math.max(1, tokens.length);
+/**
+ * Analyze the sentiment of a text
+ * @param text The text to analyze
+ * @returns Object containing sentiment score and classification
+ */
+export const analyzeSentiment = (text: string): {
+  score: number;
+  sentiment: 'positive' | 'negative' | 'neutral';
+  confidence: number;
+} => {
+  // This is a very simplified implementation
+  // In a real-world scenario, you would use a proper NLP library
   
-  // Calculate comparative score (normalized between -1 and 1)
-  const comparative = tokens.length > 0 ? score : 0;
-
+  const positiveWords = ['good', 'great', 'excellent', 'amazing', 'love', 'like', 'happy', 'best'];
+  const negativeWords = ['bad', 'terrible', 'awful', 'hate', 'dislike', 'worst', 'poor', 'horrible'];
+  
+  const words = text.toLowerCase().split(/\W+/);
+  
+  let positiveCount = 0;
+  let negativeCount = 0;
+  
+  words.forEach(word => {
+    if (positiveWords.includes(word)) positiveCount++;
+    if (negativeWords.includes(word)) negativeCount++;
+  });
+  
+  const score = (positiveCount - negativeCount) / words.length;
+  let sentiment: 'positive' | 'negative' | 'neutral' = 'neutral';
+  
+  if (score > 0.05) sentiment = 'positive';
+  else if (score < -0.05) sentiment = 'negative';
+  
+  const confidence = Math.min(1, Math.abs(score) * 5);
+  
   return {
-    score: Math.max(-1, Math.min(1, score * 5)),  // Scale and clamp between -1 and 1
-    comparative,
-    positive,
-    negative,
-    tokens
+    score,
+    sentiment,
+    confidence
   };
-}
+};
 
-export default {
-  analyzeSentiment
+/**
+ * Extract entities from text
+ * @param text The text to analyze
+ * @returns Array of extracted entities
+ */
+export const extractEntities = (text: string): {
+  entity: string;
+  type: 'person' | 'organization' | 'location' | 'date' | 'other';
+  confidence: number;
+}[] => {
+  // Simplified implementation
+  const entities = [];
+  
+  // Extract potential name patterns (capitalized words)
+  const nameRegex = /\b[A-Z][a-z]+ [A-Z][a-z]+\b/g;
+  const names = text.match(nameRegex) || [];
+  
+  names.forEach(name => {
+    entities.push({
+      entity: name,
+      type: 'person',
+      confidence: 0.7
+    });
+  });
+  
+  // Extract potential dates
+  const dateRegex = /\b\d{1,2}\/\d{1,2}\/\d{2,4}\b|\b\d{1,2}\-\d{1,2}\-\d{2,4}\b/g;
+  const dates = text.match(dateRegex) || [];
+  
+  dates.forEach(date => {
+    entities.push({
+      entity: date,
+      type: 'date',
+      confidence: 0.9
+    });
+  });
+  
+  return entities;
 };

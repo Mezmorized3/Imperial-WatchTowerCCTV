@@ -1,3 +1,4 @@
+
 /**
  * Utility functions for handling IP ranges
  */
@@ -121,4 +122,15 @@ export const getCountryNameFromCode = (code: string): string => {
   };
   
   return countryMap[code.toLowerCase()] || code;
+};
+
+/**
+ * Calculate the number of IP addresses in a CIDR range
+ */
+export const calculateIpsInRange = (cidr: string): number => {
+  if (!cidr.includes('/')) return 1;
+  
+  const prefix = parseInt(cidr.split('/')[1]);
+  const hostBits = 32 - prefix;
+  return Math.pow(2, hostBits);
 };
