@@ -1,4 +1,3 @@
-
 /**
  * External Tools Connector
  * This module provides interfaces for connecting to external GitHub repositories and tools.
@@ -40,9 +39,42 @@ export const EXTERNAL_TOOLS: Record<string, ExternalToolConfig> = {
     githubRepo: 'https://github.com/Ullaakut/cameradar',
     executable: 'cameradar',
     platform: 'all',
-    setupCommand: 'go build',
-    // For Windows compatibility, provide an alternative
-    windowsAlternative: 'cameradar.exe'
+    setupCommand: 'go build'
+  },
+  'hack-cctv': {
+    githubRepo: 'https://github.com/Whomrx666/Hack-cctv',
+    executable: 'hack-cctv.py',
+    platform: 'all'
+  },
+  'cctv-hack': {
+    githubRepo: 'https://github.com/akashblackhat/cctv-Hack.py',
+    executable: 'cctv-hack.py',
+    platform: 'all'
+  },
+  'cam-dumper': {
+    githubRepo: 'https://github.com/er4vn/Cam-Dumper',
+    executable: 'cam-dumper.py',
+    platform: 'all'
+  },
+  'opencctv': {
+    githubRepo: 'https://github.com/nak0823/OpenCCTV',
+    executable: 'opencctv.py',
+    platform: 'all'
+  },
+  'cctv-hacked': {
+    githubRepo: 'https://github.com/Rihan444/CCTV_HACKED',
+    executable: 'cctv-hacked.py',
+    platform: 'all'
+  },
+  'eyepwn': {
+    githubRepo: 'https://github.com/Hasan-Malek/EyePwn',
+    executable: 'eyepwn.py',
+    platform: 'all'
+  },
+  'ingram': {
+    githubRepo: 'https://github.com/jorhelp/Ingram',
+    executable: 'ingram.py',
+    platform: 'all'
   },
   'ipcam_search': {
     githubRepo: 'https://github.com/hmgle/ipcam_search_protocol',
