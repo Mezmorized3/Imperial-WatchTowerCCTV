@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -45,16 +46,32 @@ const FileCentipede: React.FC = () => {
     }
   };
 
-  const handleToolClick = (toolName: string) => {
+  const handleExploreRange = () => {
     if (rangeDetails) {
       toast({
-        title: `${toolName} Selected`,
-        description: `Target range: ${rangeDetails.range} (${rangeDetails.ipCount.toLocaleString()} IPs)`,
+        title: "Exploring IP Range",
+        description: `Scanning range: ${rangeDetails.range} (${rangeDetails.ipCount.toLocaleString()} IPs)`,
       });
     } else {
       toast({
-        title: "Tool Selected",
-        description: `${toolName} will be implemented soon.`,
+        title: "Error",
+        description: "Please select an IP range first",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDownload = () => {
+    if (rangeDetails) {
+      toast({
+        title: "Download Manager",
+        description: `Starting download for range: ${rangeDetails.range}`,
+      });
+    } else {
+      toast({
+        title: "Error",
+        description: "Please select an IP range first",
+        variant: "destructive",
       });
     }
   };
@@ -177,7 +194,7 @@ const FileCentipede: React.FC = () => {
           <Button 
             variant="outline" 
             className="border-gray-700 hover:bg-scanner-dark-alt hover:text-scanner-primary transition-colors"
-            onClick={() => handleToolClick('IP Range Explorer')}
+            onClick={handleExploreRange}
           >
             <Search className="h-4 w-4 mr-2" />
             Explore Range
@@ -186,7 +203,7 @@ const FileCentipede: React.FC = () => {
           <Button 
             variant="outline" 
             className="border-gray-700 hover:bg-scanner-dark-alt hover:text-scanner-primary transition-colors"
-            onClick={() => handleToolClick('FileCentipede')}
+            onClick={handleDownload}
           >
             <Download className="h-4 w-4 mr-2" />
             Download

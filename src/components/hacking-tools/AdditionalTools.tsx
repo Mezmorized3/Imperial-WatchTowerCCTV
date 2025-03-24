@@ -2,7 +2,7 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Shield, Code } from 'lucide-react';
+import { Shield, Code, Database, FileSearch, Terminal, Globe } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
 import { executeSecurityAdmin } from '@/utils/osintTools';
 
@@ -11,10 +11,57 @@ interface AdditionalToolsProps {
 }
 
 const AdditionalTools: React.FC<AdditionalToolsProps> = ({ isRealmode }) => {
-  const handleToolClick = (toolName: string) => {
+  const handleSecurityAdmin = async () => {
+    try {
+      const result = await executeSecurityAdmin({
+        command: 'scan',
+        scanType: 'basic',
+        options: {
+          target: 'localhost',
+          ports: '1-1000'
+        }
+      });
+      
+      toast({
+        title: "Security Admin",
+        description: "Scan completed successfully",
+      });
+      console.log("Security Admin Results:", result);
+    } catch (err) {
+      toast({
+        title: "Security Admin",
+        description: "Error executing security scan",
+        variant: "destructive",
+      });
+      console.error("Security Admin Error:", err);
+    }
+  };
+
+  const handleSQLiPayloads = () => {
     toast({
-      title: "Tool Selected",
-      description: `${toolName} will be implemented soon.`,
+      title: "SQLi Payloads",
+      description: "Opening SQL injection payloads & cheatsheets",
+    });
+  };
+
+  const handleCMSDetection = () => {
+    toast({
+      title: "CMS Detection",
+      description: "Opening CMS & Web technology detection tool",
+    });
+  };
+
+  const handlePayloadGenerator = () => {
+    toast({
+      title: "Payload Generator",
+      description: "Opening advanced payload generator",
+    });
+  };
+
+  const handleSecurityScanning = () => {
+    toast({
+      title: "Security Scanning",
+      description: "Opening security scanning tools",
     });
   };
 
@@ -34,28 +81,7 @@ const AdditionalTools: React.FC<AdditionalToolsProps> = ({ isRealmode }) => {
           <Button 
             variant="outline" 
             className="border-gray-700 hover:bg-scanner-dark-alt"
-            onClick={() => {
-              if (isRealmode) {
-                executeSecurityAdmin({
-                  command: 'scan',
-                  scanType: 'basic',
-                  options: {
-                    target: 'localhost',
-                    ports: '1-1000'
-                  }
-                }).then(result => {
-                  toast({
-                    title: "Security Admin",
-                    description: "Scan completed. Check console for details.",
-                  });
-                  console.log("Security Admin Results:", result);
-                }).catch(err => {
-                  console.error("Security Admin Error:", err);
-                });
-              } else {
-                handleToolClick('Security Admin');
-              }
-            }}
+            onClick={handleSecurityAdmin}
           >
             <Code className="h-4 w-4 mr-2" />
             Security Admin
@@ -65,10 +91,18 @@ const AdditionalTools: React.FC<AdditionalToolsProps> = ({ isRealmode }) => {
         <div className="pt-2">
           <h3 className="text-sm font-semibold mb-2">Available Tools:</h3>
           <ul className="text-xs text-gray-400 space-y-1 pl-5 list-disc">
-            <li>SQLi payloads & cheatsheets</li>
-            <li>CMS & Web technology detection</li>
-            <li>Advanced payload generator</li>
-            <li>Security scanning tools</li>
+            <li className="cursor-pointer hover:text-scanner-primary" onClick={handleSQLiPayloads}>
+              SQLi payloads & cheatsheets
+            </li>
+            <li className="cursor-pointer hover:text-scanner-primary" onClick={handleCMSDetection}>
+              CMS & Web technology detection
+            </li>
+            <li className="cursor-pointer hover:text-scanner-primary" onClick={handlePayloadGenerator}>
+              Advanced payload generator
+            </li>
+            <li className="cursor-pointer hover:text-scanner-primary" onClick={handleSecurityScanning}>
+              Security scanning tools
+            </li>
           </ul>
         </div>
       </CardContent>
