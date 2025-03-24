@@ -46,7 +46,8 @@
     "jwtSecret": "imp_JWT_9c4f8e63b215a972d84f7aa38c2cb891e76519af",
     "encryptionKey": "imp_ENC_b237e8af6d31c490f7eb21082305a391",
     "authSalt": "8f5db97a31e4c7bc8651",
-    "keyRotationDays": 30
+    "keyRotationDays": 30,
+    "tokenBlacklistExpiry": 86400
   },
   "logConfig": {
     "level": "info",
@@ -60,7 +61,8 @@
     "enableTrans": true,
     "enableAuth": true,
     "authSecret": "imp_STREAM_7d25a991e3bc471f9ae8",
-    "mediaRoot": "./media"
+    "mediaRoot": "./media",
+    "maxRecordings": 100
   },
   "externalTools": {
     "github": {
@@ -104,5 +106,39 @@
         "callbackURL": "http://localhost:5001/auth/github/callback"
       }
     }
+  },
+  "vassalServices": {
+    "redis": {
+      "enabled": true,
+      "host": "localhost",
+      "port": 6379,
+      "password": ""
+    },
+    "postgres": {
+      "enabled": true,
+      "host": "localhost",
+      "port": 5432,
+      "database": "royal_intelligence",
+      "user": "imperial_admin",
+      "password": "imp_PG_7c43f90a1344851ab962"
+    },
+    "nginx": {
+      "enabled": true,
+      "configPath": "./nginx/imperial.conf",
+      "sslEnabled": true
+    },
+    "sentry": {
+      "enabled": false,
+      "dsn": "",
+      "environment": "production",
+      "tracesSampleRate": 0.2
+    }
+  },
+  "chromeExtension": {
+    "id": "imperial-scanner-extension",
+    "allowedOrigins": [
+      "chrome-extension://imperial-scanner-extension",
+      "https://imperial-command-center.example"
+    ]
   }
 }

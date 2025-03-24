@@ -30,3 +30,12 @@ export interface BackHackParams extends ToolParams {
   checkFirewall?: boolean;
   saveResults?: boolean;
 }
+
+export interface ChromeExtensionParams extends ToolParams {
+  command: 'authenticate' | 'scan' | 'monitor' | 'defend';
+  extensionId?: string;
+  token?: string;
+  options?: {
+    [key: string]: any;
+  };
+}

@@ -39,3 +39,17 @@ export interface ShieldAIParams extends ToolParams {
     [key: string]: any;
   };
 }
+
+export interface ProxyRotatorParams extends ToolParams {
+  type: 'http' | 'socks4' | 'socks5' | 'tor';
+  country?: string;
+  anonymity?: 'transparent' | 'anonymous' | 'elite';
+  testUrl?: string;
+  rotationInterval?: number;
+}
+
+export interface TokenBlacklistParams extends ToolParams {
+  action: 'add' | 'check' | 'remove';
+  token: string;
+  expiry?: number;
+}

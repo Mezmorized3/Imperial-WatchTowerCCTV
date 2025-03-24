@@ -28,3 +28,11 @@ export interface OSINTParams extends ToolParams {
   depth?: number;
   timeout?: number;
 }
+
+export interface ImperialOculusParams extends ToolParams {
+  target: string;
+  mode?: 'scan' | 'monitor' | 'analyze';
+  scanDepth?: 'surface' | 'deep' | 'royal';
+  collectEvidence?: boolean;
+  timeoutSeconds?: number;
+}

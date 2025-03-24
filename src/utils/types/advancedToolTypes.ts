@@ -13,6 +13,8 @@ export interface RapidPayloadParams extends ToolParams {
     secure?: boolean;
     encoder?: string;
     format?: string;
+    lhost?: string;
+    lport?: number;
   };
   output?: string;
 }
@@ -41,6 +43,17 @@ export interface FFmpegParams extends ToolParams {
   audioCodec?: string;
   duration?: number;
   options?: {
+    [key: string]: any;
+  };
+}
+
+export interface ImperialShieldParams extends ToolParams {
+  target: string;
+  mode?: 'analyze' | 'defend' | 'monitor';
+  options?: {
+    scanLevel?: 'basic' | 'advanced' | 'royal';
+    alertThreshold?: number;
+    autoDefend?: boolean;
     [key: string]: any;
   };
 }
