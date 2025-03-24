@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { ScanProgress, CameraResult, ScanTarget, ScanSettings } from '@/types/scanner';
 import { Toaster } from '@/components/ui/toaster';
@@ -89,8 +90,8 @@ const Index = () => {
     if (isConnected) {
       realtimeStartScan({ target, settings });
     } else {
-      // Fall back to regular method
-      handleStartScan();
+      // Fall back to regular method - fixing this line to pass empty object parameters
+      handleStartScan({}, {});
     }
   };
 
