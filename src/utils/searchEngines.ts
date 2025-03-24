@@ -1,8 +1,8 @@
-import { CameraResult, CameraStatus } from '@/types/scanner';
+import { CameraResult as ScannerCameraResult, CameraStatus } from '@/types/scanner';
 import { getComprehensiveThreatIntel, analyzeFirmware } from './threatIntelligence';
 import { simulateNetworkDelay } from './networkUtils';
-import { CameraResult } from '@/types/scanner';
-import { ThreatIntelData } from './types/baseTypes';
+import { ThreatIntelData } from './types/threatIntelTypes';
+import { getIpPrefixByCountry, getCountryName, getCountryCities, getCountryCoordinates } from './countryUtils';
 
 /**
  * Generate a search query for Shodan
@@ -30,7 +30,7 @@ export const generateShodanQuery = (params: {
  * Search Shodan for cameras - this is a simulation that will be 
  * replaced with actual Shodan API integration
  */
-export const searchShodan = async (query: string, limit = 10): Promise<CameraResult[]> => {
+export const searchShodan = async (query: string, limit = 10): Promise<ScannerCameraResult[]> => {
   console.log(`[Shodan Search] Query: ${query}, Limit: ${limit}`);
   
   // Simulate network delay
@@ -44,7 +44,7 @@ export const searchShodan = async (query: string, limit = 10): Promise<CameraRes
   }
   
   // Generate simulated results
-  const results: CameraResult[] = [];
+  const results: ScannerCameraResult[] = [];
   const count = Math.min(limit, 25);
   
   // Mapping of product name patterns based on query
@@ -70,77 +70,117 @@ export const searchShodan = async (query: string, limit = 10): Promise<CameraRes
     port = parseInt(portMatch[1]);
   }
   
-  // Generate IP addresses
-  const ipPrefix = getIpPrefixByCountry(countryCode);
-  
-  for (let i = 0; i < count; i++) {
-    // Random IP within the country's range
-    const ip = `${ipPrefix}.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}`;
+  // Get IP prefixes for this country
+  const ipPrefixes = getIpPrefixByCountry(countryCode);
+  if (!ipPrefixes || ipPrefixes.length === 0) {
+    // Fallback to a generic prefix if country not found
+    const ipPrefix = Math.floor(Math.random() * 223) + 1;
     
-    // Generate a vulns array for some results
-    const vulns = Math.random() > 0.7 ? [
-      { 
-        name: `${productName} Default Credentials`, 
-        severity: (Math.random() > 0.5 ? 'high' : 'critical') as 'high' | 'critical', 
-        description: 'Device uses factory default credentials' 
+    for (let i = 0; i < count; i++) {
+      // Random IP within the range
+      const ip = `${ipPrefix}.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}`;
+      generateCameraResult(results, ip, port, productName, countryCode);
+    }
+  } else {
+    // Generate IPs based on the country's prefixes
+    for (let i = 0; i < count; i++) {
+      const prefixIndex = Math.floor(Math.random() * ipPrefixes.length);
+      const randomPrefix = ipPrefixes[prefixIndex];
+      let ip = '';
+      
+      if (randomPrefix.includes('/')) {
+        // Handle CIDR notation
+        const [baseIp, cidrPart] = randomPrefix.split('/');
+        const ipParts = baseIp.split('.');
+        // Generate a random IP within the CIDR range (simplified)
+        ip = `${ipParts[0]}.${ipParts[1]}.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}`;
+      } else {
+        ip = randomPrefix;
       }
-    ] : [];
-    
-    // Generate location data
-    const country = getCountryName(countryCode);
-    const cities = getCountryCities(countryCode);
-    const city = cities[Math.floor(Math.random() * cities.length)];
-    
-    // Geo coordinates with some randomization
-    const coords = getCountryCoordinates(countryCode);
-    const latitude = coords[0] + (Math.random() * 5) - 2.5;
-    const longitude = coords[1] + (Math.random() * 5) - 2.5;
-    
-    // Threat intelligence data
-    const threatIntelData: ThreatIntelData = {
-      ipReputation: Math.floor(Math.random() * 100),
-      lastReportedMalicious: Math.random() > 0.7 ? new Date(Date.now() - Math.random() * 30 * 86400000).toISOString() : undefined,
-      associatedMalware: Math.random() > 0.8 ? ['TrickBot', 'Mirai'] : [],
-      reportedBy: Math.random() > 0.7 ? ['ThreatFox Community'] : undefined,
-      firstSeen: new Date(Date.now() - Math.random() * 180 * 86400000).toISOString(),
-      tags: Math.random() > 0.6 ? ['iot', 'camera'] : [],
-      confidenceScore: Math.floor(Math.random() * 100),
-      source: 'threatfox',
-      lastUpdated: new Date().toISOString()
-    };
-    
-    // Create the camera result
-    results.push({
-      id: `shodan-${i}-${Date.now()}`,
-      ip,
-      port,
-      brand: productName.split(' ')[0],
-      model: `${productName} P${1000 + i}`,
-      url: `rtsp://${ip}:${port}/stream`,
-      snapshotUrl: `http://${ip}:${port}/snapshot.jpg`,
-      status: Math.random() > 0.3 ? 'online' : 'unknown',
-      vulnerabilities: vulns,
-      location: {
-        country,
-        city,
-        latitude,
-        longitude
-      },
-      credentials: Math.random() > 0.7 ? {
-        username: 'admin',
-        password: Math.random() > 0.5 ? 'admin' : '12345'
-      } : null,
-      lastSeen: new Date().toISOString(),
-      accessLevel: Math.random() > 0.7 ? 'admin' : (Math.random() > 0.5 ? 'view' : 'none'),
-      responseTime: Math.floor(Math.random() * 500),
-      threatIntel: threatIntelData
-    });
+      
+      generateCameraResult(results, ip, port, productName, countryCode);
+    }
   }
   
   return results;
 };
 
-// Mock function for ZoomEye API
+/**
+ * Helper function to generate a camera result
+ */
+function generateCameraResult(results: ScannerCameraResult[], ip: string, port: number, productName: string, countryCode: string) {
+  // Generate a vulns array for some results
+  const vulns = Math.random() > 0.7 ? [
+    { 
+      id: `vuln-${Math.random().toString(36).substring(2, 7)}`,
+      name: `${productName} Default Credentials`, 
+      severity: (Math.random() > 0.5 ? 'high' : 'critical') as 'high' | 'critical', 
+      description: 'Device uses factory default credentials' 
+    }
+  ] : [];
+  
+  // Generate location data
+  const country = getCountryName(countryCode);
+  const cities = getCountryCities(countryCode);
+  const city = cities && cities.length > 0 ? cities[Math.floor(Math.random() * cities.length)] : 'Unknown';
+  
+  // Geo coordinates with some randomization
+  const coords = getCountryCoordinates(countryCode);
+  let latitude = 0;
+  let longitude = 0;
+  
+  if (coords) {
+    latitude = coords.latitude + (Math.random() * 5) - 2.5;
+    longitude = coords.longitude + (Math.random() * 5) - 2.5;
+  } else {
+    latitude = (Math.random() * 180) - 90;
+    longitude = (Math.random() * 360) - 180;
+  }
+  
+  // Threat intelligence data
+  const threatIntelData: ThreatIntelData = {
+    ipReputation: Math.floor(Math.random() * 100),
+    lastReportedMalicious: Math.random() > 0.7 ? new Date(Date.now() - Math.random() * 30 * 86400000).toISOString() : undefined,
+    associatedMalware: Math.random() > 0.8 ? ['TrickBot', 'Mirai'] : [],
+    reportedBy: Math.random() > 0.7 ? ['ThreatFox Community'] : undefined,
+    firstSeen: new Date(Date.now() - Math.random() * 180 * 86400000).toISOString(),
+    tags: Math.random() > 0.6 ? ['iot', 'camera'] : [],
+    confidenceScore: Math.floor(Math.random() * 100),
+    source: 'threatfox',
+    lastUpdated: new Date().toISOString()
+  };
+  
+  // Create the camera result
+  results.push({
+    id: `shodan-${Math.random().toString(36).substring(2)}`,
+    ip,
+    port,
+    brand: productName.split(' ')[0],
+    model: `${productName} P${1000 + Math.floor(Math.random() * 999)}`,
+    url: `rtsp://${ip}:${port}/stream`,
+    snapshotUrl: `http://${ip}:${port}/snapshot.jpg`,
+    status: Math.random() > 0.3 ? 'online' : 'unknown',
+    vulnerabilities: vulns,
+    location: {
+      country,
+      city,
+      latitude,
+      longitude
+    },
+    credentials: Math.random() > 0.7 ? {
+      username: 'admin',
+      password: Math.random() > 0.5 ? 'admin' : '12345'
+    } : null,
+    lastSeen: new Date().toISOString(),
+    accessLevel: Math.random() > 0.7 ? 'admin' : (Math.random() > 0.5 ? 'view' : 'none'),
+    responseTime: Math.floor(Math.random() * 500),
+    threatIntel: threatIntelData
+  });
+}
+
+/**
+ * Search ZoomEye for cameras
+ */
 export const searchZoomEye = async (query: string): Promise<CameraResult[]> => {
   console.log(`Searching ZoomEye for: ${query}`);
   
@@ -190,7 +230,9 @@ export const searchZoomEye = async (query: string): Promise<CameraResult[]> => {
   return results;
 };
 
-// Mock function for Censys API
+/**
+ * Search Censys for cameras
+ */
 export const searchCensys = async (query: string): Promise<CameraResult[]> => {
   console.log(`Searching Censys for: ${query}`);
   

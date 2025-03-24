@@ -15,11 +15,36 @@ import {
   ScanResult,
   CCTVParams, 
   SpeedCameraParams,
-  CamerattackParams
+  CamerattackParams,
+  Vulnerability
 } from '../types/cameraTypes';
+import { nanoid } from 'nanoid';
 
 // Import the IP range utility from a separate file
-import { parseIpRange } from './utilities/ipRangeParser';
+const parseIpRange = (ipRange: string): string[] => {
+  // Basic implementation to parse CIDR notation
+  if (ipRange.includes('/')) {
+    const [baseIp, cidrPart] = ipRange.split('/');
+    const cidr = parseInt(cidrPart);
+    
+    // For simplicity, return a few IPs in the range for simulation
+    const ipParts = baseIp.split('.');
+    const results: string[] = [];
+    
+    // Generate 10 IPs in the range
+    for (let i = 0; i < 10; i++) {
+      const lastOctet = parseInt(ipParts[3]) + i;
+      if (lastOctet <= 255) {
+        results.push(`${ipParts[0]}.${ipParts[1]}.${ipParts[2]}.${lastOctet}`);
+      }
+    }
+    
+    return results;
+  }
+  
+  // Single IP
+  return [ipRange];
+};
 
 // Will be replaced with github.com/Ullaakut/cameradar implementation
 export const executeCameradar = async (params: { target: string, ports?: string }): Promise<ScanResult> => {
@@ -38,7 +63,15 @@ export const executeCameradar = async (params: { target: string, ports?: string 
     manufacturer: 'Generic',
     status: 'vulnerable',
     lastSeen: new Date().toISOString(),
-    accessLevel: 'none'
+    accessLevel: 'none',
+    vulnerabilities: [
+      {
+        id: `vuln-${i}-1`,
+        name: 'Default Credentials',
+        severity: 'high',
+        description: 'Camera uses default login credentials'
+      }
+    ]
   }));
   
   return {
@@ -70,7 +103,8 @@ export const executeIPCamSearch = async (params: { subnet: string, protocols?: s
     model: `IP Camera ${i}`,
     status: 'online',
     lastSeen: new Date().toISOString(),
-    accessLevel: 'none'
+    accessLevel: 'none',
+    vulnerabilities: []
   }));
   
   return {
@@ -101,8 +135,9 @@ export const executeCCTV = async (params: CCTVParams): Promise<ScanResult> => {
     lastSeen: new Date().toISOString(),
     accessLevel: 'none',
     geolocation: {
-      country: params.country || params.region.toUpperCase()
-    }
+      country: params.country || params.region?.toUpperCase() || 'Unknown'
+    },
+    vulnerabilities: []
   }));
   
   return {
@@ -131,7 +166,8 @@ export const executeSpeedCamera = async (params: SpeedCameraParams): Promise<Sca
     model: `Speed Camera ${i}`,
     status: 'online',
     lastSeen: new Date().toISOString(),
-    accessLevel: 'none'
+    accessLevel: 'none',
+    vulnerabilities: []
   }));
   
   return {
@@ -153,9 +189,19 @@ export const executeCamerattack = async (params: CamerattackParams): Promise<Sca
   console.log('Executing Camerattack:', params);
 
   // Simulated results - will be replaced with real implementation
-  const vulnerabilities = [
-    { name: 'Default Credentials', severity: 'high' as const, description: 'Camera uses default login credentials' },
-    { name: 'Unencrypted Stream', severity: 'medium' as const, description: 'RTSP stream is not encrypted' }
+  const vulnerabilities: Vulnerability[] = [
+    { 
+      id: 'vuln-att-1',
+      name: 'Default Credentials', 
+      severity: 'high', 
+      description: 'Camera uses default login credentials' 
+    },
+    { 
+      id: 'vuln-att-2',
+      name: 'Unencrypted Stream', 
+      severity: 'medium', 
+      description: 'RTSP stream is not encrypted' 
+    }
   ];
   
   const camera: CameraResult = {

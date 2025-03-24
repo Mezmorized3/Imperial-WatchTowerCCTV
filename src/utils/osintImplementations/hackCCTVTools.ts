@@ -14,7 +14,8 @@ import {
   ScanResult,
   HackCCTVParams,
   CameraResult,
-  CameraStatus
+  CameraStatus,
+  Vulnerability
 } from '../types/cameraTypes';
 import { nanoid } from 'nanoid';
 
@@ -77,45 +78,53 @@ const defaultCredentials = [
 ];
 
 // Create a database of common vulnerabilities in CCTV cameras
-const commonVulnerabilities = [
+const commonVulnerabilities: Vulnerability[] = [
   {
+    id: 'vuln-001',
     name: 'Default Credentials',
-    severity: 'high' as const,
+    severity: 'high',
     description: 'The camera uses factory default username and password'
   },
   {
+    id: 'vuln-002',
     name: 'Telnet Enabled',
-    severity: 'critical' as const,
+    severity: 'critical',
     description: 'Telnet service is enabled on this device'
   },
   {
+    id: 'vuln-003',
     name: 'Outdated Firmware',
-    severity: 'medium' as const,
+    severity: 'medium',
     description: 'Camera firmware has known security vulnerabilities'
   },
   {
+    id: 'vuln-004',
     name: 'Unencrypted RTSP Stream',
-    severity: 'medium' as const,
+    severity: 'medium',
     description: 'Video stream is transmitted without encryption'
   },
   {
+    id: 'vuln-005',
     name: 'Web Interface XSS',
-    severity: 'high' as const,
+    severity: 'high',
     description: 'Web interface is vulnerable to cross-site scripting attacks'
   },
   {
+    id: 'vuln-006',
     name: 'Authentication Bypass',
-    severity: 'critical' as const,
+    severity: 'critical',
     description: 'Camera has known authentication bypass vulnerabilities'
   },
   {
+    id: 'vuln-007',
     name: 'Command Injection',
-    severity: 'critical' as const,
+    severity: 'critical',
     description: 'Device is vulnerable to command injection attacks via the web interface'
   },
   {
+    id: 'vuln-008',
     name: 'Insecure Password Storage',
-    severity: 'high' as const,
+    severity: 'high',
     description: 'Passwords are stored in cleartext or with weak encryption'
   }
 ];

@@ -8,7 +8,7 @@ import { Eye, RefreshCw, Video } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { executeCameradar, executeIPCamSearch, executeCCTV } from '@/utils/osintImplementations';
 import { CameraResult } from '@/types/scanner';
-import { CCTVParams } from '@/utils/osintToolTypes';
+import { CCTVParams } from '@/utils/types/cameraTypes';
 import { getProperStreamUrl } from '@/utils/rtspUtils';
 
 interface CameraSearchProps {
@@ -57,6 +57,7 @@ const CameraSearch: React.FC<CameraSearchProps> = ({
         case 'cctv':
           const cctvParams: CCTVParams = {
             region: searchInput,
+            country: searchInput,
             limit: 10
           };
           results = await executeCCTV(cctvParams);
@@ -67,11 +68,11 @@ const CameraSearch: React.FC<CameraSearchProps> = ({
           });
       }
       
-      if (results && results.cameras) {
-        setSearchResults(results.cameras);
+      if (results && results.data && results.data.cameras) {
+        setSearchResults(results.data.cameras);
         toast({
           title: "Search Complete",
-          description: `Found ${results.cameras.length} camera${results.cameras.length !== 1 ? 's' : ''}`
+          description: `Found ${results.data.cameras.length} camera${results.data.cameras.length !== 1 ? 's' : ''}`
         });
       } else {
         toast({
@@ -154,7 +155,7 @@ const CameraSearch: React.FC<CameraSearchProps> = ({
                       <div>
                         <h3 className="font-medium">{camera.ip}</h3>
                         <p className="text-sm text-gray-400">
-                          {camera.brand || 'Unknown'} {camera.model || 'Camera'}
+                          {camera.brand || camera.manufacturer || 'Unknown'} {camera.model || 'Camera'}
                         </p>
                         {camera.credentials && (
                           <p className="text-xs text-green-500">
@@ -190,9 +191,9 @@ const CameraSearch: React.FC<CameraSearchProps> = ({
           <p>• Common camera networks are on 192.168.1.0/24 or 10.0.0.0/24</p>
           <p>• Most cameras use ports 554, 80, or 8080</p>
           <p>• Try different search methods if one doesn't find your camera</p>
-          <p>• Check camera documentation for default credentials</p>
-          <p>• Common usernames: admin, root, user</p>
-          <p>• Common passwords: admin, password, 12345, blank</p>
+          <p>• For cameras in specific countries, try using their IP ranges</p>
+          <p>• Ukrainian cameras often use ports 554 and 80</p>
+          <p>• Russian CCTV systems may be found on ports 8000 and 37777</p>
         </CardContent>
       </Card>
     </>

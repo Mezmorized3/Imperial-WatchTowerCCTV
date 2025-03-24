@@ -3,9 +3,8 @@ import React, { useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { executeCCTV } from '@/utils/osintTools';
+import { executeCCTV } from '@/utils/osintImplementations';
 import { useToast } from '@/hooks/use-toast';
-import { ToolResult } from '@/utils/osintToolTypes';
 
 export const CCTVTool: React.FC = () => {
   const [country, setCountry] = useState('');
@@ -35,8 +34,8 @@ export const CCTVTool: React.FC = () => {
       const scanResults = await executeCCTV({
         region: country,
         limit: parseInt(limit),
-        type: cameraType,
-        country: country
+        country: country,
+        brand: cameraType
       });
       
       setResults(scanResults.data);
@@ -121,8 +120,8 @@ export const CCTVTool: React.FC = () => {
                     <tr key={index} className="border-b border-gray-800">
                       <td className="py-2">{camera.ip}</td>
                       <td className="py-2">{camera.port}</td>
-                      <td className="py-2">{camera.country}</td>
-                      <td className="py-2">{camera.type}</td>
+                      <td className="py-2">{camera.country || camera.geolocation?.country || 'Unknown'}</td>
+                      <td className="py-2">{camera.model || camera.type || 'Unknown'}</td>
                       <td className="py-2">{camera.accessible ? 'Yes' : 'No'}</td>
                     </tr>
                   ))}

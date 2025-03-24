@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@/hooks/use-toast';
 import { Loader2, Eye, Globe, Search } from 'lucide-react';
 import { executeCCTV } from '@/utils/osintImplementations';
 import { Badge } from '@/components/ui/badge';
@@ -25,9 +25,9 @@ const CCTVExplorerTool: React.FC = () => {
     { value: 'jp', label: 'Japan' },
     { value: 'cn', label: 'China' },
     { value: 'ru', label: 'Russia' },
-    { value: 'br', label: 'Brazil' },
-    { value: 'au', label: 'Australia' },
-    { value: 'ca', label: 'Canada' },
+    { value: 'ua', label: 'Ukraine' },
+    { value: 'ge', label: 'Georgia' },
+    { value: 'ro', label: 'Romania' },
   ];
 
   const handleSearch = async () => {
@@ -35,9 +35,12 @@ const CCTVExplorerTool: React.FC = () => {
     setResults([]);
 
     try {
+      const countryName = regions.find(r => r.value === region)?.label || region;
+      
       const response = await executeCCTV({
         region,
         limit,
+        country: countryName,
         saveResults: true,
       });
 
@@ -45,7 +48,7 @@ const CCTVExplorerTool: React.FC = () => {
         setResults(response.data.cameras);
         toast({
           title: 'Search Complete',
-          description: `Found ${response.data.cameras.length} cameras in ${regions.find(r => r.value === region)?.label || region}`,
+          description: `Found ${response.data.cameras.length} cameras in ${countryName}`,
         });
       } else {
         toast({

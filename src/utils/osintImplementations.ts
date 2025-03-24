@@ -33,13 +33,6 @@ export {
   executeBotExploits
 } from './osintImplementations/networkTools';
 
-// Re-export all social tools
-export {
-  executeUsernameSearch,
-  executeTwint,
-  executeOSINT
-} from './osintImplementations/socialTools';
-
 // Re-export all security tools
 export {
   executeShieldAI
