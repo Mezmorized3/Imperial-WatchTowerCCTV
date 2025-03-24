@@ -1,115 +1,107 @@
-import { CameraResult, ThreatIntelData } from '@/types/scanner';
-import { getComprehensiveThreatIntel, analyzeFirmware } from './threatIntelligence';
-import { fetchWhoisData, fetchDnsRecords } from './networkUtils';
-import { checkVulnerabilityDatabase } from './vulnerabilityUtils';
-import { getRandomGeoLocation } from './geoUtils';
 
-// Export the functions from our new modules to maintain backward compatibility
-export * from './searchUtils';
-export * from './networkUtils';
-export * from './cameraSearchUtils';
-export * from './geoUtils';
+import { CameraResult } from './osintToolTypes';
+import { simulateNetworkDelay, fetchWhoisData, fetchDnsRecords } from './networkUtils';
 
 /**
- * Enhanced: Query ZoomEye API for CCTV camera information with threat intelligence
+ * Utility functions for OSINT operations
  */
-export const queryZoomEyeApi = async (ip: string): Promise<Record<string, any>> => {
-  console.log(`Querying ZoomEye for IP: ${ip}`);
+
+/**
+ * Enriches camera data with additional OSINT information
+ */
+export const enrichCameraData = async (camera: CameraResult): Promise<CameraResult> => {
+  await simulateNetworkDelay(800);
   
-  // Simulate API delay
-  await new Promise(resolve => setTimeout(resolve, 1200));
+  // This is a simulation - in a real app this would use real OSINT sources
+  const enrichedCamera = { ...camera };
   
-  // Get threat intelligence data
-  const threatIntel = await getComprehensiveThreatIntel(ip);
-  
-  // Mock ZoomEye data for demonstration
-  const randomRecentDate = () => {
-    const date = new Date();
-    date.setDate(date.getDate() - Math.floor(Math.random() * 30));
-    return date.toISOString().split('T')[0];
+  // Add threat intelligence
+  enrichedCamera.threatIntelligence = {
+    associatedMalware: Math.random() > 0.7 ? ['Mirai', 'Gafgyt'] : [],
+    knownExploits: Math.random() > 0.6 ? ['CVE-2018-10088', 'CVE-2017-7921'] : []
   };
   
-  // Generate random port for different services
-  const httpPort = [80, 8080, 8000, 8081, 8888][Math.floor(Math.random() * 5)];
-  const rtspPort = [554, 8554, 10554][Math.floor(Math.random() * 3)];
+  // Add firmware info
+  enrichedCamera.firmware = {
+    version: `${Math.floor(Math.random() * 5)}.${Math.floor(Math.random() * 10)}.${Math.floor(Math.random() * 20)}`,
+    updateAvailable: Math.random() > 0.5,
+    lastChecked: new Date().toISOString()
+  };
   
-  // Generate random camera manufacturer and model
-  const manufacturers = [
-    { name: 'Hikvision', models: ['DS-2CD2032-I', 'DS-2CD2142FWD-I', 'DS-2CD2042WD-I'] },
-    { name: 'Dahua', models: ['IPC-HDW4431C-A', 'IPC-HDBW4631R-S', 'DH-IPC-HFW4431E-SE'] },
-    { name: 'Axis', models: ['M3015', 'P1448-LE', 'P3225-LV Mk II'] },
-    { name: 'Samsung', models: ['SNH-V6410PN', 'SNH-P6410BN', 'SND-L6083R'] },
-    { name: 'Bosch', models: ['DINION IP 4000 HD', 'FLEXIDOME IP outdoor 4000 IR', 'TINYON IP 2000 WI'] }
+  return enrichedCamera;
+};
+
+/**
+ * Gets the geolocation information for an IP address
+ */
+export const getIpGeolocation = async (ip: string): Promise<any> => {
+  await simulateNetworkDelay(500);
+  
+  // This is a simulation - in a real app this would call a geolocation API
+  const countries = ['United States', 'Germany', 'Japan', 'Brazil', 'Australia', 'Canada', 'France'];
+  const cities = [
+    ['New York', 'Los Angeles', 'Chicago', 'Houston'],
+    ['Berlin', 'Munich', 'Hamburg', 'Frankfurt'],
+    ['Tokyo', 'Osaka', 'Kyoto', 'Yokohama'],
+    ['Sao Paulo', 'Rio de Janeiro', 'Brasilia', 'Salvador'],
+    ['Sydney', 'Melbourne', 'Brisbane', 'Perth'],
+    ['Toronto', 'Vancouver', 'Montreal', 'Calgary'],
+    ['Paris', 'Marseille', 'Lyon', 'Toulouse']
   ];
   
-  const manufacturer = manufacturers[Math.floor(Math.random() * manufacturers.length)];
-  const model = manufacturer.models[Math.floor(Math.random() * manufacturer.models.length)];
-  
-  // Generate random firmware version
-  const generateFirmwareVersion = () => {
-    const major = Math.floor(Math.random() * 5) + 1;
-    const minor = Math.floor(Math.random() * 10);
-    const patch = Math.floor(Math.random() * 20);
-    return `v${major}.${minor}.${patch}`;
-  };
-  
-  const firmwareVersion = generateFirmwareVersion();
-  
-  // Get firmware analysis
-  const firmwareAnalysis = Math.random() > 0.5 ? 
-    await analyzeFirmware(manufacturer.name, model, firmwareVersion.substring(1)) : null;
-  
-  // Random open ports
-  const openPorts = [];
-  if (Math.random() > 0.3) openPorts.push(httpPort);
-  if (Math.random() > 0.3) openPorts.push(rtspPort);
-  if (Math.random() > 0.6) openPorts.push(22); // SSH
-  if (Math.random() > 0.7) openPorts.push(23); // Telnet
-  if (Math.random() > 0.8) openPorts.push(9000); // API port
+  const countryIndex = Math.floor(Math.random() * countries.length);
+  const cityIndex = Math.floor(Math.random() * cities[countryIndex].length);
   
   return {
-    'IP Address': ip,
-    'Last Scanned': randomRecentDate(),
-    'Manufacturer': manufacturer.name,
-    'Model': model,
-    'Firmware Version': firmwareVersion,
-    'Firmware Analysis': firmwareAnalysis,
-    'Open Ports': openPorts.join(', '),
-    'HTTP Service': Math.random() > 0.3 ? `Port ${httpPort} - Web Management Interface` : 'Not detected',
-    'RTSP Service': Math.random() > 0.3 ? `Port ${rtspPort} - Video Stream` : 'Not detected',
-    'SSL/TLS': Math.random() > 0.5 ? 'Enabled' : 'Disabled',
-    'Authentication': Math.random() > 0.4 ? 'Required' : 'Not required or bypassed',
-    'Geolocation': getRandomGeoLocation(ip),
-    'Threat Intelligence': threatIntel
+    ip,
+    country: countries[countryIndex],
+    city: cities[countryIndex][cityIndex],
+    coordinates: [
+      (Math.random() * 180) - 90,
+      (Math.random() * 360) - 180
+    ],
+    isp: ['Comcast', 'AT&T', 'Verizon', 'Deutsche Telekom', 'NTT'][Math.floor(Math.random() * 5)],
+    timezone: ['America/New_York', 'Europe/Berlin', 'Asia/Tokyo', 'America/Sao_Paulo', 'Australia/Sydney'][countryIndex]
   };
 };
 
 /**
- * Get more comprehensive OSINT data from multiple sources
+ * Searches for vulnerabilities related to a camera model
  */
-export const getComprehensiveOsintData = async (ip: string): Promise<Record<string, any>> => {
-  console.log(`Getting comprehensive OSINT data for IP: ${ip}`);
+export const searchCameraVulnerabilities = async (manufacturer: string, model: string): Promise<any[]> => {
+  await simulateNetworkDelay(1200);
   
-  try {
-    // Query all sources in parallel
-    const [whoisData, dnsRecords, vulnerabilities, zoomeyeData] = await Promise.all([
-      fetchWhoisData(ip),
-      fetchDnsRecords(ip),
-      checkVulnerabilityDatabase(ip),
-      queryZoomEyeApi(ip)
-    ]);
-    
-    // Combine the data
-    return {
-      whois: whoisData,
-      dns: dnsRecords,
-      vulnerabilities,
-      zoomEye: zoomeyeData,
-      geolocation: zoomeyeData.Geolocation,
-      comprehensive: true
-    };
-  } catch (error) {
-    console.error("Error fetching comprehensive OSINT data:", error);
-    throw error;
-  }
+  // This is a simulation - in a real app this would search CVE databases
+  const vulnerabilities = [
+    {
+      id: 'CVE-2018-10088',
+      title: 'Authentication Bypass',
+      description: 'Authentication bypass vulnerability in the web interface',
+      severity: 'critical',
+      affected: ['Hikvision', 'Dahua']
+    },
+    {
+      id: 'CVE-2017-7921',
+      title: 'Default Credentials',
+      description: 'Default credentials allow unauthorized access',
+      severity: 'high',
+      affected: ['Hikvision', 'Axis']
+    },
+    {
+      id: 'CVE-2019-8267',
+      title: 'Command Injection',
+      description: 'Command injection in web interface allows remote code execution',
+      severity: 'critical',
+      affected: ['Dahua', 'Bosch']
+    },
+    {
+      id: 'CVE-2020-9524',
+      title: 'Information Disclosure',
+      description: 'Information disclosure in API endpoints',
+      severity: 'medium',
+      affected: ['Axis', 'Samsung']
+    }
+  ];
+  
+  return vulnerabilities.filter(v => v.affected.includes(manufacturer));
 };

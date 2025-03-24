@@ -123,10 +123,9 @@ const FFmpegTool: React.FC = () => {
       
       const params: FFmpegParams = {
         input: inputStream,
-        outputFormat,
+        output: `output_${Date.now()}.${outputFormat}`,
         videoCodec: enableHighQuality ? 'libx264' : 'h264_nvenc',
-        bitrate: enableHighQuality ? '2000k' : '800k',
-        outputPath: `output_${Date.now()}.${outputFormat}`
+        bitrate: enableHighQuality ? '2000k' : '800k'
       };
       
       const result = await executeFFmpeg(params);
@@ -218,7 +217,7 @@ const FFmpegTool: React.FC = () => {
             variant="outline"
             onClick={handleRecordStream}
             disabled={isRecording || !inputStream}
-            className={`${isRecording ? 'bg-scanner-success/20' : 'bg-scanner-dark-alt'} border-scanner-success text-scanner-success`}
+            className={`${isRecording ? 'bg-scanner-info/20' : 'bg-scanner-dark-alt'} border-scanner-info text-scanner-info`}
           >
             {isRecording ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Download className="h-4 w-4 mr-2" />}
             Record Stream
@@ -228,7 +227,7 @@ const FFmpegTool: React.FC = () => {
             variant="outline"
             onClick={handleMotionDetection}
             disabled={isDetectingMotion || !inputStream}
-            className={`${isDetectingMotion ? 'bg-scanner-warning/20' : 'bg-scanner-dark-alt'} border-scanner-warning text-scanner-warning`}
+            className={`${isDetectingMotion ? 'bg-scanner-info/20' : 'bg-scanner-dark-alt'} border-scanner-info text-scanner-info`}
           >
             {isDetectingMotion ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Video className="h-4 w-4 mr-2" />}
             Motion Detection
@@ -238,19 +237,19 @@ const FFmpegTool: React.FC = () => {
             variant="outline"
             onClick={handleCustomFFmpeg}
             disabled={isConverting || !inputStream}
-            className="bg-scanner-dark-alt border-gray-600 text-white"
+            className={`${isConverting ? 'bg-scanner-info/20' : 'bg-scanner-dark-alt'} border-scanner-info text-scanner-info`}
           >
-            {isConverting ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
+            {isConverting ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Play className="h-4 w-4 mr-2" />}
             Custom FFmpeg
           </Button>
         </div>
         
         {results && (
           <div className="mt-4">
-            <Label>Results</Label>
-            <div className="bg-black rounded p-2 mt-1 overflow-auto max-h-60 text-xs font-mono">
-              <pre>{results}</pre>
-            </div>
+            <h3 className="text-sm font-medium mb-2">Result:</h3>
+            <pre className="bg-scanner-dark p-3 rounded text-xs overflow-x-auto">
+              {results}
+            </pre>
           </div>
         )}
       </CardContent>

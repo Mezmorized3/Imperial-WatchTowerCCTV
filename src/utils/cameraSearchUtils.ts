@@ -128,15 +128,14 @@ export const searchCameras = async (
     
     // Create the camera result
     const camera: CameraResult = {
-      id: `cam-${Date.now()}-${i}`, // Add unique id
+      id: `cam-${Date.now()}-${i}`,
       ip,
       port,
-      type: searchType || ['Public', 'Traffic', 'Indoor', 'Outdoor'][Math.floor(Math.random() * 4)],
-      protocol,
       manufacturer: manufacturer.name,
       model,
       credentials,
       rtspUrl,
+      protocol,
       vulnerabilities: cameraVulnerabilities.length > 0 ? cameraVulnerabilities : undefined,
       geolocation: {
         country: selectedCountry.name,

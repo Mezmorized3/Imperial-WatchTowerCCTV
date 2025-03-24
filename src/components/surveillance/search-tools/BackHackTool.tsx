@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -11,14 +10,14 @@ import { executeBackHack } from '@/utils/osintTools';
 import { useToast } from '@/hooks/use-toast';
 
 export const BackHackTool: React.FC = () => {
-  const [target, setTarget] = useState('');
+  const [targetUrl, setTargetUrl] = useState('');
   const [scanType, setScanType] = useState('basic');
   const [isScanning, setIsScanning] = useState(false);
   const [results, setResults] = useState<any>(null);
   const { toast } = useToast();
 
   const handleScan = async () => {
-    if (!target) {
+    if (!targetUrl) {
       toast({
         title: "Target Required",
         description: "Please enter a target URL or IP to scan",
@@ -30,12 +29,12 @@ export const BackHackTool: React.FC = () => {
     setIsScanning(true);
     toast({
       title: "BackHack Scan Initiated",
-      description: `Scanning ${target}...`,
+      description: `Scanning ${targetUrl}...`,
     });
 
     try {
       const scanResults = await executeBackHack({
-        url: target, // Change target to url to match BackHackParams
+        url: targetUrl,
         scanType: scanType as 'basic' | 'full',
       });
 
@@ -64,15 +63,15 @@ export const BackHackTool: React.FC = () => {
         <div className="md:col-span-2">
           <Input
             placeholder="Enter target URL or IP (e.g., example.com)"
-            value={target}
-            onChange={(e) => setTarget(e.target.value)}
+            value={targetUrl}
+            onChange={(e) => setTargetUrl(e.target.value)}
             className="bg-scanner-dark"
           />
         </div>
         <div>
           <Button
             onClick={handleScan}
-            disabled={isScanning || !target}
+            disabled={isScanning || !targetUrl}
             className="w-full"
           >
             {isScanning ? (

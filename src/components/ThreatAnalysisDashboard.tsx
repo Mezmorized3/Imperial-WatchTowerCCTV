@@ -15,6 +15,10 @@ interface ThreatData {
   securityScore: number;
 }
 
+interface ThreatAnalysisDashboardProps {
+  camera?: CameraResult;
+}
+
 const getThreatData = (camera: CameraResult): ThreatData => {
   // This would be replaced with actual threat analysis
   const vulnCount = camera.vulnerabilities?.length || 0;
@@ -40,10 +44,6 @@ const getThreatData = (camera: CameraResult): ThreatData => {
     securityScore
   };
 };
-
-interface ThreatAnalysisDashboardProps {
-  camera?: CameraResult;
-}
 
 const ThreatAnalysisDashboard: React.FC<ThreatAnalysisDashboardProps> = ({ camera }) => {
   if (!camera) {

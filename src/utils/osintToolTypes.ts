@@ -1,3 +1,4 @@
+
 /**
  * Type definitions for OSINT and security tools
  */
@@ -138,6 +139,7 @@ export interface SpeedCameraParams extends ToolParams {
 export interface WebCheckParams extends ToolParams {
   domain: string;
   checks?: string[];
+  timeout?: number;
 }
 
 export interface TwintParams extends ToolParams {
