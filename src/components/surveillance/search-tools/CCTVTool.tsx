@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -33,7 +34,9 @@ export const CCTVTool: React.FC = () => {
       const scanResults = await executeCCTV({
         region: country,
         limit: parseInt(limit),
-        type: cameraType
+        type: cameraType,
+        // Add the country property required by the tool
+        country: country
       });
       
       setResults(scanResults.data);
@@ -136,3 +139,5 @@ export const CCTVTool: React.FC = () => {
     </div>
   );
 };
+
+export default CCTVTool;

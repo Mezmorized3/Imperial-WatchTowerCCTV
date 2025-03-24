@@ -1,4 +1,3 @@
-
 /**
  * Network utility functions for networking operations
  */
@@ -14,52 +13,42 @@ export const simulateNetworkDelay = (ms: number): Promise<void> => {
  * Fetches WHOIS data for a domain
  */
 export const fetchWhoisData = async (domain: string): Promise<any> => {
-  // This is a simulation - in a real app this would call a WHOIS API
-  await simulateNetworkDelay(1000);
-  
-  return {
-    domain,
-    registrar: 'Example Registrar, LLC',
-    registrationDate: '2010-01-15',
-    expiryDate: '2025-01-15',
-    nameservers: [
-      'ns1.examplehost.com',
-      'ns2.examplehost.com'
-    ],
-    status: 'Active',
-    registrant: {
-      organization: 'Example Organization',
-      country: 'US',
-      email: 'admin@example.com'
+  try {
+    // Use a real WHOIS API service
+    const response = await fetch(`https://whois.freeaiapi.io/?domain=${domain}`);
+    if (!response.ok) {
+      throw new Error(`WHOIS API returned status: ${response.status}`);
     }
-  };
+    return await response.json();
+  } catch (error) {
+    console.error('Error fetching WHOIS data:', error);
+    throw error;
+  }
 };
 
 /**
  * Fetches DNS records for a domain
  */
 export const fetchDnsRecords = async (domain: string, recordType = 'A'): Promise<any[]> => {
-  // This is a simulation - in a real app this would perform a DNS lookup
-  await simulateNetworkDelay(800);
-  
-  const records: any = {
-    A: [
-      { name: domain, value: '93.184.216.34', ttl: 300 },
-      { name: `www.${domain}`, value: '93.184.216.34', ttl: 300 }
-    ],
-    MX: [
-      { name: domain, value: `mail1.${domain}`, priority: 10, ttl: 3600 },
-      { name: domain, value: `mail2.${domain}`, priority: 20, ttl: 3600 }
-    ],
-    TXT: [
-      { name: domain, value: 'v=spf1 include:_spf.example.com -all', ttl: 3600 }
-    ],
-    CNAME: [
-      { name: `cdn.${domain}`, value: 'cdn.external-provider.com', ttl: 3600 }
-    ]
-  };
-  
-  return records[recordType as keyof typeof records] || [];
+  try {
+    // Use a real DNS API service
+    const response = await fetch(`https://dns.google/resolve?name=${domain}&type=${recordType}`);
+    if (!response.ok) {
+      throw new Error(`DNS API returned status: ${response.status}`);
+    }
+    const data = await response.json();
+    
+    // Parse the response into a common format
+    return (data.Answer || []).map((record: any) => ({
+      name: record.name,
+      value: record.data,
+      ttl: record.TTL,
+      type: recordType
+    }));
+  } catch (error) {
+    console.error('Error fetching DNS records:', error);
+    throw error;
+  }
 };
 
 /**
@@ -114,4 +103,40 @@ export const getRandomIpInSubnet = (subnet: string): string => {
   
   const randomOffset = Math.floor(Math.random() * (size - 2)) + 1;
   return numberToIp(baseNum + randomOffset);
+};
+
+/**
+ * Sends a ping to the specified host to check if it's alive
+ */
+export const pingHost = async (host: string, timeout = 1000): Promise<{alive: boolean, responseTime?: number}> => {
+  try {
+    const startTime = performance.now();
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), timeout);
+    
+    const response = await fetch(`https://${host}`, {
+      method: 'HEAD',
+      signal: controller.signal,
+      mode: 'no-cors'
+    });
+    
+    clearTimeout(timeoutId);
+    const endTime = performance.now();
+    
+    return {
+      alive: true,
+      responseTime: Math.round(endTime - startTime)
+    };
+  } catch (error) {
+    return { alive: false };
+  }
+};
+
+/**
+ * Performs a traceroute to the specified host
+ */
+export const traceroute = async (host: string): Promise<any[]> => {
+  console.log('Traceroute is not natively supported in browsers');
+  // In a real implementation, this would be handled by a backend service
+  throw new Error('Traceroute requires server-side implementation');
 };

@@ -1,10 +1,13 @@
 
 /**
- * Type definitions for OSINT and security tools
+ * Types for OSINT and camera discovery tools
  */
 
-// Base types
-export interface ToolParams {}
+// Basic tool parameter and result interfaces
+export interface ToolParams {
+  [key: string]: any;
+}
+
 export interface ToolResult {
   success: boolean;
   data: any;
@@ -12,28 +15,20 @@ export interface ToolResult {
   simulatedData?: boolean;
 }
 
-// Proxy configuration type
-export interface ProxyConfig {
-  enabled: boolean;
-  type: 'http' | 'https' | 'socks4' | 'socks5';
-  host: string;
-  port: number;
-  username?: string;
-  password?: string;
-  useAuthentication?: boolean;
-  rotationEnabled?: boolean;
-  rotationInterval?: number;
-  proxyList?: string[];
-  // Adding missing properties
-  autoReconnect?: boolean;
-  dnsProtection?: boolean;
-  forceTls?: boolean;
-  connectionTimeout?: number;
-  maxRetries?: number;
-  lastKnownExternalIp?: string;
+export interface ScanResult {
+  total: number;
+  found: number;
+  results: any[];
 }
 
-// Camera discovery tools - aligned with scanner.ts definitions
+export interface UsernameResult {
+  sites?: any[];
+  success: boolean;
+  error?: string;
+  totalFound?: number;
+  simulatedData?: boolean;
+}
+
 export interface CameraResult {
   id: string;
   ip: string;
@@ -60,164 +55,129 @@ export interface CameraResult {
     description: string;
   }>;
   accessible?: boolean;
-  // Add missing properties
-  threatIntelligence?: any;
-  firmware?: any;
-  brand?: string;
-  // Add properties to fix errors in ScanController
-  lastSeen?: Date;
-  accessLevel?: 'none' | 'view' | 'control' | 'admin';
-}
-
-export interface ScanResult extends ToolResult {
-  data: {
-    cameras?: CameraResult[];
-    total?: number;
-    vulnerabilities?: any[];
+  threatIntelligence?: {
+    associatedMalware?: string[];
+    knownExploits?: string[];
+    lastUpdated?: string;
   };
-}
-
-// Username OSINT tools
-export interface UsernameResult extends ToolResult {
-  data: {
-    sites: Array<{
-      name: string;
-      url: string;
-      found: boolean;
-      accountUrl?: string;
-    }>;
-    totalFound: number;
+  firmware?: {
+    version?: string;
+    vulnerabilities?: string[];
+    updateAvailable?: boolean;
   };
+  // Required by some implementations
+  threatIntel?: {
+    associatedMalware?: string[];
+    knownExploits?: string[];
+    lastUpdated?: string;
+  };
+  country?: string;
 }
 
-// Parameter types for specific tools
-export interface CCTVParams extends ToolParams {
-  region?: string;  // Making optional
+// Specific tool parameter interfaces
+export interface CCTVParams {
+  region: string;
   limit?: number;
   saveResults?: boolean;
-  country?: string;
   type?: string;
+  country?: string;
 }
 
-// New HackCCTV parameters
-export interface HackCCTVParams extends ToolParams {
-  targetIP?: string;
-  targetRange?: string;
-  exploitType?: string;
-  bruteforce?: boolean;
-  ports?: string;
-  timeout?: number;
-  customWordlist?: string[];
-  deepScan?: boolean;
-}
-
-export interface TorBotParams extends ToolParams {
+export interface TorBotParams {
   url: string;
   level?: number;
   dumpData?: boolean;
   mode?: string;
-  depth?: number;
 }
 
-export interface WebHackParams extends ToolParams {
-  target?: string;
+export interface WebHackParams {
+  target: string;
   mode?: string;
   url?: string;
-  scanType?: string;
-  findVulnerabilities?: boolean;
-  checkHeaders?: boolean;
-  testXss?: boolean;
-  testSql?: boolean;
 }
 
-export interface SpeedCameraParams extends ToolParams {
+export interface SpeedCameraParams {
   sensitivity?: number;
   resolution?: string;
   threshold?: number;
+  rtspUrl?: string;
 }
 
-export interface WebCheckParams extends ToolParams {
+export interface WebCheckParams {
   domain: string;
   checks?: string[];
-  timeout?: number;
 }
 
-export interface TwintParams extends ToolParams {
+export interface TwintParams {
   username?: string;
   search?: string;
   limit?: number;
 }
 
-export interface OSINTParams extends ToolParams {
+export interface OSINTParams {
   target: string;
   type?: string;
   depth?: string;
 }
 
-export interface ShieldAIParams extends ToolParams {
+export interface ShieldAIParams {
   target: string;
   mode?: string;
   depth?: string;
   aiModel?: string;
 }
 
-export interface BotExploitsParams extends ToolParams {
+export interface BotExploitsParams {
   target: string;
   port?: number;
   attackType?: string;
   scanType?: string;
-  timeout?: number;
 }
 
-export interface CamerattackParams extends ToolParams {
+export interface CamerattackParams {
   target: string;
   sessions?: number;
   timeout?: number;
   mode?: string;
-  duration?: number;
-  rate?: number;
 }
 
-export interface BackHackParams extends ToolParams {
-  url?: string;
+export interface BackHackParams {
+  url: string;
   extractData?: boolean;
   target?: string;
-  scanType?: string;
 }
 
-export interface ImperialOculusParams extends ToolParams {
+export interface ImperialOculusParams {
   target: string;
   ports?: string;
   scanType?: string;
 }
 
-// New tool parameter types
-export interface RapidPayloadParams extends ToolParams {
-  targetOS?: string;
+export interface RapidPayloadParams {
+  targetOS: string;
   payloadType: string;
   options?: Record<string, any>;
   format?: string;
-  lhost?: string;
-  lport?: number;
-  encode?: boolean;
-  encryption?: string;
-  outputPath?: string;
 }
 
-export interface HackingToolParams extends ToolParams {
-  category?: string;
-  tool?: string;
+export interface HackingToolParams {
+  tool: string;
   options?: Record<string, any>;
+  category?: string;
   toolCategory?: string;
-  target?: string;
-  customCommand?: string;  // Added this property for custom commands
 }
 
-export interface FFmpegParams extends ToolParams {
+export interface SecurityAdminParams {
+  command: string;
+  options?: Record<string, any>;
+  scanType?: string;
+}
+
+export interface FFmpegParams {
   input?: string;
   output?: string;
-  options?: Record<string, any>;
   inputStream?: string;
+  outputPath?: string;
   outputFormat?: string;
   videoCodec?: string;
   audioCodec?: string;
@@ -225,72 +185,60 @@ export interface FFmpegParams extends ToolParams {
   bitrate?: string;
   framerate?: string;
   filters?: string[];
-  outputPath?: string;
 }
 
-export interface SecurityAdminParams extends ToolParams {
-  command?: string;
+export interface ImperialShieldParams {
+  target: string;
+  mode: string;
   options?: Record<string, any>;
-  scanType?: string;
-  target?: string;
-  fixVulnerabilities?: boolean;
-  reportFormat?: string;
 }
 
-// Imperial Shield Protocol types
-export interface ImperialShieldParams extends ToolParams {
-  targetUrl: string;
-  protocol: string;
-  validateCert: boolean;
+export interface ImperialShieldResult extends ToolResult {
+  data: {
+    vulnerabilities: any[];
+    score: number;
+    recommendations: string[];
+  };
 }
 
-export interface ImperialShieldResult {
-  success: boolean;
-  responseTime?: number;
-  shieldStatus: 'active' | 'inactive' | 'breached';
-  securityRating: number;
-  error?: string;
-  data?: any;
-}
-
-// Scrapy tool types
-export interface ScrapyParams extends ToolParams {
-  url?: string;
-  depth?: string;
-  selector?: string;
-  outputFormat?: string;
-  customCode?: string;
-  followLinks?: boolean;
-  respectRobotsTxt?: boolean;
+// For web scraping tools
+export interface ScrapyParams {
+  url: string;
+  depth?: number;
+  follow?: boolean;
+  outputFormat?: 'json' | 'csv' | 'xml';
 }
 
 export interface ScrapyResult extends ToolResult {
   data: {
-    url?: string;
-    spiderName?: string;
-    crawledPages?: number;
-    itemsScraped?: number;
-    executionTime?: string;
-    depth?: number;
-    selector?: string;
-    elapsedTime?: string;
+    urls: string[];
+    items: any[];
+    stats: {
+      pagesCrawled: number;
+      itemsScraped: number;
+      timeElapsed: string;
+    };
   };
-  urls?: string[];
-  items?: any[];
-  errors?: string[];
 }
 
-// ScanSettings extension for ScanController
-export interface ScanSettings {
-  detailed?: boolean;
-  aggressive?: boolean;
-  targetSubnet?: string;
-  portRange?: string;
-  timeout?: number;
-  // Additional properties to fix build errors
-  testCredentials?: boolean;
-  checkVulnerabilities?: boolean;
-  saveSnapshots?: boolean;
-  regionFilter?: string;
-  threadsCount?: number;
+// Proxy configuration for tools that need to hide their identity
+export interface ProxyConfig {
+  type: 'http' | 'socks4' | 'socks5' | 'tor';
+  host?: string;
+  port?: number;
+  username?: string;
+  password?: string;
+  useTor?: boolean;
+}
+
+// Additional type for threat intelligence data
+export interface ThreatIntelData {
+  ipReputation?: number; // 0-100, higher is better
+  lastReportedMalicious?: string; // ISO date string
+  associatedMalware?: string[]; // List of malware names
+  reportedBy?: string[]; // List of sources
+  firstSeen?: string; // ISO date string
+  tags?: string[]; // Tags associated with the IP
+  confidenceScore?: number; // 0-100
+  source?: string; // Source of the threat intel
 }

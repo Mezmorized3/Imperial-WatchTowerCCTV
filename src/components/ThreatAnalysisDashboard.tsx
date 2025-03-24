@@ -1,154 +1,131 @@
-
 import React from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { CameraResult } from '@/types/scanner';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Shield, AlertTriangle, CheckCircle, Info } from 'lucide-react';
+import { Progress } from '@/components/ui/progress';
 import ThreatIntelligence from './ThreatIntelligence';
 import FirmwareAnalysis from './FirmwareAnalysis';
-import VulnerabilityAssessment from './VulnerabilityAssessment';
-import { AlertTriangle, Shield, Activity } from 'lucide-react';
-
-interface ThreatData {
-  threatLevel: 'low' | 'medium' | 'high' | 'critical';
-  vulnCount: number;
-  detectedMalware: string[];
-  securityScore: number;
-}
 
 interface ThreatAnalysisDashboardProps {
-  camera?: CameraResult;
+  camera: CameraResult;
 }
 
-const getThreatData = (camera: CameraResult): ThreatData => {
-  // This would be replaced with actual threat analysis
-  const vulnCount = camera.vulnerabilities?.length || 0;
-  const malwareCount = camera.threatIntel?.associatedMalware?.length || 0;
-  
-  let threatLevel: 'low' | 'medium' | 'high' | 'critical' = 'low';
-  if (vulnCount > 2 || malwareCount > 1) {
-    threatLevel = 'critical';
-  } else if (vulnCount > 0 || malwareCount > 0) {
-    threatLevel = 'high';
-  } else if (camera.status === 'vulnerable') {
-    threatLevel = 'medium';
-  }
-  
-  const securityScore = threatLevel === 'low' ? 90 :
-                        threatLevel === 'medium' ? 70 :
-                        threatLevel === 'high' ? 40 : 20;
-  
-  return {
-    threatLevel,
-    vulnCount,
-    detectedMalware: camera.threatIntel?.associatedMalware || [],
-    securityScore
-  };
-};
-
 const ThreatAnalysisDashboard: React.FC<ThreatAnalysisDashboardProps> = ({ camera }) => {
-  if (!camera) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Threat Analysis</CardTitle>
-          <CardDescription>
-            Select a camera to view threat analysis
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="p-12 text-center text-gray-500">
-            <AlertTriangle className="h-16 w-16 mx-auto mb-4 text-gray-400" />
-            <p>No camera selected for threat analysis</p>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
-  
-  const threatData = getThreatData(camera);
-  
+  const calculateOverallRisk = () => {
+    let risk = 0;
+
+    if (camera.vulnerabilities && camera.vulnerabilities.length > 0) {
+      risk += camera.vulnerabilities.filter(v => v.severity === 'critical').length * 50;
+      risk += camera.vulnerabilities.filter(v => v.severity === 'high').length * 30;
+      risk += camera.vulnerabilities.filter(v => v.severity === 'medium').length * 20;
+      risk += camera.vulnerabilities.filter(v => v.severity === 'low').length * 10;
+    }
+
+    if (camera.threatIntel && camera.threatIntel.associatedMalware && camera.threatIntel.associatedMalware.length > 0) {
+      risk += 40;
+    }
+
+    if (camera.firmware && camera.firmware.updateAvailable) {
+      risk += 25;
+    }
+
+    return Math.min(risk, 100);
+  };
+
+  const overallRisk = calculateOverallRisk();
+  const riskColor = overallRisk > 70 ? 'red' : overallRisk > 40 ? 'yellow' : 'green';
+
   return (
-    <div className="space-y-6">
-      <Card>
+    <div className="space-y-4">
+      <Card className="bg-scanner-dark-alt border-gray-700">
         <CardHeader>
           <CardTitle className="flex items-center">
-            <Shield className="mr-2 h-5 w-5" />
-            Threat Analysis: {camera.ip}
+            <Shield className="mr-2 h-4 w-4" /> Threat Analysis
           </CardTitle>
-          <CardDescription>
-            Comprehensive security analysis for the selected device
-          </CardDescription>
         </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-            <div className="p-4 rounded-lg border border-gray-200 dark:border-gray-800">
-              <h3 className="text-sm font-medium text-gray-500">Threat Level</h3>
-              <div className="mt-1 flex items-center">
-                <span className={`text-xl font-bold mr-2 
-                  ${threatData.threatLevel === 'low' ? 'text-green-500' : 
-                    threatData.threatLevel === 'medium' ? 'text-yellow-500' :
-                    threatData.threatLevel === 'high' ? 'text-orange-500' : 'text-red-500'}`}>
-                  {threatData.threatLevel.toUpperCase()}
-                </span>
-                <Activity className={`h-5 w-5 
-                  ${threatData.threatLevel === 'low' ? 'text-green-500' : 
-                    threatData.threatLevel === 'medium' ? 'text-yellow-500' :
-                    threatData.threatLevel === 'high' ? 'text-orange-500' : 'text-red-500'}`} />
-              </div>
-            </div>
-            
-            <div className="p-4 rounded-lg border border-gray-200 dark:border-gray-800">
-              <h3 className="text-sm font-medium text-gray-500">Vulnerabilities</h3>
-              <div className="mt-1 flex items-center">
-                <span className={`text-xl font-bold mr-2 
-                  ${threatData.vulnCount === 0 ? 'text-green-500' : 
-                    threatData.vulnCount <= 2 ? 'text-yellow-500' : 'text-red-500'}`}>
-                  {threatData.vulnCount}
-                </span>
-                <span className="text-gray-500">detected</span>
-              </div>
-            </div>
-            
-            <div className="p-4 rounded-lg border border-gray-200 dark:border-gray-800">
-              <h3 className="text-sm font-medium text-gray-500">Security Score</h3>
-              <div className="mt-1 flex items-center">
-                <span className={`text-xl font-bold mr-2 
-                  ${threatData.securityScore >= 80 ? 'text-green-500' : 
-                    threatData.securityScore >= 60 ? 'text-yellow-500' :
-                    threatData.securityScore >= 40 ? 'text-orange-500' : 'text-red-500'}`}>
-                  {threatData.securityScore}/100
-                </span>
-              </div>
-            </div>
+        <CardContent className="space-y-2">
+          <div className="flex items-center justify-between">
+            <div className="text-sm font-medium">Overall Risk:</div>
+            <div className="text-sm font-medium text-right">{overallRisk}%</div>
           </div>
-          
-          <Tabs defaultValue="intelligence">
-            <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="intelligence">Threat Intelligence</TabsTrigger>
-              <TabsTrigger value="firmware">Firmware Analysis</TabsTrigger>
-              <TabsTrigger value="vulnerabilities">Vulnerability Assessment</TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="intelligence">
-              <div className="py-4">
-                <ThreatIntelligence />
-              </div>
-            </TabsContent>
-            
-            <TabsContent value="firmware">
-              <div className="py-4">
-                <FirmwareAnalysis />
-              </div>
-            </TabsContent>
-            
-            <TabsContent value="vulnerabilities">
-              <div className="py-4">
-                <VulnerabilityAssessment />
-              </div>
-            </TabsContent>
-          </Tabs>
+          <Progress value={overallRisk} className="h-2" indicatorClassName={`bg-${riskColor}-500`} />
+          <div className="text-xs text-gray-400">
+            {overallRisk > 70 && "Critical risk detected. Immediate action required."}
+            {overallRisk <= 70 && overallRisk > 40 && "Elevated risk. Review and apply recommendations."}
+            {overallRisk <= 40 && "Low risk. Monitor for changes."}
+          </div>
         </CardContent>
       </Card>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <Card className="bg-scanner-dark-alt border-gray-700">
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              <AlertTriangle className="mr-2 h-4 w-4" /> Vulnerabilities
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {camera.vulnerabilities && camera.vulnerabilities.length > 0 ? (
+              <ul className="list-none space-y-1">
+                {camera.vulnerabilities.map((vuln, index) => (
+                  <li key={index} className="text-sm">
+                    <span className="font-medium">{vuln.name}</span> - <span className="text-gray-400">{vuln.description}</span>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <div className="text-sm text-gray-400">No known vulnerabilities</div>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card className="bg-scanner-dark-alt border-gray-700">
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              <CheckCircle className="mr-2 h-4 w-4" /> Security Status
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            <div className="text-sm">
+              <span className="font-medium">Accessible:</span> {camera.accessible ? 'Yes' : 'No'}
+            </div>
+            {camera.credentials && (
+              <div className="text-sm">
+                <span className="font-medium">Default Credentials:</span> {camera.credentials ? 'Yes' : 'No'}
+              </div>
+            )}
+            {camera.rtspUrl && (
+              <div className="text-sm">
+                <span className="font-medium">RTSP URL:</span> {camera.rtspUrl}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <Card className="bg-scanner-dark-alt border-gray-700">
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              <Info className="mr-2 h-4 w-4" /> Threat Intelligence
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ThreatIntelligence camera={camera} />
+          </CardContent>
+        </Card>
+
+        <Card className="bg-scanner-dark-alt border-gray-700">
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              <Info className="mr-2 h-4 w-4" /> Firmware Analysis
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <FirmwareAnalysis camera={camera} />
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 };
