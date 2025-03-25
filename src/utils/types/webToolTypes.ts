@@ -23,8 +23,8 @@ export interface WebHackParams {
   checkSubdomains?: boolean;
   userAgent?: string;
   saveResults?: boolean;
-  target?: string; // Adding missing properties
-  method?: string; // Adding missing properties
+  target?: string; // Add missing properties
+  method?: string; // Add missing properties
 }
 
 export interface WebHackResult {
@@ -61,5 +61,5 @@ export interface PhotonParams {
 // Add alias for backward compatibility
 export type WebhackParams = WebHackParams;
 
-// Re-export BackHackParams from cameraTypes
+// Re-export BackHackParams from cameraTypes using export type
 export type { BackHackParams } from './cameraTypes';

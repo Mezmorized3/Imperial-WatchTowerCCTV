@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -14,6 +15,7 @@ interface PasswordCrackerTabProps {
   toolOutput: string | null;
   setToolOutput: (output: string | null) => void;
   executeSelectedTool: (toolType: string) => void;
+  isRealmode?: boolean; // Add the optional property to fix the error
 }
 
 const PasswordCrackerTab: React.FC<PasswordCrackerTabProps> = ({ 
@@ -21,7 +23,8 @@ const PasswordCrackerTab: React.FC<PasswordCrackerTabProps> = ({
   setIsExecuting, 
   toolOutput, 
   setToolOutput,
-  executeSelectedTool 
+  executeSelectedTool,
+  isRealmode
 }) => {
   const [selectedHashType, setSelectedHashType] = useState('md5');
   const [customHash, setCustomHash] = useState('');

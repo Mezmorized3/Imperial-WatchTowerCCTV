@@ -36,7 +36,27 @@ export const isValidProxyConfig = (config: ProxyConfig): boolean => {
   return !!(config.host && config.port && hasCredentials);
 };
 
+/**
+ * Convert a proxy object to a string format
+ * @param proxyObj The proxy object with host, port and country properties
+ * @returns A string representation of the proxy
+ */
+export const proxyToString = (proxyObj: { host: string; port: number; country?: string }): string => {
+  return `${proxyObj.host}:${proxyObj.port}${proxyObj.country ? ` (${proxyObj.country})` : ''}`;
+};
+
+/**
+ * Convert a list of proxy objects to an array of strings
+ * @param proxyList Array of proxy objects
+ * @returns Array of string representations of proxies
+ */
+export const proxyListToString = (proxyList: { host: string; port: number; country?: string }[]): string[] => {
+  return proxyList.map(proxy => proxyToString(proxy));
+};
+
 export default {
   getProxyUrl,
-  isValidProxyConfig
+  isValidProxyConfig,
+  proxyToString,
+  proxyListToString
 };

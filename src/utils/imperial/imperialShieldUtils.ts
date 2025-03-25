@@ -3,6 +3,7 @@
  */
 
 import { ImperialShieldResult } from '../types/threatIntelTypes';
+import { v4 as uuidv4 } from 'uuid';
 
 /**
  * Configure Imperial Shield settings
@@ -139,3 +140,56 @@ export async function activateImperialShield(): Promise<ImperialShieldResult> {
     success // Add the success property
   };
 }
+
+export const generateMockShieldAnalysis = (): ImperialShieldResult => {
+  const riskLevels = ['low', 'medium', 'high', 'critical'];
+  const randomRisk = riskLevels[Math.floor(Math.random() * riskLevels.length)];
+  
+  return {
+    id: uuidv4(), // Adding id property
+    status: Math.random() > 0.7 ? 'compromised' : (Math.random() > 0.4 ? 'active' : 'inactive'),
+    targetIp: `${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}`,
+    lastScan: new Date().toISOString(),
+    vulnSummary: {
+      critical: Math.floor(Math.random() * 3),
+      high: Math.floor(Math.random() * 5),
+      medium: Math.floor(Math.random() * 10),
+      low: Math.floor(Math.random() * 15)
+    }
+  };
+};
+
+export const generateDetailedShieldAnalysis = (ip: string): ImperialShieldResult => {
+  const now = new Date();
+  
+  return {
+    id: uuidv4(), // Adding id property
+    status: Math.random() > 0.3 ? 'active' : (Math.random() > 0.6 ? 'inactive' : 'compromised'),
+    targetIp: ip,
+    lastScan: now.toISOString(),
+    vulnSummary: {
+      critical: Math.floor(Math.random() * 2),
+      high: Math.floor(Math.random() * 3),
+      medium: Math.floor(Math.random() * 5),
+      low: Math.floor(Math.random() * 7)
+    }
+  };
+};
+
+export const generateShieldState = (): ImperialShieldResult => {
+  const statuses: ('active' | 'inactive' | 'compromised')[] = ['active', 'inactive', 'compromised'];
+  const randomStatus = statuses[Math.floor(Math.random() * statuses.length)];
+  
+  return {
+    id: uuidv4(), // Adding id property
+    status: randomStatus,
+    targetIp: `${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}`,
+    lastScan: new Date().toISOString(),
+    vulnSummary: {
+      critical: Math.floor(Math.random() * 3),
+      high: Math.floor(Math.random() * 5),
+      medium: Math.floor(Math.random() * 10),
+      low: Math.floor(Math.random() * 15)
+    }
+  };
+};

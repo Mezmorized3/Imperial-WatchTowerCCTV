@@ -27,6 +27,13 @@ export const executeTorBot = async (params: TorBotParams): Promise<any> => {
     };
   }
   
+  // Convert string to number before comparison
+  const timeout = parseInt(params.timeout as string) || 30;
+  if (timeout > 60) {
+    // limit timeout to 60 seconds
+    params.timeout = 60;
+  }
+  
   // Limit depth for performance
   const depth = params.depth && parseInt(params.depth.toString()) < 5 ? params.depth : 2;
   

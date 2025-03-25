@@ -1,11 +1,15 @@
+
 import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Eye, Network, Shield } from 'lucide-react';
+import { Separator } from '@/components/ui/separator';
+import { Progress } from '@/components/ui/progress';
+import { Badge } from '@/components/ui/badge';
+import { Eye, Network, Shield, Server, Wifi, AlertCircle, ArrowRight } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
 import { executeImperialOculus } from '@/utils/osintTools';
 
@@ -156,7 +160,7 @@ const ImperialOculusTool: React.FC<ImperialOculusToolProps> = ({ onScanComplete 
             </Select>
           </div>
 
-          <div className="space-y-2">
+          <div className="space-y-2 flex items-center gap-2">
             <Label htmlFor="saveResults">Save Results</Label>
             <Checkbox
               id="saveResults"

@@ -61,5 +61,18 @@ export interface ThreatAssessment {
   lastUpdated: string;
 }
 
+export interface ImperialShieldResult {
+  status: 'active' | 'inactive' | 'compromised';
+  targetIp: string;
+  lastScan: string;
+  vulnSummary: {
+    critical: number;
+    high: number;
+    medium: number;
+    low: number;
+  };
+  id?: string; // Make id optional
+}
+
 // Change re-export to use 'export type'
 export type { ImperialShieldResult } from './advancedToolTypes';
