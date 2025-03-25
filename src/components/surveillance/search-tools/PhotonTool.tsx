@@ -1,73 +1,40 @@
 
 import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Loader2, Globe, ExternalLink } from 'lucide-react';
-import { Slider } from '@/components/ui/slider';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Textarea } from '@/components/ui/textarea';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Key, Mail } from 'lucide-react';
-import { toast } from '@/components/ui/use-toast';
+import { Switch } from '@/components/ui/switch';
 import { PhotonParams } from '@/utils/types/networkToolTypes';
+import { toast } from '@/components/ui/use-toast';
 
-// Mock function for Photon tool execution
-const mockExecutePhoton = async (params: PhotonParams): Promise<any> => {
-  console.log("PhotonTool: executing with params", params);
-  await new Promise(resolve => setTimeout(resolve, 2000));
-  
-  return {
-    success: true,
-    urls: [
-      'https://example.com',
-      'https://example.com/about',
-      'https://example.com/contact',
-      'https://example.com/products',
-      'https://example.com/blog',
-    ],
-    jsFiles: [
-      'https://example.com/js/main.js',
-      'https://example.com/js/analytics.js',
-    ],
-    emails: [
-      'info@example.com',
-      'support@example.com',
-    ],
-    apiKeys: [
-      'api_key_123456789abcdef',
-      'sk_test_example_key',
-    ],
-    total: 9
-  };
-};
+interface PhotonToolProps {
+  onExecute: (params: PhotonParams) => Promise<any>;
+}
 
-const PhotonTool: React.FC = () => {
+const PhotonTool: React.FC<PhotonToolProps> = ({ onExecute }) => {
   const [url, setUrl] = useState('');
-  const [depth, setDepth] = useState(3);
-  const [timeout, setTimeout] = useState(30);
-  const [threads, setThreads] = useState(8);
-  const [delay, setDelay] = useState(0);
+  const [depth, setDepth] = useState(2);
+  const [timeout, setTimeout] = useState(10);
+  const [threads, setThreads] = useState(10);
+  const [delay, setDelay] = useState(1);
   const [userAgent, setUserAgent] = useState('');
-  const [saveResults, setSaveResults] = useState(false);
-  const [isScanning, setIsScanning] = useState(false);
-  const [results, setResults] = useState<any>(null);
-  const [activeTab, setActiveTab] = useState('urls');
+  const [saveResults, setSaveResults] = useState(true);
+  const [isExecuting, setIsExecuting] = useState(false);
+  const [result, setResult] = useState<any>(null);
 
-  const handleScan = async () => {
+  const handleExecute = async () => {
     if (!url) {
       toast({
-        title: "Error",
-        description: "Please enter a URL to scan",
+        title: "URL Required",
+        description: "Please enter a URL to crawl",
         variant: "destructive"
       });
       return;
     }
 
-    setIsScanning(true);
-    setResults(null);
+    setIsExecuting(true);
+    setResult(null);
 
     try {
       const params: PhotonParams = {
@@ -80,267 +47,160 @@ const PhotonTool: React.FC = () => {
         saveResults
       };
 
-      // Execute photon tool (using mock in this case)
-      const result = await mockExecutePhoton(params);
+      // Call the onExecute function with the params
+      const result = await onExecute(params);
+      setResult(result);
 
-      setResults(result);
+      if (result?.success) {
+        toast({
+          title: "Crawl Completed",
+          description: `Found ${result.data?.urls?.length || 0} URLs`,
+        });
+      } else {
+        toast({
+          title: "Crawl Failed",
+          description: result?.error || "Unknown error occurred",
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      console.error('Error executing Photon:', error);
+      setResult({
+        success: false,
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
       
       toast({
-        title: "Scan Complete",
-        description: `Found ${result.total} items`,
-      });
-    } catch (error) {
-      console.error("Error during Photon scan:", error);
-      toast({
-        title: "Scan Error",
+        title: "Execution Error",
         description: error instanceof Error ? error.message : "An unknown error occurred",
         variant: "destructive"
       });
     } finally {
-      setIsScanning(false);
+      setIsExecuting(false);
     }
   };
 
   return (
-    <Card className="w-full">
+    <Card className="bg-scanner-dark border-gray-700">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Globe className="h-5 w-5" />
-          Photon - Web Crawler
-        </CardTitle>
+        <CardTitle>Photon Web Crawler</CardTitle>
       </CardHeader>
-      <CardContent className="space-y-6">
-        <div className="space-y-4">
+      <CardContent className="space-y-4">
+        <div className="space-y-2">
+          <Label htmlFor="url">Target URL</Label>
+          <Input 
+            id="url" 
+            value={url} 
+            onChange={(e) => setUrl(e.target.value)} 
+            placeholder="https://example.com"
+            className="bg-scanner-dark-alt border-gray-700"
+          />
+        </div>
+        
+        <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label htmlFor="url">Target URL</Label>
-            <Input
-              id="url"
-              placeholder="https://example.com"
-              value={url}
-              onChange={(e) => setUrl(e.target.value)}
-              disabled={isScanning}
+            <Label htmlFor="depth">Crawl Depth</Label>
+            <Input 
+              id="depth" 
+              type="number" 
+              min="1" 
+              max="10" 
+              value={depth} 
+              onChange={(e) => setDepth(parseInt(e.target.value))} 
+              className="bg-scanner-dark-alt border-gray-700"
             />
           </div>
-
+          
           <div className="space-y-2">
-            <div className="flex justify-between">
-              <Label htmlFor="depth">Crawl Depth: {depth}</Label>
-            </div>
-            <Slider
-              id="depth"
-              min={1}
-              max={10}
-              step={1}
-              value={[depth]}
-              onValueChange={(value) => setDepth(value[0])}
-              disabled={isScanning}
+            <Label htmlFor="timeout">Timeout (seconds)</Label>
+            <Input 
+              id="timeout" 
+              type="number" 
+              min="1" 
+              max="60" 
+              value={timeout} 
+              onChange={(e) => setTimeout(parseInt(e.target.value))} 
+              className="bg-scanner-dark-alt border-gray-700"
             />
-          </div>
-
-          <div className="space-y-2">
-            <div className="flex justify-between">
-              <Label htmlFor="timeout">Timeout (seconds): {timeout}</Label>
-            </div>
-            <Slider
-              id="timeout"
-              min={5}
-              max={120}
-              step={5}
-              value={[timeout]}
-              onValueChange={(value) => setTimeout(value[0])}
-              disabled={isScanning}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <div className="flex justify-between">
-              <Label htmlFor="threads">Threads: {threads}</Label>
-            </div>
-            <Slider
-              id="threads"
-              min={1}
-              max={20}
-              step={1}
-              value={[threads]}
-              onValueChange={(value) => setThreads(value[0])}
-              disabled={isScanning}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <div className="flex justify-between">
-              <Label htmlFor="delay">Request Delay (ms): {delay}</Label>
-            </div>
-            <Slider
-              id="delay"
-              min={0}
-              max={2000}
-              step={100}
-              value={[delay]}
-              onValueChange={(value) => setDelay(value[0])}
-              disabled={isScanning}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="userAgent">User Agent (Optional)</Label>
-            <Input
-              id="userAgent"
-              placeholder="Mozilla/5.0..."
-              value={userAgent}
-              onChange={(e) => setUserAgent(e.target.value)}
-              disabled={isScanning}
-            />
-          </div>
-
-          <div className="flex items-center space-x-2">
-            <Checkbox
-              id="saveResults"
-              checked={saveResults}
-              onCheckedChange={(checked) => setSaveResults(checked === true)}
-              disabled={isScanning}
-            />
-            <Label htmlFor="saveResults">Save Results to Disk</Label>
           </div>
         </div>
-
-        {results && (
-          <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="w-full">
-              <TabsTrigger value="urls" className="flex-1">
-                URLs
-              </TabsTrigger>
-              <TabsTrigger value="js" className="flex-1">
-                JS Files
-              </TabsTrigger>
-              <TabsTrigger value="emails" className="flex-1">
-                <Mail className="mr-2 h-4 w-4" />
-                Emails
-              </TabsTrigger>
-              <TabsTrigger value="keys" className="flex-1">
-                <Key className="mr-2 h-4 w-4" />
-                API Keys
-              </TabsTrigger>
-              <TabsTrigger value="raw" className="flex-1">
-                Raw Data
-              </TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="urls" className="mt-4">
-              <div className="space-y-2">
-                <h3 className="text-sm font-medium">URLs Discovered</h3>
-                <ScrollArea className="h-60 border rounded-md p-2">
-                  <ul className="space-y-1">
-                    {results.urls && results.urls.map((url: string, index: number) => (
-                      <li key={index} className="flex items-center justify-between text-sm">
-                        <span className="truncate">{url}</span>
-                        <a 
-                          href={url} 
-                          target="_blank" 
-                          rel="noopener noreferrer" 
-                          className="text-blue-400 hover:text-blue-300"
-                        >
-                          <ExternalLink className="h-3 w-3" />
-                        </a>
-                      </li>
-                    ))}
-                  </ul>
-                </ScrollArea>
+        
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="threads">Threads</Label>
+            <Input 
+              id="threads" 
+              type="number" 
+              min="1" 
+              max="50" 
+              value={threads} 
+              onChange={(e) => setThreads(parseInt(e.target.value))} 
+              className="bg-scanner-dark-alt border-gray-700"
+            />
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="delay">Delay (seconds)</Label>
+            <Input 
+              id="delay" 
+              type="number" 
+              min="0" 
+              max="10" 
+              value={delay} 
+              onChange={(e) => setDelay(parseInt(e.target.value))} 
+              className="bg-scanner-dark-alt border-gray-700"
+            />
+          </div>
+        </div>
+        
+        <div className="space-y-2">
+          <Label htmlFor="user-agent">User Agent (Optional)</Label>
+          <Input 
+            id="user-agent" 
+            value={userAgent} 
+            onChange={(e) => setUserAgent(e.target.value)} 
+            placeholder="Custom user agent"
+            className="bg-scanner-dark-alt border-gray-700"
+          />
+        </div>
+        
+        <div className="flex items-center justify-between">
+          <Label htmlFor="save-results" className="cursor-pointer">Save crawl results to file</Label>
+          <Switch 
+            id="save-results" 
+            checked={saveResults} 
+            onCheckedChange={(checked) => setSaveResults(checked)}
+          />
+        </div>
+        
+        <Button 
+          onClick={handleExecute} 
+          disabled={isExecuting || !url} 
+          className="w-full bg-scanner-primary"
+        >
+          {isExecuting ? "Crawling..." : "Start Web Crawl"}
+        </Button>
+        
+        {result && (
+          <div className="mt-4 p-3 rounded bg-scanner-dark-alt border border-gray-700">
+            <h3 className="text-sm font-medium mb-2">Crawl Results</h3>
+            
+            {result.success ? (
+              <div className="space-y-2 text-sm">
+                <div>URLs found: {result.data?.urls?.length || 0}</div>
+                <div>JavaScript files: {result.data?.js?.length || 0}</div>
+                <div>CSS files: {result.data?.css?.length || 0}</div>
+                <div>Images: {result.data?.images?.length || 0}</div>
+                {result.data?.emails?.length > 0 && (
+                  <div>Emails found: {result.data.emails.length}</div>
+                )}
               </div>
-            </TabsContent>
-
-            <TabsContent value="js" className="mt-4">
-              <div className="space-y-2">
-                <h3 className="text-sm font-medium">JavaScript Files</h3>
-                <ScrollArea className="h-60 border rounded-md p-2">
-                  <ul className="space-y-1">
-                    {results.jsFiles && results.jsFiles.map((url: string, index: number) => (
-                      <li key={index} className="flex items-center justify-between text-sm">
-                        <span className="truncate">{url}</span>
-                        <a 
-                          href={url} 
-                          target="_blank" 
-                          rel="noopener noreferrer" 
-                          className="text-blue-400 hover:text-blue-300"
-                        >
-                          <ExternalLink className="h-3 w-3" />
-                        </a>
-                      </li>
-                    ))}
-                  </ul>
-                </ScrollArea>
-              </div>
-            </TabsContent>
-
-            <TabsContent value="emails" className="mt-4">
-              <div className="space-y-2">
-                <h3 className="text-sm font-medium">Email Addresses</h3>
-                <ScrollArea className="h-60 border rounded-md p-2">
-                  <ul className="space-y-1">
-                    {results.emails && results.emails.map((email: string, index: number) => (
-                      <li key={index} className="flex items-center justify-between text-sm">
-                        <span>{email}</span>
-                        <a 
-                          href={`mailto:${email}`} 
-                          className="text-blue-400 hover:text-blue-300"
-                        >
-                          <Mail className="h-3 w-3" />
-                        </a>
-                      </li>
-                    ))}
-                  </ul>
-                </ScrollArea>
-              </div>
-            </TabsContent>
-
-            <TabsContent value="keys" className="mt-4">
-              <div className="space-y-2">
-                <h3 className="text-sm font-medium">API Keys &amp; Tokens</h3>
-                <ScrollArea className="h-60 border rounded-md p-2">
-                  <ul className="space-y-1">
-                    {results.apiKeys && results.apiKeys.map((key: string, index: number) => (
-                      <li key={index} className="flex items-center justify-between text-sm">
-                        <span className="font-mono">{key}</span>
-                        <Key className="h-3 w-3 text-yellow-500" />
-                      </li>
-                    ))}
-                  </ul>
-                </ScrollArea>
-              </div>
-            </TabsContent>
-
-            <TabsContent value="raw" className="mt-4">
-              <div className="space-y-2">
-                <h3 className="text-sm font-medium">Raw Results</h3>
-                <Textarea
-                  readOnly
-                  value={JSON.stringify(results, null, 2)}
-                  className="h-60 font-mono text-sm"
-                />
-              </div>
-            </TabsContent>
-          </Tabs>
+            ) : (
+              <div className="text-red-500 text-sm">{result.error || "Unknown error occurred"}</div>
+            )}
+          </div>
         )}
       </CardContent>
-      <CardFooter>
-        <Button
-          className="w-full"
-          onClick={handleScan}
-          disabled={isScanning || !url}
-        >
-          {isScanning ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Crawling Website...
-            </>
-          ) : (
-            <>
-              <Globe className="mr-2 h-4 w-4" />
-              Start Crawling
-            </>
-          )}
-        </Button>
-      </CardFooter>
     </Card>
   );
 };

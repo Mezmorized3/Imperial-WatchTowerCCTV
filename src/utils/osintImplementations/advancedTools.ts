@@ -1,4 +1,3 @@
-
 /**
  * Implementation of advanced OSINT and security tools
  */
@@ -17,7 +16,7 @@ export const executeRapidPayload = async (params: RapidPayloadParams): Promise<a
   console.log('Executing RapidPayload with params:', params);
   
   // Simulate network delay
-  await simulateNetworkDelay(1000, 2500);
+  await simulateNetworkDelay(1500);
   
   // Extract parameters
   const { targetOS, format, lhost, lport, encode, encryption } = params;
@@ -74,7 +73,7 @@ export const executeHackingTool = async (params: HackingToolParams): Promise<any
   console.log('Executing hacking tool with params:', params);
   
   // Simulate network delay
-  await simulateNetworkDelay(1200, 3000);
+  await simulateNetworkDelay(2000);
   
   const { tool } = params;
   
@@ -176,7 +175,7 @@ export const executeSecurityAdmin = async (params: SecurityAdminParams): Promise
   console.log('Executing security admin tool with params:', params);
   
   // Simulate network delay
-  await simulateNetworkDelay(1500, 3500);
+  await simulateNetworkDelay(2500);
   
   const { command, scanType, target } = params;
   

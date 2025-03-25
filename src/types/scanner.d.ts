@@ -43,6 +43,7 @@ export interface CameraResult {
     lastChecked?: string;
   };
   firmwareVersion?: string; // Making this explicitly defined
+  firmwareAnalysis?: any; // Added firmwareAnalysis property
   lastSeen?: string;
   accessLevel?: 'none' | 'view' | 'control' | 'admin';
 }

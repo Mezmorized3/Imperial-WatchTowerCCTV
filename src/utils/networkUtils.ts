@@ -1,133 +1,74 @@
 
 /**
- * Network utility functions for discovery and analysis
+ * Network utility functions
  */
 
-import { ProxyConfig } from './osintToolTypes';
-
-export const simulateNetworkDelay = (ms: number = 1000) => {
+/**
+ * Simulates a network delay for async operations
+ * @param ms Milliseconds to delay
+ */
+export const simulateNetworkDelay = async (ms: number): Promise<void> => {
   return new Promise((resolve) => setTimeout(resolve, ms));
 };
 
-export const parseIpRange = (ipRange: string): string[] => {
-  // Basic implementation to parse CIDR notation
-  if (ipRange.includes('/')) {
-    const [baseIp, cidrPart] = ipRange.split('/');
-    const cidr = parseInt(cidrPart);
-    
-    // For simplicity, return a few IPs in the range for simulation
-    const ipParts = baseIp.split('.');
-    const results: string[] = [];
-    
-    // Generate 10 IPs in the range
-    for (let i = 0; i < 10; i++) {
-      const lastOctet = parseInt(ipParts[3]) + i;
-      if (lastOctet <= 255) {
-        results.push(`${ipParts[0]}.${ipParts[1]}.${ipParts[2]}.${lastOctet}`);
-      }
-    }
-    
-    return results;
+/**
+ * Utility function to check if a string is a valid IP address
+ */
+export const isValidIPAddress = (ip: string): boolean => {
+  // IPv4 regex pattern
+  const ipv4Pattern = /^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/;
+  if (!ipv4Pattern.test(ip)) return false;
+  
+  // Check if each octet is valid (0-255)
+  const octets = ip.split('.');
+  for (const octet of octets) {
+    const num = parseInt(octet, 10);
+    if (num < 0 || num > 255) return false;
   }
   
-  // Handle range notation like 192.168.1.1-10
-  if (ipRange.includes('-')) {
-    const [start, end] = ipRange.split('-');
-    const results: string[] = [];
-    
-    if (start.includes('.')) {
-      const baseParts = start.split('.');
-      const startNum = parseInt(baseParts[3]);
-      const endNum = parseInt(end);
-      
-      for (let i = startNum; i <= endNum && i <= 255; i++) {
-        results.push(`${baseParts[0]}.${baseParts[1]}.${baseParts[2]}.${i}`);
-      }
-    }
-    
-    return results;
+  return true;
+};
+
+/**
+ * Utility function to check if a string is a valid CIDR notation
+ */
+export const isValidCIDR = (cidr: string): boolean => {
+  const parts = cidr.split('/');
+  if (parts.length !== 2) return false;
+  
+  const [ip, prefixStr] = parts;
+  if (!isValidIPAddress(ip)) return false;
+  
+  const prefix = parseInt(prefixStr, 10);
+  return prefix >= 0 && prefix <= 32;
+};
+
+/**
+ * Utility function to check if a port number is valid
+ */
+export const isValidPort = (port: number): boolean => {
+  return port > 0 && port < 65536;
+};
+
+/**
+ * Generates a random delay within a range
+ * @param min Minimum delay in milliseconds
+ * @param max Maximum delay in milliseconds
+ */
+export const getRandomDelay = (min = 500, max = 2000): number => {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+};
+
+/**
+ * Formats a network scan speed for display
+ * @param ipsPerSecond Number of IPs scanned per second
+ */
+export const formatScanSpeed = (ipsPerSecond: number): string => {
+  if (ipsPerSecond < 1) {
+    return `${(ipsPerSecond * 1000).toFixed(1)} IP/min`;
+  } else if (ipsPerSecond >= 1000) {
+    return `${(ipsPerSecond / 1000).toFixed(1)} K IP/sec`;
+  } else {
+    return `${ipsPerSecond.toFixed(1)} IP/sec`;
   }
-  
-  // Single IP
-  return [ipRange];
-};
-
-export const analyzeWebsite = async (url: string) => {
-  // Simulate website analysis
-  await simulateNetworkDelay(1500);
-  
-  return {
-    url,
-    statusCode: 200,
-    server: 'nginx/1.19.3',
-    technologies: ['WordPress', 'PHP', 'MySQL', 'jQuery'],
-    headers: {
-      'Content-Type': 'text/html',
-      'Server': 'nginx/1.19.3',
-      'X-Powered-By': 'PHP/7.4.11'
-    },
-    cookies: [
-      { name: 'session', secure: true, httpOnly: true },
-      { name: 'tracking', secure: false, httpOnly: false }
-    ],
-    securityHeaders: {
-      'Content-Security-Policy': 'missing',
-      'X-XSS-Protection': 'present',
-      'X-Frame-Options': 'present'
-    },
-    ports: [80, 443, 8080],
-    vulnerabilities: [
-      { name: 'Outdated jQuery', severity: 'medium', description: 'The site is using an outdated jQuery library with known vulnerabilities.' },
-      { name: 'Sensitive Files Exposed', severity: 'high', description: 'Backup files are accessible on the server.' }
-    ]
-  };
-};
-
-export const performPortScan = async (target: string, ports: string) => {
-  // Simulate port scanning
-  await simulateNetworkDelay(2000);
-  
-  const portList = ports.split(',').map(p => parseInt(p.trim()));
-  const openPorts = portList.filter(() => Math.random() > 0.5);
-  
-  return {
-    target,
-    scanned: portList.length,
-    open: openPorts.length,
-    openPorts
-  };
-};
-
-export const checkForCVEs = async (software: string, version: string) => {
-  // Simulate CVE lookup
-  await simulateNetworkDelay(1000);
-  
-  return {
-    software,
-    version,
-    cveCount: Math.floor(Math.random() * 5),
-    cves: [
-      { id: 'CVE-2022-1234', severity: 'high', description: 'Remote code execution vulnerability' },
-      { id: 'CVE-2021-5678', severity: 'medium', description: 'Cross-site scripting vulnerability' }
-    ]
-  };
-};
-
-export const setupProxy = (config: ProxyConfig) => {
-  console.log('Setting up proxy with config:', config);
-  return {
-    connected: true,
-    externalIp: '45.67.89.123',
-    latency: 120,
-    config
-  };
-};
-
-export default {
-  parseIpRange,
-  simulateNetworkDelay,
-  performPortScan,
-  checkForCVEs,
-  setupProxy,
-  analyzeWebsite
 };

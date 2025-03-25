@@ -1,3 +1,4 @@
+
 /**
  * Implementation of network-based OSINT tools
  */
@@ -16,7 +17,7 @@ export const executeTorBot = async (params: TorBotParams): Promise<any> => {
   console.log('Executing TorBot with params:', params);
   
   // Simulate network delay
-  await simulateNetworkDelay(2000, 5000);
+  await simulateNetworkDelay(2000);
   
   // Validate parameters
   if (!params.url) {
@@ -28,14 +29,17 @@ export const executeTorBot = async (params: TorBotParams): Promise<any> => {
   }
   
   // Convert string to number before comparison
-  const timeout = parseInt(params.timeout as string) || 30;
+  const timeout = typeof params.timeout === 'string' 
+    ? parseInt(params.timeout) 
+    : (params.timeout || 30);
+    
   if (timeout > 60) {
     // limit timeout to 60 seconds
     params.timeout = 60;
   }
   
   // Limit depth for performance
-  const depth = params.depth && parseInt(params.depth.toString()) < 5 ? params.depth : 2;
+  const depth = params.depth && parseInt(String(params.depth)) < 5 ? params.depth : 2;
   
   // Simulated results - will be replaced with real implementation
   return {
@@ -66,7 +70,7 @@ export const executeBotExploits = async (params: BotExploitsParams): Promise<any
   console.log('Executing BotExploits with params:', params);
   
   // Simulate network delay
-  await simulateNetworkDelay(1500, 3500);
+  await simulateNetworkDelay(1500);
   
   // Validate parameters
   if (!params.target) {
@@ -106,7 +110,7 @@ export const executeImperialOculus = async (params: ImperialOculusParams): Promi
   console.log('Executing Imperial Oculus with params:', params);
   
   // Simulate network delay
-  await simulateNetworkDelay(2500, 6000);
+  await simulateNetworkDelay(2500);
   
   // Simulated results - will be replaced with real implementation
   return {

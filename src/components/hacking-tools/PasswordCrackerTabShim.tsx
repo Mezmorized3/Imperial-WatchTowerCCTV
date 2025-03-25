@@ -1,6 +1,6 @@
 
 import React from 'react';
-import PasswordCrackerTab, { PasswordCrackerTabProps } from './PasswordCrackerTab';
+import PasswordCrackerTab from './PasswordCrackerTab';
 
 interface PasswordCrackerTabShimProps {
   isRealmode: boolean;
@@ -19,33 +19,36 @@ const PasswordCrackerTabShim: React.FC<PasswordCrackerTabShimProps> = ({
   setIsExecuting,
   setToolOutput
 }) => {
+  // State for tool output
+  const [toolOutputState, setToolOutputState] = React.useState<string | null>(null);
+  
   // Mock function to execute the selected tool
-  const executeSelectedTool = async (
-    tool: string,
-    options: Record<string, any>
-  ): Promise<void> => {
-    console.log(`Executing password cracking tool: ${tool}`, options);
+  const executeSelectedTool = (toolType: string) => {
+    console.log(`Executing password cracking tool: ${toolType}`);
     setIsExecuting(true);
     
     try {
       // Simulate tool execution
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      // Generate mock output
-      let output = '';
-      if (tool === 'hashcat') {
-        output = 'Hashcat initiated...\nLoading wordlist...\nStarting attack mode 3...\nPassword found: p@ssw0rd123';
-      } else if (tool === 'johntheripper') {
-        output = 'John the Ripper started...\nUsing default rules...\nProcessing hashes...\nPassword: summer2023!';
-      } else {
-        output = `${tool} executed successfully\nSimulated output\nCracking completed`;
-      }
-      
-      setToolOutput(output);
+      setTimeout(() => {
+        // Generate mock output
+        let output = '';
+        if (toolType === 'hashcat') {
+          output = 'Hashcat initiated...\nLoading wordlist...\nStarting attack mode 3...\nPassword found: p@ssw0rd123';
+        } else if (toolType === 'johntheripper') {
+          output = 'John the Ripper started...\nUsing default rules...\nProcessing hashes...\nPassword: summer2023!';
+        } else {
+          output = `${toolType} executed successfully\nSimulated output\nCracking completed`;
+        }
+        
+        setToolOutput(output);
+        setToolOutputState(output);
+        setIsExecuting(false);
+      }, 2000);
     } catch (error) {
       console.error('Error executing tool:', error);
-      setToolOutput(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
-    } finally {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      setToolOutput(`Error: ${errorMessage}`);
+      setToolOutputState(`Error: ${errorMessage}`);
       setIsExecuting(false);
     }
   };
@@ -54,8 +57,10 @@ const PasswordCrackerTabShim: React.FC<PasswordCrackerTabShimProps> = ({
     <PasswordCrackerTab
       isExecuting={isExecuting}
       setIsExecuting={setIsExecuting}
-      toolOutput={''}
+      toolOutput={toolOutputState}
+      setToolOutput={setToolOutput}
       executeSelectedTool={executeSelectedTool}
+      isRealmode={isRealmode}
     />
   );
 };

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -128,7 +127,7 @@ const ImperialOculusTool: React.FC<ImperialOculusToolProps> = ({ onScanComplete 
       case 'high':
         return <Badge variant="destructive">High</Badge>;
       case 'medium':
-        return <Badge variant="warning">Medium</Badge>;
+        return <Badge variant="secondary">Medium</Badge>;
       case 'low':
         return <Badge variant="outline">Low</Badge>;
       default:
@@ -227,7 +226,7 @@ const ImperialOculusTool: React.FC<ImperialOculusToolProps> = ({ onScanComplete 
                       <Badge variant="destructive">Low Security</Badge>
                     )}
                     {results.networkInformation.securityRating === "medium" && (
-                      <Badge variant="warning">Medium Security</Badge>
+                      <Badge variant="secondary">Medium Security</Badge>
                     )}
                     {results.networkInformation.securityRating === "high" && (
                       <Badge variant="outline" className="bg-green-900/30 text-green-300">

@@ -158,7 +158,6 @@ const HackingTool = () => {
               <div className="p-4">
                 {activeTab === 'encoder' && (
                   <EncoderDecoderTab 
-                    isRealmode={isRealmode}
                     isExecuting={isExecuting}
                     setIsExecuting={setIsExecuting}
                     setToolOutput={setToolOutput}
@@ -167,7 +166,6 @@ const HackingTool = () => {
                 
                 {activeTab === 'revshell' && (
                   <ReverseShellTab 
-                    isRealmode={isRealmode}
                     isExecuting={isExecuting}
                     setIsExecuting={setIsExecuting}
                     setToolOutput={setToolOutput}
@@ -175,7 +173,7 @@ const HackingTool = () => {
                 )}
                 
                 {activeTab === 'passwords' && (
-                  <PasswordCrackerTabShim // Use the shim component here
+                  <PasswordCrackerTabShim
                     isRealmode={isRealmode}
                     isExecuting={isExecuting}
                     setIsExecuting={setIsExecuting}
@@ -185,7 +183,7 @@ const HackingTool = () => {
                 
                 {activeTab === 'payload' && (
                   <PayloadGeneratorTab 
-                    isRealmode={isRealmode}
+                    executeSelectedTool={() => {}}
                     isExecuting={isExecuting}
                     setIsExecuting={setIsExecuting}
                     setToolOutput={setToolOutput}
@@ -194,7 +192,7 @@ const HackingTool = () => {
                 
                 {activeTab === 'sqli' && (
                   <SqliPayloadsTab 
-                    isRealmode={isRealmode}
+                    executeSelectedTool={() => {}}
                     isExecuting={isExecuting}
                     setIsExecuting={setIsExecuting}
                     setToolOutput={setToolOutput}
@@ -203,7 +201,6 @@ const HackingTool = () => {
                 
                 {activeTab === 'xss' && (
                   <XssPayloadsTab 
-                    isRealmode={isRealmode}
                     isExecuting={isExecuting}
                     setIsExecuting={setIsExecuting}
                     setToolOutput={setToolOutput}
@@ -212,10 +209,8 @@ const HackingTool = () => {
                 
                 {activeTab === 'additional' && (
                   <AdditionalTools 
-                    isRealmode={isRealmode}
-                    isExecuting={isExecuting}
-                    setIsExecuting={setIsExecuting}
-                    setToolOutput={setToolOutput}
+                    onToolSelect={() => {}}
+                    onExecute={() => {}}
                   />
                 )}
               </div>
