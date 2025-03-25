@@ -17,7 +17,7 @@ import ScanNotifications from '@/components/dashboard/ScanNotifications';
 import ScanPanel from '@/components/dashboard/ScanPanel';
 
 // Import search engine utilities
-import { executeCameraSearch, findEasternEuropeanCameras } from '@/utils/searchEngines';
+import { executeSearch, executeCameraSearch, findEasternEuropeanCameras } from '@/utils/searchEngines';
 
 const Index = () => {
   // Get real-time data from context
@@ -246,8 +246,8 @@ const Index = () => {
 
   // Function to start Imperial Server
   const handleServerStart = () => {
-    if (window.startImperialServer) {
-      const success = window.startImperialServer();
+    if ((window as any).startImperialServer) {
+      const success = (window as any).startImperialServer();
       setServerStarted(true);
       
       // Try to connect to real-time after server start

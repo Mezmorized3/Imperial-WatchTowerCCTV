@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -11,19 +12,19 @@ import { executeHackingTool } from '@/utils/osintTools';
 interface SqliPayloadsTabProps {
   isExecuting: boolean;
   setIsExecuting: (isExecuting: boolean) => void;
+  setToolOutput: (output: string | null) => void;
+  executeSelectedTool: (toolType: string) => Promise<void>;
   toolOutput: string | null;
   activeTab: string;
-  setToolOutput: (output: string | null) => void;
-  executeSelectedTool: (toolType: string) => void;
 }
 
 const SqliPayloadsTab: React.FC<SqliPayloadsTabProps> = ({ 
   isExecuting, 
   setIsExecuting, 
-  toolOutput, 
-  activeTab,
   setToolOutput,
-  executeSelectedTool 
+  executeSelectedTool,
+  toolOutput,
+  activeTab
 }) => {
   const [selectedSqliPayload, setSelectedSqliPayload] = useState('');
   const [sqliTarget, setSqliTarget] = useState('');
@@ -59,30 +60,13 @@ const SqliPayloadsTab: React.FC<SqliPayloadsTabProps> = ({
       // Execute SQLi scan using selected payload
       const payload = selectedSqliPayload ? sqliPayloads[selectedSqliPayload as keyof typeof sqliPayloads] : '';
       
-      const result = await executeHackingTool({
-        tool: 'sqlmap',
-        options: {
-          url: sqliTarget,
-          data: payload,
-          level: 3
-        }
-      });
+      // Call the provided executeSelectedTool function
+      await executeSelectedTool('sqlmap');
       
       toast({
         title: "SQLi Tool Executed",
         description: "Scan executed against target",
       });
-      
-      if (result?.data) {
-        // Format and display the tool output
-        const formattedOutput = typeof result.data === 'string' ? 
-          result.data : 
-          JSON.stringify(result.data, null, 2);
-        
-        setToolOutput(formattedOutput);
-      } else if (result?.error) {
-        setToolOutput(`Error: ${result.error}`);
-      }
     } catch (error) {
       console.error('Tool execution error:', error);
       setToolOutput(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -168,7 +152,7 @@ const SqliPayloadsTab: React.FC<SqliPayloadsTabProps> = ({
             </Button>
           </div>
           
-          {toolOutput && activeTab === 'sqli-payloads' && (
+          {toolOutput && activeTab === 'sqli' && (
             <div className="mt-4">
               <Label>Tool Output</Label>
               <div className="bg-scanner-dark-alt border border-gray-700 rounded-md p-4 mt-1.5">

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -38,6 +39,23 @@ const HackingTool = () => {
         : "Sandbox mode enabled. Commands are simulated for safety.",
       variant: checked ? "destructive" : "default"
     });
+  };
+
+  // Mock function to execute selected tool for SqliPayloadsTab
+  const executeSelectedTool = async (tool: string) => {
+    console.log(`Executing SQL tool: ${tool}`);
+    setIsExecuting(true);
+    
+    try {
+      // Simulate tool execution
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      setToolOutput(`${tool} executed successfully!\n\nResults:\n- Found 3 potential injection points\n- Tested parameter: id\n- Vulnerability detected: Boolean-based blind SQL injection`);
+    } catch (error) {
+      console.error('Tool execution error:', error);
+      setToolOutput(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } finally {
+      setIsExecuting(false);
+    }
   };
 
   const imperialProtocolBanner = `
@@ -194,9 +212,9 @@ const HackingTool = () => {
                     isExecuting={isExecuting}
                     setIsExecuting={setIsExecuting}
                     setToolOutput={setToolOutput}
-                    executeSelectedTool={async (tool: string) => {
-                      console.log(`Executing SQL tool: ${tool}`);
-                    }}
+                    executeSelectedTool={executeSelectedTool}
+                    toolOutput={toolOutput}
+                    activeTab={activeTab}
                   />
                 )}
                 

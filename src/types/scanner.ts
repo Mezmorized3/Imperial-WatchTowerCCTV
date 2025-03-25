@@ -1,3 +1,4 @@
+
 export type ScanTarget = {
   type: 'ip' | 'range' | 'file' | 'shodan' | 'zoomeye' | 'censys';
   value: string;

