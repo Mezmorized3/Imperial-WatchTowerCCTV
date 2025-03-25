@@ -42,8 +42,8 @@ export interface CameraResult {
     updateAvailable?: boolean;
     lastChecked?: string;
   };
-  firmwareVersion?: string; // Making this explicitly defined
-  firmwareAnalysis?: any; // Added firmwareAnalysis property
+  firmwareVersion?: string;
+  firmwareAnalysis?: any;
   lastSeen?: string;
   accessLevel?: 'none' | 'view' | 'control' | 'admin';
 }
@@ -57,7 +57,7 @@ export interface ScanSettings {
   testCredentials?: boolean;
   checkVulnerabilities?: boolean;
   saveSnapshots?: boolean;
-  regionFilter?: string;
+  regionFilter?: string[];
   threadsCount?: number;
 }
 

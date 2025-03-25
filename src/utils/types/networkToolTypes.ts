@@ -10,6 +10,7 @@ export interface TorBotParams {
   timeout?: number | string;
   dumpData?: boolean;
   savePath?: string;
+  mode?: string; // Add mode parameter
 }
 
 export interface BotExploitsParams {
@@ -18,6 +19,7 @@ export interface BotExploitsParams {
   botType?: string;
   scanType?: string;
   attackType?: string;
+  timeout?: number; // Add timeout parameter
 }
 
 export interface ImperialOculusParams {
@@ -27,6 +29,7 @@ export interface ImperialOculusParams {
   timeout?: number;
   scanTechniques?: string[];
   outputFormat?: string;
+  saveResults?: boolean; // Add saveResults parameter
 }
 
 export interface NetworkScanParams {

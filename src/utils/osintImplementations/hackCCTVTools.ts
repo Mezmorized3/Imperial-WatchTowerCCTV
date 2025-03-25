@@ -1,4 +1,3 @@
-
 /**
  * Implementation of camera hacking tools
  */
@@ -80,7 +79,7 @@ export const executeHackCCTV = async (params: HackCCTVParams): Promise<any> => {
   console.log('Executing HackCCTV with params:', params);
   
   // Simulate operation delay
-  await simulateNetworkDelay(1500, 3500);
+  await simulateNetworkDelay(2500);
   
   // Generate number of cameras to "find"
   const countryCode = params.country?.toLowerCase() || '';
@@ -224,7 +223,7 @@ export const executeCamDumper = async (params: CamDumperParams): Promise<any> =>
   console.log('Executing CamDumper with params:', params);
   
   // Simulate network operation
-  await simulateNetworkDelay(1800, 4000);
+  await simulateNetworkDelay(2500);
   
   // Use same logic as HackCCTV with slight modifications
   return executeHackCCTV({
@@ -243,7 +242,7 @@ export const executeOpenCCTV = async (params: OpenCCTVParams): Promise<any> => {
   console.log('Executing OpenCCTV with params:', params);
   
   // Simulate network operation
-  await simulateNetworkDelay(2000, 5000);
+  await simulateNetworkDelay(2500);
   
   // Different scan modes will affect the number of cameras found
   const scaleFactor = params.scanMode === 'quick' ? 0.5 : 
@@ -266,7 +265,7 @@ export const executeEyePwn = async (params: EyePwnParams): Promise<any> => {
   console.log('Executing EyePwn with params:', params);
   
   // Simulate network operation
-  await simulateNetworkDelay(2200, 4500);
+  await simulateNetworkDelay(2500);
   
   // Method will affect the search approach
   const method = params.method === 'rtsp' ? 'rtsp-discovery' : 
@@ -289,7 +288,7 @@ export const executeIngram = async (params: IngramParams): Promise<any> => {
   console.log('Executing Ingram with params:', params);
   
   // Simulate network operation
-  await simulateNetworkDelay(2500, 6000);
+  await simulateNetworkDelay(2500);
   
   const deepScan = params.scanType === 'deep' || 
                   params.scanType === 'stealth' ||

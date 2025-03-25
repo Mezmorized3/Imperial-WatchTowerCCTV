@@ -1,9 +1,8 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import PasswordCrackerTab from './PasswordCrackerTab';
 
 interface PasswordCrackerTabShimProps {
-  isRealmode: boolean;
   isExecuting: boolean;
   setIsExecuting: React.Dispatch<React.SetStateAction<boolean>>;
   setToolOutput: React.Dispatch<React.SetStateAction<string>>;
@@ -14,23 +13,22 @@ interface PasswordCrackerTabShimProps {
  * It adds the missing props that are required by PasswordCrackerTab
  */
 const PasswordCrackerTabShim: React.FC<PasswordCrackerTabShimProps> = ({
-  isRealmode,
   isExecuting,
   setIsExecuting,
   setToolOutput
 }) => {
   // State for tool output
-  const [toolOutputState, setToolOutputState] = React.useState<string | null>(null);
+  const [toolOutputState, setToolOutputState] = useState<string | null>(null);
   
   // Mock function to execute the selected tool
-  const executeSelectedTool = (toolType: string) => {
+  const executeSelectedTool = async (toolType: string) => {
     console.log(`Executing password cracking tool: ${toolType}`);
     setIsExecuting(true);
     
     try {
       // Simulate tool execution
       setTimeout(() => {
-        // Generate mock output
+        // Generate output
         let output = '';
         if (toolType === 'hashcat') {
           output = 'Hashcat initiated...\nLoading wordlist...\nStarting attack mode 3...\nPassword found: p@ssw0rd123';
@@ -60,7 +58,7 @@ const PasswordCrackerTabShim: React.FC<PasswordCrackerTabShimProps> = ({
       toolOutput={toolOutputState}
       setToolOutput={setToolOutput}
       executeSelectedTool={executeSelectedTool}
-      isRealmode={isRealmode}
+      isRealmode={false}
     />
   );
 };

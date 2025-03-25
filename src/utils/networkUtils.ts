@@ -72,3 +72,28 @@ export const formatScanSpeed = (ipsPerSecond: number): string => {
     return `${ipsPerSecond.toFixed(1)} IP/sec`;
   }
 };
+
+// Add website analysis function for WebCheckTool
+export const analyzeWebsite = async (url: string, options: any = {}): Promise<any> => {
+  console.log(`Analyzing website: ${url}`, options);
+  await simulateNetworkDelay(2000);
+  
+  // Return basic analysis data
+  return {
+    url,
+    status: 200,
+    title: "Website Analysis Result",
+    technologies: ["Apache", "PHP", "MySQL"],
+    meta: {
+      description: "Example website description",
+      keywords: "example, website, analysis"
+    },
+    security: {
+      headers: {
+        "X-XSS-Protection": "1; mode=block",
+        "Content-Security-Policy": "default-src 'self'"
+      },
+      vulnerabilities: []
+    }
+  };
+};

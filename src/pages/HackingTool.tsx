@@ -15,7 +15,6 @@ import SqliPayloadsTab from '@/components/hacking-tools/SqliPayloadsTab';
 import XssPayloadsTab from '@/components/hacking-tools/XssPayloadsTab';
 import AdditionalTools from '@/components/hacking-tools/AdditionalTools';
 
-// Add this new import
 import PasswordCrackerTabShim from '@/components/hacking-tools/PasswordCrackerTabShim';
 
 const HackingTool = () => {
@@ -183,19 +182,20 @@ const HackingTool = () => {
                 
                 {activeTab === 'payload' && (
                   <PayloadGeneratorTab 
-                    executeSelectedTool={() => {}}
                     isExecuting={isExecuting}
                     setIsExecuting={setIsExecuting}
                     setToolOutput={setToolOutput}
+                    toolOutput={toolOutput}
                   />
                 )}
                 
                 {activeTab === 'sqli' && (
                   <SqliPayloadsTab 
-                    executeSelectedTool={() => {}}
                     isExecuting={isExecuting}
                     setIsExecuting={setIsExecuting}
                     setToolOutput={setToolOutput}
+                    toolOutput={toolOutput}
+                    activeTab="sqli"
                   />
                 )}
                 
@@ -209,8 +209,9 @@ const HackingTool = () => {
                 
                 {activeTab === 'additional' && (
                   <AdditionalTools 
-                    onToolSelect={() => {}}
-                    onExecute={() => {}}
+                    isRealmode={isRealmode}
+                    toolNames={["Tool1", "Tool2", "Tool3"]}
+                    onExecute={(tool) => console.log(`Executing tool: ${tool}`)}
                   />
                 )}
               </div>

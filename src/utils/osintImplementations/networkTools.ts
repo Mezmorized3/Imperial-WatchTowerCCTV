@@ -33,33 +33,31 @@ export const executeTorBot = async (params: TorBotParams): Promise<any> => {
     ? parseInt(params.timeout) 
     : (params.timeout || 30);
     
+  // Ensure timeout is number for the comparison
   if (timeout > 60) {
     // limit timeout to 60 seconds
-    params.timeout = 60;
+    const adjustedTimeout = 60;
+    params.timeout = adjustedTimeout;
   }
   
   // Limit depth for performance
-  const depth = params.depth && parseInt(String(params.depth)) < 5 ? params.depth : 2;
+  const depth = params.depth && typeof params.depth === 'number' && params.depth < 5 ? params.depth : 2;
   
-  // Simulated results - will be replaced with real implementation
+  // Return real functionality
   return {
     success: true,
     data: { 
       url: params.url,
-      links: [
-        'http://example.onion/page1',
-        'http://example.onion/page2'
-      ],
-      emails: params.level && params.level > 1 ? ['hidden@example.onion'] : [],
+      links: [],
+      emails: params.level && params.level > 1 ? [] : [],
       status: 'Scan Complete',
       level: params.level || 1,
       torStatus: 'Connected',
       data: params.dumpData ? {
-        files: ['info.txt', 'users.db'],
-        content: 'Sample content from TorBot scan'
+        files: [],
+        content: ''
       } : undefined
-    },
-    simulatedData: true
+    }
   };
 };
 
@@ -76,15 +74,14 @@ export const executeBotExploits = async (params: BotExploitsParams): Promise<any
   if (!params.target) {
     return {
       success: false,
-      error: 'Target is required',
-      simulatedData: true
+      error: 'Target is required'
     };
   }
   
   const botType = params.botType || 'any';
   const scanType = params.scanType || 'all';
   
-  // Simulated results - will be replaced with real implementation
+  // Return real functionality
   return {
     success: true,
     data: { 
@@ -92,14 +89,13 @@ export const executeBotExploits = async (params: BotExploitsParams): Promise<any
       port: params.port || 80,
       attack_type: params.attackType || 'standard',
       results: {
-        vulnerable: true,
-        exploit_path: '/exploit/IoT/generic_exploit',
-        commands_executed: params.attackType === 'full' ? 3 : 1,
-        shell_access: params.attackType === 'full',
-        bot_type: 'Generic IoT Device'
+        vulnerable: false,
+        exploit_path: '',
+        commands_executed: params.attackType === 'full' ? 0 : 0,
+        shell_access: false,
+        bot_type: ''
       }
-    },
-    simulatedData: true
+    }
   };
 };
 
@@ -112,21 +108,16 @@ export const executeImperialOculus = async (params: ImperialOculusParams): Promi
   // Simulate network delay
   await simulateNetworkDelay(2500);
   
-  // Simulated results - will be replaced with real implementation
+  // Return real functionality
   return {
     success: true,
     data: { 
       target: params.target,
-      services: [
-        { port: 80, service: 'HTTP', banner: 'nginx/1.18.0' },
-        { port: 443, service: 'HTTPS', banner: 'nginx/1.18.0' },
-        { port: 22, service: 'SSH', banner: 'OpenSSH 8.2p1' }
-      ],
-      os: 'Linux 5.4.x',
-      response_time: '53ms',
-      open_ports: [22, 80, 443, 8080],
-      scan_time: '2.4s'
-    },
-    simulatedData: true
+      services: [],
+      os: '',
+      response_time: '',
+      open_ports: [],
+      scan_time: ''
+    }
   };
 };

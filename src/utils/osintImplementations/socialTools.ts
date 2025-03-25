@@ -44,7 +44,7 @@ const mockUsers = [
  */
 export const executeUsernameSearch = async (params: SocialSearchParams): Promise<ScanResult> => {
   console.log('Executing username search with params:', params);
-  await simulateNetworkDelay(800, 2000);
+  await simulateNetworkDelay(2500);
   
   const { username, platforms = ['twitter', 'instagram', 'facebook', 'linkedin', 'github'] } = params;
   
@@ -151,7 +151,7 @@ export const executeUsernameSearch = async (params: SocialSearchParams): Promise
  */
 export const executeTwint = async (): Promise<ScanResult> => {
   console.log('Executing Twint');
-  await simulateNetworkDelay(1000, 3000);
+  await simulateNetworkDelay(2500);
   
   // Generate mock Twitter posts
   const mockPosts: SocialPostData[] = [];
@@ -195,7 +195,7 @@ export const executeTwint = async (): Promise<ScanResult> => {
  */
 export const executeOSINT = async (): Promise<ScanResult> => {
   console.log('Executing OSINT');
-  await simulateNetworkDelay(1200, 2500);
+  await simulateNetworkDelay(2500);
   
   // Generate mock OSINT results
   const mockResults = [];
