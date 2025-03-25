@@ -1,4 +1,3 @@
-
 export type ScanTarget = {
   type: 'ip' | 'range' | 'file' | 'shodan' | 'zoomeye' | 'censys';
   value: string;
@@ -74,6 +73,12 @@ export type CameraResult = {
   firmwareVersion?: string; // Added firmwareVersion explicitly
   services?: string[];
   firstSeen?: string;
+  firmwareAnalysis?: {
+    knownVulnerabilities?: string[];
+    outdated?: boolean;
+    lastUpdate?: string;
+    recommendedVersion?: string;
+  };
 };
 
 export type ScanStatus = 'idle' | 'running' | 'completed' | 'failed';

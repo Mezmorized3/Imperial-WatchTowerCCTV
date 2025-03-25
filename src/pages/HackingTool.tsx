@@ -160,6 +160,7 @@ const HackingTool = () => {
                     isExecuting={isExecuting}
                     setIsExecuting={setIsExecuting}
                     setToolOutput={setToolOutput}
+                    isRealmode={isRealmode}
                   />
                 )}
                 
@@ -168,12 +169,12 @@ const HackingTool = () => {
                     isExecuting={isExecuting}
                     setIsExecuting={setIsExecuting}
                     setToolOutput={setToolOutput}
+                    isRealmode={isRealmode}
                   />
                 )}
                 
                 {activeTab === 'passwords' && (
                   <PasswordCrackerTabShim
-                    isRealmode={isRealmode}
                     isExecuting={isExecuting}
                     setIsExecuting={setIsExecuting}
                     setToolOutput={setToolOutput}
@@ -185,7 +186,6 @@ const HackingTool = () => {
                     isExecuting={isExecuting}
                     setIsExecuting={setIsExecuting}
                     setToolOutput={setToolOutput}
-                    toolOutput={toolOutput}
                   />
                 )}
                 
@@ -194,8 +194,9 @@ const HackingTool = () => {
                     isExecuting={isExecuting}
                     setIsExecuting={setIsExecuting}
                     setToolOutput={setToolOutput}
-                    toolOutput={toolOutput}
-                    activeTab="sqli"
+                    executeSelectedTool={async (tool: string) => {
+                      console.log(`Executing SQL tool: ${tool}`);
+                    }}
                   />
                 )}
                 
@@ -204,14 +205,13 @@ const HackingTool = () => {
                     isExecuting={isExecuting}
                     setIsExecuting={setIsExecuting}
                     setToolOutput={setToolOutput}
+                    isRealmode={isRealmode}
                   />
                 )}
                 
                 {activeTab === 'additional' && (
                   <AdditionalTools 
                     isRealmode={isRealmode}
-                    toolNames={["Tool1", "Tool2", "Tool3"]}
-                    onExecute={(tool) => console.log(`Executing tool: ${tool}`)}
                   />
                 )}
               </div>

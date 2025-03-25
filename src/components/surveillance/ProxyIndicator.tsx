@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Shield, AlertCircle, Globe, Lock } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
@@ -111,63 +110,25 @@ const ProxyIndicator: React.FC<ProxyIndicatorProps> = ({
   }
   
   return (
-    <>
-      <div className="flex items-center gap-2">
-        <Button 
-          size="sm" 
-          variant={proxyConfig.enabled ? "default" : "outline"}
-          className={proxyConfig.enabled ? "bg-green-600 hover:bg-green-700" : ""}
-          onClick={handleProxyToggle}
-        >
-          <Shield className="h-4 w-4 mr-1" />
-          {proxyConfig.enabled ? 'Proxy On' : 'Proxy Off'}
-        </Button>
-        
-        {proxyConfig.enabled && (
-          <>
-            <Badge className="bg-gray-700">
-              {proxyConfig.type.toUpperCase()}
-            </Badge>
-            
-            {proxyConfig.useAuthentication && (
-              <Badge variant="outline" className="gap-1 border-yellow-600 text-yellow-500">
-                <Lock className="h-3 w-3" /> Auth
-              </Badge>
-            )}
-            
-            {proxyConfig.rotationEnabled && (
-              <Badge variant="outline" className="gap-1 border-blue-600 text-blue-500">
-                <Globe className="h-3 w-3" /> Rotating ({getNextRotationTime()})
-              </Badge>
-            )}
-            
-            <Button 
-              size="sm" 
-              variant="ghost"
-              onClick={() => setDialogOpen(true)}
-            >
-              Settings
-            </Button>
-          </>
-        )}
-      </div>
-      
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-3xl">
-          <DialogHeader>
-            <DialogTitle>Proxy Settings</DialogTitle>
-          </DialogHeader>
-          <ProxySettings 
-            onProxyChange={(newConfig) => {
-              if (onProxyChange) {
-                onProxyChange(newConfig);
-              }
-            }} 
-            initialConfig={proxyConfig}
-          />
-        </DialogContent>
-      </Dialog>
-    </>
+    <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+      <DialogContent className="max-w-3xl">
+        <DialogHeader>
+          <DialogTitle>Proxy Settings</DialogTitle>
+        </DialogHeader>
+        <ProxySettings 
+          onProxyChange={(config: any) => {
+            if (onProxyChange) {
+              onProxyChange(config);
+            }
+          }}
+          onClearProxies={() => {}}
+          onTestProxy={async () => true}
+          onFetchProxies={async () => []}
+          proxies={[]}
+          setProxies={() => {}}
+        />
+      </DialogContent>
+    </Dialog>
   );
 };
 
