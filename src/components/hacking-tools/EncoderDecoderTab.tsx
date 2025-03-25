@@ -11,7 +11,7 @@ import { Code, Copy, Check } from 'lucide-react';
 interface EncoderDecoderTabProps {
   isExecuting: boolean;
   setIsExecuting: (isExecuting: boolean) => void;
-  setToolOutput: (output: string | null) => void;
+  setToolOutput: (output: string) => void;
   isRealmode?: boolean;
 }
 
@@ -25,6 +25,7 @@ const EncoderDecoderTab: React.FC<EncoderDecoderTabProps> = ({
   const [encoding, setEncoding] = useState('base64');
   const [operation, setOperation] = useState<'encode' | 'decode'>('encode');
   const [copySuccess, setCopySuccess] = useState<string | null>(null);
+  const [result, setResult] = useState<string>('');
 
   const handleProcess = () => {
     if (!inputText) {
@@ -37,46 +38,46 @@ const EncoderDecoderTab: React.FC<EncoderDecoderTabProps> = ({
     }
 
     setIsExecuting(true);
-    setToolOutput(null);
 
     try {
-      let result = '';
+      let processedResult = '';
       
       if (operation === 'encode') {
         if (encoding === 'base64') {
-          result = btoa(inputText);
+          processedResult = btoa(inputText);
         } else if (encoding === 'uri') {
-          result = encodeURIComponent(inputText);
+          processedResult = encodeURIComponent(inputText);
         } else if (encoding === 'hex') {
-          result = Array.from(inputText)
+          processedResult = Array.from(inputText)
             .map(c => c.charCodeAt(0).toString(16).padStart(2, '0'))
             .join('');
         }
       } else {
         if (encoding === 'base64') {
           try {
-            result = atob(inputText);
+            processedResult = atob(inputText);
           } catch (e) {
-            result = 'Error: Invalid base64 input';
+            processedResult = 'Error: Invalid base64 input';
           }
         } else if (encoding === 'uri') {
           try {
-            result = decodeURIComponent(inputText);
+            processedResult = decodeURIComponent(inputText);
           } catch (e) {
-            result = 'Error: Invalid URI component';
+            processedResult = 'Error: Invalid URI component';
           }
         } else if (encoding === 'hex') {
           try {
-            result = inputText.match(/.{1,2}/g)?.map(byte => 
+            processedResult = inputText.match(/.{1,2}/g)?.map(byte => 
               String.fromCharCode(parseInt(byte, 16))
             ).join('') || 'Error: Invalid hex input';
           } catch (e) {
-            result = 'Error: Invalid hex input';
+            processedResult = 'Error: Invalid hex input';
           }
         }
       }
       
-      setToolOutput(result);
+      setResult(processedResult);
+      setToolOutput(processedResult);
       
       toast({
         title: `${operation === 'encode' ? 'Encoded' : 'Decoded'} Successfully`,
@@ -84,7 +85,9 @@ const EncoderDecoderTab: React.FC<EncoderDecoderTabProps> = ({
       });
     } catch (error) {
       console.error('Encoding/decoding error:', error);
-      setToolOutput(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      setResult(`Error: ${errorMessage}`);
+      setToolOutput(`Error: ${errorMessage}`);
       
       toast({
         title: "Processing Failed",
@@ -167,32 +170,29 @@ const EncoderDecoderTab: React.FC<EncoderDecoderTabProps> = ({
         )}
       </Button>
       
-      {setToolOutput && (
-        <div>
-          <div className="flex justify-between items-center">
-            <Label>Result</Label>
-            <Button 
-              size="sm" 
-              variant="outline" 
-              className="h-8 py-0 px-2 border-gray-700 hover:bg-scanner-dark-alt"
-              onClick={() => handleCopyToClipboard(document.getElementById('result-text')?.textContent || '')}
-            >
-              {copySuccess === 'result' ? (
-                <Check className="h-4 w-4 mr-1" />
-              ) : (
-                <Copy className="h-4 w-4 mr-1" />
-              )}
-              Copy
-            </Button>
-          </div>
-          <div 
-            id="result-text"
-            className="mt-1.5 p-4 min-h-32 bg-scanner-dark-alt rounded-md border border-gray-700 overflow-auto whitespace-pre-wrap"
+      <div>
+        <div className="flex justify-between items-center">
+          <Label>Result</Label>
+          <Button 
+            size="sm" 
+            variant="outline" 
+            className="h-8 py-0 px-2 border-gray-700 hover:bg-scanner-dark-alt"
+            onClick={() => handleCopyToClipboard(result)}
           >
-            {/* Result will be displayed here */}
-          </div>
+            {copySuccess === 'result' ? (
+              <Check className="h-4 w-4 mr-1" />
+            ) : (
+              <Copy className="h-4 w-4 mr-1" />
+            )}
+            Copy
+          </Button>
         </div>
-      )}
+        <div 
+          className="mt-1.5 p-4 min-h-32 bg-scanner-dark-alt rounded-md border border-gray-700 overflow-auto whitespace-pre-wrap"
+        >
+          {result}
+        </div>
+      </div>
     </div>
   );
 };
