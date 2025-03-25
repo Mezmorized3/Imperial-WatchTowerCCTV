@@ -1,200 +1,240 @@
-
 import React, { useState, useEffect } from 'react';
-import ViewerHeader from '@/components/viewer/ViewerHeader';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Cpu, Terminal, Download, ExternalLink, Code, Shield, AlertTriangle, Wrench, Copy, Check, Send, Bug, Settings2, Lock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { toast } from '@/components/ui/use-toast';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Separator } from '@/components/ui/separator';
-import { executeHackingTool, executeRapidPayload } from '@/utils/osintTools';
-import { executeSecurityAdmin } from '@/utils/osintTools';
+import { Terminal, Key, ShieldAlert, Code, Lock, ServerCrash, Bug } from 'lucide-react';
+import { toast } from '@/components/ui/use-toast';
 
-// Import the refactored components
-import ReverseShellTab from '@/components/hacking-tools/ReverseShellTab';
-import XssPayloadsTab from '@/components/hacking-tools/XssPayloadsTab';
-import SqliPayloadsTab from '@/components/hacking-tools/SqliPayloadsTab';
-import PayloadGeneratorTab from '@/components/hacking-tools/PayloadGeneratorTab';
 import EncoderDecoderTab from '@/components/hacking-tools/EncoderDecoderTab';
-import PasswordCrackerTab from '@/components/hacking-tools/PasswordCrackerTab';
+import ReverseShellTab from '@/components/hacking-tools/ReverseShellTab';
+import PayloadGeneratorTab from '@/components/hacking-tools/PayloadGeneratorTab';
+import SqliPayloadsTab from '@/components/hacking-tools/SqliPayloadsTab';
+import XssPayloadsTab from '@/components/hacking-tools/XssPayloadsTab';
 import AdditionalTools from '@/components/hacking-tools/AdditionalTools';
-import FileCentipede from '@/components/hacking-tools/FileCentipede';
 
-const HackingToolPage: React.FC = () => {
-  const [activeTab, setActiveTab] = useState('reverse-shell');
+// Add this new import
+import PasswordCrackerTabShim from '@/components/hacking-tools/PasswordCrackerTabShim';
+
+const HackingTool = () => {
   const [isRealmode, setIsRealmode] = useState(false);
-  const [toolOutput, setToolOutput] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState('encoder');
   const [isExecuting, setIsExecuting] = useState(false);
-  const [copySuccess, setCopySuccess] = useState<string | null>(null);
-  
-  // Check for configuration in localStorage
+  const [toolOutput, setToolOutput] = useState('');
+
   useEffect(() => {
-    const realMode = localStorage.getItem('hacktools-realmode') === 'true';
-    setIsRealmode(realMode);
+    const realmode = localStorage.getItem('realmode') === 'true';
+    setIsRealmode(realmode);
   }, []);
-  
-  const toggleRealMode = () => {
-    const newMode = !isRealmode;
-    setIsRealmode(newMode);
-    localStorage.setItem('hacktools-realmode', newMode.toString());
-    
+
+  const handleRealmodeToggle = (checked: boolean) => {
+    setIsRealmode(checked);
+    localStorage.setItem('realmode', checked.toString());
     toast({
-      title: newMode ? "Real Mode Activated" : "Simulation Mode Activated",
-      description: newMode ? 
-        "Tools will execute real commands. Use with caution." : 
-        "Tools will run in simulation mode with no real impact.",
-      variant: newMode ? "destructive" : "default"
+      title: checked ? "Realmode Activated" : "Sandbox Mode Active",
+      description: checked
+        ? "Warning: Realmode allows execution of potentially harmful commands. Use with caution."
+        : "Sandbox mode enabled. Commands are simulated for safety.",
+      variant: checked ? "destructive" : "default"
     });
   };
 
-  // Handle copy to clipboard functionality
-  const handleCopyToClipboard = (text: string, type: string) => {
-    navigator.clipboard.writeText(text).then(() => {
-      setCopySuccess(type);
-      setTimeout(() => setCopySuccess(null), 2000);
-      toast({
-        title: "Copied to clipboard!",
-        description: `The ${type} has been copied to your clipboard.`,
-      });
-    });
-  };
+  const imperialProtocolBanner = `
+    ██████╗  ██████╗ ██╗   ██╗███████╗██████╗  ██████╗ ███████╗
+    ██╔══██╗██╔═══██╗██║   ██║██╔════╝██╔══██╗██╔═══██╗██╔════╝
+    ██████╔╝██║   ██║██║   ██║███████╗██████╔╝██║   ██║███████╗
+    ██╔══██╗██║   ██║██║   ██║╚════██║██╔══██╗██║   ██║╚════██║
+    ██████╔╝╚██████╔╝╚██████╔╝███████║██║  ██║╚██████╔╝███████║
+    ╚═════╝  ╚═════╝  ╚═════╝ ╚══════╝╚═╝  ╚═╝ ╚═════╝ ╚══════╝
+  `;
 
   return (
-    <div className="min-h-screen bg-scanner-dark text-white">
-      <ViewerHeader />
-      
-      <main className="container mx-auto py-6 px-4">
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold mb-2 flex items-center">
-            <Cpu className="mr-2 h-6 w-6 text-scanner-primary" />
-            Hacking Tool Framework
-          </h1>
+    <div className="min-h-screen bg-scanner-dark">
+      <header className="bg-scanner-dark-alt border-b border-gray-800 py-4 px-6">
+        <div className="container mx-auto">
           <div className="flex justify-between items-center">
-            <p className="text-gray-400">
-              Security testing and vulnerability assessment framework
-            </p>
             <div className="flex items-center">
-              <span className="text-xs mr-2">
-                {isRealmode ? 'Real Mode' : 'Simulation Mode'}
-              </span>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={toggleRealMode}
-                className={isRealmode ? "bg-red-900/20 hover:bg-red-900/30 text-red-400" : ""}
-              >
-                <Settings2 className="h-4 w-4 mr-2" />
-                {isRealmode ? 'Disable Real Mode' : 'Enable Real Mode'}
-              </Button>
+              <h1 className="text-2xl font-bold text-white">Hacking Tools</h1>
+            </div>
+            <div className="flex items-center space-x-4">
+              <Label htmlFor="realmode-toggle" className="text-sm text-gray-400">
+                Realmode
+              </Label>
+              <Switch
+                id="realmode-toggle"
+                checked={isRealmode}
+                onCheckedChange={handleRealmodeToggle}
+              />
             </div>
           </div>
         </div>
-        
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2">
-            <Card className="border-gray-700 bg-scanner-dark shadow-lg">
+      </header>
+      
+      <div className="mx-auto mt-2 mb-4">
+        <div className="bg-scanner-dark p-4 rounded-md overflow-x-auto w-full">
+          <pre className="text-[#ea384c] text-xs font-mono">{imperialProtocolBanner}</pre>
+        </div>
+      </div>
+      
+      <main className="container mx-auto p-6">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
+          <div className="md:col-span-1 space-y-4">
+            <Card className="bg-scanner-card border-gray-700">
               <CardHeader>
-                <CardTitle className="flex items-center">
-                  <Wrench className="h-5 w-5 text-scanner-primary mr-2" />
-                  HackTools Implementation
-                </CardTitle>
-                <CardDescription className="text-gray-400">
-                  The all-in-one Red Team toolkit for Web Pentesters
-                </CardDescription>
+                <CardTitle className="text-lg font-bold">Tool Categories</CardTitle>
+                <CardDescription className="text-gray-400">Select a category to begin</CardDescription>
               </CardHeader>
-              <CardContent>
-                <Tabs defaultValue="reverse-shell" className="w-full" onValueChange={setActiveTab}>
-                  <TabsList className="grid grid-cols-6 mb-4">
-                    <TabsTrigger value="reverse-shell">Reverse Shell</TabsTrigger>
-                    <TabsTrigger value="xss-payloads">XSS Payloads</TabsTrigger>
-                    <TabsTrigger value="sqli-payloads">SQLi Payloads</TabsTrigger>
-                    <TabsTrigger value="payload-gen">Payload Gen</TabsTrigger>
-                    <TabsTrigger value="encode-decode">Encode/Decode</TabsTrigger>
-                    <TabsTrigger value="password-cracker">Password Cracker</TabsTrigger>
-                  </TabsList>
-                  
-                  <TabsContent value="reverse-shell">
-                    <ReverseShellTab 
-                      isRealmode={isRealmode}
-                      isExecuting={isExecuting}
-                      setIsExecuting={setIsExecuting}
-                      setToolOutput={setToolOutput}
-                    />
-                  </TabsContent>
-                  
-                  <TabsContent value="xss-payloads">
-                    <XssPayloadsTab />
-                  </TabsContent>
-                  
-                  <TabsContent value="sqli-payloads">
-                    <SqliPayloadsTab 
-                      isExecuting={isExecuting}
-                      setIsExecuting={setIsExecuting}
-                      toolOutput={toolOutput}
-                      activeTab={activeTab}
-                      setToolOutput={setToolOutput}
-                      executeSelectedTool={(type) => {
-                        setIsExecuting(true);
-                        setToolOutput(null);
-                        
-                        // Logic for executing SQLi tool is now in SqliPayloadsTab
-                      }}
-                    />
-                  </TabsContent>
-                  
-                  <TabsContent value="payload-gen">
-                    <PayloadGeneratorTab 
-                      isExecuting={isExecuting}
-                      setIsExecuting={setIsExecuting}
-                      setToolOutput={setToolOutput}
-                    />
-                  </TabsContent>
-                  
-                  <TabsContent value="encode-decode">
-                    <EncoderDecoderTab />
-                  </TabsContent>
-                  
-                  <TabsContent value="password-cracker">
-                    <PasswordCrackerTab 
-                      isRealmode={isRealmode}
-                      isExecuting={isExecuting}
-                      setIsExecuting={setIsExecuting}
-                      setToolOutput={setToolOutput}
-                    />
-                  </TabsContent>
-                </Tabs>
-                
-                {toolOutput && (
-                  <div className="mt-6 p-4 bg-scanner-dark-alt rounded-md border border-gray-700">
-                    <div className="flex justify-between items-center mb-2">
-                      <h3 className="text-sm font-semibold">Tool Output</h3>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="h-7 px-2 border-gray-700"
-                        onClick={() => handleCopyToClipboard(toolOutput, 'output')}
-                      >
-                        {copySuccess === 'output' ? (
-                          <Check className="h-3.5 w-3.5" />
-                        ) : (
-                          <Copy className="h-3.5 w-3.5" />
-                        )}
-                      </Button>
-                    </div>
-                    <pre className="bg-gray-900 p-3 rounded text-xs overflow-x-auto whitespace-pre-wrap">
-                      {toolOutput}
-                    </pre>
-                  </div>
-                )}
+              <CardContent className="space-y-2">
+                <Button
+                  variant={activeTab === 'encoder' ? 'secondary' : 'outline'}
+                  className="w-full justify-start"
+                  onClick={() => setActiveTab('encoder')}
+                >
+                  <Code className="mr-2 h-4 w-4" />
+                  Encoder/Decoder
+                </Button>
+                <Button
+                  variant={activeTab === 'revshell' ? 'secondary' : 'outline'}
+                  className="w-full justify-start"
+                  onClick={() => setActiveTab('revshell')}
+                >
+                  <Terminal className="mr-2 h-4 w-4" />
+                  Reverse Shells
+                </Button>
+                <Button
+                  variant={activeTab === 'passwords' ? 'secondary' : 'outline'}
+                  className="w-full justify-start"
+                  onClick={() => setActiveTab('passwords')}
+                >
+                  <Key className="mr-2 h-4 w-4" />
+                  Password Cracking
+                </Button>
+                <Button
+                  variant={activeTab === 'payload' ? 'secondary' : 'outline'}
+                  className="w-full justify-start"
+                  onClick={() => setActiveTab('payload')}
+                >
+                  <ShieldAlert className="mr-2 h-4 w-4" />
+                  Payload Generator
+                </Button>
+                <Button
+                  variant={activeTab === 'sqli' ? 'secondary' : 'outline'}
+                  className="w-full justify-start"
+                  onClick={() => setActiveTab('sqli')}
+                >
+                  <ServerCrash className="mr-2 h-4 w-4" />
+                  SQLi Payloads
+                </Button>
+                <Button
+                  variant={activeTab === 'xss' ? 'secondary' : 'outline'}
+                  className="w-full justify-start"
+                  onClick={() => setActiveTab('xss')}
+                >
+                  <Bug className="mr-2 h-4 w-4" />
+                  XSS Payloads
+                </Button>
+                <Button
+                  variant={activeTab === 'additional' ? 'secondary' : 'outline'}
+                  className="w-full justify-start"
+                  onClick={() => setActiveTab('additional')}
+                >
+                  <Lock className="mr-2 h-4 w-4" />
+                  Additional Tools
+                </Button>
               </CardContent>
             </Card>
           </div>
           
-          <div className="lg:col-span-1 space-y-6">
-            <AdditionalTools 
-              isRealmode={isRealmode} 
-            />
-            <FileCentipede />
+          <div className="md:col-span-4 space-y-6">
+            <div className="bg-scanner-card rounded-lg border border-gray-700 overflow-hidden">
+              <div className="border-b border-gray-700">
+                <div className="flex overflow-x-auto">
+                  
+                </div>
+              </div>
+              
+              <div className="p-4">
+                {activeTab === 'encoder' && (
+                  <EncoderDecoderTab 
+                    isRealmode={isRealmode}
+                    isExecuting={isExecuting}
+                    setIsExecuting={setIsExecuting}
+                    setToolOutput={setToolOutput}
+                  />
+                )}
+                
+                {activeTab === 'revshell' && (
+                  <ReverseShellTab 
+                    isRealmode={isRealmode}
+                    isExecuting={isExecuting}
+                    setIsExecuting={setIsExecuting}
+                    setToolOutput={setToolOutput}
+                  />
+                )}
+                
+                {activeTab === 'passwords' && (
+                  <PasswordCrackerTabShim // Use the shim component here
+                    isRealmode={isRealmode}
+                    isExecuting={isExecuting}
+                    setIsExecuting={setIsExecuting}
+                    setToolOutput={setToolOutput}
+                  />
+                )}
+                
+                {activeTab === 'payload' && (
+                  <PayloadGeneratorTab 
+                    isRealmode={isRealmode}
+                    isExecuting={isExecuting}
+                    setIsExecuting={setIsExecuting}
+                    setToolOutput={setToolOutput}
+                  />
+                )}
+                
+                {activeTab === 'sqli' && (
+                  <SqliPayloadsTab 
+                    isRealmode={isRealmode}
+                    isExecuting={isExecuting}
+                    setIsExecuting={setIsExecuting}
+                    setToolOutput={setToolOutput}
+                  />
+                )}
+                
+                {activeTab === 'xss' && (
+                  <XssPayloadsTab 
+                    isRealmode={isRealmode}
+                    isExecuting={isExecuting}
+                    setIsExecuting={setIsExecuting}
+                    setToolOutput={setToolOutput}
+                  />
+                )}
+                
+                {activeTab === 'additional' && (
+                  <AdditionalTools 
+                    isRealmode={isRealmode}
+                    isExecuting={isExecuting}
+                    setIsExecuting={setIsExecuting}
+                    setToolOutput={setToolOutput}
+                  />
+                )}
+              </div>
+            </div>
+            
+            <Card className="bg-scanner-card border-gray-700">
+              <CardHeader>
+                <CardTitle className="text-lg font-bold">Tool Output</CardTitle>
+                <CardDescription className="text-gray-400">Results and feedback from the tools</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Input
+                  readOnly
+                  className="bg-gray-800 text-white font-mono text-sm"
+                  value={toolOutput}
+                  placeholder="Tool output will appear here"
+                />
+              </CardContent>
+            </Card>
           </div>
         </div>
       </main>
@@ -202,4 +242,4 @@ const HackingToolPage: React.FC = () => {
   );
 };
 
-export default HackingToolPage;
+export default HackingTool;

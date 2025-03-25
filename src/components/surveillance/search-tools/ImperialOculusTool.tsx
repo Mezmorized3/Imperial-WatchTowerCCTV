@@ -1,118 +1,139 @@
 
-import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Separator } from '@/components/ui/separator';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
-import { Eye, Network, Shield, Server, Wifi, AlertCircle, ArrowRight } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
-import { executeImperialOculus } from '@/utils/osintTools';
+import { ImperialOculusParams } from '@/utils/types/networkToolTypes';
+import { Loader2, Wifi, AlertCircle, ArrowRight, Server } from 'lucide-react';
 
 interface ImperialOculusToolProps {
   onScanComplete?: (results: any) => void;
 }
 
+// Mock function for the Imperial Oculus functionality
+const mockExecuteImperialOculus = async (params: ImperialOculusParams): Promise<any> => {
+  console.log("Imperial Oculus: executing with params", params);
+  
+  // Simulate network delay
+  await new Promise(resolve => setTimeout(resolve, 3000));
+  
+  // For demo, return simulated data
+  return {
+    success: true,
+    timestamp: new Date().toISOString(),
+    scanType: params.scanType,
+    target: params.target,
+    domain: params.target,
+    networkInformation: {
+      ipAddresses: ["192.168.1.1", "192.168.1.100", "192.168.1.254"],
+      subdomains: ["mail", "admin", "api", "static"],
+      openPorts: [80, 443, 22, 3389, 8080],
+      services: ["HTTP", "HTTPS", "SSH", "RDP", "Proxy"],
+      securityRating: "medium",
+      vulnerabilities: [
+        {
+          severity: "high",
+          description: "Outdated SSL certificate",
+          remediation: "Update SSL certificate to latest standard"
+        },
+        {
+          severity: "medium", 
+          description: "Remote administration ports open",
+          remediation: "Restrict access to administrative ports"
+        }
+      ]
+    },
+    simulatedData: true
+  };
+};
+
 const ImperialOculusTool: React.FC<ImperialOculusToolProps> = ({ onScanComplete }) => {
   const [target, setTarget] = useState('');
-  const [scanType, setScanType] = useState<'basic' | 'full' | 'stealth'>('basic');
-  const [isScanning, setIsScanning] = useState(false);
-  const [results, setResults] = useState<any>(null);
-  const [progress, setProgress] = useState(0);
+  const [scanType, setScanType] = useState<'full' | 'quick' | 'stealth' | 'basic'>('quick');
   const [saveResults, setSaveResults] = useState(false);
-  const [timeout, setTimeout] = useState('60');
-  const [isLoading, setIsLoading] = useState(false);
+  const [isScanning, setIsScanning] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [results, setResults] = useState<any>(null);
 
   const handleScan = async () => {
     if (!target) {
       toast({
         title: "Error",
-        description: "Please enter a target",
+        description: "Please enter a target domain or IP",
         variant: "destructive"
       });
       return;
     }
-    
-    setIsLoading(true);
-    
-    try {
-      const result = await executeImperialOculus({
-        target,
-        scanType: scanType as 'full' | 'quick' | 'stealth',
-        saveResults,
-        timeout: parseInt(timeout)
-      });
-      
-      if (result && result.success) {
-        setResults(result.data);
-        
-        if (onScanComplete) {
-          onScanComplete(result.data);
+
+    setIsScanning(true);
+    setProgress(0);
+    setResults(null);
+
+    // Simulate progress updates
+    const progressInterval = setInterval(() => {
+      setProgress(prev => {
+        if (prev >= 95) {
+          clearInterval(progressInterval);
+          return 95;
         }
-        
-        toast({
-          title: "Scan Complete",
-          description: `Scan completed successfully`
-        });
-      } else {
-        toast({
-          title: "Scan Failed",
-          description: result?.error || "Unknown error occurred",
-          variant: "destructive"
-        });
+        return prev + Math.floor(Math.random() * 5) + 1;
+      });
+    }, 200);
+
+    try {
+      const params: ImperialOculusParams = {
+        target,
+        scanType,
+        saveResults,
+        timeout: 60
+      };
+
+      // Execute Imperial Oculus scan
+      const result = await mockExecuteImperialOculus(params);
+      setResults(result);
+
+      if (onScanComplete) {
+        onScanComplete(result);
       }
-    } catch (error) {
-      console.error("Error during scan:", error);
+
       toast({
-        title: "Scan Error",
+        title: "Scan Complete",
+        description: `Imperial Oculus completed the ${scanType} scan`,
+      });
+    } catch (error) {
+      console.error("Error during Imperial Oculus scan:", error);
+      toast({
+        title: "Scan Failed",
         description: error instanceof Error ? error.message : "An unknown error occurred",
         variant: "destructive"
       });
     } finally {
-      setIsLoading(false);
+      clearInterval(progressInterval);
+      setProgress(100);
+      setTimeout(() => setIsScanning(false), 500);
     }
   };
 
-  const getScanTypeBadge = (type: string) => {
-    switch (type) {
-      case 'full':
-        return <Badge className="bg-blue-600">Full Scan</Badge>;
-      case 'stealth':
-        return <Badge className="bg-purple-600">Stealth Scan</Badge>;
-      default:
-        return <Badge className="bg-green-600">Basic Scan</Badge>;
-    }
-  };
-
-  const getPortSeverity = (port: number) => {
-    const highRiskPorts = [21, 23, 3389, 445, 135, 139];
-    const mediumRiskPorts = [22, 80, 443, 8080, 8443, 3306, 5432];
-    
-    if (highRiskPorts.includes(port)) return 'high';
-    if (mediumRiskPorts.includes(port)) return 'medium';
-    return 'low';
-  };
-
-  const getPortBadge = (port: number, service: string) => {
-    const severity = getPortSeverity(port);
-    let className = "ml-1";
-    
-    switch (severity) {
+  const renderSeverityBadge = (severity: string) => {
+    switch (severity.toLowerCase()) {
+      case 'critical':
+        return <Badge variant="destructive">Critical</Badge>;
       case 'high':
-        className += " bg-red-600";
-        break;
+        return <Badge variant="destructive">High</Badge>;
       case 'medium':
-        className += " bg-yellow-600";
-        break;
+        return <Badge variant="warning">Medium</Badge>;
+      case 'low':
+        return <Badge variant="outline">Low</Badge>;
       default:
-        className += " bg-blue-600";
+        return <Badge variant="outline">Unknown</Badge>;
     }
-    
-    return <Badge className={className}>{port} ({service})</Badge>;
   };
 
   return (
@@ -120,144 +141,153 @@ const ImperialOculusTool: React.FC<ImperialOculusToolProps> = ({ onScanComplete 
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Wifi className="h-5 w-5" />
-          Imperial Oculus Network Scanner
+          Imperial Oculus
         </CardTitle>
         <CardDescription>
-          Scan networks to identify devices and open ports
+          Advanced network reconnaissance and domain analysis
         </CardDescription>
       </CardHeader>
-      <CardContent>
+      <CardContent className="space-y-6">
         <div className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="target">Target Network (CIDR format)</Label>
+            <Label htmlFor="target">Target Domain or IP</Label>
             <Input
               id="target"
-              placeholder="192.168.1.0/24"
+              placeholder="example.com or 192.168.1.1"
               value={target}
               onChange={(e) => setTarget(e.target.value)}
               disabled={isScanning}
             />
-            <p className="text-xs text-muted-foreground">
-              Enter a network address in CIDR notation (e.g., 192.168.1.0/24)
-            </p>
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="scanType">Scan Type</Label>
-            <Select 
-              value={scanType} 
-              onValueChange={(value) => setScanType(value as 'basic' | 'full' | 'stealth')}
+            <Select
+              value={scanType}
+              onValueChange={(value) => setScanType(value as 'full' | 'quick' | 'stealth' | 'basic')}
               disabled={isScanning}
             >
               <SelectTrigger id="scanType">
                 <SelectValue placeholder="Select scan type" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="basic">Basic (Fast)</SelectItem>
-                <SelectItem value="full">Full (Detailed)</SelectItem>
-                <SelectItem value="stealth">Stealth (Low Detection)</SelectItem>
+                <SelectItem value="quick">Quick Scan</SelectItem>
+                <SelectItem value="full">Full Scan</SelectItem>
+                <SelectItem value="stealth">Stealth Scan</SelectItem>
+                <SelectItem value="basic">Basic Scan</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
-          <div className="space-y-2 flex items-center gap-2">
-            <Label htmlFor="saveResults">Save Results</Label>
+          <div className="flex items-center space-x-2">
             <Checkbox
               id="saveResults"
               checked={saveResults}
               onCheckedChange={(checked) => setSaveResults(checked === true)}
               disabled={isScanning}
             />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="timeout">Timeout (seconds)</Label>
-            <Input
-              id="timeout"
-              type="number"
-              value={timeout}
-              onChange={(e) => setTimeout(e.target.value)}
-              disabled={isScanning}
-            />
+            <Label htmlFor="saveResults">Save Results to Database</Label>
           </div>
 
           {isScanning && (
-            <div className="space-y-2 mt-4">
-              <div className="flex justify-between text-xs text-muted-foreground">
-                <span>Scanning network...</span>
+            <div className="space-y-2">
+              <div className="flex justify-between text-sm">
+                <span>Scanning...</span>
                 <span>{progress}%</span>
               </div>
               <Progress value={progress} className="h-2" />
             </div>
           )}
+        </div>
 
-          {results && (
-            <div className="mt-6 space-y-3">
-              <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold">Scan Results</h3>
-                <div className="flex items-center gap-2">
-                  {getScanTypeBadge(results.scan_type)}
-                  <Badge variant="outline">{results.total_hosts} Hosts</Badge>
-                  <Badge variant="outline">{results.total_ports} Ports</Badge>
-                </div>
-              </div>
-              
-              <Separator />
-              
-              <div className="space-y-4">
-                {results.devices.map((device: any, index: number) => (
-                  <div key={index} className="border rounded-lg p-3 shadow-sm">
-                    <div className="flex justify-between items-start">
-                      <div className="flex items-center gap-2">
-                        <Server className="h-4 w-4 text-muted-foreground" />
-                        <span className="font-medium">{device.ip}</span>
-                        {device.hostName && (
-                          <span className="text-sm text-muted-foreground ml-2">
-                            ({device.hostName})
-                          </span>
-                        )}
-                      </div>
-                      {device.manufacturer && (
-                        <Badge variant="outline">{device.manufacturer}</Badge>
-                      )}
-                    </div>
-                    
-                    {device.macAddress && (
-                      <div className="text-xs text-muted-foreground mt-1">
-                        MAC: {device.macAddress}
-                      </div>
+        {results && (
+          <div className="space-y-4 pt-4">
+            <div className="flex flex-wrap gap-2">
+              <Badge variant="outline" className="bg-blue-900/30 text-blue-300">
+                {results.scanType}
+              </Badge>
+              <Badge variant="outline" className="bg-gray-900/30 text-gray-300">
+                {new Date(results.timestamp).toLocaleString()}
+              </Badge>
+            </div>
+
+            <Separator className="my-2" />
+
+            <div className="space-y-3">
+              <h3 className="text-lg font-semibold flex items-center gap-2">
+                <Server className="h-4 w-4" />
+                Network Information
+              </h3>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <h4 className="text-sm font-medium text-gray-400">Security Rating</h4>
+                  <div className="mt-1">
+                    {results.networkInformation.securityRating === "low" && (
+                      <Badge variant="destructive">Low Security</Badge>
                     )}
-                    
-                    <div className="mt-2">
-                      <div className="text-sm flex items-center gap-1 mb-1">
-                        <Shield className="h-3 w-3" />
-                        <span>Open Ports:</span>
-                      </div>
-                      <div className="flex flex-wrap gap-1">
-                        {device.openPorts.map((port: any, pidx: number) => (
-                          <span key={pidx}>
-                            {getPortBadge(port.port, port.service)}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                    
-                    {device.openPorts.some((p: any) => getPortSeverity(p.port) === 'high') && (
-                      <div className="mt-2 flex items-center gap-1 text-xs text-red-500">
-                        <AlertCircle className="h-3 w-3" />
-                        <span>High-risk ports detected</span>
-                      </div>
+                    {results.networkInformation.securityRating === "medium" && (
+                      <Badge variant="warning">Medium Security</Badge>
+                    )}
+                    {results.networkInformation.securityRating === "high" && (
+                      <Badge variant="outline" className="bg-green-900/30 text-green-300">
+                        High Security
+                      </Badge>
                     )}
                   </div>
-                ))}
+                </div>
+
+                <div>
+                  <h4 className="text-sm font-medium text-gray-400">Open Ports</h4>
+                  <p className="mt-1 text-sm">
+                    {results.networkInformation.openPorts.join(", ")}
+                  </p>
+                </div>
               </div>
-              
-              <div className="text-xs text-muted-foreground mt-2">
-                Scan completed in {results.scan_time} • {new Date(results.timestamp).toLocaleString()}
+
+              <div>
+                <h4 className="text-sm font-medium text-gray-400">Services</h4>
+                <p className="mt-1 text-sm">
+                  {results.networkInformation.services.join(", ")}
+                </p>
               </div>
+
+              <div>
+                <h4 className="text-sm font-medium text-gray-400">Subdomains</h4>
+                <div className="mt-1 grid grid-cols-2 md:grid-cols-4 gap-2">
+                  {results.networkInformation.subdomains.map((subdomain: string, index: number) => (
+                    <div key={index} className="text-sm bg-gray-800 rounded p-1 px-2">
+                      {subdomain}.{results.domain}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {results.networkInformation.vulnerabilities && 
+               results.networkInformation.vulnerabilities.length > 0 && (
+                <div>
+                  <h4 className="text-sm font-medium text-gray-400 flex items-center gap-1">
+                    <AlertCircle className="h-3 w-3 text-red-500" />
+                    Vulnerabilities
+                  </h4>
+                  <div className="mt-2 space-y-3">
+                    {results.networkInformation.vulnerabilities.map((vuln: any, index: number) => (
+                      <div key={index} className="bg-gray-800/50 p-3 rounded-md">
+                        <div className="flex justify-between">
+                          <div className="font-medium">{vuln.description}</div>
+                          {renderSeverityBadge(vuln.severity)}
+                        </div>
+                        <p className="text-sm text-gray-400 mt-1">
+                          {vuln.remediation}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
-          )}
-        </div>
+          </div>
+        )}
       </CardContent>
       <CardFooter>
         <Button
@@ -265,8 +295,17 @@ const ImperialOculusTool: React.FC<ImperialOculusToolProps> = ({ onScanComplete 
           onClick={handleScan}
           disabled={isScanning || !target}
         >
-          {isScanning ? 'Scanning...' : 'Start Network Scan'}
-          {!isScanning && <ArrowRight className="ml-2 h-4 w-4" />}
+          {isScanning ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Running Imperial Oculus...
+            </>
+          ) : (
+            <>
+              Scan with Imperial Oculus
+              <ArrowRight className="ml-2 h-4 w-4" />
+            </>
+          )}
         </Button>
       </CardFooter>
     </Card>

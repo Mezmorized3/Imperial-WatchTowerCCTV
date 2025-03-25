@@ -71,6 +71,7 @@ export type CameraResult = {
     updateAvailable?: boolean;
     lastChecked?: string;
   };
+  firmwareVersion?: string; // Added firmwareVersion explicitly
   services?: string[];
   firstSeen?: string;
 };

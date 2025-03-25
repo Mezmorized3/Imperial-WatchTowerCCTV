@@ -1,75 +1,227 @@
 
 /**
- * Geo utilities for handling geolocation data
+ * Utility functions for geographic operations 
  */
 
+// Map of country names to ISO codes
+const countryCodeMap: Record<string, string> = {
+  'afghanistan': 'af',
+  'albania': 'al',
+  'algeria': 'dz',
+  'andorra': 'ad',
+  'angola': 'ao',
+  'argentina': 'ar',
+  'armenia': 'am',
+  'australia': 'au',
+  'austria': 'at',
+  'azerbaijan': 'az',
+  'bahamas': 'bs',
+  'bahrain': 'bh',
+  'bangladesh': 'bd',
+  'barbados': 'bb',
+  'belarus': 'by',
+  'belgium': 'be',
+  'belize': 'bz',
+  'benin': 'bj',
+  'bhutan': 'bt',
+  'bolivia': 'bo',
+  'bosnia': 'ba',
+  'botswana': 'bw',
+  'brazil': 'br',
+  'brunei': 'bn',
+  'bulgaria': 'bg',
+  'burkina faso': 'bf',
+  'burundi': 'bi',
+  'cambodia': 'kh',
+  'cameroon': 'cm',
+  'canada': 'ca',
+  'cape verde': 'cv',
+  'central african republic': 'cf',
+  'chad': 'td',
+  'chile': 'cl',
+  'china': 'cn',
+  'colombia': 'co',
+  'comoros': 'km',
+  'congo': 'cg',
+  'costa rica': 'cr',
+  'croatia': 'hr',
+  'cuba': 'cu',
+  'cyprus': 'cy',
+  'czech republic': 'cz',
+  'denmark': 'dk',
+  'djibouti': 'dj',
+  'dominica': 'dm',
+  'dominican republic': 'do',
+  'ecuador': 'ec',
+  'egypt': 'eg',
+  'el salvador': 'sv',
+  'equatorial guinea': 'gq',
+  'eritrea': 'er',
+  'estonia': 'ee',
+  'ethiopia': 'et',
+  'fiji': 'fj',
+  'finland': 'fi',
+  'france': 'fr',
+  'gabon': 'ga',
+  'gambia': 'gm',
+  'georgia': 'ge',
+  'germany': 'de',
+  'ghana': 'gh',
+  'greece': 'gr',
+  'grenada': 'gd',
+  'guatemala': 'gt',
+  'guinea': 'gn',
+  'guinea-bissau': 'gw',
+  'guyana': 'gy',
+  'haiti': 'ht',
+  'honduras': 'hn',
+  'hungary': 'hu',
+  'iceland': 'is',
+  'india': 'in',
+  'indonesia': 'id',
+  'iran': 'ir',
+  'iraq': 'iq',
+  'ireland': 'ie',
+  'israel': 'il',
+  'italy': 'it',
+  'ivory coast': 'ci',
+  'jamaica': 'jm',
+  'japan': 'jp',
+  'jordan': 'jo',
+  'kazakhstan': 'kz',
+  'kenya': 'ke',
+  'kiribati': 'ki',
+  'korea, north': 'kp',
+  'korea, south': 'kr',
+  'kosovo': 'xk',
+  'kuwait': 'kw',
+  'kyrgyzstan': 'kg',
+  'laos': 'la',
+  'latvia': 'lv',
+  'lebanon': 'lb',
+  'lesotho': 'ls',
+  'liberia': 'lr',
+  'libya': 'ly',
+  'liechtenstein': 'li',
+  'lithuania': 'lt',
+  'luxembourg': 'lu',
+  'macedonia': 'mk',
+  'madagascar': 'mg',
+  'malawi': 'mw',
+  'malaysia': 'my',
+  'maldives': 'mv',
+  'mali': 'ml',
+  'malta': 'mt',
+  'marshall islands': 'mh',
+  'mauritania': 'mr',
+  'mauritius': 'mu',
+  'mexico': 'mx',
+  'micronesia': 'fm',
+  'moldova': 'md',
+  'monaco': 'mc',
+  'mongolia': 'mn',
+  'montenegro': 'me',
+  'morocco': 'ma',
+  'mozambique': 'mz',
+  'myanmar': 'mm',
+  'namibia': 'na',
+  'nauru': 'nr',
+  'nepal': 'np',
+  'netherlands': 'nl',
+  'new zealand': 'nz',
+  'nicaragua': 'ni',
+  'niger': 'ne',
+  'nigeria': 'ng',
+  'norway': 'no',
+  'oman': 'om',
+  'pakistan': 'pk',
+  'palau': 'pw',
+  'palestine': 'ps',
+  'panama': 'pa',
+  'papua new guinea': 'pg',
+  'paraguay': 'py',
+  'peru': 'pe',
+  'philippines': 'ph',
+  'poland': 'pl',
+  'portugal': 'pt',
+  'qatar': 'qa',
+  'romania': 'ro',
+  'russia': 'ru',
+  'rwanda': 'rw',
+  'saint kitts and nevis': 'kn',
+  'saint lucia': 'lc',
+  'saint vincent': 'vc',
+  'samoa': 'ws',
+  'san marino': 'sm',
+  'sao tome and principe': 'st',
+  'saudi arabia': 'sa',
+  'senegal': 'sn',
+  'serbia': 'rs',
+  'seychelles': 'sc',
+  'sierra leone': 'sl',
+  'singapore': 'sg',
+  'slovakia': 'sk',
+  'slovenia': 'si',
+  'solomon islands': 'sb',
+  'somalia': 'so',
+  'south africa': 'za',
+  'south sudan': 'ss',
+  'spain': 'es',
+  'sri lanka': 'lk',
+  'sudan': 'sd',
+  'suriname': 'sr',
+  'swaziland': 'sz',
+  'sweden': 'se',
+  'switzerland': 'ch',
+  'syria': 'sy',
+  'taiwan': 'tw',
+  'tajikistan': 'tj',
+  'tanzania': 'tz',
+  'thailand': 'th',
+  'timor-leste': 'tl',
+  'togo': 'tg',
+  'tonga': 'to',
+  'trinidad and tobago': 'tt',
+  'tunisia': 'tn',
+  'turkey': 'tr',
+  'turkmenistan': 'tm',
+  'tuvalu': 'tv',
+  'uganda': 'ug',
+  'ukraine': 'ua',
+  'united arab emirates': 'ae',
+  'united kingdom': 'gb',
+  'united states': 'us',
+  'uruguay': 'uy',
+  'uzbekistan': 'uz',
+  'vanuatu': 'vu',
+  'vatican city': 'va',
+  'venezuela': 've',
+  'vietnam': 'vn',
+  'yemen': 'ye',
+  'zambia': 'zm',
+  'zimbabwe': 'zw'
+};
+
 /**
- * Generate random geolocation for an IP (for simulation)
+ * Get the ISO country code for a given country name
  */
-export const getRandomGeoLocation = (ip: string): Record<string, any> => {
-  // Use the IP to deterministically generate a location
-  const ipHash = ip.split('.').reduce((sum, num) => sum + parseInt(num), 0);
-  
-  // List of countries and cities
-  const countries = [
-    { code: 'US', name: 'United States', cities: ['New York', 'Los Angeles', 'Chicago', 'Houston', 'Phoenix'] },
-    { code: 'GB', name: 'United Kingdom', cities: ['London', 'Manchester', 'Birmingham', 'Glasgow', 'Liverpool'] },
-    { code: 'DE', name: 'Germany', cities: ['Berlin', 'Munich', 'Hamburg', 'Cologne', 'Frankfurt'] },
-    { code: 'FR', name: 'France', cities: ['Paris', 'Marseille', 'Lyon', 'Toulouse', 'Nice'] },
-    { code: 'JP', name: 'Japan', cities: ['Tokyo', 'Osaka', 'Kyoto', 'Yokohama', 'Sapporo'] },
-    { code: 'CA', name: 'Canada', cities: ['Toronto', 'Montreal', 'Vancouver', 'Calgary', 'Ottawa'] },
-    { code: 'AU', name: 'Australia', cities: ['Sydney', 'Melbourne', 'Brisbane', 'Perth', 'Adelaide'] }
-  ];
-  
-  // Select a country based on the IP hash
-  const country = countries[ipHash % countries.length];
-  
-  // Select a city based on the IP hash
-  const city = country.cities[(ipHash * 31) % country.cities.length];
-  
-  // Generate latitude and longitude
-  // These are very rough approximations for demonstration
-  let lat, lon;
-  
-  switch (country.code) {
-    case 'US':
-      lat = 37 + (ipHash % 15) - 7.5;
-      lon = -100 + (ipHash % 50) - 25;
-      break;
-    case 'GB':
-      lat = 54 + (ipHash % 5) - 2.5;
-      lon = -2 + (ipHash % 3) - 1.5;
-      break;
-    case 'DE':
-      lat = 51 + (ipHash % 5) - 2.5;
-      lon = 10 + (ipHash % 5) - 2.5;
-      break;
-    case 'FR':
-      lat = 47 + (ipHash % 5) - 2.5;
-      lon = 2 + (ipHash % 5) - 2.5;
-      break;
-    case 'JP':
-      lat = 36 + (ipHash % 5) - 2.5;
-      lon = 138 + (ipHash % 5) - 2.5;
-      break;
-    case 'CA':
-      lat = 56 + (ipHash % 10) - 5;
-      lon = -106 + (ipHash % 50) - 25;
-      break;
-    case 'AU':
-      lat = -25 + (ipHash % 10) - 5;
-      lon = 135 + (ipHash % 10) - 5;
-      break;
-    default:
-      lat = (ipHash % 180) - 90;
-      lon = (ipHash % 360) - 180;
-  }
-  
-  return {
-    country: country.name,
-    countryCode: country.code,
-    city: city,
-    coordinates: [lat, lon],
-    ip: ip
-  };
+export const getCountryCode = (countryName: string): string => {
+  const normalizedName = countryName.toLowerCase().trim();
+  return countryCodeMap[normalizedName] || 'unknown';
+};
+
+/**
+ * Get the country name for a given ISO country code
+ */
+export const getCountryName = (code: string): string => {
+  const normalizedCode = code.toLowerCase().trim();
+  const entry = Object.entries(countryCodeMap).find(([_, value]) => value === normalizedCode);
+  return entry ? entry[0] : 'Unknown';
+};
+
+/**
+ * Check if a country code is valid
+ */
+export const isValidCountryCode = (code: string): boolean => {
+  return Object.values(countryCodeMap).includes(code.toLowerCase());
 };

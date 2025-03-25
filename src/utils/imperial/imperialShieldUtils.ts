@@ -7,6 +7,59 @@ import { ImperialShieldResult } from '../types/threatIntelTypes';
  */
 
 /**
+ * Configure Imperial Shield
+ */
+export const configureImperialShield = (
+  enabled: boolean,
+  emperorPort: string,
+  shieldPorts: string,
+  trustedNetworks: string,
+  cipherKey: string
+): boolean => {
+  console.log(`Configuring Imperial Shield: 
+    Enabled: ${enabled}, 
+    Emperor Port: ${emperorPort}, 
+    Shield Ports: ${shieldPorts}, 
+    Trusted Networks: ${trustedNetworks}`
+  );
+  
+  // Simulate configuration - in a real implementation, this would configure actual security protocols
+  return Math.random() > 0.1; // 90% chance of success for demo purposes
+};
+
+/**
+ * Test the Imperial Shield connection
+ */
+export const testImperialShieldConnection = async (
+  serverUrl: string
+): Promise<{success: boolean, shieldStatus: string, securityRating: number, error?: string}> => {
+  console.log(`Testing connection to Imperial Shield at ${serverUrl}`);
+  
+  // Simulate network delay
+  await new Promise(resolve => setTimeout(resolve, 1500));
+  
+  const success = Math.random() > 0.2; // 80% chance of success
+  
+  if (success) {
+    const ratings = ['active', 'active', 'active', 'inactive', 'breached'];
+    const randomRating = ratings[Math.floor(Math.random() * ratings.length)];
+    
+    return {
+      success: true,
+      shieldStatus: randomRating,
+      securityRating: Math.floor(Math.random() * 60) + 40, // 40-100 range
+    };
+  } else {
+    return {
+      success: false,
+      shieldStatus: 'inactive',
+      securityRating: 0,
+      error: 'Connection failed: Imperial Shield server not responding'
+    };
+  }
+};
+
+/**
  * Generate a mock Imperial Shield scan result
  */
 export const generateMockShieldResult = (ip: string): ImperialShieldResult => {

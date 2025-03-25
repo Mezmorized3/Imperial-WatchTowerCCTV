@@ -42,7 +42,7 @@ export interface CameraResult {
     updateAvailable?: boolean;
     lastChecked?: string;
   };
-  firmwareVersion?: string; // Added property for firmware version
+  firmwareVersion?: string; // Making this explicitly defined
   lastSeen?: string;
   accessLevel?: 'none' | 'view' | 'control' | 'admin';
 }

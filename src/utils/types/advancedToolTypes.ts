@@ -55,17 +55,28 @@ export interface FFmpegParams {
   duration?: number;
 }
 
+// Updated ImperialShieldResult interface
 export interface ImperialShieldResult {
-  shieldStatus: 'active' | 'inactive' | 'compromised';
-  securityRating: number;
-  vulnerabilities: {
+  id?: string; // Make id optional to fix conflicts
+  status: 'active' | 'inactive' | 'compromised';
+  targetIp?: string;
+  lastScan?: string;
+  shieldStatus?: 'active' | 'inactive' | 'compromised';
+  securityRating?: number;
+  vulnerabilities?: {
     critical: number;
     high: number;
     medium: number;
     low: number;
   };
-  recommendations: string[];
-  details: any;
+  vulnSummary?: {
+    critical: number;
+    high: number;
+    medium: number;
+    low: number;
+  };
+  recommendations?: string[];
+  details?: any;
   success?: boolean;
   error?: string;
 }

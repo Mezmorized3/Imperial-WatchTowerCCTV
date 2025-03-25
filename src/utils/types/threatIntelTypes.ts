@@ -61,18 +61,9 @@ export interface ThreatAssessment {
   lastUpdated: string;
 }
 
-export interface ImperialShieldResult {
-  status: 'active' | 'inactive' | 'compromised';
-  targetIp: string;
-  lastScan: string;
-  vulnSummary: {
-    critical: number;
-    high: number;
-    medium: number;
-    low: number;
-  };
-  id?: string; // Optional ID property
-}
+// Import the ImperialShieldResult interface from advancedToolTypes
+// to avoid duplication and conflict
+import { ImperialShieldResult as AdvancedImperialShieldResult } from './advancedToolTypes';
 
-// Use 'export type' for re-exports
-export type { ImperialShieldResult } from './advancedToolTypes';
+// Re-export it 
+export type ImperialShieldResult = AdvancedImperialShieldResult;
