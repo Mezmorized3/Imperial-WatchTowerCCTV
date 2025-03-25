@@ -23,8 +23,8 @@ export interface WebHackParams {
   checkSubdomains?: boolean;
   userAgent?: string;
   saveResults?: boolean;
-  target?: string; // Add missing properties
-  method?: string; // Add missing properties
+  target?: string; // Add target property
+  method?: string; // Add method property
 }
 
 export interface WebHackResult {

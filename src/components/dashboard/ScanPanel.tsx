@@ -1,8 +1,8 @@
 
 import React from 'react';
-import ScanForm from '@/components/ScanForm';
-import StatusBar from '@/components/StatusBar';
 import { ScanProgress, ScanTarget, ScanSettings } from '@/types/scanner';
+import StatusBar from '@/components/StatusBar';
+import ScannerConfiguration from './ScannerConfiguration';
 
 interface ScanPanelProps {
   onStartScan: (target: ScanTarget, settings: ScanSettings) => void;
@@ -16,16 +16,16 @@ const ScanPanel: React.FC<ScanPanelProps> = ({
   scanProgress 
 }) => {
   return (
-    <>
-      <ScanForm 
+    <div className="space-y-4">
+      <ScannerConfiguration 
         onStartScan={onStartScan}
         isScanning={isScanning}
       />
       
-      <div className="mt-6">
+      <div className="mt-4">
         <StatusBar progress={scanProgress} />
       </div>
-    </>
+    </div>
   );
 };
 

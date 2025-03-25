@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { ScanProgress, CameraResult, ScanTarget, ScanSettings } from '@/types/scanner';
 import { Toaster } from '@/components/ui/toaster';
@@ -14,6 +15,9 @@ import ScanController from '@/components/dashboard/ScanController';
 import DashboardTabs from '@/components/dashboard/DashboardTabs';
 import ScanNotifications from '@/components/dashboard/ScanNotifications';
 import ScanPanel from '@/components/dashboard/ScanPanel';
+
+// Import search engine utilities
+import { executeCameraSearch, findEasternEuropeanCameras } from '@/utils/searchEngines';
 
 const Index = () => {
   // Get real-time data from context
@@ -70,6 +74,7 @@ const Index = () => {
     }
   }, [scanProgress.status]);
 
+  // Configure scan controller
   const { handleStartScan } = ScanController({
     onScanProgressUpdate: (progress) => {
       setScanProgress(progress);
@@ -84,26 +89,141 @@ const Index = () => {
     onErrorOccurred: setError
   });
 
-  const handleRealTimeStartScan = (target: ScanTarget, settings: ScanSettings) => {
-    // If connected to real-time, use that for starting scan
-    if (isConnected) {
-      realtimeStartScan({ target, settings });
-    } else {
-      // Fall back to regular method - create default parameters that match required types
-      const defaultTarget: ScanTarget = {
-        type: 'ip',
-        value: '192.168.1.1'
-      };
-      const defaultSettings: ScanSettings = {
-        aggressive: false,
-        testCredentials: false,
-        checkVulnerabilities: false,
-        saveSnapshots: false,
-        regionFilter: [],
-        threadsCount: 1,
-        timeout: 5000
-      };
-      handleStartScan(defaultTarget, defaultSettings);
+  // Integrated scan handler that combines real-time, network scan and search engines
+  const handleIntegratedScan = async (target: ScanTarget, settings: ScanSettings) => {
+    // Start progress tracking
+    const startTime = new Date();
+    setScanProgress({
+      status: 'running',
+      targetsTotal: 100,
+      targetsScanned: 0,
+      camerasFound: 0,
+      startTime,
+      scanTarget: target,
+      scanSettings: settings
+    });
+    
+    try {
+      // If connected to real-time server, use that for the scan
+      if (isConnected) {
+        realtimeStartScan({ target, settings });
+        return;
+      }
+      
+      let scanResults: CameraResult[] = [];
+      
+      // Use different methods based on the scan type
+      if (target.type === 'shodan' || target.type === 'zoomeye' || target.type === 'censys') {
+        // Use search engine integrations
+        toast({
+          title: `Using ${target.type.toUpperCase()} Integration`,
+          description: `Searching for cameras with query: ${target.value}`
+        });
+        
+        // Update progress
+        setScanProgress(prev => ({
+          ...prev,
+          status: 'running',
+          targetsScanned: 25,
+        }));
+        
+        // Execute camera search
+        const searchResult = await executeCameraSearch(
+          { 
+            country: settings.regionFilter?.[0],
+            onlyVulnerable: settings.checkVulnerabilities,
+            limit: 20
+          }, 
+          target.type as any
+        );
+        
+        if (searchResult.cameras) {
+          scanResults = searchResult.cameras;
+        }
+      } 
+      else if (target.value.toLowerCase().includes('eastern:europe') || 
+              (settings.regionFilter && 
+               ['ua', 'ru', 'ge', 'ro', 'by', 'md'].includes(settings.regionFilter[0]))) {
+        // Use specialized Eastern European camera search
+        toast({
+          title: "Eastern European Scanner",
+          description: "Scanning for cameras in Eastern European networks"
+        });
+        
+        // Update progress
+        setScanProgress(prev => ({
+          ...prev,
+          status: 'running',
+          targetsScanned: 30,
+        }));
+        
+        // Find Eastern European cameras
+        const searchResult = await findEasternEuropeanCameras(
+          settings.aggressive ? 'scan' : 'osint',
+          {
+            country: settings.regionFilter?.[0],
+            onlyVulnerable: settings.checkVulnerabilities,
+            limit: settings.aggressive ? 25 : 15
+          }
+        );
+        
+        if (searchResult.cameras) {
+          scanResults = searchResult.cameras;
+        }
+      }
+      else {
+        // Use traditional network scanner
+        toast({
+          title: "Network Scanner",
+          description: `Scanning network: ${target.value}`
+        });
+        
+        // Call the regular network scanner
+        handleStartScan(target, settings);
+        return; // The regular scanner handles its own progress updates
+      }
+      
+      // Update final scan results
+      setResults(scanResults);
+      
+      // Complete scan progress
+      const endTime = new Date();
+      const timeElapsed = Math.floor((endTime.getTime() - startTime.getTime()) / 1000);
+      
+      setScanProgress({
+        status: 'completed',
+        targetsTotal: 100,
+        targetsScanned: 100,
+        camerasFound: scanResults.length,
+        startTime,
+        endTime,
+        scanTarget: target,
+        scanSettings: settings
+      });
+      
+      toast({
+        title: "Scan Completed",
+        description: `Found ${scanResults.length} cameras in ${timeElapsed}s`
+      });
+      
+    } catch (error) {
+      console.error("Scan error:", error);
+      
+      setScanProgress({
+        status: 'failed',
+        targetsTotal: 100,
+        targetsScanned: 0,
+        camerasFound: 0,
+        startTime,
+        endTime: new Date(),
+        error: error instanceof Error ? error.message : "Unknown error occurred"
+      });
+      
+      toast({
+        title: "Scan Failed",
+        description: error instanceof Error ? error.message : "An unknown error occurred during scan",
+        variant: "destructive"
+      });
     }
   };
 
@@ -192,7 +312,7 @@ const Index = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
           <div className="lg:col-span-1">
             <ScanPanel 
-              onStartScan={handleRealTimeStartScan}
+              onStartScan={handleIntegratedScan}
               isScanning={scanProgress.status === 'running'} 
               scanProgress={scanProgress}
             />

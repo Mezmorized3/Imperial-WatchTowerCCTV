@@ -71,8 +71,8 @@ export interface ImperialShieldResult {
     medium: number;
     low: number;
   };
-  id?: string; // Make id optional
+  id?: string; // Optional ID property
 }
 
-// Change re-export to use 'export type'
+// Use 'export type' for re-exports
 export type { ImperialShieldResult } from './advancedToolTypes';

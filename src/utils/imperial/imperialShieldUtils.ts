@@ -1,195 +1,203 @@
-/**
- * Imperial Shield utilities
- */
 
+import { nanoid } from 'nanoid';
 import { ImperialShieldResult } from '../types/threatIntelTypes';
-import { v4 as uuidv4 } from 'uuid';
 
 /**
- * Configure Imperial Shield settings
+ * Utility functions for the Imperial Shield system
  */
-export function configureImperialShield(
-  enabled: boolean,
-  emperorPort: string,
-  shieldPorts: string,
-  trustedNetworks: string,
-  cipherKey: string
-): boolean {
-  // This is a simulation function - in a real implementation, this would
-  // configure actual security settings
-  
-  console.log('Configuring Imperial Shield:', {
-    enabled,
-    emperorPort,
-    shieldPorts,
-    trustedNetworks,
-    cipherKey: cipherKey ? '****' : 'None'
-  });
-  
-  // Simulate a successful configuration
-  return true;
-}
 
 /**
- * Test connection to Imperial Shield
+ * Generate a mock Imperial Shield scan result
  */
-export async function testImperialShieldConnection(
-  endpoint: string
-): Promise<ImperialShieldResult> {
-  // Simulate a connection test with some delay
-  await new Promise(resolve => setTimeout(resolve, 1000));
+export const generateMockShieldResult = (ip: string): ImperialShieldResult => {
+  const randomStatus = Math.random();
+  let status: 'active' | 'inactive' | 'compromised';
   
-  // 80% chance of successful connection
-  const isSuccessful = Math.random() > 0.2;
-  
-  if (isSuccessful) {
-    return {
-      id: `shield-test-${Date.now()}`,
-      name: 'Test Connection',
-      description: 'Successfully connected to Imperial Shield',
-      status: 'secure',
-      lastScan: new Date().toISOString(),
-      vulnerabilities: [],
-      score: Math.floor(Math.random() * 40) + 60, // 60-100 score
-      mode: 'test',
-      shieldStatus: 'active',
-      securityRating: Math.floor(Math.random() * 40) + 60,
-      success: true // Add the success property
-    };
+  if (randomStatus < 0.6) {
+    status = 'active';
+  } else if (randomStatus < 0.8) {
+    status = 'inactive';
   } else {
-    return {
-      id: `shield-test-${Date.now()}`,
-      name: 'Test Connection',
-      description: 'Connection timeout or rejected',
-      status: 'vulnerable',
-      lastScan: new Date().toISOString(),
-      vulnerabilities: [
-        {
-          severity: 'medium',
-          description: 'Connection timeout or rejected',
-          remediation: 'Check Shield services are running and firewall settings'
-        }
-      ],
-      score: Math.floor(Math.random() * 30) + 20, // 20-50 score
-      mode: 'test',
-      shieldStatus: 'inactive',
-      securityRating: Math.floor(Math.random() * 30) + 20,
-      success: false, // Add the success property
-      error: 'Connection timeout or rejected' // Add the error property
-    };
+    status = 'compromised';
   }
-}
-
-/**
- * Check Imperial Shield Status
- */
-export async function checkImperialShieldStatus(): Promise<ImperialShieldResult> {
-  // Simulate a status check with some delay
-  await new Promise(resolve => setTimeout(resolve, 800));
-  
-  // Generate random status (80% chance of active)
-  const status = Math.random() > 0.2 ? 'active' : Math.random() > 0.5 ? 'inactive' : 'compromised';
-  const securityScore = status === 'active' 
-    ? Math.floor(Math.random() * 30) + 70
-    : status === 'inactive'
-      ? Math.floor(Math.random() * 30) + 30
-      : Math.floor(Math.random() * 20) + 10;
   
   return {
-    id: `shield-status-${Date.now()}`,
-    name: 'Shield Status',
-    description: 'Current status of Imperial Shield',
-    status: status === 'active' ? 'secure' : status === 'inactive' ? 'unknown' : 'vulnerable',
+    id: nanoid(), // Generate a unique ID for the result
+    status,
+    targetIp: ip,
     lastScan: new Date().toISOString(),
-    vulnerabilities: status === 'compromised' ? [
-      {
-        severity: 'critical',
-        description: 'Shield breach detected',
-        remediation: 'Reset shield matrix and scan for intrusions'
-      }
-    ] : [],
-    score: securityScore,
-    mode: 'monitor',
-    shieldStatus: status as 'active' | 'inactive' | 'compromised',
-    securityRating: securityScore,
-    success: status !== 'compromised' // Add the success property
+    vulnSummary: {
+      critical: Math.floor(Math.random() * 3),
+      high: Math.floor(Math.random() * 5),
+      medium: Math.floor(Math.random() * 8),
+      low: Math.floor(Math.random() * 12)
+    }
   };
-}
+};
 
 /**
- * Activate Imperial Shield (Simulated)
+ * Generate a detailed Imperial Shield scan result
  */
-export async function activateImperialShield(): Promise<ImperialShieldResult> {
-  // Simulate activation with delay
-  await new Promise(resolve => setTimeout(resolve, 1500));
+export const generateDetailedShieldResult = (ip: string): ImperialShieldResult => {
+  const result = generateMockShieldResult(ip);
   
-  // 90% chance of successful activation
+  return {
+    ...result,
+    id: nanoid(), // Generate a unique ID
+    vulnSummary: {
+      critical: 2,
+      high: 4,
+      medium: 7,
+      low: 10
+    }
+  };
+};
+
+/**
+ * Generate Imperial Shield monitoring data
+ */
+export const generateMonitoringData = (ips: string[]): ImperialShieldResult[] => {
+  return ips.map(ip => generateMockShieldResult(ip));
+};
+
+/**
+ * Generate Imperial Shield protection result
+ */
+export const generateProtectionResult = (ip: string): {
+  success: boolean;
+  message: string;
+  protectionState: string;
+} => {
   const success = Math.random() > 0.1;
   
   return {
-    id: `shield-activate-${Date.now()}`,
-    name: 'Activate Shield',
-    description: 'Imperial Shield activated',
-    status: success ? 'secure' : 'unknown',
-    lastScan: new Date().toISOString(),
-    vulnerabilities: [],
-    score: success ? 85 : 40,
-    mode: 'defend',
-    shieldStatus: success ? 'active' : 'inactive',
-    securityRating: success ? 85 : 40,
-    success // Add the success property
+    success,
+    message: success 
+      ? "Imperial Shield protection activated successfully" 
+      : "Failed to activate protection, please check network connectivity",
+    protectionState: success ? "active" : "inactive"
   };
-}
+};
 
-export const generateMockShieldAnalysis = (): ImperialShieldResult => {
-  const riskLevels = ['low', 'medium', 'high', 'critical'];
-  const randomRisk = riskLevels[Math.floor(Math.random() * riskLevels.length)];
+/**
+ * Generate Imperial Shield breach report
+ */
+export const generateBreachReport = (ip: string): {
+  breachDetected: boolean;
+  breachTime?: string;
+  breachType?: string;
+  attackerIp?: string;
+  details?: string;
+} => {
+  const breachDetected = Math.random() > 0.7;
+  
+  if (!breachDetected) {
+    return {
+      breachDetected: false
+    };
+  }
+  
+  const breachTypes = [
+    "Brute Force Attempt",
+    "Unauthorized Access",
+    "RTSP Stream Hijacking",
+    "Firmware Exploitation",
+    "Credential Theft"
+  ];
   
   return {
-    id: uuidv4(), // Adding id property
-    status: Math.random() > 0.7 ? 'compromised' : (Math.random() > 0.4 ? 'active' : 'inactive'),
+    breachDetected: true,
+    breachTime: new Date(Date.now() - Math.floor(Math.random() * 10 * 86400000)).toISOString(),
+    breachType: breachTypes[Math.floor(Math.random() * breachTypes.length)],
+    attackerIp: `${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}`,
+    details: "Attack detected and blocked by Imperial Shield defensive measures."
+  };
+};
+
+/**
+ * Generate a list of recent alert events
+ */
+export const generateRecentAlerts = (count: number = 5): Array<{
+  timestamp: string;
+  type: string;
+  severity: 'low' | 'medium' | 'high' | 'critical';
+  ip: string;
+  details: string;
+}> => {
+  const alertTypes = [
+    "Unauthorized Access Attempt",
+    "Credential Stuffing Attack",
+    "Firmware Exploit Attempt",
+    "Port Scan Detected",
+    "RTSP Stream Access"
+  ];
+  
+  const severities: Array<'low' | 'medium' | 'high' | 'critical'> = [
+    'low', 'medium', 'high', 'critical'
+  ];
+  
+  const alerts = [];
+  
+  for (let i = 0; i < count; i++) {
+    alerts.push({
+      timestamp: new Date(Date.now() - Math.floor(Math.random() * 7 * 86400000)).toISOString(),
+      type: alertTypes[Math.floor(Math.random() * alertTypes.length)],
+      severity: severities[Math.floor(Math.random() * severities.length)],
+      ip: `${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}`,
+      details: "Imperial Shield automatically blocked the attempt."
+    });
+  }
+  
+  return alerts.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+};
+
+/**
+ * Generate Imperial Shield system status
+ */
+export const generateSystemStatus = (): {
+  status: 'active' | 'inactive' | 'compromised';
+  activeSensors: number;
+  protectedCameras: number;
+  lastUpdate: string;
+  batteryLevel?: number;
+  alerts: {
+    critical: number;
+    high: number;
+    medium: number;
+    low: number;
+  };
+} => {
+  return {
+    status: Math.random() > 0.8 ? 'compromised' : (Math.random() > 0.2 ? 'active' : 'inactive'),
+    activeSensors: Math.floor(Math.random() * 20) + 5,
+    protectedCameras: Math.floor(Math.random() * 50) + 10,
+    lastUpdate: new Date().toISOString(),
+    batteryLevel: Math.floor(Math.random() * 100),
+    alerts: {
+      critical: Math.floor(Math.random() * 3),
+      high: Math.floor(Math.random() * 5),
+      medium: Math.floor(Math.random() * 8),
+      low: Math.floor(Math.random() * 12)
+    }
+  };
+};
+
+/**
+ * Generate Imperial Shield device protection status
+ */
+export const generateDeviceProtectionStatus = (deviceId: string): ImperialShieldResult => {
+  const status = Math.random() > 0.7 ? (Math.random() > 0.5 ? 'compromised' : 'inactive') : 'active';
+  
+  return {
+    id: deviceId, // Use the provided deviceId
+    status: status as 'active' | 'inactive' | 'compromised',
     targetIp: `${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}`,
     lastScan: new Date().toISOString(),
     vulnSummary: {
       critical: Math.floor(Math.random() * 3),
       high: Math.floor(Math.random() * 5),
-      medium: Math.floor(Math.random() * 10),
-      low: Math.floor(Math.random() * 15)
-    }
-  };
-};
-
-export const generateDetailedShieldAnalysis = (ip: string): ImperialShieldResult => {
-  const now = new Date();
-  
-  return {
-    id: uuidv4(), // Adding id property
-    status: Math.random() > 0.3 ? 'active' : (Math.random() > 0.6 ? 'inactive' : 'compromised'),
-    targetIp: ip,
-    lastScan: now.toISOString(),
-    vulnSummary: {
-      critical: Math.floor(Math.random() * 2),
-      high: Math.floor(Math.random() * 3),
-      medium: Math.floor(Math.random() * 5),
-      low: Math.floor(Math.random() * 7)
-    }
-  };
-};
-
-export const generateShieldState = (): ImperialShieldResult => {
-  const statuses: ('active' | 'inactive' | 'compromised')[] = ['active', 'inactive', 'compromised'];
-  const randomStatus = statuses[Math.floor(Math.random() * statuses.length)];
-  
-  return {
-    id: uuidv4(), // Adding id property
-    status: randomStatus,
-    targetIp: `${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}`,
-    lastScan: new Date().toISOString(),
-    vulnSummary: {
-      critical: Math.floor(Math.random() * 3),
-      high: Math.floor(Math.random() * 5),
-      medium: Math.floor(Math.random() * 10),
-      low: Math.floor(Math.random() * 15)
+      medium: Math.floor(Math.random() * 8),
+      low: Math.floor(Math.random() * 12)
     }
   };
 };
