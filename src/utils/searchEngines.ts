@@ -19,7 +19,7 @@ const MOCK_CAMERA_RESULTS: CameraResult[] = [
     hasLogin: true,
     isVulnerable: true,
     vulnerabilities: [
-      { id: 'CVE-2017-7921', description: 'Authentication bypass', severity: 'HIGH' }
+      { id: 'CVE-2017-7921', description: 'Authentication bypass', severity: 'high' }
     ],
     lastSeen: new Date().toISOString(),
     streamUrl: 'rtsp://85.132.78.12:554/Streaming/Channels/101/',
@@ -29,7 +29,9 @@ const MOCK_CAMERA_RESULTS: CameraResult[] = [
       releaseDate: '2018-03-15',
       knownVulnerabilities: 3,
       outdated: true
-    }
+    },
+    status: 'online',
+    accessLevel: 'admin'
   },
   // ... more camera results would be here
 ];

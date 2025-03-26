@@ -103,6 +103,12 @@ const Index = () => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
+  // Convert connect function to void return type to fix TS error
+  const handleConnect = async () => {
+    await connect();
+    return;
+  };
+
   return (
     <div className="min-h-screen bg-scanner-dark text-white">
       <main className="container mx-auto py-6 px-4">
@@ -116,7 +122,7 @@ const Index = () => {
         </div>
         
         {/* Startup Button */}
-        <ImperialStartup setServerStarted={setServerStarted} connect={connect} />
+        <ImperialStartup setServerStarted={setServerStarted} connect={handleConnect} />
         
         <ScanNotifications error={error} />
         
