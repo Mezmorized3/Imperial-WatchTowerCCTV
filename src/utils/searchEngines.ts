@@ -9,7 +9,12 @@ const MOCK_CAMERA_RESULTS: CameraResult[] = [
     port: 8080,
     brand: 'Hikvision',
     model: 'DS-2CD2032-I',
-    firmware: '5.4.5',
+    firmware: {
+      version: '5.4.5',
+      vulnerabilities: ['CVE-2017-7921', 'CVE-2018-123456', 'CVE-2019-654321'],
+      updateAvailable: true,
+      lastChecked: '2023-10-15'
+    },
     location: {
       country: 'UA',
       city: 'Kyiv',
@@ -19,7 +24,7 @@ const MOCK_CAMERA_RESULTS: CameraResult[] = [
     hasLogin: true,
     isVulnerable: true,
     vulnerabilities: [
-      { id: 'CVE-2017-7921', description: 'Authentication bypass', severity: 'high' }
+      { id: 'CVE-2017-7921', name: 'Authentication Bypass', description: 'Authentication bypass', severity: 'high' }
     ],
     lastSeen: new Date().toISOString(),
     streamUrl: 'rtsp://85.132.78.12:554/Streaming/Channels/101/',
