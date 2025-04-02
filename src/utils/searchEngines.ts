@@ -30,10 +30,10 @@ const MOCK_CAMERA_RESULTS: CameraResult[] = [
     streamUrl: 'rtsp://85.132.78.12:554/Streaming/Channels/101/',
     snapshot: '/placeholder.svg',
     firmwareAnalysis: {
-      version: '5.4.5',
-      releaseDate: '2018-03-15',
       knownVulnerabilities: ['CVE-2017-7921', 'CVE-2018-123456', 'CVE-2019-654321'],
-      outdated: true
+      outdated: true,
+      lastUpdate: '2018-03-15',
+      recommendedVersion: '6.0.0'
     },
     status: 'online',
     accessLevel: 'admin'
