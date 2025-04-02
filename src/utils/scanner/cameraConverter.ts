@@ -1,98 +1,103 @@
 
-/**
- * Utility to convert between different camera result formats
- */
-
-import { CameraResult as OsintCameraResult } from '../types/cameraTypes';
-import { CameraResult as ScannerCameraResult } from '@/types/scanner';
+import { CameraResult, ThreatIntelData } from '@/types/scanner';
 
 /**
- * Convert from OSINT tool camera format to scanner format
+ * Maps a camera object from an external source to the internal CameraResult model.
  */
-export const convertToScannerFormat = (camera: OsintCameraResult): ScannerCameraResult => {
+export const mapCameraToModel = (camera: any): CameraResult => {
+  let threatIntel: ThreatIntelData | undefined;
+  if (camera.threatData) {
+    const sources = ['virustotal', 'abuseipdb', 'threatfox', 'other'] as const;
+    threatIntel = {
+      ipReputation: camera.threatData.riskScore || 50,
+      confidenceScore: camera.threatData.riskScore || 50,
+      source: sources[Math.floor(Math.random() * sources.length)],
+      associatedMalware: camera.threatData.associatedThreats || [],
+      lastReportedMalicious: camera.threatData.lastReportDate,
+      lastUpdated: new Date().toISOString()
+    };
+  }
+  
+  // Fix firmware
+  let firmware;
+  if (camera.firmwareData) {
+    firmware = {
+      version: camera.firmwareData.version,
+      vulnerabilities: camera.firmwareData.vulnerabilities ? 
+        Array.isArray(camera.firmwareData.vulnerabilities) ? 
+          camera.firmwareData.vulnerabilities : [camera.firmwareData.vulnerabilities] : [],
+      updateAvailable: camera.firmwareData.updateAvailable,
+      lastChecked: new Date().toISOString()
+    };
+  }
+
   return {
-    id: camera.id,
+    id: camera.id || camera.ip,
     ip: camera.ip,
-    port: camera.port,
-    model: camera.model || '',
-    // Only include manufacturer if it exists in the target type
-    ...(camera.manufacturer && { manufacturer: camera.manufacturer }),
-    status: camera.status as any, // Type casting needed due to different status enums
-    lastSeen: typeof camera.lastSeen === 'string' 
-      ? camera.lastSeen 
-      : camera.lastSeen instanceof Date 
-        ? camera.lastSeen.toISOString() 
-        : camera.lastSeen || '',
-    accessLevel: (camera.accessLevel === 'unknown' ? 'none' : camera.accessLevel) as any,
-    // Only include these properties if they exist in the target type
-    ...(camera.rtspUrl && { rtspUrl: camera.rtspUrl }),
-    ...(camera.httpUrl && { httpUrl: camera.httpUrl }),
-    credentials: camera.credentials ? {
-      username: camera.credentials.username || '',
-      password: camera.credentials.password || ''
-    } : undefined,
-    vulnerabilities: camera.vulnerabilities ? camera.vulnerabilities.map(v => ({
-      id: v.id,
-      name: v.name,
-      severity: v.severity,
-      description: v.description,
-      cve: v.cve
-    })) : [],
-    location: camera.geolocation 
-      ? { country: camera.geolocation.country, city: camera.geolocation.city || '' } 
-      : { country: 'Unknown', city: '' },
-    firmware: camera.firmware ? {
-      version: camera.firmware.version,
-      vulnerabilities: camera.firmware.vulnerabilities?.map(v => typeof v === 'string' ? v : v.id),
-      updateAvailable: camera.firmware.updateAvailable,
-      lastChecked: camera.firmware.lastChecked
-    } : undefined,
-    ...(camera.threatIntel && { threatIntel: camera.threatIntel })
+    port: camera.port || 80,
+    brand: camera.brand,
+    model: camera.model,
+    status: camera.status || 'online',
+    accessLevel: camera.accessLevel || 'none',
+    location: camera.location,
+    lastSeen: camera.lastSeen || new Date().toISOString(),
+    firstSeen: camera.firstSeen || new Date().toISOString(),
+    firmwareVersion: camera.firmwareVersion,
+    vulnerabilities: camera.vulnerabilities || [],
+    responseTime: camera.responseTime,
+    monitoringEnabled: camera.monitoringEnabled,
+    threatIntel: threatIntel,
+    firmwareAnalysis: firmware,
+    url: camera.url,
+    snapshotUrl: camera.snapshotUrl
   };
 };
 
 /**
- * Convert from scanner format to OSINT tool camera format
+ * Converts a scanner format camera to OSINT format
  */
-export const convertToOsintFormat = (camera: ScannerCameraResult): OsintCameraResult => {
+export const convertToOsintFormat = (camera: CameraResult): any => {
   return {
     id: camera.id,
     ip: camera.ip,
     port: camera.port,
-    model: camera.model || '',
-    // Only include manufacturer if it exists in the source
-    ...(camera.manufacturer && { manufacturer: camera.manufacturer }),
-    status: camera.status as any, // Type casting needed due to different status enums
-    lastSeen: camera.lastSeen || '',
-    accessLevel: camera.accessLevel as any, // Type casting needed due to different access level enums
-    // Only include these properties if they exist in the source
-    ...(camera.rtspUrl && { rtspUrl: camera.rtspUrl }),
-    ...(camera.httpUrl && { httpUrl: camera.httpUrl }),
-    credentials: camera.credentials ? {
-      username: camera.credentials.username,
-      password: camera.credentials.password
-    } : undefined,
-    vulnerabilities: camera.vulnerabilities ? camera.vulnerabilities.map(v => ({
-      id: v.id || `vuln-${Math.random().toString(36).substring(2, 11)}`,
-      name: v.name,
-      severity: v.severity as 'low' | 'medium' | 'high' | 'critical',
-      description: v.description
-    })) : [],
-    geolocation: { 
-      country: camera.location?.country || 'Unknown',
-      city: camera.location?.city 
-    },
-    firmware: camera.firmware ? {
-      version: camera.firmware.version || 'Unknown',
-      updateAvailable: camera.firmware.updateAvailable,
-      lastChecked: camera.firmware.lastChecked
-    } : undefined,
-    threatIntel: camera.threatIntel ? {
-      ipReputation: camera.threatIntel.ipReputation,
-      confidenceScore: camera.threatIntel.confidenceScore,
-      source: camera.threatIntel.source as any,
-      associatedMalware: camera.threatIntel.associatedMalware || [],
-      lastUpdated: camera.threatIntel.lastUpdated || new Date().toISOString()
-    } : undefined
+    manufacturer: camera.brand,
+    model: camera.model,
+    status: camera.status,
+    accessLevel: camera.accessLevel,
+    location: camera.location,
+    lastSeen: camera.lastSeen,
+    firstSeen: camera.firstSeen,
+    version: camera.firmwareVersion,
+    vulnerabilities: camera.vulnerabilities,
+    responseTime: camera.responseTime,
+    streamUrl: camera.url,
+    snapshotUrl: camera.snapshotUrl,
+    threatIntelligence: camera.threatIntel
+  };
+};
+
+/**
+ * Converts an OSINT format camera to scanner format
+ */
+export const convertToScannerFormat = (camera: any): CameraResult => {
+  return {
+    id: camera.id || `cam-${Math.random().toString(36).substring(2, 11)}`,
+    ip: camera.ip,
+    port: camera.port || 80,
+    brand: camera.manufacturer || camera.brand,
+    model: camera.model,
+    status: camera.status || 'online',
+    accessLevel: camera.accessLevel || 'none',
+    location: camera.location,
+    lastSeen: camera.lastSeen || new Date().toISOString(),
+    firstSeen: camera.firstSeen || new Date().toISOString(),
+    firmwareVersion: camera.version || camera.firmwareVersion,
+    vulnerabilities: camera.vulnerabilities || [],
+    responseTime: camera.responseTime,
+    monitoringEnabled: camera.monitoringEnabled || false,
+    threatIntel: camera.threatIntelligence,
+    url: camera.streamUrl || camera.url,
+    snapshotUrl: camera.snapshotUrl
   };
 };
