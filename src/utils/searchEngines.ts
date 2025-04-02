@@ -32,7 +32,7 @@ const MOCK_CAMERA_RESULTS: CameraResult[] = [
     firmwareAnalysis: {
       version: '5.4.5',
       releaseDate: '2018-03-15',
-      knownVulnerabilities: 3,
+      knownVulnerabilities: ['CVE-2017-7921', 'CVE-2018-123456', 'CVE-2019-654321'],
       outdated: true
     },
     status: 'online',
