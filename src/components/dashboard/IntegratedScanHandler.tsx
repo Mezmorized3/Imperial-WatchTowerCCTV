@@ -2,45 +2,7 @@
 import React from 'react';
 import { ScanTarget, ScanSettings, CameraResult } from '@/types/scanner';
 import { toast } from '@/components/ui/use-toast';
-import { executeSearch } from '@/utils/searchEngines';
-
-// Adding the missing function to search for Eastern European cameras
-const findEasternEuropeanCameras = async (
-  mode: string,
-  options: {
-    country?: string;
-    onlyVulnerable?: boolean;
-    limit?: number;
-  }
-): Promise<{ cameras: CameraResult[] }> => {
-  // Implementation of findEasternEuropeanCameras
-  const result = await executeSearch({
-    query: `region:eastern-europe ${options.country ? `country:${options.country}` : ''} ${options.onlyVulnerable ? 'vulnerable:true' : ''}`,
-    limit: options.limit || 15
-  });
-  
-  return { cameras: result.cameras || [] };
-};
-
-// Adding the missing function for camera search
-const executeCameraSearch = async (
-  options: {
-    country?: string;
-    onlyVulnerable?: boolean;
-    limit?: number;
-  },
-  searchEngine: 'shodan' | 'zoomeye' | 'censys'
-): Promise<{ cameras: CameraResult[] }> => {
-  // Implementation of executeCameraSearch
-  const query = `type:camera engine:${searchEngine} ${options.country ? `country:${options.country}` : ''} ${options.onlyVulnerable ? 'vulnerable:true' : ''}`;
-  
-  const result = await executeSearch({
-    query,
-    limit: options.limit || 20
-  });
-  
-  return { cameras: result.cameras || [] };
-};
+import { executeSearch, findEasternEuropeanCameras, executeCameraSearch } from '@/utils/searchEngines';
 
 interface IntegratedScanHandlerProps {
   isConnected: boolean;
@@ -198,4 +160,4 @@ const useIntegratedScanHandler = ({
   return { handleIntegratedScan };
 };
 
-export { useIntegratedScanHandler, findEasternEuropeanCameras, executeCameraSearch };
+export { useIntegratedScanHandler };

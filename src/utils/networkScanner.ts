@@ -1,16 +1,16 @@
+
 /**
  * Network scanner utilities
  */
 
 import { simulateNetworkDelay } from './networkUtils';
-import { getRandomGeoLocation } from './osintUtils';
 import { CameraResult, ScanSettings, ThreatIntelData } from '@/types/scanner';
 
 // Export ScanSettings type for external use
 export type { ScanSettings };
 
 /**
- * Simulates a network scan to discover cameras and assess their security.
+ * Empty network scan implementation - returns empty results
  */
 export const simulateNetworkScan = async (
   target: string,
@@ -19,59 +19,10 @@ export const simulateNetworkScan = async (
   console.log(`Starting simulated network scan on target: ${target} with settings:`, settings);
   await simulateNetworkDelay(1500);
 
-  const numCameras = Math.floor(Math.random() * 5) + 1;
-  const cameras: CameraResult[] = [];
-
-  for (let i = 0; i < numCameras; i++) {
-    cameras.push(generateSimulatedCamera(target, i, settings));
-  }
-
   return {
-    cameras: cameras,
-    total: numCameras * 3 // Simulate scanning multiple ports/protocols per IP
+    cameras: [],
+    total: 0
   };
-};
-
-/**
- * Generates a simulated camera object with randomized properties.
- */
-const generateSimulatedCamera = (target: string, index: number, settings: ScanSettings): CameraResult => {
-  const ip = target.includes('/') ? generateRandomIP(target) : target;
-  const port = [80, 554, 8080][Math.floor(Math.random() * 3)];
-  const location = getRandomGeoLocation(settings.regionFilter?.[0]);
-  const status = ['online', 'offline', 'vulnerable'][Math.floor(Math.random() * 3)] as 'online' | 'offline' | 'vulnerable';
-  const accessLevel = ['none', 'view', 'control', 'admin'][Math.floor(Math.random() * 4)] as 'none' | 'view' | 'control' | 'admin';
-  const brand = ['Axis', 'Dahua', 'Hikvision', 'Nest', 'Arlo'][Math.floor(Math.random() * 5)];
-  const model = [`Cam ${index + 1}`, 'Pro', 'Ultra', 'HD'][Math.floor(Math.random() * 4)];
-  const firmwareVersion = `v${Math.floor(Math.random() * 5)}.${Math.floor(Math.random() * 10)}`;
-  const lastSeen = new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString();
-  const firstSeen = new Date(Date.now() - Math.random() * 365 * 24 * 60 * 60 * 1000).toISOString();
-
-  const camera: CameraResult = {
-    id: `simulated-${ip}-${port}-${index}`,
-    ip: ip,
-    port: port,
-    brand: brand,
-    model: model,
-    status: status,
-    accessLevel: accessLevel,
-    location: {
-      country: location.country,
-      city: location.city || '',
-      latitude: location.latitude,
-      longitude: location.longitude
-    },
-    lastSeen: lastSeen,
-    firstSeen: firstSeen,
-    firmwareVersion: firmwareVersion,
-    vulnerabilities: settings.checkVulnerabilities ? generateSimulatedVulnerabilities() : [],
-    responseTime: Math.floor(Math.random() * 200) + 50,
-    monitoringEnabled: Math.random() > 0.5,
-    threatIntel: settings.checkThreatIntel ? generateSimulatedThreatIntel() : undefined,
-    firmwareAnalysis: settings.checkVulnerabilities ? generateSimulatedFirmwareAnalysis(firmwareVersion) : undefined
-  };
-
-  return camera;
 };
 
 /**
@@ -120,62 +71,6 @@ const generateRandomIP = (cidr: string): string => {
   }
 
   return randomIP;
-};
-
-/**
- * Generates simulated vulnerability data for a camera.
- */
-const generateSimulatedVulnerabilities = (): { name: string; severity: 'low' | 'medium' | 'high' | 'critical'; description: string; }[] => {
-  const numVulnerabilities = Math.floor(Math.random() * 3);
-  const vulnerabilities: { name: string; severity: 'low' | 'medium' | 'high' | 'critical'; description: string; }[] = [];
-  const severityLevels: Array<'low' | 'medium' | 'high' | 'critical'> = ['low', 'medium', 'high', 'critical'];
-
-  for (let i = 0; i < numVulnerabilities; i++) {
-    vulnerabilities.push({
-      name: `CVE-${2023 + i}-${Math.floor(Math.random() * 10000)}`,
-      severity: severityLevels[Math.floor(Math.random() * 4)],
-      description: 'Simulated vulnerability description'
-    });
-  }
-
-  return vulnerabilities;
-};
-
-/**
- * Generates simulated threat intelligence data for a camera.
- */
-const generateSimulatedThreatIntel = (): ThreatIntelData => {
-  const sources = ['virustotal', 'abuseipdb', 'threatfox', 'other'] as const;
-  return {
-    ipReputation: Math.floor(Math.random() * 100),
-    lastReportedMalicious: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString(),
-    associatedMalware: ['Mirai', 'Hajime', 'Mozi'].slice(0, Math.floor(Math.random() * 3)),
-    reportedBy: ['AbuseIPDB', 'VirusTotal', 'AlienVault'].slice(0, Math.floor(Math.random() * 3)),
-    firstSeen: new Date(Date.now() - Math.random() * 365 * 24 * 60 * 60 * 1000).toISOString(),
-    tags: ['iot', 'camera', 'botnet'].slice(0, Math.floor(Math.random() * 3)),
-    confidenceScore: Math.floor(Math.random() * 100),
-    source: sources[Math.floor(Math.random() * sources.length)],
-    lastUpdated: new Date().toISOString()
-  };
-};
-
-/**
- * Generates simulated firmware analysis data for a camera.
- */
-const generateSimulatedFirmwareAnalysis = (firmwareVersion: string): any => {
-  const numVulnerabilities = Math.floor(Math.random() * 3);
-  const knownVulnerabilities: string[] = [];
-
-  for (let i = 0; i < numVulnerabilities; i++) {
-    knownVulnerabilities.push(`CVE-${2023 + i}-${Math.floor(Math.random() * 10000)}`);
-  }
-
-  return {
-    knownVulnerabilities: knownVulnerabilities,
-    outdated: Math.random() > 0.5,
-    lastUpdate: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString(),
-    recommendedVersion: `v${parseInt(firmwareVersion.split('.')[0], 10) + 1}.0`
-  };
 };
 
 /**
@@ -231,7 +126,7 @@ const mapCameraToModel = (camera: any): CameraResult => {
 };
 
 /**
- * Scans a network and returns a list of cameras.
+ * Scans a network and returns a list of cameras - empty implementation
  */
 const scanNetwork = async (
   ipRange: string,
@@ -271,17 +166,8 @@ const scanNetwork = async (
     });
   }
   
-  // Simulate scan
-  const result = await simulateNetworkScan(ipRange, settings);
-  
-  // Notify about found cameras
-  if (cameraCallback) {
-    for (const camera of result.cameras) {
-      if (abortSignal?.aborted) break;
-      cameraCallback(camera);
-      await simulateNetworkDelay(300);
-    }
-  }
+  // Empty results
+  const result = { cameras: [], total: 0 };
   
   // Update final progress
   if (progressCallback && !abortSignal?.aborted) {
@@ -289,15 +175,15 @@ const scanNetwork = async (
       status: 'completed',
       targetsTotal: 100,
       targetsScanned: 100,
-      camerasFound: result.cameras.length
+      camerasFound: 0
     });
   }
   
   return {
     success: true,
     data: {
-      cameras: result.cameras,
-      total: result.total
+      cameras: [],
+      total: 0
     }
   };
 };
@@ -309,20 +195,11 @@ export const testProxyConnection = async (proxyConfig: any): Promise<{ success: 
   console.log('Testing proxy connection:', proxyConfig);
   await simulateNetworkDelay(1000);
   
-  // Simulate success or failure
-  const success = Math.random() > 0.2;
-  
-  if (success) {
-    return {
-      success: true,
-      latency: Math.floor(Math.random() * 200) + 50
-    };
-  } else {
-    return {
-      success: false,
-      error: 'Could not connect to proxy server'
-    };
-  }
+  // Return success with empty data
+  return {
+    success: true,
+    latency: 100
+  };
 };
 
 /**
@@ -350,9 +227,5 @@ export default scanNetwork;
 // Export the utility functions
 export {
   generateRandomIP,
-  generateSimulatedCamera,
-  generateSimulatedVulnerabilities,
-  generateSimulatedThreatIntel,
-  generateSimulatedFirmwareAnalysis,
   mapCameraToModel
 };
