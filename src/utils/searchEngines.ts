@@ -21,7 +21,7 @@ const MOCK_CAMERA_RESULTS: CameraResult[] = [
       latitude: 50.4501,
       longitude: 30.5234,
     },
-    hasLogin: true,
+    accessible: true,  // Replacing hasLogin with accessible which is in the type definition
     isVulnerable: true,
     vulnerabilities: [
       { id: 'CVE-2017-7921', name: 'Authentication Bypass', description: 'Authentication bypass', severity: 'high' }
