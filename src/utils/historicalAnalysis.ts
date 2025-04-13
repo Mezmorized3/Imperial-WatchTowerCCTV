@@ -47,7 +47,7 @@ export const getHistoricalData = async (cameraId: string, days: number = 30): Pr
 /**
  * Analyze trends in historical data using statistical analysis
  */
-export const analyzeTrends = async (cameraId: string, historicalData: HistoricalDataPoint[]): Promise<TrendAnalysisResult[]> => {
+export const analyzeTrends = async (cameraId: string, historicalData: HistoricalDataPoint[], days: number = 30): Promise<TrendAnalysisResult[]> => {
   console.log(`Analyzing trends for camera ${cameraId}`);
   
   if (historicalData.length < 2) {

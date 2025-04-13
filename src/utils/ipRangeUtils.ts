@@ -39,6 +39,21 @@ export const parseIpRange = (ipRange: string): string[] => {
   return [ipRange.trim()];
 };
 
+// Calculate the number of IP addresses in a CIDR range
+export const calculateIpsInRange = (cidr: string): number => {
+  if (!cidr.includes('/')) return 1; // Single IP
+  
+  const [baseIp, prefixStr] = cidr.split('/');
+  const prefix = parseInt(prefixStr, 10);
+  
+  if (isNaN(prefix) || prefix < 0 || prefix > 32) {
+    throw new Error(`Invalid CIDR prefix: ${prefixStr}`);
+  }
+  
+  // 2^(32-prefix) is the number of IP addresses in the range
+  return Math.pow(2, 32 - prefix);
+};
+
 // Generate all IPs in a small CIDR range
 const generateAllIpsInCidr = (baseIp: string, cidr: number): string[] => {
   const baseIpParts = baseIp.split('.').map(Number);

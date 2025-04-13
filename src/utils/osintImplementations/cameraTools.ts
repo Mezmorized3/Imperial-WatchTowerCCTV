@@ -16,9 +16,10 @@ import {
   SpeedCameraParams,
   CamerattackParams,
   Vulnerability
-} from '../types/cameraTypes';
+} from '@/types/scanner';
 
-import { PYTHON_API_BASE_URL, executePythonTool } from '../pythonIntegration';
+// Define the API base URL
+const PYTHON_API_BASE_URL = '/api/python';
 
 // Parse IP range into individual IPs
 const parseIpRange = (ipRange: string): string[] => {
@@ -86,11 +87,11 @@ export const executeCameradar = async (params: { target: string, ports?: string 
     console.error('Cameradar execution error:', error);
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Unknown error',
       total: 0,
       found: 0,
       results: [],
-      data: { cameras: [], total: 0 }
+      data: { cameras: [], total: 0 },
+      error: error instanceof Error ? error.message : 'Unknown error'
     };
   }
 };
@@ -134,11 +135,11 @@ export const executeIPCamSearch = async (params: { subnet: string, protocols?: s
     console.error('IPCamSearch execution error:', error);
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Unknown error',
       total: 0,
       found: 0,
       results: [],
-      data: { cameras: [], total: 0 }
+      data: { cameras: [], total: 0 },
+      error: error instanceof Error ? error.message : 'Unknown error'
     };
   }
 };
@@ -183,11 +184,11 @@ export const executeCCTV = async (params: CCTVParams): Promise<ScanResult> => {
     console.error('CCTV execution error:', error);
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Unknown error',
       total: 0,
       found: 0,
       results: [],
-      data: { cameras: [], total: 0 }
+      data: { cameras: [], total: 0 },
+      error: error instanceof Error ? error.message : 'Unknown error'
     };
   }
 };
@@ -232,11 +233,11 @@ export const executeSpeedCamera = async (params: SpeedCameraParams): Promise<Sca
     console.error('Speed Camera execution error:', error);
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Unknown error',
       total: 0,
       found: 0,
       results: [],
-      data: { cameras: [], total: 0 }
+      data: { cameras: [], total: 0 },
+      error: error instanceof Error ? error.message : 'Unknown error'
     };
   }
 };
@@ -294,11 +295,11 @@ export const executeCamerattack = async (params: CamerattackParams): Promise<Sca
     console.error('Camerattack execution error:', error);
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Unknown error',
       total: 0,
       found: 0,
       results: [],
-      data: { cameras: [], vulnerabilities: [], total: 0 }
+      data: { cameras: [], vulnerabilities: [], total: 0 },
+      error: error instanceof Error ? error.message : 'Unknown error'
     };
   }
 };

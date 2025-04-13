@@ -137,8 +137,7 @@ export const getComprehensiveThreatIntel = async (ip: string): Promise<ThreatInt
       confidenceScore: 0,
       source: 'other',
       associatedMalware: [],
-      lastUpdated: new Date().toISOString(),
-      error: error instanceof Error ? error.message : 'Unknown error'
+      lastUpdated: new Date().toISOString()
     };
   }
 };

@@ -66,7 +66,7 @@ export default async function handler(
       // Scan the target using cameradar
       const scanResult = await executeCameradar({
         target,
-        ports: settings.ports?.join(',')
+        ports: settings.portsToScan?.join(',')
       });
       
       if (scanResult.success && scanResult.data.cameras?.length > 0) {
