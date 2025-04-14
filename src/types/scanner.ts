@@ -6,6 +6,20 @@ export interface ScanSettings {
   vulnerabilityCheck?: boolean;
   bruteforceCredentials?: boolean;
   torNetworkScan?: boolean;
+  // Additional properties needed by components
+  regionFilter?: string[];
+  aggressive?: boolean;
+  detailed?: boolean;
+  targetSubnet?: string;
+  portRange?: string;
+  timeout?: number;
+  testCredentials?: boolean;
+  checkVulnerabilities?: boolean;
+  saveSnapshots?: boolean;
+  threadsCount?: number;
+  enableRealTimeMonitoring?: boolean;
+  alertThreshold?: 'low' | 'medium' | 'high' | 'critical';
+  checkThreatIntel?: boolean;
 }
 
 export interface ScanProgress {
@@ -14,10 +28,17 @@ export interface ScanProgress {
   targetsScanned: number;
   camerasFound?: number;
   error?: string;
+  // Additional properties needed by components
+  startTime?: Date;
+  endTime?: Date;
+  scanTarget?: ScanTarget;
+  scanSettings?: ScanSettings;
+  currentTarget?: string;
+  targetCountry?: string;
 }
 
 export interface ScanTarget {
-  type: 'ip' | 'range' | 'file' | 'search';
+  type: 'ip' | 'range' | 'file' | 'search' | 'shodan' | 'zoomeye' | 'censys';
   value: string;
   country?: string;
 }
@@ -44,6 +65,7 @@ export interface ThreatIntelData {
   tags?: string[];
   blacklisted?: boolean;
   lastUpdated: string;
+  error?: string;
 }
 
 export interface FirmwareAnalysis {
@@ -75,9 +97,9 @@ export interface CameraResult {
   port: number;
   brand?: string;
   model?: string;
-  status: 'online' | 'offline' | 'unknown';
-  accessLevel: 'admin' | 'view' | 'none';
-  location?: CameraLocation | string;
+  status: 'online' | 'offline' | 'unknown' | 'vulnerable' | 'authenticated' | 'secure' | 'compromised';
+  accessLevel: 'admin' | 'view' | 'none' | 'limited' | 'full' | 'unknown' | 'control';
+  location?: CameraLocation;
   lastSeen?: string;
   firstSeen?: string;
   firmwareVersion?: string;
@@ -89,6 +111,9 @@ export interface CameraResult {
   credentials?: CameraCredentials;
   url?: string;
   snapshotUrl?: string;
+  services?: string[];
+  accessible?: boolean;
+  manufacturer?: string;
 }
 
 export interface ScanResult {
@@ -102,6 +127,8 @@ export interface ScanResult {
     vulnerabilities?: Vulnerability[];
   };
   error?: string;
+  simulatedData?: boolean;
+  timestamp?: string;
 }
 
 export interface CCTVParams {
@@ -109,6 +136,7 @@ export interface CCTVParams {
   mode?: string;
   country?: string;
   timeout?: number;
+  region?: string;
 }
 
 export interface SpeedCameraParams {
@@ -123,4 +151,18 @@ export interface CamerattackParams {
   mode?: string;
   timeout?: number;
   attackType?: string;
+  port?: number;
+  rate?: number;
+}
+
+export interface AlertConfig {
+  id: string;
+  name: string;
+  enabled: boolean;
+  triggeredBy: string[];
+  level: 'low' | 'medium' | 'high' | 'critical';
+  action: 'notify' | 'email' | 'sms' | 'webhook';
+  recipients?: string[];
+  webhookUrl?: string;
+  createdAt: string;
 }

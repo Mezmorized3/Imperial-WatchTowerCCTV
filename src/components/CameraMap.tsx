@@ -50,24 +50,44 @@ const CameraMap: React.FC<CameraMapProps> = ({ cameras, onSelectCamera }) => {
     };
   }, [cameras]);
 
+  const getCameraLocation = (camera: CameraResult) => {
+    if (!camera.location) return null;
+    
+    // Handle location as object
+    if (typeof camera.location === 'object') {
+      return camera.location;
+    }
+    
+    // If we reach here, we don't have valid location data
+    return null;
+  };
+
   const renderMarkers = () => {
     // Clear existing markers in a real implementation
     markersRef.current = [];
     
     // Add markers for each camera with location data
     cameras.forEach(camera => {
-      if (camera.location?.latitude && camera.location?.longitude) {
+      const location = getCameraLocation(camera);
+      if (location && location.latitude && location.longitude) {
         // In a real implementation, we'd add actual markers to the map
         markersRef.current.push({
           camera,
           position: {
-            lat: camera.location.latitude,
-            lng: camera.location.longitude
+            lat: location.latitude,
+            lng: location.longitude
           }
         });
         
-        console.log(`Added marker for camera ${camera.ip} at ${camera.location.latitude}, ${camera.location.longitude}`);
+        console.log(`Added marker for camera ${camera.ip} at ${location.latitude}, ${location.longitude}`);
       }
+    });
+  };
+
+  const getCamerasWithLocation = () => {
+    return cameras.filter(camera => {
+      const location = getCameraLocation(camera);
+      return location && location.latitude && location.longitude;
     });
   };
 
@@ -77,9 +97,9 @@ const CameraMap: React.FC<CameraMapProps> = ({ cameras, onSelectCamera }) => {
         <CardTitle className="text-white flex items-center space-x-2">
           <MapPin className="w-5 h-5 text-scanner-primary" />
           <span>Camera Map</span>
-          {cameras.filter(c => c.location?.latitude && c.location?.longitude).length > 0 && (
+          {getCamerasWithLocation().length > 0 && (
             <Badge className="ml-2 bg-scanner-primary">
-              {cameras.filter(c => c.location?.latitude && c.location?.longitude).length}
+              {getCamerasWithLocation().length}
             </Badge>
           )}
         </CardTitle>
@@ -91,7 +111,7 @@ const CameraMap: React.FC<CameraMapProps> = ({ cameras, onSelectCamera }) => {
             <AlertTitle>Error</AlertTitle>
             <AlertDescription>{mapError}</AlertDescription>
           </Alert>
-        ) : cameras.filter(c => c.location?.latitude && c.location?.longitude).length === 0 ? (
+        ) : getCamerasWithLocation().length === 0 ? (
           <div className="h-72 flex items-center justify-center bg-gray-900 rounded-md border border-gray-800">
             <div className="text-center text-gray-500">
               <MapPin className="h-12 w-12 mx-auto mb-2 opacity-30" />
@@ -107,9 +127,11 @@ const CameraMap: React.FC<CameraMapProps> = ({ cameras, onSelectCamera }) => {
             >
               {/* Mock map visualization */}
               <div className="absolute inset-0 p-4 flex flex-wrap gap-2 overflow-auto">
-                {cameras
-                  .filter(c => c.location?.latitude && c.location?.longitude)
-                  .map(camera => (
+                {getCamerasWithLocation().map(camera => {
+                  const location = getCameraLocation(camera);
+                  if (!location) return null;
+                  
+                  return (
                     <div 
                       key={camera.id}
                       className="bg-gray-800 p-2 rounded border border-gray-700 cursor-pointer hover:bg-gray-700 transition-colors"
@@ -124,11 +146,11 @@ const CameraMap: React.FC<CameraMapProps> = ({ cameras, onSelectCamera }) => {
                         <span className="text-sm font-mono">{camera.ip}</span>
                       </div>
                       <div className="text-xs text-gray-400 mt-1">
-                        {camera.location?.country}, {camera.location?.city || 'Unknown city'}
+                        {location.country}, {location.city || 'Unknown city'}
                       </div>
                     </div>
-                  ))
-                }
+                  );
+                })}
               </div>
             </div>
             
@@ -137,11 +159,11 @@ const CameraMap: React.FC<CameraMapProps> = ({ cameras, onSelectCamera }) => {
               <div className="flex items-center gap-2">
                 <div className="flex items-center">
                   <div className="w-2 h-2 rounded-full bg-scanner-info mr-1" />
-                  <span>Online: {cameras.filter(c => c.status === 'online' && c.location?.latitude).length}</span>
+                  <span>Online: {cameras.filter(c => c.status === 'online' && getCameraLocation(c)?.latitude).length}</span>
                 </div>
                 <div className="flex items-center">
                   <div className="w-2 h-2 rounded-full bg-scanner-danger mr-1" />
-                  <span>Vulnerable: {cameras.filter(c => c.status === 'vulnerable' && c.location?.latitude).length}</span>
+                  <span>Vulnerable: {cameras.filter(c => c.status === 'vulnerable' && getCameraLocation(c)?.latitude).length}</span>
                 </div>
               </div>
             </div>

@@ -22,6 +22,19 @@ const DashboardTabs: React.FC<DashboardTabsProps> = ({
 }) => {
   const { toast } = useToast();
 
+  // Helper function to get camera location
+  const getCameraLocation = (camera: CameraResult) => {
+    if (!camera.location) return null;
+    
+    // Handle location as object
+    if (typeof camera.location === 'object') {
+      return camera.location;
+    }
+    
+    // If we reach here, we don't have valid location data
+    return null;
+  };
+
   return (
     <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
       <TabsList className="bg-scanner-dark-alt w-full justify-start">
@@ -40,9 +53,10 @@ const DashboardTabs: React.FC<DashboardTabsProps> = ({
           cameras={results} 
           onSelectCamera={(camera) => {
             console.log('Selected camera:', camera);
+            const location = getCameraLocation(camera);
             toast({
               title: `Camera ${camera.ip}`,
-              description: `${camera.brand || 'Unknown'} camera in ${camera.location?.country || 'Unknown location'}`,
+              description: `${camera.brand || 'Unknown'} camera in ${location?.country || 'Unknown location'}`,
               duration: 3000,
             });
           }} 

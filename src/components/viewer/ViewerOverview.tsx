@@ -10,9 +10,23 @@ type ViewerOverviewProps = {
 };
 
 const ViewerOverview: React.FC<ViewerOverviewProps> = ({ cameras }) => {
+  // Helper function to get location 
+  const getCameraLocation = (camera: CameraResult) => {
+    if (!camera.location) return null;
+    
+    // Handle location as object
+    if (typeof camera.location === 'object') {
+      return camera.location;
+    }
+    
+    // If we reach here, we don't have valid location data
+    return null;
+  };
+
   // Group cameras by country
   const camerasByCountry = cameras.reduce((acc, camera) => {
-    const country = camera.location?.country || 'Unknown';
+    const location = getCameraLocation(camera);
+    const country = location?.country || 'Unknown';
     if (!acc[country]) {
       acc[country] = [];
     }
