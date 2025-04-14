@@ -1,84 +1,48 @@
 
 /**
- * Re-export all OSINT tool types from their specific modules
- * This file is maintained for backward compatibility
+ * Type definitions for OSINT tool parameters
  */
 
-// Import types directly to avoid namespace conflicts
-import { 
-  ToolParams, 
-  ToolResult, 
-  UsernameResult, 
-  ScanResult, 
-  ProxyConfig, 
-  ThreatIntelData
-} from './types/baseTypes';
+export interface FFmpegParams {
+  input: string;
+  output?: string;
+  duration?: string; // e.g. '30s', '1m', etc.
+  videoCodec?: string;
+  audioCodec?: string;
+  options?: Record<string, string>; // Additional FFmpeg options
+}
 
-import { 
-  CameraResult, 
-  CCTVParams, 
-  CCTVExplorerParams, 
-  HackCCTVParams, 
-  BackHackParams, 
-  CamDumperParams, 
-  OpenCCTVParams, 
-  EyePwnParams, 
-  IngramParams
-} from './types/cameraTypes';
+export interface SherockParams {
+  username: string;
+  sites?: string[];
+  outputType?: 'json' | 'csv' | 'terminal';
+  folderPath?: string;
+  timeout?: number;
+}
 
-import { 
-  NetworkScanParams, 
-  TorBotParams, 
-  BotExploitsParams,
-  ChromeExtensionParams,
-  ImperialOculusParams
-} from './types/networkToolTypes';
+export interface WebCheckParams {
+  url: string;
+  scanType?: 'basic' | 'full' | 'security';
+  screenshot?: boolean;
+  saveResults?: boolean;
+  timeout?: number;
+}
 
-import { 
-  WebCheckParams, 
-  WebHackParams
-} from './types/webToolTypes';
+export interface OsintParams {
+  target: string;
+  type: 'username' | 'domain' | 'ip' | 'email' | 'phone';
+  level?: number;
+  timeout?: number;
+  modules?: string[];
+}
 
-import { 
-  SocialSearchParams, 
-  SocialPostData
-} from './types/socialToolTypes';
-
-import {
-  RapidPayloadParams,
-  HackingToolParams,
-  SecurityAdminParams,
-  FFmpegParams,
-  ImperialShieldResult
-} from './types/advancedToolTypes';
-
-// Export all imported types using 'export type' for isolatedModules compatibility
-export type { ToolParams };
-export type { ToolResult };
-export type { UsernameResult };
-export type { ScanResult };
-export type { ProxyConfig };
-export type { ThreatIntelData };
-export type { CameraResult };
-export type { CCTVParams };
-export type { CCTVExplorerParams };
-export type { HackCCTVParams };
-export type { BackHackParams };
-export type { CamDumperParams };
-export type { OpenCCTVParams };
-export type { EyePwnParams };
-export type { IngramParams };
-export type { NetworkScanParams };
-export type { TorBotParams };
-export type { BotExploitsParams };
-export type { ChromeExtensionParams };
-export type { ImperialOculusParams };
-export type { WebCheckParams };
-export type { WebHackParams };
-export type { SocialSearchParams };
-export type { SocialPostData };
-export type { RapidPayloadParams };
-export type { HackingToolParams };
-export type { SecurityAdminParams };
-export type { FFmpegParams };
-export type { ImperialShieldResult };
+export interface RTSPParams {
+  target: string | string[];
+  port?: number | number[];
+  timeout?: number;
+  usernames?: string[];
+  passwords?: string[];
+  paths?: string[];
+  threads?: number;
+  outputFormat?: 'json' | 'csv' | 'text';
+}

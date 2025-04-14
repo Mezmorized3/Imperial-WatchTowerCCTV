@@ -20,6 +20,8 @@ export interface ScanSettings {
   enableRealTimeMonitoring?: boolean;
   alertThreshold?: 'low' | 'medium' | 'high' | 'critical';
   checkThreatIntel?: boolean;
+  ports?: string[];
+  limit?: number;
 }
 
 export interface ScanProgress {
@@ -137,6 +139,7 @@ export interface CCTVParams {
   country?: string;
   timeout?: number;
   region?: string;
+  limit?: number;
 }
 
 export interface SpeedCameraParams {
@@ -153,6 +156,7 @@ export interface CamerattackParams {
   attackType?: string;
   port?: number;
   rate?: number;
+  method?: string;
 }
 
 export interface AlertConfig {
@@ -165,4 +169,56 @@ export interface AlertConfig {
   recipients?: string[];
   webhookUrl?: string;
   createdAt: string;
+  type?: string;
+  severity?: string;
+  notificationMethod?: string;
+}
+
+export interface RTSPBruteParams {
+  targets: string | string[];
+  ports?: number[];
+  credentials?: { username: string; password: string }[];
+  routes?: string[];
+  threads?: number;
+  timeout?: number;
+  captureScreenshots?: boolean;
+  saveReport?: boolean;
+  outputFormat?: 'json' | 'csv' | 'text';
+  useML?: boolean;
+  scanMode?: 'quick' | 'thorough' | 'stealth';
+}
+
+export interface RTSPBruteResult {
+  success: boolean;
+  targetsScanned: number;
+  streamsFound: number;
+  accessibleStreams: number;
+  results: RTSPStreamResult[];
+  executionTime: number;
+  reportPath?: string;
+  error?: string;
+}
+
+export interface RTSPStreamResult {
+  id: string;
+  target: string;
+  port: number;
+  accessible: boolean;
+  protocol: 'rtsp' | 'rtsps';
+  route?: string;
+  credentials?: {
+    username: string;
+    password: string;
+    default?: boolean;
+  };
+  streamUrl?: string;
+  screenshotPath?: string;
+  metadata?: {
+    resolution?: string;
+    fps?: number;
+    codec?: string;
+    bitrate?: string;
+  };
+  responseTime?: number;
+  discoveredAt: string;
 }
