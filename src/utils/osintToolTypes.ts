@@ -10,6 +10,14 @@ export interface FFmpegParams {
   videoCodec?: string;
   audioCodec?: string;
   options?: Record<string, string>; // Additional FFmpeg options
+  // Adding missing properties
+  inputStream?: string;
+  resolution?: string;
+  bitrate?: string;
+  framerate?: number;
+  filters?: string[];
+  outputPath?: string;
+  outputFormat?: string;
 }
 
 export interface SherockParams {
@@ -45,4 +53,47 @@ export interface RTSPParams {
   paths?: string[];
   threads?: number;
   outputFormat?: 'json' | 'csv' | 'text';
+}
+
+// Add missing ProxyConfig interface
+export interface ProxyConfig {
+  enabled: boolean;
+  type: 'http' | 'socks4' | 'socks5';
+  host: string;
+  port: number;
+  username?: string;
+  password?: string;
+  rotationEnabled?: boolean;
+  rotationInterval?: number;
+}
+
+// Add missing ToolResult interface
+export interface ToolResult {
+  success: boolean;
+  data?: any;
+  error?: string;
+  command?: string;
+  timestamp?: string;
+}
+
+// Add missing SecurityAdminParams interface
+export interface SecurityAdminParams {
+  target: string;
+  action: 'check' | 'patch' | 'report';
+  scope?: 'system' | 'network' | 'application';
+  level?: 'basic' | 'advanced';
+  timeout?: number;
+}
+
+// Extend CCTVParams with additional properties
+export interface CCTVParams {
+  target: string;
+  mode?: string;
+  country?: string;
+  timeout?: number;
+  region?: string;
+  limit?: number;
+  // Adding missing properties
+  saveResults?: boolean;
+  brand?: string;
 }

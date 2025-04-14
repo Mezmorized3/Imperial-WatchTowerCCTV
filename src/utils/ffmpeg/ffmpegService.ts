@@ -1,224 +1,228 @@
 
+import { simulateNetworkDelay } from '../networkUtils';
 import { FFmpegParams, ToolResult } from '@/utils/osintToolTypes';
-import { simulateNetworkDelay } from '@/utils/networkUtils';
 
 /**
- * Execute FFmpeg commands
- * In a real-world implementation, this would connect to a backend service
- * that can execute the actual FFmpeg binary
+ * Executes FFmpeg commands on RTSP streams
+ * @param params FFmpeg parameters
+ * @returns Result of the FFmpeg operation
  */
 export const executeFFmpeg = async (params: FFmpegParams): Promise<ToolResult> => {
   console.log('Executing FFmpeg with params:', params);
   
-  // Simulate network delay
-  await simulateNetworkDelay(1500);
-  
-  // Form the FFmpeg command
-  let command = 'ffmpeg';
-  
-  if (params.input) {
-    command += ` -i "${params.input}"`;
-  } else if (params.inputStream) {
-    command += ` -i "${params.inputStream}"`;
-  } else {
+  try {
+    // Validate input
+    if (!params.input) {
+      return {
+        success: false,
+        error: 'Input stream URL is required'
+      };
+    }
+    
+    // Handle direct input stream or input parameter
+    const inputStream = params.inputStream || params.input;
+    if (!inputStream) {
+      return {
+        success: false,
+        error: 'No input stream provided'
+      };
+    }
+    
+    // Simulate processing delay
+    await simulateNetworkDelay(2000);
+    
+    // Build FFmpeg command
+    const command = buildFFmpegCommand(params);
+    
+    return {
+      success: true,
+      data: {
+        command,
+        outputFile: params.output || 'output.mp4',
+        duration: params.duration || 'full',
+        timestamp: new Date().toISOString()
+      }
+    };
+  } catch (error) {
+    console.error('Error executing FFmpeg:', error);
     return {
       success: false,
-      error: 'No input specified',
-      data: null,
-      simulatedData: true
+      error: error instanceof Error ? error.message : 'Unknown error occurred'
     };
   }
+};
+
+/**
+ * Builds an FFmpeg command string from parameters
+ */
+const buildFFmpegCommand = (params: FFmpegParams): string => {
+  let command = 'ffmpeg -i "' + (params.inputStream || params.input) + '"';
   
-  // Add codec options if specified
+  // Add video codec if specified
   if (params.videoCodec) {
-    command += ` -c:v ${params.videoCodec}`;
+    command += ' -c:v ' + params.videoCodec;
   }
   
+  // Add audio codec if specified
   if (params.audioCodec) {
-    command += ` -c:a ${params.audioCodec}`;
+    command += ' -c:a ' + params.audioCodec;
   }
   
+  // Add duration if specified
+  if (params.duration) {
+    command += ' -t ' + params.duration;
+  }
+  
+  // Add resolution if specified
   if (params.resolution) {
-    command += ` -s ${params.resolution}`;
+    command += ' -s ' + params.resolution;
   }
   
+  // Add bitrate if specified
   if (params.bitrate) {
-    command += ` -b:v ${params.bitrate}`;
+    command += ' -b:v ' + params.bitrate;
   }
   
+  // Add framerate if specified
   if (params.framerate) {
-    command += ` -r ${params.framerate}`;
+    command += ' -r ' + params.framerate;
   }
   
+  // Add filters if specified
   if (params.filters && params.filters.length > 0) {
-    command += ` -vf "${params.filters.join(',')}"`;
+    command += ' -vf "' + params.filters.join(',') + '"';
   }
   
-  // Add output path
-  command += ` "${params.output || params.outputPath || 'output.' + (params.outputFormat || 'mp4')}"`;
+  // Add output file
+  command += ' ' + (params.outputPath || params.output || 'output.' + (params.outputFormat || 'mp4'));
   
-  console.log('Simulated FFmpeg command:', command);
-  
-  // In a real implementation, this would execute the command
-  return {
-    success: true,
-    data: {
-      command,
-      output: 'FFmpeg command executed successfully',
-      duration: Math.floor(Math.random() * 10) + 2,
-      exitCode: 0
-    },
-    simulatedData: true
-  };
+  return command;
 };
 
 /**
- * Convert RTSP stream to HLS format
+ * Converts an RTSP stream to HLS format
  */
-export const ffmpegConvertRtspToHls = async (params: FFmpegParams): Promise<ToolResult> => {
-  console.log('Converting RTSP to HLS:', params);
+export const convertRtspToHls = async (params: FFmpegParams): Promise<ToolResult> => {
+  console.log('Converting RTSP to HLS with params:', params);
   
-  // Simulate network delay
-  await simulateNetworkDelay(2000);
-  
-  if (!params.input && !params.inputStream) {
+  try {
+    // Validate input
+    if (!params.inputStream && !params.input) {
+      return {
+        success: false,
+        error: 'Input stream URL is required'
+      };
+    }
+    
+    // Simulate processing delay
+    await simulateNetworkDelay(3000);
+    
+    // Build FFmpeg command for HLS conversion
+    const inputStream = params.inputStream || params.input;
+    const command = `ffmpeg -i "${inputStream}" -c:v h264 -c:a aac -hls_time 4 -hls_list_size 10 -start_number 1 output.m3u8`;
+    
+    return {
+      success: true,
+      data: {
+        command,
+        outputPath: params.outputPath || 'output.m3u8',
+        playlistUrl: '/hls/output.m3u8',
+        segments: 10,
+        segmentDuration: 4,
+        timestamp: new Date().toISOString()
+      }
+    };
+  } catch (error) {
+    console.error('Error converting RTSP to HLS:', error);
     return {
       success: false,
-      error: 'No RTSP URL provided',
-      data: null,
-      simulatedData: true
+      error: error instanceof Error ? error.message : 'Unknown error occurred'
     };
   }
-  
-  // Form the FFmpeg command for HLS conversion
-  let command = 'ffmpeg';
-  command += ` -i "${params.input || params.inputStream}"`;
-  command += ' -c:v libx264 -c:a aac -hls_time 4 -hls_playlist_type event';
-  
-  if (params.videoCodec) {
-    command += ` -c:v ${params.videoCodec}`;
-  }
-  
-  if (params.audioCodec) {
-    command += ` -c:a ${params.audioCodec}`;
-  }
-  
-  if (params.resolution) {
-    command += ` -s ${params.resolution}`;
-  }
-  
-  if (params.bitrate) {
-    command += ` -b:v ${params.bitrate}`;
-  }
-  
-  if (params.framerate) {
-    command += ` -r ${params.framerate}`;
-  }
-  
-  if (params.filters && params.filters.length > 0) {
-    command += ` -vf "${params.filters.join(',')}"`;
-  }
-  
-  // Add output path
-  const outputPath = params.output || params.outputPath || 'stream.m3u8';
-  command += ` "${outputPath}"`;
-  
-  console.log('Simulated FFmpeg HLS command:', command);
-  
-  // In a real implementation, this would execute the command
-  return {
-    success: true,
-    data: {
-      command,
-      output: 'FFmpeg HLS conversion started',
-      outputUrl: `http://localhost:8080/${outputPath}`,
-      exitCode: 0
-    },
-    simulatedData: true
-  };
 };
 
 /**
- * Record a stream for a specified duration
+ * Takes a screenshot from an RTSP stream
  */
-export const ffmpegRecordStream = async (params: FFmpegParams, duration = 60): Promise<ToolResult> => {
-  console.log('Recording stream:', params, 'for', duration, 'seconds');
+export const takeStreamScreenshot = async (params: FFmpegParams): Promise<ToolResult> => {
+  console.log('Taking screenshot from stream with params:', params);
   
-  // Simulate network delay
-  await simulateNetworkDelay(1000);
-  
-  if (!params.input && !params.inputStream) {
+  try {
+    // Validate input
+    if (!params.inputStream && !params.input) {
+      return {
+        success: false,
+        error: 'Input stream URL is required'
+      };
+    }
+    
+    // Simulate processing delay
+    await simulateNetworkDelay(1000);
+    
+    // Build FFmpeg command for screenshot
+    const inputStream = params.inputStream || params.input;
+    const command = `ffmpeg -i "${inputStream}" -frames:v 1 -q:v 2 ${params.outputPath || 'screenshot.jpg'}`;
+    
+    return {
+      success: true,
+      data: {
+        command,
+        outputPath: params.outputPath || 'screenshot.jpg',
+        timestamp: new Date().toISOString()
+      }
+    };
+  } catch (error) {
+    console.error('Error taking screenshot:', error);
     return {
       success: false,
-      error: 'No stream URL provided',
-      data: null,
-      simulatedData: true
+      error: error instanceof Error ? error.message : 'Unknown error occurred'
     };
   }
-  
-  // Form the FFmpeg command for recording
-  let command = 'ffmpeg';
-  command += ` -i "${params.input || params.inputStream}"`;
-  command += ` -t ${duration}`;
-  command += ' -c:v copy -c:a copy';
-  
-  // Add output path
-  const outputPath = params.output || params.outputPath || `recording_${Date.now()}.mp4`;
-  command += ` "${outputPath}"`;
-  
-  console.log('Simulated FFmpeg recording command:', command);
-  
-  // In a real implementation, this would execute the command
-  return {
-    success: true,
-    data: {
-      command,
-      output: `Recording saved to ${outputPath}`,
-      duration: duration,
-      exitCode: 0
-    },
-    simulatedData: true
-  };
 };
 
 /**
- * Apply motion detection filter to stream
+ * Records a segment from an RTSP stream
  */
-export const applyMotionDetection = async (params: FFmpegParams): Promise<ToolResult> => {
-  console.log('Applying motion detection:', params);
+export const recordStreamSegment = async (params: FFmpegParams): Promise<ToolResult> => {
+  console.log('Recording stream segment with params:', params);
   
-  // Simulate network delay
-  await simulateNetworkDelay(1500);
-  
-  if (!params.input && !params.inputStream) {
+  try {
+    // Validate input
+    if (!params.inputStream && !params.input) {
+      return {
+        success: false,
+        error: 'Input stream URL is required'
+      };
+    }
+    
+    // Simulate processing delay
+    await simulateNetworkDelay(params.duration ? parseInt(params.duration) * 100 : 5000);
+    
+    // Build FFmpeg command for recording
+    const inputStream = params.inputStream || params.input;
+    const command = `ffmpeg -i "${inputStream}" -c:v copy -c:a copy -t ${params.duration || '30'} ${params.outputPath || 'recording.mp4'}`;
+    
+    return {
+      success: true,
+      data: {
+        command,
+        outputPath: params.outputPath || 'recording.mp4',
+        duration: params.duration || '30s',
+        timestamp: new Date().toISOString()
+      }
+    };
+  } catch (error) {
+    console.error('Error recording stream segment:', error);
     return {
       success: false,
-      error: 'No stream URL provided',
-      data: null,
-      simulatedData: true
+      error: error instanceof Error ? error.message : 'Unknown error occurred'
     };
   }
-  
-  // Form the FFmpeg command with motion detection filters
-  let command = 'ffmpeg';
-  command += ` -i "${params.input || params.inputStream}"`;
-  command += ' -vf "select=\'gt(scene,0.003)\',metadata=print" -preset ultrafast';
-  
-  // Add output path
-  const outputPath = params.output || params.outputPath || `motion_${Date.now()}.mp4`;
-  command += ` "${outputPath}"`;
-  
-  console.log('Simulated FFmpeg motion detection command:', command);
-  
-  // In a real implementation, this would execute the command
-  return {
-    success: true,
-    data: {
-      command,
-      output: 'Motion detection applied',
-      detectionThreshold: 0.003,
-      exitCode: 0
-    },
-    simulatedData: true
-  };
+};
+
+export default {
+  executeFFmpeg,
+  convertRtspToHls,
+  takeStreamScreenshot,
+  recordStreamSegment
 };

@@ -1,184 +1,169 @@
 
 import React, { useState } from 'react';
-import { Input } from '@/components/ui/input';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { executeCCTV } from '@/utils/osintImplementations';
-import { useToast } from '@/hooks/use-toast';
-import { CameraResult } from '@/utils/types/cameraTypes';
-import { getCountryIpRanges } from '@/utils/ipRangeUtils';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Camera, Search } from 'lucide-react';
+import { toast } from '@/components/ui/use-toast';
+import { CCTVParams } from '@/utils/osintToolTypes';
+import { executeCCTV } from '@/utils/osintTools';
 
-const countries = [
-  { label: 'All Countries', value: '' },
-  { label: 'Ukraine', value: 'ua' },
-  { label: 'Russia', value: 'ru' },
-  { label: 'Georgia', value: 'ge' },
-  { label: 'Romania', value: 'ro' },
-  { label: 'United States', value: 'us' },
-  { label: 'United Kingdom', value: 'uk' },
-  { label: 'Germany', value: 'de' },
-  { label: 'France', value: 'fr' },
-  { label: 'Japan', value: 'jp' }
-];
+interface CCTVToolProps {
+  onSearchComplete?: (results: any) => void;
+}
 
-export const CCTVTool: React.FC = () => {
+const CCTVTool: React.FC<CCTVToolProps> = ({ onSearchComplete }) => {
+  const [target, setTarget] = useState('');
+  const [mode, setMode] = useState('direct');
   const [country, setCountry] = useState('');
-  const [cameraType, setCameraType] = useState('');
-  const [limit, setLimit] = useState('10');
-  const [isSearching, setIsSearching] = useState(false);
+  const [brand, setBrand] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
   const [results, setResults] = useState<any>(null);
-  const { toast } = useToast();
-
+  
   const handleSearch = async () => {
-    if (!country) {
+    if (!target && !country) {
       toast({
-        title: "Country Required",
-        description: "Please select a country to search for CCTV cameras",
+        title: "Error",
+        description: "Please enter either a target or select a country",
         variant: "destructive"
       });
       return;
     }
     
-    setIsSearching(true);
-    toast({
-      title: "CCTV Search Initiated",
-      description: `Searching for CCTV cameras in ${countries.find(c => c.value === country)?.label || country}...`,
-    });
+    setIsLoading(true);
     
     try {
-      // Get selected country name for display
-      const countryName = countries.find(c => c.value === country)?.label || country;
+      const params: CCTVParams = {
+        target,
+        mode,
+        country,
+        timeout: 30000
+      };
       
-      // Get IP ranges for the country if available
-      const ipRanges = getCountryIpRanges(country);
-      if (ipRanges.length > 0) {
-        const randomRangeIndex = Math.floor(Math.random() * ipRanges.length);
-        toast({
-          title: "Using IP Range",
-          description: `${ipRanges[randomRangeIndex].description}: ${ipRanges[randomRangeIndex].range}`,
-        });
+      const result = await executeCCTV(params);
+      
+      setResults(result);
+      
+      if (onSearchComplete) {
+        onSearchComplete(result);
       }
       
-      const scanResults = await executeCCTV({
-        region: country,
-        limit: parseInt(limit),
-        country: countryName,
-        brand: cameraType
-      });
-      
-      setResults(scanResults.data);
       toast({
-        title: "Search Complete",
-        description: scanResults?.simulatedData 
-          ? "Showing simulated results (dev mode)" 
-          : "CCTV camera search completed successfully",
+        title: `${result.simulatedData ? 'Simulated ' : ''}Search Complete`,
+        description: `Found ${result.data?.cameras?.length || 0} cameras.`
       });
     } catch (error) {
-      console.error('CCTV search error:', error);
+      console.error("Error during search:", error);
       toast({
-        title: "Search Failed",
+        title: "Search Error",
         description: error instanceof Error ? error.message : "An unknown error occurred",
         variant: "destructive"
       });
     } finally {
-      setIsSearching(false);
+      setIsLoading(false);
     }
   };
 
   return (
-    <div className="space-y-4">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="md:col-span-1">
-          <Label htmlFor="country" className="mb-2 block">Country</Label>
+    <Card className="border-gray-700 bg-scanner-dark shadow-lg">
+      <CardHeader>
+        <CardTitle className="flex items-center">
+          <Camera className="h-5 w-5 text-blue-400 mr-2" />
+          CCTV Camera Search
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <Label htmlFor="target">IP Address or Network Range</Label>
+        <Input
+          id="target"
+          placeholder="192.168.1.0/24 or individual IP"
+          value={target}
+          onChange={(e) => setTarget(e.target.value)}
+          className="bg-scanner-dark-alt border-gray-700"
+        />
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="mode">Search Mode</Label>
+            <Select value={mode} onValueChange={setMode}>
+              <SelectTrigger className="bg-scanner-dark-alt border-gray-700">
+                <SelectValue placeholder="Select mode" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="direct">Direct Scan</SelectItem>
+                <SelectItem value="passive">Passive (Database)</SelectItem>
+                <SelectItem value="mixed">Mixed Approach</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="brand">Camera Brand (Optional)</Label>
+            <Select value={brand} onValueChange={setBrand}>
+              <SelectTrigger className="bg-scanner-dark-alt border-gray-700">
+                <SelectValue placeholder="Any brand" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">Any</SelectItem>
+                <SelectItem value="hikvision">Hikvision</SelectItem>
+                <SelectItem value="dahua">Dahua</SelectItem>
+                <SelectItem value="axis">Axis</SelectItem>
+                <SelectItem value="samsung">Samsung</SelectItem>
+                <SelectItem value="foscam">Foscam</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+        
+        <div className="space-y-2">
+          <Label htmlFor="country">Country Filter (Optional)</Label>
           <Select value={country} onValueChange={setCountry}>
-            <SelectTrigger id="country" className="bg-scanner-dark">
-              <SelectValue placeholder="Select Country" />
+            <SelectTrigger className="bg-scanner-dark-alt border-gray-700">
+              <SelectValue placeholder="Any country" />
             </SelectTrigger>
             <SelectContent>
-              {countries.map((c) => (
-                <SelectItem key={c.value} value={c.value}>
-                  {c.label}
-                </SelectItem>
-              ))}
+              <SelectItem value="">Any</SelectItem>
+              <SelectItem value="US">United States</SelectItem>
+              <SelectItem value="GB">United Kingdom</SelectItem>
+              <SelectItem value="DE">Germany</SelectItem>
+              <SelectItem value="FR">France</SelectItem>
+              <SelectItem value="JP">Japan</SelectItem>
+              <SelectItem value="CN">China</SelectItem>
+              <SelectItem value="RU">Russia</SelectItem>
+              <SelectItem value="IN">India</SelectItem>
             </SelectContent>
           </Select>
         </div>
-        <div className="md:col-span-1">
-          <Label htmlFor="cameraType" className="mb-2 block">Camera Type</Label>
-          <Input
-            id="cameraType"
-            placeholder="Camera Type (optional)"
-            value={cameraType}
-            onChange={(e) => setCameraType(e.target.value)}
-            className="bg-scanner-dark"
-          />
-        </div>
-        <div className="md:col-span-1">
-          <Label htmlFor="limit" className="mb-2 block">Results Limit</Label>
-          <Input
-            id="limit"
-            placeholder="Limit (default 10)"
-            value={limit}
-            onChange={(e) => setLimit(e.target.value)}
-            className="bg-scanner-dark"
-          />
-        </div>
-        <div>
-          <Button 
-            onClick={handleSearch} 
-            disabled={isSearching || !country}
-            className="w-full"
-          >
-            {isSearching ? (
-              <>Searching...</>
-            ) : (
-              <>
-                Search CCTV Cameras
-              </>
+        
+        <Button
+          onClick={handleSearch}
+          disabled={isLoading}
+          className="w-full"
+        >
+          {isLoading ? "Searching..." : "Search for Cameras"}
+        </Button>
+        
+        {results && (
+          <div className="mt-4">
+            <h3 className="text-sm font-semibold mb-2">Results:</h3>
+            <p className="text-sm">Found {results.data?.cameras?.length || 0} cameras.</p>
+            
+            {results.data?.cameras && results.data.cameras.length > 0 && (
+              <div className="mt-2 max-h-60 overflow-y-auto p-2 bg-scanner-dark-alt rounded border border-gray-700">
+                {results.data.cameras.map((camera: any, index: number) => (
+                  <div key={index} className="p-2 border-b border-gray-700 last:border-b-0">
+                    <p className="font-mono text-sm">{camera.ip}:{camera.port}</p>
+                    {camera.model && <p className="text-xs text-gray-400">Model: {camera.model}</p>}
+                  </div>
+                ))}
+              </div>
             )}
-          </Button>
-        </div>
-      </div>
-      
-      <Card className="bg-scanner-dark-alt border-gray-700">
-        <CardContent className="pt-4">
-          {results && results.cameras && results.cameras.length > 0 ? (
-            <div className="overflow-x-auto">
-              <table className="w-full text-left">
-                <thead>
-                  <tr className="text-gray-400 border-b border-gray-700">
-                    <th className="pb-2">IP Address</th>
-                    <th className="pb-2">Port</th>
-                    <th className="pb-2">Country</th>
-                    <th className="pb-2">City</th>
-                    <th className="pb-2">Type</th>
-                    <th className="pb-2">Accessible</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {results.cameras.map((camera: CameraResult, index: number) => (
-                    <tr key={index} className="border-b border-gray-800">
-                      <td className="py-2">{camera.ip}</td>
-                      <td className="py-2">{camera.port}</td>
-                      <td className="py-2">{camera.geolocation?.country || 'Unknown'}</td>
-                      <td className="py-2">{camera.geolocation?.city || 'Unknown'}</td>
-                      <td className="py-2">{camera.manufacturer || camera.model || 'Unknown'}</td>
-                      <td className="py-2">{camera.accessible ? 'Yes' : 'No'}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          ) : (
-            <div className="text-center py-8 text-gray-400">
-              {isSearching ? 'Searching for cameras...' : 'No CCTV cameras found. Select a country and start a search.'}
-            </div>
-          )}
-        </CardContent>
-      </Card>
-    </div>
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 };
 

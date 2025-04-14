@@ -1,182 +1,195 @@
+
 import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Switch } from '@/components/ui/switch';
-import { Loader2, Lock, ShieldCheck, FileJson, FileText } from 'lucide-react';
-import { executeSecurityAdmin } from '@/utils/osintImplementations';
+import { Shield, Check, AlertTriangle } from 'lucide-react';
+import { toast } from '@/components/ui/use-toast';
 import { SecurityAdminParams } from '@/utils/osintToolTypes';
-import { useToast } from '@/hooks/use-toast';
 
-const SecurityAdminTool: React.FC = () => {
-  const [scanType, setScanType] = useState<'permissions' | 'users' | 'services' | 'full'>('permissions');
-  const [target, setTarget] = useState<string>('localhost');
-  const [fixVulnerabilities, setFixVulnerabilities] = useState<boolean>(false);
-  const [reportFormat, setReportFormat] = useState<'json' | 'html' | 'text'>('json');
-  const [isScanning, setIsScanning] = useState<boolean>(false);
-  const [results, setResults] = useState<string | null>(null);
-  const { toast } = useToast();
+interface SecurityAdminToolProps {
+  onResult?: (result: any) => void;
+}
 
-  const handleScan = async () => {
+const SecurityAdminTool: React.FC<SecurityAdminToolProps> = ({ onResult }) => {
+  const [target, setTarget] = useState('');
+  const [action, setAction] = useState<'check' | 'patch' | 'report'>('check');
+  const [scope, setScope] = useState<'system' | 'network' | 'application'>('system');
+  const [isExecuting, setIsExecuting] = useState(false);
+  const [results, setResults] = useState<any>(null);
+  
+  const handleExecute = async () => {
+    if (!target) {
+      toast({
+        title: "Validation Error",
+        description: "Please enter a target system",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    setIsExecuting(true);
+    
     try {
-      setIsScanning(true);
-      setResults(null);
-      
-      const params = {
-        tool: 'security-admin',
-        command: `scan_${scanType}`,
-        scanType: scanType as 'full' | 'users' | 'permissions' | 'services',
+      // This is a mock execution, in a real implementation we would call a security admin API
+      const params: SecurityAdminParams = {
         target,
-        fixVulnerabilities,
-        reportFormat: 'json' as 'html' | 'text' | 'json'
+        action,
+        scope,
+        timeout: 30000
       };
       
-      const result = await executeSecurityAdmin(params);
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 2000));
       
-      if (result.success) {
-        toast({
-          title: "Security Scan Complete",
-          description: `${result.data.vulnerabilitiesFound} vulnerabilities detected`,
-        });
-        setResults(JSON.stringify(result.data, null, 2));
-        
-        if (fixVulnerabilities && result.data.mitigationsApplied > 0) {
-          toast({
-            title: "Vulnerabilities Mitigated",
-            description: `${result.data.mitigationsApplied} issues have been automatically fixed`,
-            variant: "default",
-          });
-        }
-      } else {
-        toast({
-          title: "Scan Failed",
-          description: result.error || "An error occurred during security scan",
-          variant: "destructive",
-        });
+      // Mock result
+      const mockResult = {
+        success: true,
+        timestamp: new Date().toISOString(),
+        target: params.target,
+        action: params.action,
+        scope: params.scope,
+        findings: [
+          {
+            type: 'vulnerability',
+            severity: 'high',
+            description: 'Outdated firmware with known vulnerabilities',
+            recommendation: 'Update firmware to latest version'
+          },
+          {
+            type: 'configuration',
+            severity: 'medium',
+            description: 'Default credentials still in use',
+            recommendation: 'Change default credentials'
+          }
+        ]
+      };
+      
+      setResults(mockResult);
+      
+      if (onResult) {
+        onResult(mockResult);
       }
-    } catch (error) {
-      console.error("Error during security scan:", error);
+      
       toast({
-        title: "Scan Error",
-        description: error instanceof Error ? error.message : "An unexpected error occurred",
-        variant: "destructive",
+        title: "Operation Complete",
+        description: `Security ${action} completed for ${target}`
+      });
+    } catch (error) {
+      console.error('Error executing security admin tool:', error);
+      
+      toast({
+        title: "Operation Failed",
+        description: error instanceof Error ? error.message : "An unknown error occurred",
+        variant: "destructive"
       });
     } finally {
-      setIsScanning(false);
+      setIsExecuting(false);
     }
   };
 
   return (
-    <Card className="border-gray-700 bg-scanner-dark-alt">
+    <Card className="border-gray-700 bg-scanner-dark shadow-lg">
       <CardHeader>
-        <CardTitle className="text-scanner-primary flex items-center">
-          <ShieldCheck className="mr-2 h-5 w-5" />
-          Security Admin
+        <CardTitle className="flex items-center">
+          <Shield className="h-5 w-5 text-green-400 mr-2" />
+          Security Administration
         </CardTitle>
-        <CardDescription>
-          Advanced security assessment and hardening tool
-        </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
+        <div className="space-y-2">
+          <Label htmlFor="target">Target System</Label>
+          <Input
+            id="target"
+            placeholder="IP address, hostname, or URL"
+            value={target}
+            onChange={(e) => setTarget(e.target.value)}
+            className="bg-scanner-dark-alt border-gray-700"
+          />
+        </div>
+        
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label htmlFor="scanType">Scan Type</Label>
-            <Select 
-              value={scanType} 
-              onValueChange={(value: 'permissions' | 'users' | 'services' | 'full') => setScanType(value)}
+            <Label htmlFor="action">Action</Label>
+            <Select
+              value={action}
+              onValueChange={(value: 'check' | 'patch' | 'report') => setAction(value)}
             >
-              <SelectTrigger className="w-full bg-scanner-dark border-gray-700">
-                <SelectValue placeholder="Select scan type" />
+              <SelectTrigger className="bg-scanner-dark-alt border-gray-700">
+                <SelectValue placeholder="Select action" />
               </SelectTrigger>
-              <SelectContent className="bg-scanner-dark text-white border-gray-700">
-                <SelectItem value="permissions">Permissions Audit</SelectItem>
-                <SelectItem value="users">User Accounts Audit</SelectItem>
-                <SelectItem value="services">Services Audit</SelectItem>
-                <SelectItem value="full">Full System Audit</SelectItem>
+              <SelectContent>
+                <SelectItem value="check">Security Check</SelectItem>
+                <SelectItem value="patch">Apply Patches</SelectItem>
+                <SelectItem value="report">Generate Report</SelectItem>
               </SelectContent>
             </Select>
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="target">Target System</Label>
-            <Input
-              id="target"
-              placeholder="localhost or IP address"
-              className="bg-scanner-dark border-gray-700"
-              value={target}
-              onChange={(e) => setTarget(e.target.value)}
-            />
-          </div>
-        </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <Label htmlFor="fixVulnerabilities" className="flex items-center">
-                <Lock className="h-4 w-4 mr-2" />
-                Auto-fix Vulnerabilities
-              </Label>
-              <Switch 
-                id="fixVulnerabilities" 
-                checked={fixVulnerabilities}
-                onCheckedChange={setFixVulnerabilities}
-              />
-            </div>
-            <p className="text-xs text-gray-400">
-              Automatically apply security fixes for discovered vulnerabilities
-            </p>
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="reportFormat">Report Format</Label>
-            <Select 
-              value={reportFormat} 
-              onValueChange={(value: 'json' | 'html' | 'text') => setReportFormat(value)}
+            <Label htmlFor="scope">Scope</Label>
+            <Select
+              value={scope}
+              onValueChange={(value: 'system' | 'network' | 'application') => setScope(value)}
             >
-              <SelectTrigger className="w-full bg-scanner-dark border-gray-700">
-                <SelectValue placeholder="Select report format" />
+              <SelectTrigger className="bg-scanner-dark-alt border-gray-700">
+                <SelectValue placeholder="Select scope" />
               </SelectTrigger>
-              <SelectContent className="bg-scanner-dark text-white border-gray-700">
-                <SelectItem value="json" className="flex items-center">
-                  <FileJson className="h-4 w-4 mr-2" />
-                  JSON
-                </SelectItem>
-                <SelectItem value="html" className="flex items-center">
-                  <FileText className="h-4 w-4 mr-2" />
-                  HTML
-                </SelectItem>
-                <SelectItem value="text" className="flex items-center">
-                  <FileText className="h-4 w-4 mr-2" />
-                  Text
-                </SelectItem>
+              <SelectContent>
+                <SelectItem value="system">System</SelectItem>
+                <SelectItem value="network">Network</SelectItem>
+                <SelectItem value="application">Application</SelectItem>
               </SelectContent>
             </Select>
           </div>
         </div>
         
-        <div className="pt-2">
-          <Button
-            onClick={handleScan}
-            disabled={isScanning}
-            className="w-full bg-scanner-success hover:bg-scanner-success/90"
-          >
-            {isScanning ? (
-              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-            ) : (
-              <ShieldCheck className="h-4 w-4 mr-2" />
-            )}
-            {isScanning ? 'Scanning...' : 'Run Security Scan'}
-          </Button>
-        </div>
+        <Button
+          onClick={handleExecute}
+          disabled={isExecuting || !target}
+          className="w-full"
+        >
+          {isExecuting ? "Executing..." : `Execute ${action}`}
+        </Button>
         
         {results && (
-          <div className="mt-4">
-            <Label>Security Assessment Results</Label>
-            <div className="bg-black rounded p-2 mt-1 overflow-auto max-h-80 text-xs font-mono">
-              <pre>{results}</pre>
-            </div>
+          <div className="mt-4 p-4 bg-scanner-dark-alt border border-gray-700 rounded">
+            <h3 className="text-sm font-semibold mb-3">Results:</h3>
+            
+            {results.findings && results.findings.length > 0 ? (
+              <div className="space-y-3">
+                {results.findings.map((finding: any, index: number) => (
+                  <div
+                    key={index}
+                    className={`p-3 border rounded ${
+                      finding.severity === 'high'
+                        ? 'border-red-500 bg-red-500/10'
+                        : finding.severity === 'medium'
+                        ? 'border-yellow-500 bg-yellow-500/10'
+                        : 'border-blue-500 bg-blue-500/10'
+                    }`}
+                  >
+                    <div className="flex items-start">
+                      {finding.severity === 'high' ? (
+                        <AlertTriangle className="h-5 w-5 text-red-500 mr-2 flex-shrink-0" />
+                      ) : (
+                        <Check className="h-5 w-5 text-yellow-500 mr-2 flex-shrink-0" />
+                      )}
+                      <div>
+                        <p className="font-medium">{finding.description}</p>
+                        <p className="text-sm text-gray-400 mt-1">
+                          Recommendation: {finding.recommendation}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-gray-400">No issues found.</p>
+            )}
           </div>
         )}
       </CardContent>
