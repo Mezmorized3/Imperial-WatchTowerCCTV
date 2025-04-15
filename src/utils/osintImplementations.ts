@@ -38,9 +38,7 @@ export {
 } from './osintImplementations/networkTools';
 
 // Re-export all security tools
-import { executeSecurityAdmin } from './osintImplementations/securityTools';
-// Using default import since the module doesn't directly export executeShieldAI
-import executeShieldAI from './osintImplementations/securityTools';
+import { executeSecurityAdmin, executeShieldAI } from './osintImplementations/securityTools';
 
 export { executeSecurityAdmin, executeShieldAI };
 

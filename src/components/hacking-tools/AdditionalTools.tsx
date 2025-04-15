@@ -13,13 +13,10 @@ const AdditionalTools: React.FC<AdditionalToolsProps> = ({ isRealmode }) => {
   const handleSecurityAdmin = async () => {
     try {
       const result = await executeSecurityAdmin({
-        tool: 'security-admin',
-        command: 'scan',
-        scanType: 'permissions',
         target: 'localhost',
-        options: {
-          ports: '1-1000'
-        }
+        action: 'check',
+        scope: 'system',
+        timeout: 30
       });
       
       toast({

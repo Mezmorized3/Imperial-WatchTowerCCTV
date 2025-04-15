@@ -223,8 +223,5 @@ export const executeShieldAI = async (params: any): Promise<ToolResult> => {
   }
 };
 
-// Export both functions
-export default {
-  executeSecurityAdmin,
-  executeShieldAI
-};
+// Export the functions properly
+export default executeShieldAI;
