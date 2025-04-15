@@ -74,10 +74,10 @@ export interface ToolResult {
   error?: string;
   command?: string;
   timestamp?: string;
-  simulatedData?: boolean; // Adding the missing property
-  aiModel?: string; // Adding another property that might be used
-  mode?: string; // Adding another property that might be used
-  result?: any; // Adding another property that might be used
+  simulatedData?: boolean;
+  aiModel?: string;
+  mode?: string;
+  result?: any;
 }
 
 // Add missing SecurityAdminParams interface
