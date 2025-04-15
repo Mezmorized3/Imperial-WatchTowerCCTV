@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { CameraResult } from '@/types/scanner';
 import { 
@@ -24,7 +23,7 @@ import {
   ChevronDown, 
   ChevronUp 
 } from 'lucide-react';
-import { CameraDetailsDialog } from './CameraDetailsDialog';
+import CameraDetailsDialog from './CameraDetailsDialog';
 
 interface ResultsTableProps {
   results: CameraResult[];
@@ -53,16 +52,13 @@ const ResultsTable: React.FC<ResultsTableProps> = ({
     }
   };
 
-  // Helper function to get location 
   const getCameraLocation = (camera: CameraResult) => {
     if (!camera.location) return null;
     
-    // Handle location as object
     if (typeof camera.location === 'object') {
       return camera.location;
     }
     
-    // If we reach here, we don't have valid location data
     return null;
   };
   
@@ -70,7 +66,6 @@ const ResultsTable: React.FC<ResultsTableProps> = ({
     let aValue: any = a[sortField];
     let bValue: any = b[sortField];
     
-    // Special case for location
     if (sortField === 'location') {
       const aLocation = getCameraLocation(a);
       const bLocation = getCameraLocation(b);
