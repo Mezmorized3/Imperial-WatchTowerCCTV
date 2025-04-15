@@ -1,4 +1,3 @@
-
 import { simulateNetworkDelay } from '../networkUtils';
 import { SecurityAdminParams } from '../osintToolTypes';
 import { ToolResult } from '../osintToolTypes';
@@ -224,6 +223,5 @@ export const executeShieldAI = async (params: any): Promise<ToolResult> => {
   }
 };
 
-// Export the functions properly
-export { executeSecurityAdmin, executeShieldAI };
+// Export as default for compatibility with other imports
 export default { executeSecurityAdmin, executeShieldAI };
