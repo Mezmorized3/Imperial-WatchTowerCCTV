@@ -10,11 +10,16 @@ export const mockCameras: CameraResult[] = [
     model: 'DS-2CD2032',
     status: 'online',
     vulnerabilities: [
-      { id: 'vuln1', name: 'Default Password', severity: 'critical', cvssScore: 9.8 },
-      { id: 'vuln2', name: 'Outdated Firmware', severity: 'medium', cvssScore: 6.5 }
+      { id: 'vuln1', name: 'Default Password', severity: 'critical', description: 'Default credentials detected' },
+      { id: 'vuln2', name: 'Outdated Firmware', severity: 'medium', description: 'Running outdated firmware version' }
     ],
     credentials: { username: 'admin', password: '12345' },
-    location: { country: 'United States', city: 'New York', coords: { lat: 40.7128, lng: -74.0060 } }
+    location: { 
+      country: 'United States', 
+      city: 'New York', 
+      latitude: 40.7128, 
+      longitude: -74.0060 
+    }
   },
   {
     id: 'cam2',
@@ -24,9 +29,14 @@ export const mockCameras: CameraResult[] = [
     model: 'IPC-HDW4631C-A',
     status: 'online',
     vulnerabilities: [
-      { id: 'vuln3', name: 'Unencrypted Stream', severity: 'high', cvssScore: 7.2 }
+      { id: 'vuln3', name: 'Unencrypted Stream', severity: 'high', description: 'Transmitting data without encryption' }
     ],
-    location: { country: 'Germany', city: 'Berlin', coords: { lat: 52.5200, lng: 13.4050 } }
+    location: { 
+      country: 'Germany', 
+      city: 'Berlin', 
+      latitude: 52.5200, 
+      longitude: 13.4050 
+    }
   },
   {
     id: 'cam3',
@@ -36,9 +46,14 @@ export const mockCameras: CameraResult[] = [
     model: 'P3245-LVE',
     status: 'vulnerable',
     vulnerabilities: [
-      { id: 'vuln4', name: 'Outdated SDK', severity: 'medium', cvssScore: 5.9 },
-      { id: 'vuln5', name: 'ONVIF Security Issues', severity: 'medium', cvssScore: 5.2 }
+      { id: 'vuln4', name: 'Outdated SDK', severity: 'medium', description: 'Using vulnerable SDK version' },
+      { id: 'vuln5', name: 'ONVIF Security Issues', severity: 'medium', description: 'ONVIF implementation has security flaws' }
     ],
-    location: { country: 'Japan', city: 'Tokyo', coords: { lat: 35.6762, lng: 139.6503 } }
+    location: { 
+      country: 'Japan', 
+      city: 'Tokyo', 
+      latitude: 35.6762, 
+      longitude: 139.6503 
+    }
   }
 ];
