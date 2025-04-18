@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Shield, Code, Database, FileSearch, Terminal, Globe } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
-import { executeSecurityAdmin } from '@/utils/osintImplementations';
+import { executeSecurityAdmin } from '@/utils/osintImplementations/securityTools';
 
 interface AdditionalToolsProps {
   isRealmode: boolean;

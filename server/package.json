@@ -8,7 +8,8 @@
     "start": "node imperialServer.js",
     "start:dev": "node imperialServer.js --security-level=normal --log-level=debug",
     "start:secure": "node imperialServer.js --security-level=max --encryption=military",
-    "start:production": "NODE_ENV=production node imperialServer.js --security-level=max"
+    "start:production": "NODE_ENV=production node imperialServer.js --security-level=max",
+    "dev": "vite"
   },
   "dependencies": {
     "express": "^4.18.2",

@@ -37,10 +37,11 @@ export {
   executeBotExploits
 } from './osintImplementations/networkTools';
 
-// Re-export all security tools
-import { executeSecurityAdmin, executeShieldAI } from './osintImplementations/securityTools';
-
-export { executeSecurityAdmin, executeShieldAI };
+// Re-export all security tools with correct import path
+export {
+  executeSecurityAdmin,
+  executeShieldAI
+} from './osintImplementations/securityTools';
 
 // Export the new advanced tools
 export {
