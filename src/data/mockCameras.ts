@@ -9,6 +9,7 @@ export const mockCameras: CameraResult[] = [
     brand: 'Hikvision',
     model: 'DS-2CD2032',
     status: 'online',
+    accessLevel: 'admin', // Added required accessLevel property
     vulnerabilities: [
       { id: 'vuln1', name: 'Default Password', severity: 'critical', description: 'Default credentials detected' },
       { id: 'vuln2', name: 'Outdated Firmware', severity: 'medium', description: 'Running outdated firmware version' }
@@ -28,6 +29,7 @@ export const mockCameras: CameraResult[] = [
     brand: 'Dahua',
     model: 'IPC-HDW4631C-A',
     status: 'online',
+    accessLevel: 'view', // Added required accessLevel property
     vulnerabilities: [
       { id: 'vuln3', name: 'Unencrypted Stream', severity: 'high', description: 'Transmitting data without encryption' }
     ],
@@ -45,6 +47,7 @@ export const mockCameras: CameraResult[] = [
     brand: 'Axis',
     model: 'P3245-LVE',
     status: 'vulnerable',
+    accessLevel: 'limited', // Added required accessLevel property
     vulnerabilities: [
       { id: 'vuln4', name: 'Outdated SDK', severity: 'medium', description: 'Using vulnerable SDK version' },
       { id: 'vuln5', name: 'ONVIF Security Issues', severity: 'medium', description: 'ONVIF implementation has security flaws' }
