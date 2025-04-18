@@ -1,8 +1,8 @@
 
-import { ToolResult } from '@/utils/osintToolTypes';
+import { SecurityAnalysisResult } from './types';
 import { simulateNetworkDelay } from '@/utils/networkUtils';
 
-export const executeShieldAI = async (params: any): Promise<ToolResult> => {
+export const executeShieldAI = async (params: any): Promise<SecurityAnalysisResult> => {
   console.log('Executing Shield AI with params:', params);
   
   await simulateNetworkDelay(2500);
@@ -15,48 +15,42 @@ export const executeShieldAI = async (params: any): Promise<ToolResult> => {
       };
     }
     
+    // Generate AI security findings
+    const findings = [
+      {
+        id: `vuln-${Date.now()}-1`,
+        type: 'authentication',
+        severity: 'critical' as const,
+        description: 'Default credentials detected on surveillance system',
+        recommendation: 'Change default passwords and implement MFA',
+        impact: 'Complete system compromise'
+      },
+      {
+        id: `vuln-${Date.now()}-2`,
+        type: 'encryption',
+        severity: 'high' as const,
+        description: 'Unencrypted RTSP streams',
+        recommendation: 'Enable encryption for all video streams',
+        impact: 'Video feed interception'
+      },
+      {
+        id: `vuln-${Date.now()}-3`,
+        type: 'firmware',
+        severity: 'medium' as const,
+        description: 'Outdated firmware with known vulnerabilities',
+        recommendation: 'Update to latest firmware version',
+        cve: 'CVE-2023-12345'
+      }
+    ];
+    
     return {
       success: true,
       timestamp: new Date().toISOString(),
-      simulatedData: true,
-      aiModel: params.aiModel || 'ShieldCore-v2',
-      mode: params.mode || 'vulnerability',
-      result: {
-        overallRisk: ['critical', 'high', 'medium', 'low'][Math.floor(Math.random() * 4)],
-        vulnerabilityAssessment: [
-          {
-            category: 'Authentication',
-            riskLevel: 'high',
-            confidenceScore: 85 + Math.floor(Math.random() * 15),
-            recommendations: 'Implement MFA'
-          },
-          {
-            category: 'Data Protection',
-            riskLevel: 'medium',
-            confidenceScore: 70 + Math.floor(Math.random() * 20),
-            recommendations: 'Encrypt sensitive data'
-          },
-          {
-            category: 'Network Security',
-            riskLevel: 'critical',
-            confidenceScore: 95 + Math.floor(Math.random() * 5),
-            recommendations: 'Close unused ports'
-          }
-        ],
-        anomalyDetection: {
-          anomaliesDetected: Math.floor(Math.random() * 5) + 1,
-          baselineVariance: Math.floor(Math.random() * 25) + 5,
-          falsePositiveRate: Math.random() * 0.2,
-          monitoringPeriod: '24 hours'
-        },
-        networkAnalysis: {
-          deviceCount: Math.floor(Math.random() * 20) + 5,
-          unusualConnections: Math.floor(Math.random() * 3),
-          encryptedTraffic: `${Math.floor(Math.random() * 40) + 60}%`,
-          externalConnections: Math.floor(Math.random() * 10) + 2
-        },
-        remediationTimeEstimate: `${Math.floor(Math.random() * 4) + 2} hours`,
-        potentialThreats: Math.floor(Math.random() * 3)
+      findings: findings,
+      summary: {
+        total: findings.length,
+        successful: findings.length,
+        failed: 0
       }
     };
   } catch (error) {

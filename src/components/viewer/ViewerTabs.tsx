@@ -93,15 +93,15 @@ const ViewerTabs: React.FC<ViewerTabsProps> = ({
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <div className="p-3 bg-red-900/30 border border-red-800 rounded-md">
                     <p className="text-sm text-gray-300">Critical Vulnerabilities</p>
-                    <p className="text-2xl font-bold">{cameras.filter(c => c.vulnerabilities?.some(v => v.severity === 'critical')).length}</p>
+                    <p className="text-2xl font-bold">{cameras.filter(c => c.vulnerabilities?.some(v => v.severity === 'critical')).length || 0}</p>
                   </div>
                   <div className="p-3 bg-yellow-900/30 border border-yellow-800 rounded-md">
                     <p className="text-sm text-gray-300">Medium Vulnerabilities</p>
-                    <p className="text-2xl font-bold">{cameras.filter(c => c.vulnerabilities?.some(v => v.severity === 'medium')).length}</p>
+                    <p className="text-2xl font-bold">{cameras.filter(c => c.vulnerabilities?.some(v => v.severity === 'medium')).length || 0}</p>
                   </div>
                   <div className="p-3 bg-blue-900/30 border border-blue-800 rounded-md">
                     <p className="text-sm text-gray-300">Cameras with Default Credentials</p>
-                    <p className="text-2xl font-bold">{cameras.filter(c => c.credentials !== null).length}</p>
+                    <p className="text-2xl font-bold">{cameras.filter(c => c.credentials !== null && c.credentials !== undefined).length || 0}</p>
                   </div>
                 </div>
               </div>
@@ -112,9 +112,12 @@ const ViewerTabs: React.FC<ViewerTabsProps> = ({
                   {Array.from(new Set(cameras.flatMap(c => c.vulnerabilities || []).map(v => v.name))).slice(0, 5).map((vulnName, index) => (
                     <li key={index} className="flex items-start">
                       <span className="text-red-400 mr-2">•</span>
-                      <span>{vulnName}</span>
+                      <span>{vulnName || 'Unknown vulnerability'}</span>
                     </li>
                   ))}
+                  {cameras.flatMap(c => c.vulnerabilities || []).length === 0 && (
+                    <li className="text-gray-400">No vulnerabilities detected</li>
+                  )}
                 </ul>
               </div>
               
