@@ -37,16 +37,27 @@ document.addEventListener('keydown', (e) => {
 
 // Try to auto-start server when application starts
 document.addEventListener('DOMContentLoaded', () => {
+  console.log('DOM Content loaded, attempting to start server...');
   startImperialServer();
 });
 
-createRoot(document.getElementById("root")!).render(
-  <BrowserRouter>
-    <RealTimeProvider>
-      <App />
-    </RealTimeProvider>
-  </BrowserRouter>
-);
+console.log('Rendering React application...');
+const rootElement = document.getElementById("root");
+
+if (rootElement) {
+  console.log('Root element found, creating React root');
+  const root = createRoot(rootElement);
+  
+  root.render(
+    <BrowserRouter>
+      <RealTimeProvider>
+        <App />
+      </RealTimeProvider>
+    </BrowserRouter>
+  );
+} else {
+  console.error('Root element not found! Make sure there is a div with id="root" in index.html');
+}
 
 // Add startImperialServer to window for component access
 window.startImperialServer = startImperialServer;

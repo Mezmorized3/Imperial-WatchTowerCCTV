@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { ScanProgress, CameraResult, ScanTarget, ScanSettings } from '@/types/scanner';
 import { Toaster } from '@/components/ui/toaster';
@@ -17,6 +16,8 @@ import ImperialStartup from '@/components/dashboard/ImperialStartup';
 import { useIntegratedScanHandler } from '@/components/dashboard/IntegratedScanHandler';
 
 const Index = () => {
+  console.log('Index component mounting...');
+  
   // Get real-time data from context
   const { 
     isConnected, 
@@ -109,6 +110,16 @@ const Index = () => {
     return;
   };
 
+  useEffect(() => {
+    console.log('Index component mounted');
+    
+    return () => {
+      console.log('Index component unmounting');
+    };
+  }, []);
+
+  console.log('Rendering Index component', { activeTab, scanProgress, results });
+  
   return (
     <div className="min-h-screen bg-scanner-dark text-white">
       <main className="container mx-auto py-6 px-4">
