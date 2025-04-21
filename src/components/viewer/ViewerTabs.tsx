@@ -7,6 +7,7 @@ import VideoFeeds from './VideoFeeds';
 import CameraMap from '@/components/CameraMap';
 import ResultsTable from '@/components/ResultsTable';
 import CameraSearchTools from '@/components/surveillance/CameraSearchTools';
+import SecurityTools from './SecurityTools';
 import { CameraResult } from '@/types/scanner';
 
 type ViewerTabsProps = {
@@ -84,70 +85,7 @@ const ViewerTabs: React.FC<ViewerTabsProps> = ({
       
       <TabsContent value="security">
         {activeTab === 'security' && (
-          <div className="p-6 bg-scanner-dark border border-gray-700 rounded-md">
-            <h2 className="text-xl font-bold mb-4">Camera Security Assessment</h2>
-            
-            <div className="space-y-4">
-              <div className="p-4 bg-scanner-dark-alt rounded-md border border-gray-700">
-                <h3 className="text-lg font-medium mb-2">Vulnerability Statistics</h3>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  <div className="p-3 bg-red-900/30 border border-red-800 rounded-md">
-                    <p className="text-sm text-gray-300">Critical Vulnerabilities</p>
-                    <p className="text-2xl font-bold">{cameras.filter(c => c.vulnerabilities?.some(v => v.severity === 'critical')).length || 0}</p>
-                  </div>
-                  <div className="p-3 bg-yellow-900/30 border border-yellow-800 rounded-md">
-                    <p className="text-sm text-gray-300">Medium Vulnerabilities</p>
-                    <p className="text-2xl font-bold">{cameras.filter(c => c.vulnerabilities?.some(v => v.severity === 'medium')).length || 0}</p>
-                  </div>
-                  <div className="p-3 bg-blue-900/30 border border-blue-800 rounded-md">
-                    <p className="text-sm text-gray-300">Cameras with Default Credentials</p>
-                    <p className="text-2xl font-bold">{cameras.filter(c => c.credentials !== null && c.credentials !== undefined).length || 0}</p>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="p-4 bg-scanner-dark-alt rounded-md border border-gray-700">
-                <h3 className="text-lg font-medium mb-2">Common Vulnerabilities Found</h3>
-                <ul className="space-y-2">
-                  {Array.from(new Set(cameras.flatMap(c => c.vulnerabilities || []).map(v => v.name))).slice(0, 5).map((vulnName, index) => (
-                    <li key={index} className="flex items-start">
-                      <span className="text-red-400 mr-2">•</span>
-                      <span>{vulnName || 'Unknown vulnerability'}</span>
-                    </li>
-                  ))}
-                  {cameras.flatMap(c => c.vulnerabilities || []).length === 0 && (
-                    <li className="text-gray-400">No vulnerabilities detected</li>
-                  )}
-                </ul>
-              </div>
-              
-              <div className="p-4 bg-scanner-dark-alt rounded-md border border-gray-700">
-                <h3 className="text-lg font-medium mb-2">Security Recommendations</h3>
-                <ul className="space-y-2">
-                  <li className="flex items-start">
-                    <span className="text-green-400 mr-2">•</span>
-                    <span>Change default credentials on all cameras</span>
-                  </li>
-                  <li className="flex items-start">
-                    <span className="text-green-400 mr-2">•</span>
-                    <span>Update camera firmware to latest versions</span>
-                  </li>
-                  <li className="flex items-start">
-                    <span className="text-green-400 mr-2">•</span>
-                    <span>Implement network segmentation for surveillance systems</span>
-                  </li>
-                  <li className="flex items-start">
-                    <span className="text-green-400 mr-2">•</span>
-                    <span>Enable HTTPS/SSL for web interfaces when available</span>
-                  </li>
-                  <li className="flex items-start">
-                    <span className="text-green-400 mr-2">•</span>
-                    <span>Disable UPnP and automatic port forwarding</span>
-                  </li>
-                </ul>
-              </div>
-            </div>
-          </div>
+          <SecurityTools cameras={cameras} />
         )}
       </TabsContent>
     </Tabs>
