@@ -419,8 +419,8 @@ const ScanForm: React.FC<ScanFormProps> = ({ onStartScan, isScanning }) => {
               
               <div>
                 <Label htmlFor="alert-threshold" className="text-gray-300 text-sm">Alert Threshold</Label>
+                {/* Remove the id attribute from the Select component as it doesn't accept it */}
                 <Select 
-                  id="alert-threshold"
                   value={settings.alertThreshold} 
                   onValueChange={(value) => updateSettings('alertThreshold', value)}
                   disabled={!settings.enableRealTimeMonitoring}
