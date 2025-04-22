@@ -86,7 +86,7 @@ export const executeGoCV = async (params: GoCVParams): Promise<any> => {
     await new Promise((resolve) => setTimeout(resolve, 2000));
     
     // Generate mock results
-    let detections: any[] = [];
+    let detections: any = [];
     
     if (params.operation === 'detect_faces') {
       const faceCount = Math.floor(Math.random() * 5) + 1;
@@ -118,6 +118,7 @@ export const executeGoCV = async (params: GoCVParams): Promise<any> => {
         });
       }
     } else if (params.operation === 'motion_detection') {
+      // Change this from an array to an object
       detections = {
         motion_detected: Math.random() > 0.3,
         motion_regions: Math.random() > 0.5 ? [

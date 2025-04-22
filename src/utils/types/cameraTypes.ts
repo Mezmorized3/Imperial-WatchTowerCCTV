@@ -1,4 +1,3 @@
-
 /**
  * Camera types for OSINT and camera discovery
  */
@@ -113,53 +112,46 @@ export interface CamerattackParams {
   rate?: number; // Added for compatibility
 }
 
-export interface HackCCTVParams {
-  target: string;
-  method?: 'default-credentials' | 'exploit' | 'brute-force' | 'rtsp-discovery';
-  timeout?: number;
-  proxy?: string;
-  userAgent?: string;
-  country?: string;
-  deepScan?: boolean;
-  bruteforce?: boolean;
-  manufacturer?: string;
-  saveResults?: boolean;
-}
-
-export interface CCTVExplorerParams {
-  country: string;
-  region?: string;
-  limit?: number;
-  saveResults?: boolean;
-}
-
+// Add missing CamDumperParams interface
 export interface CamDumperParams {
   target: string;
-  method: 'scan' | 'exploit' | 'dump';
-  outputDir?: string;
-  timeout?: number;
+  region?: string;
+  manufacturer?: string;
   country?: string;
+  method?: string;
+  timeout?: number;
 }
 
+// Add missing HackCCTVParams interface
+export interface HackCCTVParams {
+  target: string;
+  method?: string;
+  bruteforce?: boolean;
+  deepScan?: boolean;
+  country?: string;
+  timeout?: number;
+}
+
+// Add missing OpenCCTVParams interface
 export interface OpenCCTVParams {
   target: string;
-  scanMode: 'quick' | 'deep' | 'stealth' | 'full'; // Added 'full' to match usage
-  saveOutput?: boolean;
-  proxyEnabled?: boolean;
+  scanMode?: 'quick' | 'deep' | 'full';
+  timeout?: number;
 }
 
+// Add missing EyePwnParams interface
 export interface EyePwnParams {
   target: string;
-  method: 'rtsp' | 'onvif' | 'web' | 'all';
+  method?: string;
   bruteforce?: boolean;
-  timeout?: number;
   country?: string;
+  timeout?: number;
 }
 
+// Add missing IngramParams interface
 export interface IngramParams {
   target: string;
-  scanType: 'quick' | 'deep' | 'stealth' | 'full'; // Added 'full' to match usage
-  outputFormat?: 'json' | 'csv' | 'txt';
-  includeSnapshots?: boolean;
+  scanType?: string;
   country?: string;
+  timeout?: number;
 }

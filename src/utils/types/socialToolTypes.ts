@@ -31,6 +31,7 @@ export interface SocialPostData {
 export interface TwitterParams {
   username?: string;
   query?: string;
+  search?: string;
   limit?: number;
   since?: string;
   until?: string;

@@ -2,10 +2,10 @@
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { CameradarTool } from './search-tools/CameradarTool';
-import { CCTVTool } from './search-tools/CCTVTool';
+import CCTVTool from './search-tools/CCTVTool';
 import { SpeedCameraTool } from './search-tools/SpeedCameraTool';
-import { CamerattackTool } from './search-tools/CamerattackTool';
-import { HackCCTVTool } from './search-tools/HackCCTVTool';
+import CamerattackTool from './search-tools/CamerattackTool';
+import HackCCTVTool from './search-tools/HackCCTVTool';
 import CamDumperTool from './search-tools/CamDumperTool';
 import CCTVHackedTool from './search-tools/CCTVHackedTool';
 import ONVIFSearchTool from './search-tools/ONVIFSearchTool';
