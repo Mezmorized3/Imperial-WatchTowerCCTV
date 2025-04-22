@@ -4,9 +4,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { toast } from '@/components/ui/use-toast';
+import { useToast } from '@/hooks/use-toast';
 import { User, ExternalLink } from 'lucide-react';
-import { executeUsernameSearch } from '@/utils/osintImplementations/socialTools';
+import { executeUsernameSearch } from '@/utils/osintUtilsConnector';
 
 export const UsernameSearchTool: React.FC = () => {
   const [username, setUsername] = useState('');
@@ -19,6 +19,8 @@ export const UsernameSearchTool: React.FC = () => {
     username?: string;
     note?: string;
   }>>([]);
+  
+  const { toast } = useToast();
 
   const handleSearch = async () => {
     if (!username.trim()) {

@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { executeTorBot } from '@/utils/osintTools';
+import { executeTorBot } from '@/utils/osintUtilsConnector';
 import { useToast } from '@/hooks/use-toast';
 import { Search } from 'lucide-react';
 import { Label } from '@/components/ui/label';

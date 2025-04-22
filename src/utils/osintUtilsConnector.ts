@@ -10,7 +10,9 @@ import {
   executeZGrab,
   executeHydra,
   executeRtspServer,
-  executeOSINT
+  executeOSINT,
+  executeTorBot,
+  executeTwint
 } from './osintImplementations';
 
 // Export all tools
@@ -21,5 +23,7 @@ export {
   executeZGrab,
   executeHydra,
   executeRtspServer,
-  executeOSINT
+  executeOSINT,
+  executeTorBot,
+  executeTwint
 };

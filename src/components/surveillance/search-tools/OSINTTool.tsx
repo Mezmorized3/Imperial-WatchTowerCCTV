@@ -9,7 +9,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Textarea } from '@/components/ui/textarea';
 import { Loader2, Search, Globe } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { executeOSINT } from '@/utils/osintTools';
+import { executeOSINT } from '@/utils/osintUtilsConnector';
 
 interface OSINTToolProps {
   onScanComplete?: (results: any) => void;
@@ -191,7 +191,7 @@ const OSINTTool: React.FC<OSINTToolProps> = ({ onScanComplete }) => {
 
           {results && (
             <div className="mt-6 space-y-3">
-              <h3 className="text-lg font-semibold">Scan Results</h3>
+              <h3 className="text-lg font-semibold mb-4">Scan Results</h3>
               <Textarea
                 readOnly
                 value={JSON.stringify(results, null, 2)}
