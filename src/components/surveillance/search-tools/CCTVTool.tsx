@@ -17,7 +17,7 @@ const CCTVTool: React.FC<CCTVToolProps> = ({ onSearchComplete }) => {
   const [target, setTarget] = useState('');
   const [mode, setMode] = useState('direct');
   const [country, setCountry] = useState('US'); // Default to US to ensure it's not empty
-  const [brand, setBrand] = useState('');
+  const [brand, setBrand] = useState('any');
   const [isLoading, setIsLoading] = useState(false);
   const [results, setResults] = useState<any>(null);
   
@@ -39,7 +39,7 @@ const CCTVTool: React.FC<CCTVToolProps> = ({ onSearchComplete }) => {
         mode,
         country, // Now always providing a country
         timeout: 30000,
-        brand: brand || undefined
+        brand: brand === 'any' ? undefined : brand
       };
       
       const result = await executeCCTV(params);
@@ -106,7 +106,7 @@ const CCTVTool: React.FC<CCTVToolProps> = ({ onSearchComplete }) => {
                 <SelectValue placeholder="Any brand" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Any</SelectItem>
+                <SelectItem value="any">Any</SelectItem>
                 <SelectItem value="hikvision">Hikvision</SelectItem>
                 <SelectItem value="dahua">Dahua</SelectItem>
                 <SelectItem value="axis">Axis</SelectItem>

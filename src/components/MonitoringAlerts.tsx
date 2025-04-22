@@ -26,9 +26,9 @@ const MonitoringAlerts = () => {
     level: 'medium',
     action: 'notify',
     createdAt: new Date().toISOString(),
-    type: '',
-    severity: '',
-    notificationMethod: ''
+    type: 'access',
+    severity: 'medium',
+    notificationMethod: 'email'
   });
   
   const addAlert = () => {
@@ -50,9 +50,9 @@ const MonitoringAlerts = () => {
       level: 'medium',
       action: 'notify',
       createdAt: new Date().toISOString(),
-      type: '',
-      severity: '',
-      notificationMethod: ''
+      type: 'access',
+      severity: 'medium',
+      notificationMethod: 'email'
     });
     
     toast({
