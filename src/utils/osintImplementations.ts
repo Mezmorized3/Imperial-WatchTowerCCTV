@@ -86,3 +86,29 @@ export {
   executeNmapONVIF,
   executeOpenCV
 } from './osintImplementations/onvifTools';
+
+// Export ONVIF Fuzzer and additional tools
+export {
+  executeONVIFFuzzer,
+  executeWebRTCStreamer,
+  executeTapoPoC
+} from './osintImplementations/onvifFuzzerTools';
+
+// Export extended network tools
+export {
+  executeShodan,
+  executeCensys,
+  executeHttpx,
+  executeNuclei,
+  executeAmass
+} from './osintImplementations/extendedNetworkTools';
+
+// Export computer vision tools
+export {
+  executeLive555,
+  executeGoCV,
+  executeOpenALPR,
+  executeTensorFlow,
+  executeDarknet,
+  executeEyeWitness
+} from './osintImplementations/computerVisionTools';

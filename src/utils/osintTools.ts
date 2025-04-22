@@ -43,7 +43,21 @@ import {
   executeRtspServer,
   executeZoneMinder,
   executeNmapONVIF,
-  executeOpenCV
+  executeOpenCV,
+  executeONVIFFuzzer,
+  executeWebRTCStreamer,
+  executeTapoPoC,
+  executeShodan,
+  executeCensys,
+  executeHttpx,
+  executeNuclei,
+  executeAmass,
+  executeLive555,
+  executeGoCV,
+  executeOpenALPR,
+  executeTensorFlow,
+  executeDarknet,
+  executeEyeWitness
 } from './osintImplementations';
 
 // Import CCTV Hacked tool
@@ -120,4 +134,30 @@ export {
   executeZoneMinder,
   executeNmapONVIF,
   executeOpenCV
+};
+
+// Export ONVIF Fuzzer and additional tools
+export {
+  executeONVIFFuzzer,
+  executeWebRTCStreamer,
+  executeTapoPoC
+};
+
+// Export extended network tools
+export {
+  executeShodan,
+  executeCensys,
+  executeHttpx,
+  executeNuclei,
+  executeAmass
+};
+
+// Export computer vision tools
+export {
+  executeLive555,
+  executeGoCV,
+  executeOpenALPR,
+  executeTensorFlow,
+  executeDarknet,
+  executeEyeWitness
 };
