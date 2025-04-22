@@ -31,7 +31,19 @@ import {
   applyMotionDetection,
   executeUsernameSearch,
   executeTwint,
-  executeOSINT
+  executeOSINT,
+  executeONVIFScan,
+  executeMasscan,
+  executeZGrab,
+  executeHydra,
+  executeMotion,
+  executeMotionEye,
+  executeDeepstack,
+  executeFaceRecognition,
+  executeRtspServer,
+  executeZoneMinder,
+  executeNmapONVIF,
+  executeOpenCV
 } from './osintImplementations';
 
 // Import CCTV Hacked tool
@@ -92,4 +104,20 @@ export {
   executeUsernameSearch,
   executeTwint,
   executeOSINT
+};
+
+// Export ONVIF and network scanning tools
+export {
+  executeONVIFScan,
+  executeMasscan,
+  executeZGrab,
+  executeHydra,
+  executeMotion,
+  executeMotionEye,
+  executeDeepstack,
+  executeFaceRecognition,
+  executeRtspServer,
+  executeZoneMinder,
+  executeNmapONVIF,
+  executeOpenCV
 };

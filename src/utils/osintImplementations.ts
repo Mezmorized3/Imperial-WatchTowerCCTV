@@ -60,9 +60,29 @@ export const applyMotionDetection = async (params: any) => {
   return { success: true, data: { applied: true } };
 };
 
-// Export the social tools from our new implementation
+// Export the social tools from our implementation
 export {
   executeUsernameSearch,
   executeTwint,
   executeOSINT
 } from './osintImplementations/socialTools';
+
+// Export CCTV Hacked tool
+import { executeCCTVHacked } from './osintImplementations/cctvHackedTools';
+export { executeCCTVHacked };
+
+// Export ONVIF and network scanning tools
+export {
+  executeONVIFScan,
+  executeMasscan,
+  executeZGrab,
+  executeHydra,
+  executeMotion,
+  executeMotionEye,
+  executeDeepstack,
+  executeFaceRecognition,
+  executeRtspServer,
+  executeZoneMinder,
+  executeNmapONVIF,
+  executeOpenCV
+} from './osintImplementations/onvifTools';
