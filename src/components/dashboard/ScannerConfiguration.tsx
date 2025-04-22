@@ -20,7 +20,7 @@ export const ScannerConfiguration: React.FC<ScannerConfigurationProps> = ({ onSt
   const [activeTab, setActiveTab] = useState<string>('basic');
   const [scanType, setScanType] = useState<'ip' | 'range' | 'file' | 'shodan' | 'zoomeye' | 'censys'>('range');
   const [targetValue, setTargetValue] = useState<string>('192.168.1.0/24');
-  const [regionFilter, setRegionFilter] = useState<string>('');
+  const [regionFilter, setRegionFilter] = useState<string>('all_regions');
   const [aggressiveScan, setAggressiveScan] = useState<boolean>(false);
   const [checkVulnerabilities, setCheckVulnerabilities] = useState<boolean>(true);
   
@@ -48,7 +48,7 @@ export const ScannerConfiguration: React.FC<ScannerConfigurationProps> = ({ onSt
       testCredentials,
       checkVulnerabilities,
       saveSnapshots,
-      regionFilter: regionFilter ? [regionFilter] : [],
+      regionFilter: regionFilter && regionFilter !== 'all_regions' ? [regionFilter] : [],
       threadsCount,
       timeout,
       enableRealTimeMonitoring: enableMonitoring,

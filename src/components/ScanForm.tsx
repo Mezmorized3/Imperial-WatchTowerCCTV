@@ -7,7 +7,6 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Slider } from '@/components/ui/slider';
 import { ChevronDown, ChevronUp, Search, Globe, FileText, AlertTriangle, Zap, MapPin, Database, Bell } from 'lucide-react';
 import { ScanSettings, ScanTarget } from '@/types/scanner';
