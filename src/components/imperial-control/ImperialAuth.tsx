@@ -3,9 +3,10 @@ import React, { useState, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Lock } from 'lucide-react';
+import { Lock, AlertCircle } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface ImperialAuthProps {
   adminToken: string;
@@ -24,8 +25,14 @@ const ImperialAuth: React.FC<ImperialAuthProps> = ({
 }) => {
   const [isTokenAutoFilled, setIsTokenAutoFilled] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [authError, setAuthError] = useState<string | null>(null);
+  const [isDevMode, setIsDevMode] = useState(false);
   
   useEffect(() => {
+    // Check if we're in development mode
+    setIsDevMode(window.location.hostname === 'localhost' || 
+                import.meta.env.DEV === true);
+    
     // Auto-fill the admin token from the server config
     const fetchToken = async () => {
       try {
@@ -48,6 +55,17 @@ const ImperialAuth: React.FC<ImperialAuthProps> = ({
   const toggleTokenVisibility = () => {
     setIsDialogOpen(true);
   };
+  
+  const handleLoginWithErrorHandling = () => {
+    setAuthError(null);
+    
+    // Display development mode notice if we're not on localhost
+    if (!isDevMode) {
+      setAuthError("Authentication may fail: The Imperial Server runs locally on port 5001. If you're accessing this app remotely, the authentication will fail due to CORS restrictions. Run the application locally for full functionality.");
+    }
+    
+    handleLogin();
+  };
 
   return (
     <div className="min-h-screen bg-scanner-dark text-white p-6">
@@ -60,6 +78,24 @@ const ImperialAuth: React.FC<ImperialAuthProps> = ({
         </CardHeader>
         <CardContent className="pt-6">
           <pre className="text-xs text-red-500 font-mono overflow-auto">{imperialBanner}</pre>
+          
+          {authError && (
+            <Alert variant="destructive" className="my-4 bg-red-900/30 border-red-800 text-red-200">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription className="ml-2">
+                {authError}
+              </AlertDescription>
+            </Alert>
+          )}
+          
+          {!isDevMode && (
+            <Alert className="my-4 bg-yellow-900/30 border-yellow-800 text-yellow-200">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription className="ml-2">
+                Note: Imperial Server requires local access to port 5001. For full functionality, run this application locally.
+              </AlertDescription>
+            </Alert>
+          )}
           
           <div className="mt-6 space-y-4">
             <div className="flex flex-col space-y-2">
@@ -78,7 +114,7 @@ const ImperialAuth: React.FC<ImperialAuthProps> = ({
             </div>
             
             <Button 
-              onClick={handleLogin} 
+              onClick={handleLoginWithErrorHandling} 
               disabled={isLoading || !adminToken.trim()} 
               className="w-full"
             >

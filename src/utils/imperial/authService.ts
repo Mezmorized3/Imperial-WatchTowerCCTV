@@ -22,7 +22,19 @@ class ImperialAuthService {
    */
   async authenticate(token: string): Promise<ImperialAPIResponse> {
     try {
-      // Fix the URL format - use proper URL with port
+      // Check for development environment first
+      if (window.location.hostname !== 'localhost' && import.meta.env.DEV) {
+        console.log('Development mode detected, skipping server authentication');
+        // In development or preview environments, auto-authenticate without server
+        this.setAuthToken(token);
+        return {
+          success: true,
+          token: token,
+          message: 'Development authentication successful'
+        };
+      }
+      
+      // If running locally, try to connect to the server
       const response = await fetch('http://localhost:5001/v1/api/auth', {
         method: 'POST',
         headers: {
@@ -74,7 +86,9 @@ class ImperialAuthService {
       
       // For development, simulate successful authentication
       if (import.meta.env.DEV) {
+        console.log('Simulating successful authentication in development mode');
         this.setAuthToken(token);
+        toast.success('Development mode: Authentication simulated');
         return {
           success: true,
           token: token,
