@@ -89,11 +89,11 @@ export interface SecurityAdminParams {
   timeout?: number;
 }
 
-// Extend CCTVParams with additional properties
+// Update CCTVParams to match the required properties from cameraTypes.ts
 export interface CCTVParams {
   target: string;
   mode?: string;
-  country?: string;
+  country: string; // Changed from optional to required
   timeout?: number;
   region?: string;
   limit?: number;

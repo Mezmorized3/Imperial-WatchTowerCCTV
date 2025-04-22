@@ -39,6 +39,9 @@ export interface CCTVParams {
   limit?: number;
   brand?: string;
   saveResults?: boolean;
+  target?: string; // Added for compatibility with osintToolTypes
+  mode?: string; // Added for compatibility with osintToolTypes
+  timeout?: number; // Added for compatibility with osintToolTypes
 }
 
 export interface CameraResult {
@@ -83,6 +86,7 @@ export interface ScanResult {
   data: any;
   simulatedData?: boolean;
   timestamp?: string;
+  error?: string; // Added error property to fix the TypeScript errors
 }
 
 export interface BackHackParams {

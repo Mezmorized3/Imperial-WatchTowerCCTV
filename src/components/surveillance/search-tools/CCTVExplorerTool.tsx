@@ -8,12 +8,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Checkbox } from '@/components/ui/checkbox';
 import { Camera, Search } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
-import { CCTVParams } from '@/utils/osintToolTypes';
-import { executeCCTV } from '@/utils/osintTools';
+import { executeCCTV } from '@/utils/osintImplementations';
 
 const CCTVExplorerTool = () => {
   const [ipRange, setIpRange] = useState('');
-  const [country, setCountry] = useState('');
+  const [country, setCountry] = useState('US'); // Default country to ensure it's not empty
   const [isLoading, setIsLoading] = useState(false);
   const [saveResults, setSaveResults] = useState(false);
   const [results, setResults] = useState<any>(null);
@@ -31,11 +30,12 @@ const CCTVExplorerTool = () => {
     setIsLoading(true);
     
     try {
-      const params: CCTVParams = {
+      const params = {
         target: ipRange,
-        country,
+        country: country, // Always provide country
         region: country ? 'global' : undefined,
-        timeout: 30000
+        timeout: 30000,
+        saveResults
       };
       
       const result = await executeCCTV(params);
@@ -84,7 +84,6 @@ const CCTVExplorerTool = () => {
               <SelectValue placeholder="Select country" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Any</SelectItem>
               <SelectItem value="US">United States</SelectItem>
               <SelectItem value="GB">United Kingdom</SelectItem>
               <SelectItem value="DE">Germany</SelectItem>

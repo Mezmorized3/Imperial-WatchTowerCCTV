@@ -7,8 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Camera, Search } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
-import { CCTVParams } from '@/utils/osintToolTypes';
-import { executeCCTV } from '@/utils/osintTools';
+import { executeCCTV } from '@/utils/osintImplementations';
 
 interface CCTVToolProps {
   onSearchComplete?: (results: any) => void;
@@ -17,7 +16,7 @@ interface CCTVToolProps {
 const CCTVTool: React.FC<CCTVToolProps> = ({ onSearchComplete }) => {
   const [target, setTarget] = useState('');
   const [mode, setMode] = useState('direct');
-  const [country, setCountry] = useState('');
+  const [country, setCountry] = useState('US'); // Default to US to ensure it's not empty
   const [brand, setBrand] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [results, setResults] = useState<any>(null);
@@ -35,11 +34,12 @@ const CCTVTool: React.FC<CCTVToolProps> = ({ onSearchComplete }) => {
     setIsLoading(true);
     
     try {
-      const params: CCTVParams = {
+      const params = {
         target,
         mode,
-        country,
-        timeout: 30000
+        country, // Now always providing a country
+        timeout: 30000,
+        brand: brand || undefined
       };
       
       const result = await executeCCTV(params);
@@ -118,13 +118,12 @@ const CCTVTool: React.FC<CCTVToolProps> = ({ onSearchComplete }) => {
         </div>
         
         <div className="space-y-2">
-          <Label htmlFor="country">Country Filter (Optional)</Label>
+          <Label htmlFor="country">Country Filter (Required)</Label>
           <Select value={country} onValueChange={setCountry}>
             <SelectTrigger className="bg-scanner-dark-alt border-gray-700">
-              <SelectValue placeholder="Any country" />
+              <SelectValue placeholder="Select country" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Any</SelectItem>
               <SelectItem value="US">United States</SelectItem>
               <SelectItem value="GB">United Kingdom</SelectItem>
               <SelectItem value="DE">Germany</SelectItem>
