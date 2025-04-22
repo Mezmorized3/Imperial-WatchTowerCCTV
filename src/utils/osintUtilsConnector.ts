@@ -12,7 +12,8 @@ import {
   executeRtspServer,
   executeOSINT,
   executeTorBot,
-  executeTwint
+  executeTwint,
+  executeUsernameSearch
 } from './osintImplementations';
 
 // Export all tools
@@ -25,5 +26,6 @@ export {
   executeRtspServer,
   executeOSINT,
   executeTorBot,
-  executeTwint
+  executeTwint,
+  executeUsernameSearch
 };
