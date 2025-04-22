@@ -1,4 +1,3 @@
-
 /**
  * Type definitions for OSINT tool parameters
  */

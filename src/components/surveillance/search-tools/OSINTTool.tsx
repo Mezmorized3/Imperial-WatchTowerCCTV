@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Textarea } from '@/components/ui/textarea';
 import { Loader2, Search, Globe } from 'lucide-react';
-import { toast } from '@/components/ui/use-toast';
+import { useToast } from '@/hooks/use-toast';
 import { executeOSINT } from '@/utils/osintTools';
 
 interface OSINTToolProps {
@@ -31,6 +31,7 @@ const mockOsintData = {
 };
 
 const OSINTTool: React.FC<OSINTToolProps> = ({ onScanComplete }) => {
+  const { toast } = useToast();
   const [target, setTarget] = useState('');
   const [searchEngine, setSearchEngine] = useState('google');
   const [isScanning, setIsScanning] = useState(false);

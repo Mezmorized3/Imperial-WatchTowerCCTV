@@ -1,31 +1,23 @@
 
 import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Camera, User, RefreshCw } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { Camera, Loader2, Upload } from 'lucide-react';
 
 const FaceRecognitionTool: React.FC = () => {
   const { toast } = useToast();
-  const [streamUrl, setStreamUrl] = useState('');
-  const [confidence, setConfidence] = useState(0.6);
+  const [imageUrl, setImageUrl] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
-  const [selectedModel, setSelectedModel] = useState('standard');
-  const [enableTracking, setEnableTracking] = useState(true);
-  const [saveImages, setSaveImages] = useState(false);
   const [results, setResults] = useState<any>(null);
 
-  const handleProcess = async () => {
-    if (!streamUrl) {
+  const handleProcessImage = async () => {
+    if (!imageUrl) {
       toast({
         title: "Error",
-        description: "Please enter a stream URL",
+        description: "Please enter an image URL",
         variant: "destructive"
       });
       return;
@@ -34,155 +26,85 @@ const FaceRecognitionTool: React.FC = () => {
     setIsProcessing(true);
     setResults(null);
 
-    try {
-      // Simulate processing
-      await new Promise(resolve => setTimeout(resolve, 3000));
-
-      // Simulate results
-      const mockResults = {
-        success: true,
-        data: {
-          faces: [
-            { id: 1, confidence: 0.92, location: [120, 80, 200, 200], age: '30-40', gender: 'male' },
-            { id: 2, confidence: 0.78, location: [450, 100, 120, 140], age: '20-30', gender: 'female' }
-          ],
-          processedFrames: 120,
-          elapsedTime: '4.2s',
-          model: selectedModel,
-          timestamp: new Date().toISOString()
-        }
-      };
-
-      setResults(mockResults.data);
+    // Simulate processing with timeout
+    setTimeout(() => {
+      setResults({
+        facesDetected: Math.floor(Math.random() * 5) + 1,
+        confidence: (Math.random() * 40 + 60).toFixed(2) + "%",
+        processingTime: (Math.random() * 2).toFixed(2) + "s",
+        matches: Math.floor(Math.random() * 3)
+      });
+      
+      setIsProcessing(false);
       
       toast({
         title: "Processing Complete",
-        description: `Detected ${mockResults.data.faces.length} faces in the stream`
+        description: "Face recognition analysis completed"
       });
-    } catch (error) {
-      console.error('Face recognition error:', error);
-      toast({
-        title: "Processing Failed",
-        description: error instanceof Error ? error.message : "Unknown error occurred",
-        variant: "destructive"
-      });
-    } finally {
-      setIsProcessing(false);
-    }
+    }, 2000);
   };
 
   return (
     <Card className="w-full shadow-md">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <User className="h-5 w-5" />
+          <Camera className="h-5 w-5" />
           Face Recognition Tool
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="space-y-2">
-          <Label htmlFor="stream-url">Camera Stream URL</Label>
-          <Input 
-            id="stream-url"
-            placeholder="rtsp://camera.example.com/stream"
-            value={streamUrl}
-            onChange={(e) => setStreamUrl(e.target.value)}
-          />
-          <p className="text-xs text-gray-500">RTSP, HLS or WebRTC stream URL</p>
-        </div>
+      <CardContent>
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="imageUrl">Image URL</Label>
+            <Input
+              id="imageUrl"
+              placeholder="Enter URL to image"
+              value={imageUrl}
+              onChange={(e) => setImageUrl(e.target.value)}
+              disabled={isProcessing}
+            />
+          </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="model-select">Recognition Model</Label>
-          <Select value={selectedModel} onValueChange={setSelectedModel}>
-            <SelectTrigger id="model-select">
-              <SelectValue placeholder="Select model" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="standard">Standard (Fast)</SelectItem>
-              <SelectItem value="enhanced">Enhanced (Medium)</SelectItem>
-              <SelectItem value="comprehensive">Comprehensive (Slow)</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+          <div className="flex justify-between">
+            <Button variant="outline" disabled={isProcessing}>
+              <Upload className="h-4 w-4 mr-2" />
+              Upload Image
+            </Button>
+            <Button variant="outline" disabled={isProcessing}>
+              <Camera className="h-4 w-4 mr-2" />
+              Use Camera
+            </Button>
+          </div>
 
-        <div className="space-y-2">
-          <Label>Confidence Threshold: {confidence}</Label>
-          <input
-            type="range"
-            min="0.1"
-            max="1"
-            step="0.05"
-            value={confidence}
-            onChange={(e) => setConfidence(parseFloat(e.target.value))}
-            className="w-full"
-          />
-          <p className="text-xs text-gray-500">Higher values mean fewer false positives</p>
+          {results && (
+            <div className="mt-4 p-4 bg-scanner-dark-alt rounded-md border border-gray-700">
+              <h3 className="text-md font-medium mb-2">Results</h3>
+              <ul className="space-y-1 text-sm">
+                <li>Faces Detected: {results.facesDetected}</li>
+                <li>Confidence Level: {results.confidence}</li>
+                <li>Processing Time: {results.processingTime}</li>
+                <li>Database Matches: {results.matches}</li>
+              </ul>
+            </div>
+          )}
         </div>
-
-        <div className="flex items-center space-x-2 pt-2">
-          <Checkbox
-            id="enable-tracking"
-            checked={enableTracking}
-            onCheckedChange={(checked) => setEnableTracking(!!checked)}
-          />
-          <Label htmlFor="enable-tracking">Enable face tracking</Label>
-        </div>
-
-        <div className="flex items-center space-x-2">
-          <Checkbox
-            id="save-images"
-            checked={saveImages}
-            onCheckedChange={(checked) => setSaveImages(!!checked)}
-          />
-          <Label htmlFor="save-images">Save detected face images</Label>
-        </div>
-
-        <Button 
-          onClick={handleProcess} 
-          disabled={isProcessing}
+      </CardContent>
+      <CardFooter>
+        <Button
           className="w-full"
+          onClick={handleProcessImage}
+          disabled={isProcessing || !imageUrl}
         >
           {isProcessing ? (
             <>
-              <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               Processing...
             </>
           ) : (
-            <>
-              <Camera className="h-4 w-4 mr-2" />
-              Start Face Recognition
-            </>
+            "Process Image"
           )}
         </Button>
-
-        {results && (
-          <div className="mt-4 p-4 bg-gray-100 dark:bg-gray-800 rounded-md">
-            <h3 className="text-lg font-semibold mb-2">Results</h3>
-            <div className="space-y-2">
-              <p><span className="font-medium">Faces Detected:</span> {results.faces.length}</p>
-              <p><span className="font-medium">Processed Frames:</span> {results.processedFrames}</p>
-              <p><span className="font-medium">Processing Time:</span> {results.elapsedTime}</p>
-              <p><span className="font-medium">Model Used:</span> {results.model}</p>
-              
-              {results.faces.length > 0 && (
-                <div className="mt-2">
-                  <h4 className="font-medium">Faces:</h4>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mt-2">
-                    {results.faces.map((face: any) => (
-                      <div key={face.id} className="p-2 bg-gray-200 dark:bg-gray-700 rounded">
-                        <p><span className="font-medium">ID:</span> {face.id}</p>
-                        <p><span className="font-medium">Confidence:</span> {(face.confidence * 100).toFixed(1)}%</p>
-                        <p><span className="font-medium">Age Est.:</span> {face.age}</p>
-                        <p><span className="font-medium">Gender:</span> {face.gender}</p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-      </CardContent>
+      </CardFooter>
     </Card>
   );
 };
