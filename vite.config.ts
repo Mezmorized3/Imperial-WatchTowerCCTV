@@ -12,6 +12,7 @@ export default defineConfig(({ mode }) => ({
     watch: {
       usePolling: true,
     },
+    allowedHosts: ["6bb98540-7349-47a0-b878-52297791b6e1.lovableproject.com"],
   },
   plugins: [
     react(),
