@@ -1,3 +1,4 @@
+
 /**
  * Type definitions for OSINT tool parameters
  */
@@ -63,6 +64,10 @@ export interface RTSPParams {
   paths?: string[];
   threads?: number;
   outputFormat?: 'json' | 'csv' | 'text';
+  useTor?: boolean;
+  bypassTechniques?: boolean;
+  stealthMode?: boolean;
+  vendor?: string;
 }
 
 // Add missing ProxyConfig interface
@@ -110,4 +115,20 @@ export interface CCTVParams {
   // Adding missing properties
   saveResults?: boolean;
   brand?: string;
+}
+
+// Add MegaRTSPBruterParams interface
+export interface MegaRTSPBruterParams {
+  targets: string | string[];
+  userlist?: string[];
+  passlist?: string[];
+  workers?: number;
+  timeout?: number;
+  output?: string;
+  proxies?: string[];
+  useTor?: boolean;
+  bypassHeaders?: boolean;
+  smartCredentials?: boolean;
+  stealthMode?: boolean;
+  vendorDetection?: boolean;
 }

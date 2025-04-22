@@ -112,3 +112,10 @@ export {
   executeDarknet,
   executeEyeWitness
 } from './osintImplementations/computerVisionTools';
+
+// Export RTSP brute-forcing tools
+export {
+  executeMegaRtspBruter,
+  getCommonRtspUsers,
+  getCommonRtspPasswords
+} from './osintImplementations/rtspBruteTools';

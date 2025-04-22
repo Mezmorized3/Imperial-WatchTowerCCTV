@@ -1,720 +1,543 @@
 
-import React, { useState, useRef, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Slider } from '@/components/ui/slider';
-import { Switch } from '@/components/ui/switch';
-import { Progress } from '@/components/ui/progress';
-import { Separator } from '@/components/ui/separator';
+import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Switch } from '@/components/ui/switch';
+import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Checkbox } from '@/components/ui/checkbox';
-import { useToast } from '@/components/ui/use-toast';
-import { 
-  Camera, 
-  Play, 
-  X, 
-  Save, 
-  Download, 
-  Key, 
-  FileText, 
-  Layers,
-  Cpu,
-  Lock,
-  Eye,
-  Shield,
-  Clock,
-  Video
-} from 'lucide-react';
-
-import { RTSPBruteParams, RTSPBruteResult, RTSPStreamResult } from '@/types/scanner';
-import { executeRTSPBrute } from '@/utils/imperial/rtspBruteUtils';
+import { Slider } from '@/components/ui/slider';
+import { Loader2, Lock, Network, Shield, Terminal, Video } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import { executeMegaRtspBruter, getCommonRtspUsers, getCommonRtspPasswords } from '@/utils/osintImplementations';
+import { RtspCredential } from '@/utils/types/rtspBruteTypes';
 
 const ImperialRtspBrute: React.FC = () => {
   const { toast } = useToast();
-  const [activeTab, setActiveTab] = useState('config');
-  const [isRunning, setIsRunning] = useState(false);
-  const [progress, setProgress] = useState(0);
-  const [results, setResults] = useState<RTSPBruteResult | null>(null);
-  const [selectedStream, setSelectedStream] = useState<RTSPStreamResult | null>(null);
-  const resultsViewRef = useRef<HTMLDivElement>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState('targets');
+  const [targetInput, setTargetInput] = useState('');
+  const [targets, setTargets] = useState<string[]>([]);
+  const [usernames, setUsernames] = useState<string[]>([]);
+  const [passwords, setPasswords] = useState<string[]>([]);
+  const [usernameInput, setUsernameInput] = useState('');
+  const [passwordInput, setPasswordInput] = useState('');
+  const [workers, setWorkers] = useState(100);
+  const [timeout, setTimeout] = useState(10);
+  const [useTor, setUseTor] = useState(false);
+  const [bypassTechniques, setBypassTechniques] = useState(true);
+  const [stealthMode, setStealthMode] = useState(false);
+  const [smartCredentials, setSmartCredentials] = useState(true);
+  const [vendorDetection, setVendorDetection] = useState(true);
+  const [selectedVendor, setSelectedVendor] = useState<string>('any');
+  const [results, setResults] = useState<RtspCredential[]>([]);
+  const [scanDetails, setScanDetails] = useState<any>(null);
 
-  // Configuration state
-  const [params, setParams] = useState<RTSPBruteParams>({
-    targets: '',
-    ports: [554, 8554],
-    credentials: [],
-    routes: [],
-    threads: 10,
-    timeout: 5000,
-    captureScreenshots: true,
-    saveReport: true,
-    outputFormat: 'json',
-    useML: true,
-    scanMode: 'thorough'
-  });
-
-  // Custom credential list
-  const [customCredentials, setCustomCredentials] = useState('');
-  const [customRoutes, setCustomRoutes] = useState('');
-
+  // Load common credentials when component mounts
   useEffect(() => {
-    // Parse custom credentials into the params when they change
-    if (customCredentials.trim()) {
-      const credentialsList = customCredentials
-        .split('\n')
-        .filter(line => line.includes(':'))
-        .map(line => {
-          const [username, password] = line.split(':');
-          return { username: username.trim(), password: password.trim() };
-        });
-      
-      setParams(prev => ({ ...prev, credentials: credentialsList }));
-    }
-  }, [customCredentials]);
+    setUsernames(getCommonRtspUsers());
+    setPasswords(getCommonRtspPasswords());
+  }, []);
 
-  useEffect(() => {
-    // Parse custom routes into the params when they change
-    if (customRoutes.trim()) {
-      const routesList = customRoutes
-        .split('\n')
-        .map(route => route.trim())
-        .filter(Boolean);
-      
-      setParams(prev => ({ ...prev, routes: routesList }));
-    }
-  }, [customRoutes]);
-
-  const handleTargetsChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setParams(prev => ({ ...prev, targets: e.target.value }));
-  };
-
-  const handlePortsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const portsString = e.target.value;
-    const portsList = portsString
-      .split(',')
-      .map(port => parseInt(port.trim()))
-      .filter(port => !isNaN(port) && port > 0 && port < 65536);
+  const handleAddTarget = () => {
+    if (!targetInput) return;
     
-    setParams(prev => ({ ...prev, ports: portsList }));
+    // Add targets, handling both individual IPs and ranges
+    const newTargets = targetInput
+      .split('\n')
+      .map(line => line.trim())
+      .filter(line => line.length > 0);
+    
+    setTargets([...targets, ...newTargets]);
+    setTargetInput('');
+    
+    toast({
+      title: "Targets Added",
+      description: `Added ${newTargets.length} targets to the scan list`,
+    });
   };
 
-  const handleThreadsChange = (value: number[]) => {
-    setParams(prev => ({ ...prev, threads: value[0] }));
+  const handleAddUsername = () => {
+    if (!usernameInput) return;
+    setUsernames([...usernames, usernameInput]);
+    setUsernameInput('');
   };
 
-  const handleTimeoutChange = (value: number[]) => {
-    setParams(prev => ({ ...prev, timeout: value[0] * 1000 })); // Convert to milliseconds
+  const handleAddPassword = () => {
+    if (!passwordInput) return;
+    setPasswords([...passwords, passwordInput]);
+    setPasswordInput('');
   };
 
-  const handleSwitchChange = (name: keyof RTSPBruteParams) => (checked: boolean) => {
-    setParams(prev => ({ ...prev, [name]: checked }));
+  const handleRemoveTarget = (index: number) => {
+    const newTargets = [...targets];
+    newTargets.splice(index, 1);
+    setTargets(newTargets);
   };
 
-  const handleScanModeChange = (value: string) => {
-    setParams(prev => ({ ...prev, scanMode: value as 'quick' | 'thorough' | 'stealth' }));
+  const handleLoadDefaultCredentials = () => {
+    setUsernames(getCommonRtspUsers());
+    setPasswords(getCommonRtspPasswords());
+    
+    toast({
+      title: "Default Credentials Loaded",
+      description: `Loaded ${getCommonRtspUsers().length} usernames and ${getCommonRtspPasswords().length} passwords`,
+    });
   };
 
-  const handleOutputFormatChange = (value: string) => {
-    setParams(prev => ({ ...prev, outputFormat: value as 'json' | 'csv' | 'text' }));
-  };
-
-  const startScan = async () => {
-    try {
-      // Validate inputs
-      if (!params.targets) {
-        toast({
-          title: "Validation Error",
-          description: "Target IP address or range is required",
-          variant: "destructive"
-        });
-        return;
-      }
-
-      // If no custom credentials, use defaults
-      if (!params.credentials || params.credentials.length === 0) {
-        setParams(prev => ({
-          ...prev,
-          credentials: [
-            { username: 'admin', password: 'admin' },
-            { username: 'admin', password: '12345' },
-            { username: 'admin', password: 'password' },
-            { username: 'root', password: 'root' },
-            { username: 'user', password: 'user' }
-          ]
-        }));
-      }
-
-      // If no custom routes, use defaults
-      if (!params.routes || params.routes.length === 0) {
-        setParams(prev => ({
-          ...prev,
-          routes: [
-            '/live', 
-            '/live/main', 
-            '/live/ch01', 
-            '/cam/realmonitor',
-            '/h264/ch1/main/av_stream',
-            '/streaming/channels/1', 
-            '/video1',
-            '/media/video1',
-            '/videostream.cgi'
-          ]
-        }));
-      }
-
-      setIsRunning(true);
-      setProgress(0);
-      setResults(null);
-      setActiveTab('status');
-
-      // Start the progress simulation
-      const intervalId = setInterval(() => {
-        setProgress(prev => {
-          if (prev >= 98) {
-            clearInterval(intervalId);
-            return 98;
-          }
-          return prev + (params.scanMode === 'quick' ? 2 : params.scanMode === 'thorough' ? 1 : 0.5);
-        });
-      }, params.scanMode === 'quick' ? 200 : params.scanMode === 'thorough' ? 400 : 800);
-
-      // Process the targets into an array if it's a string
-      const formattedParams = {
-        ...params,
-        targets: typeof params.targets === 'string' ? 
-          params.targets.split('\n').filter(Boolean).map(t => t.trim()) : 
-          params.targets
-      };
-
-      // Execute the scan
-      const scanResults = await executeRTSPBrute(formattedParams);
-      
-      // Cleanup and display results
-      clearInterval(intervalId);
-      setProgress(100);
-      setResults(scanResults);
-      setActiveTab('results');
-      
+  const handleExecuteScan = async () => {
+    if (targets.length === 0) {
       toast({
-        title: "Scan Completed",
-        description: `Found ${scanResults.accessibleStreams} accessible RTSP streams`,
-        variant: scanResults.accessibleStreams > 0 ? "default" : "destructive"
+        title: "Error",
+        description: "Please add at least one target",
+        variant: "destructive",
       });
-    } catch (error) {
-      setIsRunning(false);
+      return;
+    }
+    
+    if (usernames.length === 0 || passwords.length === 0) {
       toast({
-        title: "Scan Failed",
-        description: error instanceof Error ? error.message : "Unknown error occurred",
-        variant: "destructive"
+        title: "Error",
+        description: "Please add at least one username and password",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    setIsLoading(true);
+    setResults([]);
+    setScanDetails(null);
+    
+    try {
+      const result = await executeMegaRtspBruter({
+        targets,
+        userlist: usernames,
+        passlist: passwords,
+        workers,
+        timeout,
+        useTor,
+        bypassTechniques,
+        stealthMode,
+        smartCredentials,
+        vendor: selectedVendor as any
+      });
+      
+      if (result.success) {
+        setResults(result.found);
+        setScanDetails(result.scanDetails);
+        
+        if (result.found.length > 0) {
+          toast({
+            title: "Credentials Found!",
+            description: `Found ${result.found.length} valid credentials`,
+            variant: "default",
+          });
+        } else {
+          toast({
+            title: "Scan Complete",
+            description: "No valid credentials found",
+            variant: "default",
+          });
+        }
+      } else {
+        toast({
+          title: "Scan Failed",
+          description: result.error || "Unknown error occurred",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error("Error during RTSP brute-force:", error);
+      toast({
+        title: "Execution Error",
+        description: error instanceof Error ? error.message : "An unknown error occurred",
+        variant: "destructive",
       });
     } finally {
-      setIsRunning(false);
+      setIsLoading(false);
+      setActiveTab('results');
     }
   };
 
-  const cancelScan = () => {
-    setIsRunning(false);
-    setProgress(0);
-    toast({
-      title: "Scan Cancelled",
-      description: "RTSP scan was cancelled"
-    });
-  };
+  const renderTargetsTab = () => (
+    <div className="space-y-4">
+      <div className="grid grid-cols-1 gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="target-input">Target IPs/Hostnames (one per line)</Label>
+          <Textarea
+            id="target-input"
+            placeholder="192.168.1.100
+192.168.0.0/24
+camera.example.com"
+            value={targetInput}
+            onChange={(e) => setTargetInput(e.target.value)}
+            rows={5}
+            className="font-mono"
+          />
+        </div>
+        
+        <Button onClick={handleAddTarget} disabled={!targetInput || isLoading}>
+          Add Targets
+        </Button>
+        
+        {targets.length > 0 && (
+          <div className="space-y-2">
+            <Label>Target List ({targets.length} targets)</Label>
+            <div className="border rounded-md p-2 max-h-40 overflow-y-auto bg-scanner-dark-alt">
+              {targets.map((target, index) => (
+                <div key={index} className="flex justify-between items-center py-1 border-b border-gray-700 last:border-0">
+                  <span className="font-mono text-sm">{target}</span>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleRemoveTarget(index)}
+                    disabled={isLoading}
+                  >
+                    ×
+                  </Button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
 
-  const handleDownloadResults = () => {
-    if (!results) return;
+  const renderCredentialsTab = () => (
+    <div className="space-y-4">
+      <div className="flex justify-between items-center">
+        <Label>Credentials</Label>
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={handleLoadDefaultCredentials}
+          disabled={isLoading}
+        >
+          Load Default Wordlists
+        </Button>
+      </div>
+      
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="username-input">Add Username</Label>
+          <div className="flex space-x-2">
+            <Input
+              id="username-input"
+              placeholder="admin"
+              value={usernameInput}
+              onChange={(e) => setUsernameInput(e.target.value)}
+              disabled={isLoading}
+            />
+            <Button 
+              variant="outline" 
+              onClick={handleAddUsername} 
+              disabled={!usernameInput || isLoading}
+            >
+              Add
+            </Button>
+          </div>
+          <div className="border rounded-md p-2 h-28 overflow-y-auto bg-scanner-dark-alt">
+            {usernames.map((username, index) => (
+              <Badge 
+                key={index} 
+                variant="outline" 
+                className="m-1"
+              >
+                {username}
+              </Badge>
+            ))}
+          </div>
+        </div>
+        
+        <div className="space-y-2">
+          <Label htmlFor="password-input">Add Password</Label>
+          <div className="flex space-x-2">
+            <Input
+              id="password-input"
+              placeholder="12345"
+              value={passwordInput}
+              onChange={(e) => setPasswordInput(e.target.value)}
+              disabled={isLoading}
+            />
+            <Button 
+              variant="outline" 
+              onClick={handleAddPassword} 
+              disabled={!passwordInput || isLoading}
+            >
+              Add
+            </Button>
+          </div>
+          <div className="border rounded-md p-2 h-28 overflow-y-auto bg-scanner-dark-alt">
+            {passwords.map((password, index) => (
+              <Badge 
+                key={index} 
+                variant="outline" 
+                className="m-1"
+              >
+                {password === '' ? '[empty]' : password}
+              </Badge>
+            ))}
+          </div>
+        </div>
+      </div>
+      
+      <div className="pt-2">
+        <div className="text-sm text-gray-400 mb-2">
+          Attack Stats: {usernames.length} usernames × {passwords.length} passwords = {usernames.length * passwords.length} possible combinations per target
+        </div>
+      </div>
+    </div>
+  );
 
-    const dataStr = JSON.stringify(results, null, 2);
-    const dataUri = `data:application/json;charset=utf-8,${encodeURIComponent(dataStr)}`;
-    
-    const linkElement = document.createElement('a');
-    linkElement.setAttribute('href', dataUri);
-    linkElement.setAttribute('download', `rtsp-scan-results-${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.json`);
-    linkElement.click();
+  const renderOptionsTab = () => (
+    <div className="space-y-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="workers">Concurrent Workers: {workers}</Label>
+          <Slider
+            id="workers"
+            value={[workers]}
+            min={10}
+            max={500}
+            step={10}
+            onValueChange={(value) => setWorkers(value[0])}
+            disabled={isLoading}
+          />
+        </div>
+        
+        <div className="space-y-2">
+          <Label htmlFor="timeout">Request Timeout: {timeout}s</Label>
+          <Slider
+            id="timeout"
+            value={[timeout]}
+            min={1}
+            max={30}
+            step={1}
+            onValueChange={(value) => setTimeout(value[0])}
+            disabled={isLoading}
+          />
+        </div>
+      </div>
+      
+      <div className="space-y-2">
+        <Label htmlFor="vendor">Target Camera Vendor</Label>
+        <Select 
+          value={selectedVendor} 
+          onValueChange={setSelectedVendor}
+          disabled={isLoading}
+        >
+          <SelectTrigger id="vendor">
+            <SelectValue placeholder="Select vendor" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="any">Any / Auto-detect</SelectItem>
+            <SelectItem value="hikvision">Hikvision</SelectItem>
+            <SelectItem value="dahua">Dahua</SelectItem>
+            <SelectItem value="axis">Axis</SelectItem>
+            <SelectItem value="bosch">Bosch</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      
+      <div className="space-y-4 pt-2">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-2">
+            <Switch
+              id="use-tor"
+              checked={useTor}
+              onCheckedChange={setUseTor}
+              disabled={isLoading}
+            />
+            <Label htmlFor="use-tor" className="cursor-pointer">Use Tor Network</Label>
+          </div>
+          <Shield className="h-4 w-4 text-gray-500" />
+        </div>
+        
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-2">
+            <Switch
+              id="bypass-techniques"
+              checked={bypassTechniques}
+              onCheckedChange={setBypassTechniques}
+              disabled={isLoading}
+            />
+            <Label htmlFor="bypass-techniques" className="cursor-pointer">Use Bypass Techniques</Label>
+          </div>
+          <Lock className="h-4 w-4 text-gray-500" />
+        </div>
+        
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-2">
+            <Switch
+              id="stealth-mode"
+              checked={stealthMode}
+              onCheckedChange={setStealthMode}
+              disabled={isLoading}
+            />
+            <Label htmlFor="stealth-mode" className="cursor-pointer">Stealth Mode (Slower)</Label>
+          </div>
+          <Network className="h-4 w-4 text-gray-500" />
+        </div>
+        
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-2">
+            <Switch
+              id="smart-credentials"
+              checked={smartCredentials}
+              onCheckedChange={setSmartCredentials}
+              disabled={isLoading}
+            />
+            <Label htmlFor="smart-credentials" className="cursor-pointer">Smart Credential Prioritization</Label>
+          </div>
+          <Terminal className="h-4 w-4 text-gray-500" />
+        </div>
+      </div>
+    </div>
+  );
 
-    toast({
-      title: "Download Started",
-      description: "Results file has been downloaded"
-    });
-  };
-
-  const viewStream = (stream: RTSPStreamResult) => {
-    setSelectedStream(stream);
-    // We would integrate with a stream viewer component here
-    toast({
-      title: "Stream Selected",
-      description: `Accessing stream at ${stream.streamUrl}`,
-    });
-  };
-
-  useEffect(() => {
-    // Scroll to results when they're available
-    if (results && resultsViewRef.current) {
-      resultsViewRef.current.scrollIntoView({ behavior: 'smooth' });
-    }
-  }, [results]);
+  const renderResultsTab = () => (
+    <div className="space-y-4">
+      {scanDetails && (
+        <div className="bg-scanner-dark-alt rounded-md p-3 border border-gray-700">
+          <div className="grid grid-cols-2 gap-2 text-sm">
+            <div>Targets Scanned: <span className="font-semibold">{scanDetails.targetsScanned}</span></div>
+            <div>Attempts Per Target: <span className="font-semibold">{scanDetails.attemptsPerTarget}</span></div>
+            <div>Time Elapsed: <span className="font-semibold">{scanDetails.timeElapsed}</span></div>
+            <div>Scan Type: <span className="font-semibold">{scanDetails.targetType}</span></div>
+          </div>
+        </div>
+      )}
+      
+      {results.length > 0 ? (
+        <div className="border rounded-md overflow-hidden">
+          <table className="w-full text-sm">
+            <thead className="bg-scanner-dark-alt">
+              <tr>
+                <th className="px-4 py-2 text-left">Target</th>
+                <th className="px-4 py-2 text-left">Username</th>
+                <th className="px-4 py-2 text-left">Password</th>
+                <th className="px-4 py-2 text-left">Vendor</th>
+                <th className="px-4 py-2 text-left">Stream URL</th>
+              </tr>
+            </thead>
+            <tbody>
+              {results.map((result, index) => (
+                <tr key={index} className="border-t border-gray-700">
+                  <td className="px-4 py-2 font-mono">{result.target}</td>
+                  <td className="px-4 py-2 font-mono">{result.user}</td>
+                  <td className="px-4 py-2 font-mono">{result.pass === '' ? '[empty]' : result.pass}</td>
+                  <td className="px-4 py-2">{result.vendor || 'Unknown'}</td>
+                  <td className="px-4 py-2 font-mono text-xs truncate max-w-[200px]">
+                    {result.streamUrl}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ) : (
+        <div className="text-center py-8 text-gray-400">
+          {isLoading ? (
+            <div className="flex flex-col items-center space-y-4">
+              <Loader2 className="h-8 w-8 animate-spin" />
+              <div>Running RTSP brute-force attack...</div>
+            </div>
+          ) : (
+            <div>
+              {scanDetails ? "No valid credentials found" : "Run a scan to see results"}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
 
   return (
-    <div className="space-y-6">
-      <Card className="bg-scanner-dark-alt border-gray-800">
-        <CardHeader className="border-b border-gray-700">
-          <div className="flex items-center">
-            <Video className="mr-2 text-red-500 w-6 h-6" />
-            <CardTitle className="text-2xl">Imperial RTSPBrute</CardTitle>
-          </div>
-          <CardDescription className="text-gray-400">
-            Advanced RTSP stream discovery and credential bruteforcing tool
-          </CardDescription>
-        </CardHeader>
-
-        <CardContent className="pt-6">
-          <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="bg-scanner-dark w-full justify-start mb-4">
-              <TabsTrigger value="config" disabled={isRunning} className="data-[state=active]:bg-scanner-info/20">
-                <Layers className="h-4 w-4 mr-2" />
-                Configuration
-              </TabsTrigger>
-              <TabsTrigger value="status" className="data-[state=active]:bg-scanner-info/20">
-                <Cpu className="h-4 w-4 mr-2" />
-                Status
-              </TabsTrigger>
-              <TabsTrigger value="results" disabled={!results} className="data-[state=active]:bg-scanner-info/20">
-                <Camera className="h-4 w-4 mr-2" />
-                Results
-              </TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="config">
-              <div className="space-y-6">
-                <div>
-                  <h3 className="text-lg font-medium mb-2">Target Configuration</h3>
-                  <div className="space-y-4">
-                    <div>
-                      <Label htmlFor="targets">IP Addresses/Ranges (one per line)</Label>
-                      <Textarea 
-                        id="targets" 
-                        placeholder="192.168.1.1&#10;10.0.0.0/24&#10;172.16.10.1-172.16.10.254" 
-                        value={typeof params.targets === 'string' ? params.targets : params.targets.join('\n')} 
-                        onChange={handleTargetsChange}
-                        rows={4}
-                        className="font-mono"
-                      />
-                    </div>
-                    
-                    <div>
-                      <Label htmlFor="ports">Ports (comma-separated)</Label>
-                      <Input 
-                        id="ports" 
-                        placeholder="554, 8554, 1935"
-                        value={params.ports?.join(', ') || '554'}
-                        onChange={handlePortsChange}
-                        className="font-mono"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <Separator />
-
-                <div>
-                  <h3 className="text-lg font-medium mb-2">Credentials & Routes</h3>
-                  <div className="space-y-4">
-                    <div>
-                      <Label htmlFor="credentials">Custom Credentials (username:password, one per line)</Label>
-                      <Textarea 
-                        id="credentials" 
-                        placeholder="admin:admin&#10;admin:12345&#10;root:password"
-                        value={customCredentials}
-                        onChange={(e) => setCustomCredentials(e.target.value)} 
-                        rows={4}
-                        className="font-mono"
-                      />
-                    </div>
-                    
-                    <div>
-                      <Label htmlFor="routes">Custom RTSP Routes (one per line)</Label>
-                      <Textarea 
-                        id="routes" 
-                        placeholder="/live&#10;/h264/ch1/main/av_stream&#10;/cam/realmonitor"
-                        value={customRoutes}
-                        onChange={(e) => setCustomRoutes(e.target.value)} 
-                        rows={4}
-                        className="font-mono"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <Separator />
-
-                <div>
-                  <h3 className="text-lg font-medium mb-2">Scan Parameters</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="space-y-4">
-                      <div>
-                        <div className="flex justify-between mb-2">
-                          <Label htmlFor="threads">Threads: {params.threads}</Label>
-                        </div>
-                        <Slider 
-                          id="threads"
-                          value={[params.threads || 10]} 
-                          min={1} 
-                          max={50} 
-                          step={1} 
-                          onValueChange={handleThreadsChange}
-                        />
-                      </div>
-                      
-                      <div>
-                        <div className="flex justify-between mb-2">
-                          <Label htmlFor="timeout">Connection Timeout: {params.timeout ? params.timeout/1000 : 5}s</Label>
-                        </div>
-                        <Slider 
-                          id="timeout"
-                          value={[params.timeout ? params.timeout/1000 : 5]} 
-                          min={1} 
-                          max={30} 
-                          step={1} 
-                          onValueChange={handleTimeoutChange}
-                        />
-                      </div>
-                      
-                      <div>
-                        <Label htmlFor="scanMode">Scan Mode</Label>
-                        <Select 
-                          value={params.scanMode || 'thorough'} 
-                          onValueChange={handleScanModeChange}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select scan mode" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="quick">Quick (Fast but less thorough)</SelectItem>
-                            <SelectItem value="thorough">Thorough (Balanced)</SelectItem>
-                            <SelectItem value="stealth">Stealth (Slower but less detectable)</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-                    
-                    <div className="space-y-4">
-                      <div className="flex items-center space-x-2">
-                        <Checkbox 
-                          id="useML" 
-                          checked={params.useML} 
-                          onCheckedChange={handleSwitchChange('useML')}
-                        />
-                        <Label htmlFor="useML">Use Machine Learning Optimization</Label>
-                      </div>
-                      
-                      <div className="flex items-center space-x-2">
-                        <Checkbox 
-                          id="captureScreenshots" 
-                          checked={params.captureScreenshots} 
-                          onCheckedChange={handleSwitchChange('captureScreenshots')}
-                        />
-                        <Label htmlFor="captureScreenshots">Capture Stream Screenshots</Label>
-                      </div>
-                      
-                      <div className="flex items-center space-x-2">
-                        <Checkbox 
-                          id="saveReport" 
-                          checked={params.saveReport} 
-                          onCheckedChange={handleSwitchChange('saveReport')}
-                        />
-                        <Label htmlFor="saveReport">Generate Detailed Report</Label>
-                      </div>
-                      
-                      <div>
-                        <Label htmlFor="outputFormat">Output Format</Label>
-                        <Select 
-                          value={params.outputFormat || 'json'} 
-                          onValueChange={handleOutputFormatChange}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select output format" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="json">JSON</SelectItem>
-                            <SelectItem value="csv">CSV</SelectItem>
-                            <SelectItem value="text">Plain Text</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex justify-end space-x-2 pt-4">
-                  <Button variant="outline" onClick={() => setParams({
-                    targets: '',
-                    ports: [554, 8554],
-                    credentials: [],
-                    routes: [],
-                    threads: 10,
-                    timeout: 5000,
-                    captureScreenshots: true,
-                    saveReport: true,
-                    outputFormat: 'json',
-                    useML: true,
-                    scanMode: 'thorough'
-                  })}>
-                    Reset
-                  </Button>
-                  <Button 
-                    onClick={startScan} 
-                    disabled={isRunning} 
-                    className="bg-red-600 hover:bg-red-700"
-                  >
-                    <Play className="mr-2 h-4 w-4" />
-                    Start Scan
-                  </Button>
-                </div>
-              </div>
-            </TabsContent>
-
-            <TabsContent value="status">
-              <div className="space-y-6">
-                <Card className="border-scanner-info/30">
-                  <CardContent className="pt-6">
-                    <div className="space-y-8">
-                      <div>
-                        <h3 className="text-lg font-medium mb-4">Scan Progress</h3>
-                        <Progress value={progress} className="h-2" />
-                        <div className="flex justify-between mt-2 text-sm text-gray-400">
-                          <span>{progress.toFixed(0)}% Complete</span>
-                          {isRunning && <span>Scanning in progress...</span>}
-                          {!isRunning && progress === 100 && <span>Scan complete!</span>}
-                        </div>
-                      </div>
-
-                      {isRunning && (
-                        <>
-                          <div className="space-y-4">
-                            <div className="grid grid-cols-2 gap-4">
-                              <div className="bg-scanner-dark p-4 rounded-md">
-                                <div className="flex items-center mb-2">
-                                  <Cpu className="h-4 w-4 mr-2 text-scanner-info" />
-                                  <span className="text-sm font-medium">Thread Utilization</span>
-                                </div>
-                                <span className="text-2xl font-bold">{params.threads} threads</span>
-                              </div>
-                              
-                              <div className="bg-scanner-dark p-4 rounded-md">
-                                <div className="flex items-center mb-2">
-                                  <Clock className="h-4 w-4 mr-2 text-scanner-info" />
-                                  <span className="text-sm font-medium">Elapsed Time</span>
-                                </div>
-                                <span className="text-2xl font-bold">00:02:45</span>
-                              </div>
-                            </div>
-                            
-                            <div className="grid grid-cols-3 gap-4">
-                              <div className="bg-scanner-dark p-4 rounded-md">
-                                <div className="flex items-center mb-2">
-                                  <Shield className="h-4 w-4 mr-2 text-scanner-info" />
-                                  <span className="text-sm font-medium">Targets</span>
-                                </div>
-                                <span className="text-2xl font-bold">24/96</span>
-                              </div>
-                              
-                              <div className="bg-scanner-dark p-4 rounded-md">
-                                <div className="flex items-center mb-2">
-                                  <Lock className="h-4 w-4 mr-2 text-scanner-info" />
-                                  <span className="text-sm font-medium">Credentials</span>
-                                </div>
-                                <span className="text-2xl font-bold">156/240</span>
-                              </div>
-                              
-                              <div className="bg-scanner-dark p-4 rounded-md">
-                                <div className="flex items-center mb-2">
-                                  <Eye className="h-4 w-4 mr-2 text-scanner-info" />
-                                  <span className="text-sm font-medium">Streams Found</span>
-                                </div>
-                                <span className="text-2xl font-bold">7</span>
-                              </div>
-                            </div>
-                          </div>
-
-                          <div className="flex justify-end">
-                            <Button 
-                              variant="destructive" 
-                              onClick={cancelScan}
-                            >
-                              <X className="mr-2 h-4 w-4" />
-                              Cancel Scan
-                            </Button>
-                          </div>
-                        </>
-                      )}
-
-                      {!isRunning && results && (
-                        <div className="flex justify-end">
-                          <Button 
-                            variant="default" 
-                            onClick={() => setActiveTab('results')}
-                          >
-                            <Camera className="mr-2 h-4 w-4" />
-                            View Results
-                          </Button>
-                        </div>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-            </TabsContent>
-
-            <TabsContent value="results" ref={resultsViewRef}>
-              {results && (
-                <div className="space-y-6">
-                  <Card className="border-scanner-info/30">
-                    <CardHeader>
-                      <CardTitle>Scan Summary</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        <div className="bg-scanner-dark p-4 rounded-md">
-                          <span className="text-sm text-gray-400">Targets Scanned</span>
-                          <div className="text-2xl font-bold">{results.targetsScanned}</div>
-                        </div>
-                        <div className="bg-scanner-dark p-4 rounded-md">
-                          <span className="text-sm text-gray-400">Streams Found</span>
-                          <div className="text-2xl font-bold">{results.streamsFound}</div>
-                        </div>
-                        <div className="bg-scanner-dark p-4 rounded-md">
-                          <span className="text-sm text-gray-400">Accessible</span>
-                          <div className="text-2xl font-bold">{results.accessibleStreams}</div>
-                        </div>
-                        <div className="bg-scanner-dark p-4 rounded-md">
-                          <span className="text-sm text-gray-400">Execution Time</span>
-                          <div className="text-2xl font-bold">{(results.executionTime / 1000).toFixed(2)}s</div>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  <div className="flex justify-end space-x-2 mb-4">
-                    <Button 
-                      variant="outline" 
-                      onClick={handleDownloadResults}
-                    >
-                      <Download className="mr-2 h-4 w-4" />
-                      Download Results
-                    </Button>
-                    {results.reportPath && (
-                      <Button 
-                        variant="outline"
-                        onClick={() => window.open(results.reportPath, '_blank')}
-                      >
-                        <FileText className="mr-2 h-4 w-4" />
-                        View Full Report
-                      </Button>
-                    )}
-                  </div>
-
-                  <div className="space-y-4">
-                    <h3 className="text-lg font-medium">Discovered Streams</h3>
-                    {results.results.length > 0 ? (
-                      <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-                        {results.results.map((stream) => (
-                          <Card key={stream.id} className={`border-${stream.accessible ? 'green' : 'red'}-500/30`}>
-                            <CardContent className="pt-4">
-                              <div className="flex justify-between items-start mb-2">
-                                <div>
-                                  <div className="font-mono text-sm">{stream.target}:{stream.port}</div>
-                                  <div className="text-xs text-gray-400">{stream.protocol.toUpperCase()}</div>
-                                </div>
-                                <div className={`px-2 py-1 text-xs rounded-full ${stream.accessible ? 'bg-green-500/20 text-green-300' : 'bg-red-500/20 text-red-300'}`}>
-                                  {stream.accessible ? 'Accessible' : 'Inaccessible'}
-                                </div>
-                              </div>
-                              
-                              {stream.credentials && (
-                                <div className="mt-2 bg-scanner-dark p-2 rounded-md">
-                                  <div className="flex items-center mb-1">
-                                    <Key className="h-3 w-3 mr-1 text-yellow-500" />
-                                    <span className="text-xs text-gray-400">Credentials</span>
-                                  </div>
-                                  <div className="font-mono text-sm">
-                                    {stream.credentials.username}:{stream.credentials.password}
-                                    {stream.credentials.default && (
-                                      <span className="ml-2 text-xs text-yellow-500">(Default)</span>
-                                    )}
-                                  </div>
-                                </div>
-                              )}
-                              
-                              {stream.route && (
-                                <div className="mt-2 bg-scanner-dark p-2 rounded-md">
-                                  <div className="text-xs text-gray-400 mb-1">Path</div>
-                                  <div className="font-mono text-sm truncate">{stream.route}</div>
-                                </div>
-                              )}
-                              
-                              {stream.accessible && stream.streamUrl && (
-                                <div className="mt-2 bg-scanner-dark p-2 rounded-md">
-                                  <div className="text-xs text-gray-400 mb-1">Stream URL</div>
-                                  <div className="font-mono text-xs truncate">{stream.streamUrl}</div>
-                                </div>
-                              )}
-                              
-                              {stream.metadata && (
-                                <div className="mt-2 bg-scanner-dark p-2 rounded-md">
-                                  <div className="text-xs text-gray-400 mb-1">Metadata</div>
-                                  <div className="grid grid-cols-2 gap-2 text-xs">
-                                    {stream.metadata.resolution && (
-                                      <div>Resolution: {stream.metadata.resolution}</div>
-                                    )}
-                                    {stream.metadata.fps && (
-                                      <div>FPS: {stream.metadata.fps}</div>
-                                    )}
-                                    {stream.metadata.codec && (
-                                      <div>Codec: {stream.metadata.codec}</div>
-                                    )}
-                                    {stream.metadata.bitrate && (
-                                      <div>Bitrate: {stream.metadata.bitrate}</div>
-                                    )}
-                                  </div>
-                                </div>
-                              )}
-                              
-                              {stream.accessible && (
-                                <div className="mt-4 flex space-x-2">
-                                  <Button 
-                                    variant="outline"
-                                    size="sm"
-                                    className="w-full"
-                                    onClick={() => viewStream(stream)}
-                                  >
-                                    <Camera className="mr-2 h-3 w-3" />
-                                    View Stream
-                                  </Button>
-                                </div>
-                              )}
-                            </CardContent>
-                          </Card>
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="p-8 text-center bg-scanner-dark rounded-md">
-                        <Camera className="mx-auto h-12 w-12 text-gray-500 mb-4" />
-                        <h3 className="text-xl font-medium">No Streams Found</h3>
-                        <p className="text-gray-400 mt-2">Try adjusting your scan parameters or targeting a different network.</p>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-            </TabsContent>
-          </Tabs>
-        </CardContent>
-      </Card>
-    </div>
+    <Card className="w-full shadow-md bg-scanner-dark-alt border-gray-800">
+      <CardHeader>
+        <CardTitle className="flex items-center">
+          <Video className="mr-2 text-blue-500" />
+          MegaRTSPBruter
+        </CardTitle>
+        <CardDescription className="text-gray-400">
+          Advanced RTSP credential brute-forcer with multi-threading, bypass techniques, and adaptive evasion
+        </CardDescription>
+      </CardHeader>
+      
+      <CardContent>
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
+          <TabsList className="grid grid-cols-4 mb-4 bg-scanner-dark">
+            <TabsTrigger value="targets" disabled={isLoading}>
+              Targets
+            </TabsTrigger>
+            <TabsTrigger value="credentials" disabled={isLoading}>
+              Credentials
+            </TabsTrigger>
+            <TabsTrigger value="options" disabled={isLoading}>
+              Options
+            </TabsTrigger>
+            <TabsTrigger value="results">
+              Results {results.length > 0 && `(${results.length})`}
+            </TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="targets">
+            {renderTargetsTab()}
+          </TabsContent>
+          
+          <TabsContent value="credentials">
+            {renderCredentialsTab()}
+          </TabsContent>
+          
+          <TabsContent value="options">
+            {renderOptionsTab()}
+          </TabsContent>
+          
+          <TabsContent value="results">
+            {renderResultsTab()}
+          </TabsContent>
+        </Tabs>
+      </CardContent>
+      
+      <CardFooter className="flex justify-between">
+        <Button 
+          variant="outline" 
+          onClick={() => {
+            setTargets([]);
+            setTargetInput('');
+            handleLoadDefaultCredentials();
+            setActiveTab('targets');
+            setResults([]);
+            setScanDetails(null);
+          }}
+          disabled={isLoading}
+        >
+          Reset
+        </Button>
+        
+        <Button 
+          onClick={handleExecuteScan} 
+          disabled={isLoading || targets.length === 0 || usernames.length === 0 || passwords.length === 0}
+          className="bg-blue-600 hover:bg-blue-700"
+        >
+          {isLoading ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Running Brute-Force...
+            </>
+          ) : (
+            <>
+              <Lock className="mr-2 h-4 w-4" />
+              Start RTSP Brute-Force
+            </>
+          )}
+        </Button>
+      </CardFooter>
+    </Card>
   );
 };
 
