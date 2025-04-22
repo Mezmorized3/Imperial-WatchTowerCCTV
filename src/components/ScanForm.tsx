@@ -94,7 +94,7 @@ const ScanForm: React.FC<ScanFormProps> = ({ onStartScan, isScanning }) => {
   const [scanType, setScanType] = useState<'ip' | 'range' | 'file' | 'shodan' | 'zoomeye' | 'censys'>('ip');
   const [scanValue, setScanValue] = useState('');
   const [inputError, setInputError] = useState('');
-  const [selectedCountry, setSelectedCountry] = useState<string | null>(null);
+  const [selectedCountry, setSelectedCountry] = useState<string | null>('all');
   const [showPresets, setShowPresets] = useState(false);
   
   const [settings, setSettings] = useState<ScanSettings>({
@@ -152,7 +152,7 @@ const ScanForm: React.FC<ScanFormProps> = ({ onStartScan, isScanning }) => {
     } else {
       updateSettings('regionFilter', []);
       setShowPresets(false);
-      setSelectedCountry(null);
+      setSelectedCountry('all');
     }
   };
 

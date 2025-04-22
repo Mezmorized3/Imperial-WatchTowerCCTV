@@ -174,7 +174,7 @@ export const ScannerConfiguration: React.FC<ScannerConfigurationProps> = ({ onSt
                 <SelectValue placeholder="All Regions" />
               </SelectTrigger>
               <SelectContent className="bg-scanner-dark-alt border-gray-700">
-                <SelectItem value="">All Regions</SelectItem>
+                <SelectItem value="all_regions">All Regions</SelectItem>
                 <SelectItem value="ua">Ukraine</SelectItem>
                 <SelectItem value="ru">Russia</SelectItem>
                 <SelectItem value="ge">Georgia</SelectItem>
