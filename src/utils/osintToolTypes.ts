@@ -1,3 +1,4 @@
+
 /**
  * Type definitions for OSINT tool parameters
  */
@@ -22,6 +23,12 @@ export interface FFmpegParams {
   playlistSize?: number | string;
   streamUrl?: string;
   format?: string;
+  // Add properties for new tools
+  inputOptions?: string[];
+  outputOptions?: string[];
+  videoBitrate?: string;
+  audioBitrate?: string;
+  onProgress?: (progress: number) => void;
 }
 
 export interface SherockParams {

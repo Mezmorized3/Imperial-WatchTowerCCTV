@@ -24,6 +24,7 @@ export { default as NetworkReconTools } from './recon/NetworkReconTools';
 export { default as ComputerVisionTools } from './vision/ComputerVisionTools';
 export { default as FaceRecognitionTool } from './vision/FaceRecognitionTool';
 export { default as ObjectDetectionTool } from './vision/ObjectDetectionTool';
+export { default as SurveillanceToolkit } from './vision/SurveillanceToolkit';
 
 // Export streaming tools
 export { default as StreamingTools } from './streaming/StreamingTools';

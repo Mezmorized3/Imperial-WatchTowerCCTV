@@ -137,7 +137,7 @@ export interface WebRTCParams {
 }
 
 export interface AgentDVRParams {
-  action: 'start' | 'stop' | 'add-camera' | 'remove-camera' | 'get-settings';
+  action: 'start' | 'stop' | 'add-camera' | 'remove-camera' | 'get-settings' | 'discover';
   cameraParams?: {
     url: string;
     name?: string;
@@ -146,6 +146,13 @@ export interface AgentDVRParams {
     recordingSettings?: any;
   };
   configPath?: string;
+  target?: string;
+  scanRange?: string;
+  username?: string;
+  password?: string;
+  cameraUrl?: string;
+  cameraName?: string;
+  motionDetection?: boolean;
 }
 
 export interface MetasploitParams {
@@ -156,6 +163,7 @@ export interface MetasploitParams {
   payloadOptions?: Record<string, string>;
   exploitMode?: 'check' | 'run';
   timeout?: number;
+  checkMode?: boolean;
 }
 
 export interface LiveStreamParams {
@@ -175,4 +183,135 @@ export interface ONVIFFuzzerParams {
   timeout?: number;
   testType?: 'all' | 'command-injection' | 'overflow' | 'xml-entity' | 'auth-bypass';
   iterations?: number;
+}
+
+// New types for the added tools
+export interface GSoapParams {
+  target: string;
+  operation: string;
+  requestXml?: string;
+  timeout?: number;
+  saveResponse?: boolean;
+}
+
+export interface GstRTSPServerParams {
+  listenPort?: number;
+  mediaPath?: string;
+  auth?: boolean;
+  credentials?: {
+    username: string;
+    password: string;
+  };
+  enableTls?: boolean;
+  logLevel?: 'error' | 'warning' | 'info' | 'debug';
+}
+
+export interface GortsplibParams {
+  mode: 'client' | 'server';
+  url?: string;
+  listenPort?: number;
+  enableRtcp?: boolean;
+  protocols?: ('udp' | 'tcp')[];
+  credentials?: {
+    username: string;
+    password: string;
+  };
+}
+
+export interface RtspSimpleServerParams {
+  listenIp?: string;
+  listenPort?: number;
+  sourcePath?: string;
+  credentials?: {
+    username: string;
+    password: string;
+  };
+  enableTls?: boolean;
+  enableProxy?: boolean;
+  rtmpEnabled?: boolean;
+  hlsEnabled?: boolean;
+}
+
+export interface SenseCamDiscoveryParams {
+  subnet: string;
+  timeout?: number;
+  saveResults?: boolean;
+  scanMode?: 'quick' | 'deep';
+}
+
+export interface OrebroONVIFScannerParams {
+  subnet: string;
+  scanMode?: 'quick' | 'deep' | 'complete';
+  deepScan?: boolean;
+  timeout?: number;
+  username?: string;
+  password?: string;
+}
+
+export interface ONVIFCliParams {
+  target: string;
+  command: string;
+  username?: string;
+  password?: string;
+  timeout?: number;
+}
+
+export interface NodeONVIFParams {
+  target: string;
+  operation?: string;
+  username?: string;
+  password?: string;
+  timeout?: number;
+  deepScan?: boolean;
+}
+
+export interface PyONVIFParams {
+  target: string;
+  operation?: string;
+  username?: string;
+  password?: string;
+  timeout?: number;
+  deepScan?: boolean;
+}
+
+export interface PythonONVIFZeepParams {
+  target: string;
+  operation?: string;
+  username?: string;
+  password?: string;
+  timeout?: number;
+  deepScan?: boolean;
+}
+
+export interface ONVIFScoutParams {
+  subnet: string;
+  scanMode?: 'quick' | 'deep' | 'complete';
+  deepScan?: boolean;
+  timeout?: number;
+  username?: string;
+  password?: string;
+}
+
+export interface PythonWSDiscoveryParams {
+  timeout?: number;
+  types?: string[];
+  scope?: string;
+  saveResults?: boolean;
+}
+
+export interface ValkkaONVIFParams {
+  target: string;
+  operation?: string;
+  username?: string;
+  password?: string;
+  timeout?: number;
+}
+
+export interface FoscamExploitParams {
+  target: string;
+  port?: number;
+  exploit?: string;
+  username?: string;
+  password?: string;
+  timeout?: number;
 }
