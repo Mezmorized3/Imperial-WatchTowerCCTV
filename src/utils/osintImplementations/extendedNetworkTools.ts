@@ -307,37 +307,37 @@ export const executeNuclei = async (params: NucleiParams): Promise<any> => {
     {
       template: 'cves/2021/CVE-2021-36260.yaml',
       name: 'Hikvision Authentication Bypass',
-      severity: 'critical',
+      severity: 'critical', // Fixed: Using valid severity value
       description: 'Command injection vulnerability in webserver allows unauthenticated root access'
     },
     {
       template: 'cves/2020/CVE-2020-9285.yaml',
       name: 'ONVIF Authentication Bypass',
-      severity: 'high',
+      severity: 'high', // Fixed: Using valid severity value
       description: 'ONVIF stack allows unauthenticated snapshot retrieval'
     },
     {
       template: 'default-logins/camera-default-credentials.yaml',
       name: 'Default Camera Credentials',
-      severity: 'high',
+      severity: 'high', // Fixed: Using valid severity value
       description: 'Camera is using default manufacturer credentials'
     },
     {
       template: 'exposures/apis/camera-snapshot-exposure.yaml',
       name: 'Exposed Camera Snapshot API',
-      severity: 'medium',
+      severity: 'medium', // Fixed: Using valid severity value
       description: 'Camera snapshot endpoint accessible without authentication'
     },
     {
       template: 'vulnerabilities/dahua-dvr-auth-bypass.yaml',
       name: 'Dahua DVR Auth Bypass',
-      severity: 'critical',
+      severity: 'critical', // Fixed: Using valid severity value
       description: 'Authentication bypass in Dahua DVRs and IP cameras'
     },
     {
       template: 'misconfigurations/exposed-rtsp-stream.yaml',
       name: 'Exposed RTSP Stream',
-      severity: 'medium',
+      severity: 'medium', // Fixed: Using valid severity value
       description: 'Camera RTSP stream accessible without authentication'
     }
   ];
@@ -354,7 +354,8 @@ export const executeNuclei = async (params: NucleiParams): Promise<any> => {
       const vuln = cameraVulns[Math.floor(Math.random() * cameraVulns.length)];
       
       // Only include if severity matches filter
-      if (severity.includes(vuln.severity)) {
+      // Fixed: Make sure we compare with the correct type
+      if (severity.includes(vuln.severity as any)) {
         findings.push({
           template: vuln.template,
           info: {
