@@ -4,6 +4,8 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Lock } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Badge } from '@/components/ui/badge';
 
 interface ImperialAuthProps {
   adminToken: string;
@@ -21,6 +23,7 @@ const ImperialAuth: React.FC<ImperialAuthProps> = ({
   imperialBanner
 }) => {
   const [isTokenAutoFilled, setIsTokenAutoFilled] = useState(false);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
   
   useEffect(() => {
     // Auto-fill the admin token from the server config
@@ -41,6 +44,10 @@ const ImperialAuth: React.FC<ImperialAuthProps> = ({
     
     fetchToken();
   }, [setAdminToken]);
+
+  const toggleTokenVisibility = () => {
+    setIsDialogOpen(true);
+  };
 
   return (
     <div className="min-h-screen bg-scanner-dark text-white p-6">
@@ -79,9 +86,17 @@ const ImperialAuth: React.FC<ImperialAuthProps> = ({
             </Button>
             
             {isTokenAutoFilled && (
-              <p className="text-sm text-green-500 italic">
-                Token automatically fetched from server configuration
-              </p>
+              <div className="flex flex-col space-y-2">
+                <div className="flex items-center space-x-2">
+                  <Badge variant="outline" className="bg-green-900 text-green-200 border-green-700">
+                    Auto-Authentication Ready
+                  </Badge>
+                  <span className="text-sm text-green-500">Token automatically loaded from server</span>
+                </div>
+                <Button variant="outline" size="sm" onClick={toggleTokenVisibility}>
+                  Show Token Details
+                </Button>
+              </div>
             )}
             
             {!isTokenAutoFilled && (
@@ -90,6 +105,25 @@ const ImperialAuth: React.FC<ImperialAuthProps> = ({
               </p>
             )}
           </div>
+
+          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <DialogContent className="bg-scanner-dark-alt text-white border-gray-700">
+              <DialogHeader>
+                <DialogTitle className="text-white">Imperial Token Details</DialogTitle>
+                <DialogDescription className="text-gray-400">
+                  This is your authentication token for Imperial Control
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div className="p-3 bg-scanner-dark rounded-md border border-gray-700">
+                  <p className="font-mono break-all text-sm text-gray-300">{adminToken}</p>
+                </div>
+                <p className="text-xs text-gray-400">
+                  This token is stored in server/config.json. For security purposes, avoid sharing this token.
+                </p>
+              </div>
+            </DialogContent>
+          </Dialog>
         </CardContent>
       </Card>
     </div>
