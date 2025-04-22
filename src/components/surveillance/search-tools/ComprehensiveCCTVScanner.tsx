@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -78,9 +79,12 @@ const ComprehensiveCCTVScanner: React.FC<ComprehensiveCCTVScannerProps> = ({ onS
           break;
           
         case 'openCCTV':
+          // Update scan mode to match the type: 'quick' | 'deep' | 'full'
+          const openCctvScanMode = scanMode === 'stealth' ? 'deep' : scanMode as 'quick' | 'deep' | 'full';
+          
           result = await executeOpenCCTV({
             target: target || "",
-            scanMode: scanMode as 'quick' | 'deep' | 'stealth',
+            scanMode: openCctvScanMode,
             saveOutput: true
           });
           break;
@@ -95,10 +99,10 @@ const ComprehensiveCCTVScanner: React.FC<ComprehensiveCCTVScannerProps> = ({ onS
           break;
           
         case 'ingram':
+          // Update to use properties that exist in IngramParams
           result = await executeIngram({
             target: target || "",
-            scanType: scanMode as 'quick' | 'deep' | 'stealth',
-            includeSnapshots: true,
+            scanType: scanMode,
             country: selectedCountry
           });
           break;
