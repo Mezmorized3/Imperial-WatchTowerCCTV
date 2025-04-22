@@ -1,4 +1,3 @@
-
 /**
  * Camera types for OSINT and camera discovery
  */
@@ -136,9 +135,9 @@ export interface HackCCTVParams {
 // Add missing OpenCCTVParams interface with updated scanMode
 export interface OpenCCTVParams {
   target: string;
-  scanMode?: 'quick' | 'deep' | 'full' | 'stealth'; // Added 'stealth' to match component usage
+  scanMode?: 'quick' | 'deep' | 'full' | 'stealth'; // Include 'stealth' mode
   timeout?: number;
-  saveOutput?: boolean; // Added to match usage in ComprehensiveCCTVScanner
+  saveOutput?: boolean;
 }
 
 // Add missing EyePwnParams interface
@@ -156,5 +155,5 @@ export interface IngramParams {
   scanType?: string;
   country?: string;
   timeout?: number;
-  includeSnapshots?: boolean; // Added to match usage in ComprehensiveCCTVScanner
+  includeSnapshots?: boolean;
 }
