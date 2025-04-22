@@ -1,3 +1,4 @@
+
 /**
  * Implementation of camera hacking tools
  */
@@ -101,7 +102,7 @@ export const executeHackCCTV = async (params: HackCCTVParams): Promise<any> => {
     if (specificCountry && COUNTRY_IP_RANGES[specificCountry]) {
       const countryRanges = COUNTRY_IP_RANGES[specificCountry];
       const randomRangeIndex = Math.floor(Math.random() * countryRanges.length);
-      // Note: generateRandomIpFromRange would need to be implemented
+      // Generate random IP from range
       cameraIp = generateRandomIpFromRange(countryRanges[randomRangeIndex]);
       
       // Use country-specific camera models
@@ -117,8 +118,9 @@ export const executeHackCCTV = async (params: HackCCTVParams): Promise<any> => {
     }
     
     // Select a random camera model based on country or a generic model
+    const randomModelIndex = Math.floor(Math.random() * (cameraModels.length || 1));
     const cameraDetails = cameraModels.length > 0 
-      ? cameraModels[Math.floor(Math.random() * cameraModels.length)]
+      ? cameraModels[randomModelIndex]
       : {
           manufacturer: ['Hikvision', 'Dahua', 'Axis', 'Uniview'][Math.floor(Math.random() * 4)],
           model: `Generic-${Math.floor(Math.random() * 1000)}`,
@@ -139,16 +141,21 @@ export const executeHackCCTV = async (params: HackCCTVParams): Promise<any> => {
     // For "offline" cameras, we wouldn't have much data
     const status = (Math.random() > 0.2) ? (vulnerable ? 'vulnerable' : 'online') : 'offline';
     
+    // Fix the port selection - ensure it's a single number, not an array
+    const port = Array.isArray(cameraDetails.ports) 
+      ? cameraDetails.ports[Math.floor(Math.random() * cameraDetails.ports.length)] 
+      : cameraDetails.ports || 80;
+      
     if (status !== 'offline') {
       const camera: CameraResult = {
         id: `hackcctv-${Date.now()}-${i}`,
         ip: cameraIp,
-        port: cameraDetails.ports,
+        port: port,
         model: cameraDetails.model,
         manufacturer: cameraDetails.manufacturer,
         status: status as any,
         accessLevel: hasCredentials ? 'admin' : 'none',
-        lastSeen: new Date().toISOString(), // Convert to string
+        lastSeen: new Date().toISOString(),
         geolocation: {
           country: cameraLocation.country,
           city: cameraLocation.city,
@@ -162,7 +169,7 @@ export const executeHackCCTV = async (params: HackCCTVParams): Promise<any> => {
         } : null,
         vulnerabilities: vulnerable ? vulnerabilities.slice(0, 1 + Math.floor(Math.random() * (vulnerabilities.length))) : [],
         rtspUrl: `rtsp://${cameraIp}:${554}/live/ch01`,
-        httpUrl: `http://${cameraIp}:${80}/`
+        httpUrl: `http://${cameraIp}:${port}/`
       };
       
       cameras.push(camera);

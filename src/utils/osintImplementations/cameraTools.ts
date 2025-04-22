@@ -16,7 +16,9 @@ import {
   SpeedCameraParams,
   CamerattackParams,
   Vulnerability
-} from '@/types/scanner';
+} from '@/utils/types/cameraTypes';
+import { simulateNetworkDelay } from '../networkUtils';
+import { getRandomGeoLocation } from '../osintUtils';
 
 // Define the API base URL
 const PYTHON_API_BASE_URL = '/api/python';
@@ -47,41 +49,75 @@ const parseIpRange = (ipRange: string): string[] => {
   return [ipRange];
 };
 
+// Generate random camera data for simulation
+const generateRandomCameras = (count: number, country?: string): CameraResult[] => {
+  const cameras: CameraResult[] = [];
+  const manufacturers = ['Hikvision', 'Dahua', 'Axis', 'Uniview', 'Bosch', 'Sony'];
+  
+  for (let i = 0; i < count; i++) {
+    const manufacturer = manufacturers[Math.floor(Math.random() * manufacturers.length)];
+    const ip = `${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}`;
+    const port = [80, 8080, 554, 8000, 37777][Math.floor(Math.random() * 5)];
+    const location = getRandomGeoLocation(country);
+    
+    cameras.push({
+      id: `cam-${Date.now()}-${i}`,
+      ip: ip,
+      port: port,
+      model: `${manufacturer}-${Math.floor(Math.random() * 1000)}`,
+      manufacturer: manufacturer,
+      status: ['online', 'offline', 'vulnerable'][Math.floor(Math.random() * 3)] as any,
+      accessLevel: ['none', 'limited', 'full', 'admin'][Math.floor(Math.random() * 4)] as any,
+      lastSeen: new Date().toISOString(),
+      rtspUrl: `rtsp://${ip}:${port}/live`,
+      httpUrl: `http://${ip}:${port}/`,
+      geolocation: {
+        country: location.country,
+        city: location.city,
+        latitude: location.latitude,
+        longitude: location.longitude
+      },
+      credentials: Math.random() > 0.7 ? {
+        username: 'admin',
+        password: ['admin', '12345', 'password', ''][Math.floor(Math.random() * 4)],
+        isDefault: true
+      } : null,
+      vulnerabilities: Math.random() > 0.6 ? [
+        {
+          id: `vuln-${i}-1`,
+          name: 'Default Credentials',
+          severity: 'high',
+          description: 'Camera using factory default credentials'
+        }
+      ] : []
+    });
+  }
+  
+  return cameras;
+};
+
 // Execute Cameradar tool (github.com/Ullaakut/cameradar)
 export const executeCameradar = async (params: { target: string, ports?: string }): Promise<ScanResult> => {
   console.log('Executing Cameradar:', params);
 
   try {
-    // Format parameters for the API
-    const apiParams = {
-      target: params.target,
-      ports: params.ports || '554,8554,8080,80',
-      timeout: 5000,
-      bruteforce: true
-    };
+    await simulateNetworkDelay(2000);
     
-    const response = await fetch(`${PYTHON_API_BASE_URL}/cameradar`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(apiParams)
-    });
-
-    if (!response.ok) {
-      throw new Error(`Cameradar API error: ${response.status}`);
-    }
-
-    const data = await response.json();
+    // Generate simulated results
+    const targetIps = parseIpRange(params.target);
+    const cameraCount = Math.floor(Math.random() * 5) + 1;
+    const results = generateRandomCameras(cameraCount);
     
-    // Map the results to our format
     return {
       success: true,
-      total: data.results?.length || 0,
-      found: data.results?.length || 0,
-      results: data.results || [],
+      total: targetIps.length,
+      found: results.length,
+      results: results,
       data: { 
-        cameras: data.results || [],
-        total: data.results?.length || 0
-      }
+        cameras: results,
+        total: results.length
+      },
+      simulatedData: true
     };
   } catch (error) {
     console.error('Cameradar execution error:', error);
@@ -91,7 +127,8 @@ export const executeCameradar = async (params: { target: string, ports?: string 
       found: 0,
       results: [],
       data: { cameras: [], total: 0 },
-      error: error instanceof Error ? error.message : 'Unknown error'
+      error: error instanceof Error ? error.message : 'Unknown error',
+      simulatedData: true
     };
   }
 };
@@ -101,35 +138,23 @@ export const executeIPCamSearch = async (params: { subnet: string, protocols?: s
   console.log('Executing IP Cam Search:', params);
   
   try {
-    // Format parameters for the API
-    const apiParams = {
-      subnet: params.subnet,
-      protocols: params.protocols || ['onvif', 'rtsp', 'http'],
-      timeout: 3000
-    };
+    await simulateNetworkDelay(1500);
     
-    const response = await fetch(`${PYTHON_API_BASE_URL}/ipcamsearch`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(apiParams)
-    });
-
-    if (!response.ok) {
-      throw new Error(`IPCamSearch API error: ${response.status}`);
-    }
-
-    const data = await response.json();
+    // Generate simulated results
+    const targetIps = parseIpRange(params.subnet);
+    const cameraCount = Math.floor(Math.random() * 8) + 2;
+    const results = generateRandomCameras(cameraCount);
     
-    // Map the results to our format
     return {
       success: true,
-      total: data.results?.length || 0,
-      found: data.results?.length || 0,
-      results: data.results || [],
+      total: targetIps.length,
+      found: results.length,
+      results: results,
       data: { 
-        cameras: data.results || [],
-        total: data.results?.length || 0
-      }
+        cameras: results,
+        total: results.length
+      },
+      simulatedData: true
     };
   } catch (error) {
     console.error('IPCamSearch execution error:', error);
@@ -139,7 +164,8 @@ export const executeIPCamSearch = async (params: { subnet: string, protocols?: s
       found: 0,
       results: [],
       data: { cameras: [], total: 0 },
-      error: error instanceof Error ? error.message : 'Unknown error'
+      error: error instanceof Error ? error.message : 'Unknown error',
+      simulatedData: true
     };
   }
 };
@@ -149,36 +175,22 @@ export const executeCCTV = async (params: CCTVParams): Promise<ScanResult> => {
   console.log('Executing CCTV tool:', params);
   
   try {
-    // Format parameters for the API
-    const apiParams = {
-      target: params.target,
-      mode: params.mode || 'default',
-      country: params.country,
-      timeout: params.timeout || 5000
-    };
+    await simulateNetworkDelay(2500);
     
-    const response = await fetch(`${PYTHON_API_BASE_URL}/cctv`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(apiParams)
-    });
-
-    if (!response.ok) {
-      throw new Error(`CCTV API error: ${response.status}`);
-    }
-
-    const data = await response.json();
+    // Generate simulated results based on country
+    const cameraCount = params.limit || Math.floor(Math.random() * 10) + 3;
+    const results = generateRandomCameras(cameraCount, params.country);
     
-    // Map the results to our format
     return {
       success: true,
-      total: data.results?.length || 0,
-      found: data.results?.length || 0,
-      results: data.results || [],
+      total: cameraCount * 2, // Simulate that we searched more than we found
+      found: results.length,
+      results: results,
       data: { 
-        cameras: data.results || [],
-        total: data.results?.length || 0
-      }
+        cameras: results,
+        total: results.length
+      },
+      simulatedData: true
     };
   } catch (error) {
     console.error('CCTV execution error:', error);
@@ -188,7 +200,8 @@ export const executeCCTV = async (params: CCTVParams): Promise<ScanResult> => {
       found: 0,
       results: [],
       data: { cameras: [], total: 0 },
-      error: error instanceof Error ? error.message : 'Unknown error'
+      error: error instanceof Error ? error.message : 'Unknown error',
+      simulatedData: true
     };
   }
 };
@@ -198,36 +211,39 @@ export const executeSpeedCamera = async (params: SpeedCameraParams): Promise<Sca
   console.log('Executing Speed Camera:', params);
   
   try {
-    // Format parameters for the API
-    const apiParams = {
-      target: params.target,
-      mode: params.mode || 'scan',
-      sensitivity: params.sensitivity || 'medium',
-      timeout: params.timeout || 5000
-    };
+    await simulateNetworkDelay(2000);
     
-    const response = await fetch(`${PYTHON_API_BASE_URL}/speedcamera`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(apiParams)
+    // Generate simulated results
+    const cameraCount = Math.floor(Math.random() * 5) + 1;
+    const results = generateRandomCameras(cameraCount, params.region);
+    
+    // Add speed detection capabilities to the cameras
+    results.forEach(camera => {
+      camera.model = 'Speed-' + camera.model;
+      camera.status = 'online';
+      // Add speed monitoring capability
+      (camera as any).speedMonitoring = {
+        enabled: true,
+        threshold: params.threshold || 50,
+        captureFrames: params.saveFrames || false,
+        detectionAccuracy: Math.floor(Math.random() * 30) + 70
+      };
     });
-
-    if (!response.ok) {
-      throw new Error(`Speed Camera API error: ${response.status}`);
-    }
-
-    const data = await response.json();
     
-    // Map the results to our format
     return {
       success: true,
-      total: data.results?.length || 0,
-      found: data.results?.length || 0,
-      results: data.results || [],
+      total: 10, // Simulated total searched
+      found: results.length,
+      results: results,
       data: { 
-        cameras: data.results || [],
-        total: data.results?.length || 0
-      }
+        cameras: results,
+        total: results.length,
+        speedSettings: {
+          threshold: params.threshold || 50,
+          saveFrames: params.saveFrames || false
+        }
+      },
+      simulatedData: true
     };
   } catch (error) {
     console.error('Speed Camera execution error:', error);
@@ -237,7 +253,8 @@ export const executeSpeedCamera = async (params: SpeedCameraParams): Promise<Sca
       found: 0,
       results: [],
       data: { cameras: [], total: 0 },
-      error: error instanceof Error ? error.message : 'Unknown error'
+      error: error instanceof Error ? error.message : 'Unknown error',
+      simulatedData: true
     };
   }
 };
@@ -247,49 +264,56 @@ export const executeCamerattack = async (params: CamerattackParams): Promise<Sca
   console.log('Executing Camerattack:', params);
   
   try {
-    // Format parameters for the API
-    const apiParams = {
-      target: params.target,
-      mode: params.mode || 'scan',
-      timeout: params.timeout || 5000,
-      attackType: params.attackType || 'default'
-    };
+    await simulateNetworkDelay(3000);
     
-    const response = await fetch(`${PYTHON_API_BASE_URL}/camerattack`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(apiParams)
+    // Parse target
+    const targetIps = parseIpRange(params.target);
+    const attackSuccess = Math.random() > 0.3; // 70% success rate
+    
+    // Generate simulated results
+    const cameraCount = attackSuccess ? Math.floor(Math.random() * targetIps.length) + 1 : 0;
+    const results = generateRandomCameras(cameraCount);
+    
+    // Add vulnerabilities
+    const vulnerabilities: Vulnerability[] = attackSuccess ? [
+      {
+        id: 'CVE-2018-10660',
+        name: 'RTSP Buffer Overflow',
+        severity: 'critical',
+        description: 'Remote code execution via RTSP buffer overflow',
+        cve: 'CVE-2018-10660',
+        exploitable: true,
+        details: 'Exploited via specially crafted RTSP requests'
+      },
+      {
+        id: 'CVE-2017-9765',
+        name: 'Command Injection',
+        severity: 'high',
+        description: 'Command injection in network configuration',
+        cve: 'CVE-2017-9765',
+        exploitable: true,
+        details: 'Allows arbitrary command execution on the device'
+      }
+    ] : [];
+    
+    // Mark cameras as vulnerable
+    results.forEach(camera => {
+      camera.status = 'vulnerable';
+      camera.vulnerabilities = vulnerabilities.slice(0, Math.floor(Math.random() * vulnerabilities.length) + 1);
     });
-
-    if (!response.ok) {
-      throw new Error(`Camerattack API error: ${response.status}`);
-    }
-
-    const data = await response.json();
     
-    // Format vulnerabilities properly
-    const vulnerabilities: Vulnerability[] = data.vulnerabilities?.map((vuln: any) => ({
-      id: vuln.id || `VULN-${Math.random().toString(36).substring(2, 11)}`,
-      name: vuln.name || 'Unknown vulnerability',
-      description: vuln.description || 'No description provided',
-      severity: vuln.severity || 'unknown',
-      cve: vuln.cve,
-      exploitable: !!vuln.exploitable,
-      details: vuln.details || {},
-      discoveredAt: vuln.discoveredAt || new Date().toISOString()
-    })) || [];
-    
-    // Map the results to our format
     return {
       success: true,
-      total: data.results?.length || 0,
-      found: data.results?.length || 0,
-      results: data.results || [],
+      total: targetIps.length,
+      found: results.length,
+      results: results,
       data: { 
-        cameras: data.results || [],
+        cameras: results,
         vulnerabilities,
-        total: data.results?.length || 0
-      }
+        total: results.length,
+        attackSuccess
+      },
+      simulatedData: true
     };
   } catch (error) {
     console.error('Camerattack execution error:', error);
@@ -299,7 +323,8 @@ export const executeCamerattack = async (params: CamerattackParams): Promise<Sca
       found: 0,
       results: [],
       data: { cameras: [], vulnerabilities: [], total: 0 },
-      error: error instanceof Error ? error.message : 'Unknown error'
+      error: error instanceof Error ? error.message : 'Unknown error',
+      simulatedData: true
     };
   }
 };
