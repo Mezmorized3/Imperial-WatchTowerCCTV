@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Textarea } from '@/components/ui/textarea';
 import { Loader2, Shield, Network, Search, Lock } from 'lucide-react';
-import { toast } from '@/hooks/use-toast';
+import { useToast } from '@/hooks/use-toast';
 import { executeZGrab, executeHydra, executeRtspServer } from '@/utils/osintTools';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
@@ -17,6 +17,7 @@ interface AdvancedNetworkToolsProps {
 }
 
 const AdvancedNetworkTools: React.FC<AdvancedNetworkToolsProps> = ({ onActionComplete }) => {
+  const { toast } = useToast();
   const [activeTab, setActiveTab] = useState('zgrab');
   const [isLoading, setIsLoading] = useState(false);
   const [results, setResults] = useState<any>(null);
@@ -125,7 +126,7 @@ const AdvancedNetworkTools: React.FC<AdvancedNetworkToolsProps> = ({ onActionCom
 
         toast({
           title: "Brute Force Complete",
-          description: `Found ${result.found} valid credentials for ${hydraTarget}`
+          description: `Found ${result.data.found || 0} valid credentials for ${hydraTarget}`
         });
       } else {
         toast({
