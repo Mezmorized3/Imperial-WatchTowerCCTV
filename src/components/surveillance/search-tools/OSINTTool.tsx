@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -56,7 +57,11 @@ const OSINTTool: React.FC<OSINTToolProps> = ({ onScanComplete }) => {
       let result;
       
       if (typeof executeOSINT === 'function') {
-        result = await executeOSINT();
+        result = await executeOSINT({ 
+          target,
+          type: 'general',
+          saveResults
+        });
       } else {
         result = mockOsintData;
       }

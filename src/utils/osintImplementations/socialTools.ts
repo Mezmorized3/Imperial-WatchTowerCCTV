@@ -29,7 +29,7 @@ export const executeUsernameSearch = async (params: SocialSearchParams): Promise
   ];
   
   // If specific platforms were requested, filter results
-  const results = params.platforms && params.platforms.length > 0 
+  const results = params.platforms && params.platforms.length >.0 
     ? platforms.filter(p => params.platforms!.includes(p.platform.toLowerCase()))
     : platforms;
   
@@ -128,34 +128,34 @@ export const executeOSINT = async (params: any): Promise<ScanResult> => {
   const type = params.type || 'general';
   
   // Generate different results based on the target type
-  let results = [];
+  let osintResults = [];
   
   if (type === 'username') {
     // For username targets, return social media results
-    results = await executeUsernameSearch({ username: target });
-    results = results.results;
+    const searchResult = await executeUsernameSearch({ username: target });
+    osintResults = searchResult.results;
   } else if (type === 'domain') {
     // For domain targets, return domain info
-    results = [
+    osintResults = [
       { id: `whois-${target}`, type: 'whois', name: 'WHOIS', data: { registrar: 'Example Registrar, LLC', created: '2020-01-01' } },
       { id: `dns-${target}`, type: 'dns', name: 'DNS Records', data: { a: ['192.168.1.1'], mx: ['mail.example.com'] } },
       { id: `ssl-${target}`, type: 'ssl', name: 'SSL Certificate', data: { issuer: 'Let\'s Encrypt', expires: '2023-01-01' } }
     ];
   } else if (type === 'ip') {
     // For IP addresses, return geolocation and network info
-    results = [
+    osintResults = [
       { id: `geo-${target}`, type: 'geolocation', name: 'Geolocation', data: { country: 'United States', city: 'New York', coordinates: [40.7128, -74.0060] } },
       { id: `asn-${target}`, type: 'asn', name: 'ASN Information', data: { asn: 'AS15169', org: 'Google LLC', network: '192.168.0.0/16' } }
     ];
   } else if (type === 'email') {
     // For emails, return breach info and social profiles
-    results = [
+    osintResults = [
       { id: `breach-${target}`, type: 'breach', name: 'Data Breaches', data: { breached: Math.random() > 0.5, breaches: ['Example Breach 2020'] } },
       { id: `provider-${target}`, type: 'provider', name: 'Email Provider', data: { provider: target.split('@')[1], valid: true } }
     ];
   } else {
     // General OSINT results
-    results = [
+    osintResults = [
       { id: `general-${target}`, type: 'general', name: 'General Information', data: { matches: Math.floor(Math.random() * 100) } }
     ];
   }
@@ -163,15 +163,15 @@ export const executeOSINT = async (params: any): Promise<ScanResult> => {
   return {
     success: true,
     timestamp: new Date().toISOString(),
-    total: results.length,
-    found: results.length,
+    total: osintResults.length,
+    found: osintResults.length,
     data: { 
       target,
       type,
       modules: ['social', 'network', 'breaches', 'geolocation'],
-      results 
+      results: osintResults 
     },
-    results,
+    results: osintResults,
     simulatedData: true
   };
 };
