@@ -3,8 +3,7 @@ import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import RTSPServerTools from './RTSPServerTools';
-import TitanRTSPTool from './TitanRTSPTool';
-import { Video, Server, Globe, Zap } from 'lucide-react';
+import { Video, Server, Globe } from 'lucide-react';
 
 const StreamingTools: React.FC = () => {
   const [activeTab, setActiveTab] = useState('ffmpeg');
@@ -28,10 +27,6 @@ const StreamingTools: React.FC = () => {
               <Server className="h-4 w-4 mr-2" />
               RTSP Servers
             </TabsTrigger>
-            <TabsTrigger value="titanrtsp">
-              <Zap className="h-4 w-4 mr-2" />
-              TITAN-RTSP
-            </TabsTrigger>
           </TabsList>
           
           <TabsContent value="ffmpeg" className="mt-4">
@@ -49,10 +44,6 @@ const StreamingTools: React.FC = () => {
           
           <TabsContent value="rtspserver" className="mt-4">
             <RTSPServerTools />
-          </TabsContent>
-          
-          <TabsContent value="titanrtsp" className="mt-4">
-            <TitanRTSPTool />
           </TabsContent>
         </Tabs>
       </CardContent>
