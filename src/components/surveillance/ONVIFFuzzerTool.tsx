@@ -208,8 +208,8 @@ const ONVIFFuzzerTool: React.FC = () => {
               />
             </div>
             
-            <Alert variant="warning" className="mt-4">
-              <AlertTriangle className="h-4 w-4" />
+            <Alert variant="default" className="mt-4 border-yellow-500 bg-yellow-50 dark:bg-yellow-950 dark:border-yellow-900">
+              <AlertTriangle className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />
               <AlertTitle>Warning</AlertTitle>
               <AlertDescription>
                 Fuzzing can potentially crash or disrupt camera services. Use with caution on production systems.
