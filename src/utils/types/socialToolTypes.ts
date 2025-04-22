@@ -43,3 +43,11 @@ export interface InstagramParams {
   mediaType?: 'image' | 'video' | 'all';
   saveResults?: boolean;
 }
+
+export interface OsintParams {
+  target: string;
+  type?: 'username' | 'domain' | 'ip' | 'email' | 'general';
+  modules?: string[];
+  depth?: number;
+  timeout?: number;
+}

@@ -60,15 +60,9 @@ export const applyMotionDetection = async (params: any) => {
   return { success: true, data: { applied: true } };
 };
 
-// Add placeholder implementations for missing functions
-export const executeUsernameSearch = async () => {
-  return { success: false, error: "Not implemented", simulatedData: true };
-};
-
-export const executeTwint = async () => {
-  return { success: false, error: "Not implemented", simulatedData: true };
-};
-
-export const executeOSINT = async () => {
-  return { success: false, error: "Not implemented", simulatedData: true };
-};
+// Export the social tools from our new implementation
+export {
+  executeUsernameSearch,
+  executeTwint,
+  executeOSINT
+} from './osintImplementations/socialTools';

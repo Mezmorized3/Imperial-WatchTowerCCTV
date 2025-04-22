@@ -34,6 +34,9 @@ import {
   executeOSINT
 } from './osintImplementations';
 
+// Import CCTV Hacked tool
+import { executeCCTVHacked } from './osintImplementations/cctvHackedTools';
+
 // Export all camera tools
 export {
   executeCameradar,
@@ -45,7 +48,8 @@ export {
   executeCamDumper,
   executeOpenCCTV,
   executeEyePwn,
-  executeIngram
+  executeIngram,
+  executeCCTVHacked
 };
 
 // Export all web tools

@@ -3,11 +3,14 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { UsernameSearchTool } from '@/components/surveillance/search-tools/UsernameSearchTool';
+import UsernameSearchTool from '@/components/surveillance/search-tools/UsernameSearchTool';
 import TwintTool from '@/components/surveillance/search-tools/TwintTool';
+import { executeOSINT } from '@/utils/osintImplementations/socialTools';
 
 const SocialMediaTab: React.FC = () => {
   const [activeSocialTool, setActiveSocialTool] = useState<string | null>(null);
+  const [osintResults, setOsintResults] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
   const handleSocialToolClick = (toolName: string) => {
@@ -16,6 +19,27 @@ const SocialMediaTab: React.FC = () => {
       title: toolName,
       description: `Opening ${toolName} tool...`,
     });
+  };
+
+  const handleRunOsintFramework = async () => {
+    setIsLoading(true);
+    try {
+      const result = await executeOSINT({ type: 'general', target: 'comprehensive-scan' });
+      setOsintResults(result.data);
+      toast({
+        title: "OSINT Scan Complete",
+        description: `Found ${result.data.results.length} results`,
+      });
+    } catch (error) {
+      console.error("OSINT scan error:", error);
+      toast({
+        title: "OSINT Scan Failed",
+        description: error instanceof Error ? error.message : "An unknown error occurred",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   if (!activeSocialTool) {
@@ -56,14 +80,14 @@ const SocialMediaTab: React.FC = () => {
               </div>
               
               <div className="bg-scanner-dark p-4 rounded-md border border-gray-700">
-                <h3 className="text-lg font-medium mb-2">Social Media Analyzer</h3>
+                <h3 className="text-lg font-medium mb-2">OSINT Framework</h3>
                 <p className="text-sm text-gray-400 mb-4">
-                  Analyze profiles and connections
+                  Comprehensive OSINT gathering
                 </p>
                 <Button 
                   variant="outline" 
                   className="w-full"
-                  onClick={() => handleSocialToolClick('social-analyzer')}
+                  onClick={() => handleSocialToolClick('osint-framework')}
                 >
                   Open Tool
                 </Button>
@@ -82,7 +106,7 @@ const SocialMediaTab: React.FC = () => {
           <CardTitle className="text-xl font-semibold">
             {activeSocialTool === 'username-search' ? 'Username Search' : 
              activeSocialTool === 'twint' ? 'Twitter Intelligence (Twint)' : 
-             'Social Media Analyzer'}
+             'OSINT Framework'}
           </CardTitle>
           <Button 
             variant="outline" 
@@ -95,12 +119,37 @@ const SocialMediaTab: React.FC = () => {
         <CardContent>
           {activeSocialTool === 'username-search' && <UsernameSearchTool />}
           {activeSocialTool === 'twint' && <TwintTool />}
-          {activeSocialTool === 'social-analyzer' && (
-            <div className="py-8 text-center">
-              <h3 className="text-lg font-medium mb-2">Social Media Analyzer</h3>
-              <p className="text-sm text-gray-400 mb-4">
-                This tool is currently in development. Check back soon.
+          {activeSocialTool === 'osint-framework' && (
+            <div className="space-y-4">
+              <p className="text-sm text-gray-400">
+                The OSINT Framework provides comprehensive intelligence gathering across multiple sources.
+                Run a scan to collect data from various OSINT sources.
               </p>
+              
+              <Button
+                onClick={handleRunOsintFramework}
+                disabled={isLoading}
+                className="w-full"
+              >
+                {isLoading ? "Running OSINT Scan..." : "Run OSINT Framework Scan"}
+              </Button>
+              
+              {osintResults && (
+                <div className="mt-4">
+                  <h3 className="text-lg font-medium mb-2">OSINT Scan Results</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {osintResults.results.map((result: any, index: number) => (
+                      <div key={index} className="bg-scanner-dark p-4 rounded border border-gray-700">
+                        <h4 className="font-medium">{result.name}</h4>
+                        <p className="text-sm text-gray-400 mt-1">Type: {result.type}</p>
+                        <pre className="text-xs bg-black/30 p-2 mt-2 rounded overflow-x-auto">
+                          {JSON.stringify(result.data, null, 2)}
+                        </pre>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </CardContent>

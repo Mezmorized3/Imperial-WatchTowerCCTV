@@ -1,16 +1,14 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { useToast } from '@/components/ui/use-toast';
-import { ExternalLink, User, AlertCircle } from 'lucide-react';
-import { searchUsername } from '@/utils/searchUtils';
-import { executePythonTool, PYTHON_TOOLS, checkPythonApiStatus } from '@/utils/pythonIntegration';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { toast } from '@/components/ui/use-toast';
+import { User, ExternalLink } from 'lucide-react';
+import { executeUsernameSearch } from '@/utils/osintImplementations/socialTools';
 
 export const UsernameSearchTool: React.FC = () => {
-  const { toast } = useToast();
   const [username, setUsername] = useState('');
   const [isSearching, setIsSearching] = useState(false);
   const [searchProgress, setSearchProgress] = useState(0);
@@ -18,27 +16,9 @@ export const UsernameSearchTool: React.FC = () => {
     platform: string;
     url: string;
     exists: boolean;
-    username: string;
+    username?: string;
     note?: string;
   }>>([]);
-  const [pythonApiAvailable, setPythonApiAvailable] = useState<boolean | null>(null);
-  const [apiChecked, setApiChecked] = useState(false);
-
-  React.useEffect(() => {
-    const checkApi = async () => {
-      const status = await checkPythonApiStatus();
-      setPythonApiAvailable(status.available);
-      setApiChecked(true);
-      
-      if (status.available) {
-        console.log('Python OSINT API is available with tools:', status.tools);
-      } else {
-        console.log('Python OSINT API is not available, will use browser implementation');
-      }
-    };
-    
-    checkApi();
-  }, []);
 
   const handleSearch = async () => {
     if (!username.trim()) {
@@ -55,39 +35,24 @@ export const UsernameSearchTool: React.FC = () => {
     setSearchResults([]);
     
     const progressInterval = setInterval(() => {
-      setSearchProgress(prev => Math.min(prev + 1, 95));
+      setSearchProgress(prev => Math.min(prev + 2, 95));
     }, 100);
     
     try {
-      let result;
+      const result = await executeUsernameSearch({ username });
       
-      if (pythonApiAvailable) {
-        const pythonResponse = await executePythonTool(PYTHON_TOOLS.SHERLOCK, { 
-          username: username,
-          timeout: 30  // 30 second timeout
-        });
-        
-        if (pythonResponse.success) {
-          result = pythonResponse.data;
-          toast({
-            title: "Python API Used",
-            description: "Results from server-side Sherlock tool",
-          });
-        } else {
-          toast({
-            title: "Python API Failed",
-            description: "Falling back to browser implementation",
-            variant: "destructive",
-          });
-          result = await searchUsername(username);
-        }
-      } else {
-        result = await searchUsername(username);
-      }
+      // Transform the results to match our component's expected format
+      const formattedResults = result.data.results.map((item: any) => ({
+        platform: item.platform,
+        url: item.url,
+        exists: item.exists,
+        username: username,
+        note: item.exists ? undefined : 'Profile not found'
+      }));
       
-      setSearchResults(result.results);
+      setSearchResults(formattedResults);
       
-      const foundCount = result.results.filter(r => r.exists).length;
+      const foundCount = formattedResults.filter(r => r.exists).length;
       
       toast({
         title: "Search Complete",
@@ -111,15 +76,6 @@ export const UsernameSearchTool: React.FC = () => {
 
   return (
     <div className="flex flex-col space-y-4">
-      {apiChecked && pythonApiAvailable === false && (
-        <Alert variant="destructive">
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>
-            Python API not available. Using browser simulation mode.
-          </AlertDescription>
-        </Alert>
-      )}
-      
       <div className="flex space-x-2">
         <Input
           placeholder="Enter a username to search"
@@ -180,3 +136,5 @@ export const UsernameSearchTool: React.FC = () => {
     </div>
   );
 };
+
+export default UsernameSearchTool;
