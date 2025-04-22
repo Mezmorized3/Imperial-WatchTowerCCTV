@@ -127,6 +127,15 @@ export interface JSMpegParams {
   progressive?: boolean;
 }
 
+export interface WebRTCParams {
+  rtspUrl: string;
+  webrtcUrl?: string;
+  iceServers?: RTCIceServer[];
+  autoplay?: boolean;
+  muted?: boolean;
+  controls?: boolean;
+}
+
 export interface AgentDVRParams {
   action: 'start' | 'stop' | 'add-camera' | 'remove-camera' | 'get-settings';
   cameraParams?: {
@@ -147,4 +156,23 @@ export interface MetasploitParams {
   payloadOptions?: Record<string, string>;
   exploitMode?: 'check' | 'run';
   timeout?: number;
+}
+
+export interface LiveStreamParams {
+  streamUrl: string;
+  streamType: 'rtsp' | 'websocket' | 'webrtc' | 'hls' | 'dash';
+  playerType: 'auto' | 'streamedian' | 'jsmpeg' | 'webrtc' | 'hls';
+  autoplay?: boolean;
+  muted?: boolean;
+  transport?: 'tcp' | 'udp';
+}
+
+export interface ONVIFFuzzerParams {
+  target: string;
+  port?: number;
+  username?: string;
+  password?: string;
+  timeout?: number;
+  testType?: 'all' | 'command-injection' | 'overflow' | 'xml-entity' | 'auth-bypass';
+  iterations?: number;
 }

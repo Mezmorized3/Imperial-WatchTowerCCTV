@@ -1,472 +1,559 @@
 
 /**
- * Implementation for extended network tools
+ * Extended network tools implementation
  */
-
-import { simulateNetworkDelay } from '../networkUtils';
-import { 
-  ShodanParams, 
-  CensysParams, 
-  HttpxParams, 
-  NucleiParams, 
-  AmassParams 
-} from '../types/onvifToolTypes';
 
 /**
- * Execute Shodan search for camera devices
+ * Execute Shodan API search
  */
-export const executeShodan = async (params: ShodanParams): Promise<any> => {
-  console.log('Executing Shodan search with params:', params);
+export const executeShodan = async (params: {
+  query: string;
+  facets?: string[];
+  page?: number;
+  minify?: boolean;
+  limit?: number;
+  apiKey?: string;
+}) => {
+  console.log('Executing Shodan with params:', params);
   
-  // Simulate network delay
-  await simulateNetworkDelay(3000);
-  
-  // Validate input parameters
-  if (!params.query) {
-    return {
-      success: false,
-      error: 'Search query is required',
-      simulatedData: true
-    };
-  }
-  
-  const page = params.page || 1;
-  const minify = params.minify || true;
-  
-  // Generate sample results based on query
-  const isCameraQuery = params.query.toLowerCase().includes('camera') || 
-                       params.query.includes('rtsp') || 
-                       params.query.includes('hikvision') || 
-                       params.query.includes('dahua') || 
-                       params.query.includes('port:554');
-  
-  const totalResults = isCameraQuery ? 120 + Math.floor(Math.random() * 500) : 15 + Math.floor(Math.random() * 50);
-  const resultsPerPage = 10;
-  const totalPages = Math.ceil(totalResults / resultsPerPage);
-  
-  // Generate sample camera results
-  const results = [];
-  
-  for (let i = 0; i < Math.min(resultsPerPage, totalResults - (page - 1) * resultsPerPage); i++) {
-    const ipOctet3 = Math.floor(Math.random() * 256);
-    const ipOctet4 = Math.floor(Math.random() * 256);
+  try {
+    // In a real implementation, this would use the Shodan API
+    // For demonstration purposes, we're simulating the response
     
-    results.push({
-      ip_str: `104.236.${ipOctet3}.${ipOctet4}`,
-      port: isCameraQuery ? 554 : (Math.random() > 0.5 ? 80 : 443),
-      hostnames: [`camera-${ipOctet3}-${ipOctet4}.example.com`],
-      country_code: ['US', 'CN', 'RU', 'DE', 'FR'][Math.floor(Math.random() * 5)],
-      city: ['New York', 'Los Angeles', 'Beijing', 'Moscow', 'Berlin'][Math.floor(Math.random() * 5)],
-      org: ['Amazon', 'Google Cloud', 'Digital Ocean', 'OVH', 'Hetzner'][Math.floor(Math.random() * 5)],
-      data: isCameraQuery ? 'RTSP/1.0 200 OK\r\nCSeq: 1\r\nServer: Hikvision-Webs' : 'HTTP/1.1 200 OK\r\nServer: nginx',
-      timestamp: new Date().toISOString(),
-      domains: [`example-${Math.floor(Math.random() * 1000)}.com`],
-      isp: ['Comcast', 'Level 3', 'China Telecom', 'Deutsche Telekom'][Math.floor(Math.random() * 4)],
-      asn: `AS${Math.floor(Math.random() * 65536)}`,
-      products: isCameraQuery ? [
-        {
-          product: 'Hikvision Camera',
-          version: `${Math.floor(Math.random() * 10)}.${Math.floor(Math.random() * 10)}.${Math.floor(Math.random() * 10)}`,
-          type: 'cctv'
-        }
-      ] : [],
-      vulns: isCameraQuery && Math.random() > 0.7 ? [
-        `CVE-2021-${36000 + Math.floor(Math.random() * 1000)}`,
-        `CVE-2020-${25000 + Math.floor(Math.random() * 1000)}`
-      ] : []
-    });
-  }
-  
-  // Return formatted results
-  return {
-    success: true,
-    data: {
-      query: params.query,
-      total: totalResults,
-      page: page,
-      pages: totalPages,
-      results: results,
-      facets: params.facets ? {
-        country: [
-          { key: 'US', count: Math.floor(totalResults * 0.3) },
-          { key: 'CN', count: Math.floor(totalResults * 0.25) },
-          { key: 'RU', count: Math.floor(totalResults * 0.15) },
-          { key: 'DE', count: Math.floor(totalResults * 0.1) },
-          { key: 'FR', count: Math.floor(totalResults * 0.05) }
-        ]
-      } : undefined
-    },
-    simulatedData: true
-  };
-};
-
-/**
- * Execute Censys search for camera devices
- */
-export const executeCensys = async (params: CensysParams): Promise<any> => {
-  console.log('Executing Censys search with params:', params);
-  
-  // Simulate network delay
-  await simulateNetworkDelay(2500);
-  
-  // Validate input parameters
-  if (!params.query) {
-    return {
-      success: false,
-      error: 'Search query is required',
-      simulatedData: true
-    };
-  }
-  
-  const page = params.page || 1;
-  
-  // Generate sample results
-  const isCameraQuery = params.query.toLowerCase().includes('camera') || 
-                       params.query.includes('services.port=554') || 
-                       params.query.includes('hikvision') || 
-                       params.query.includes('dahua');
-  
-  const totalResults = isCameraQuery ? 85 + Math.floor(Math.random() * 400) : 10 + Math.floor(Math.random() * 40);
-  const resultsPerPage = 25;
-  const totalPages = Math.ceil(totalResults / resultsPerPage);
-  
-  // Generate sample camera results
-  const results = [];
-  
-  for (let i = 0; i < Math.min(resultsPerPage, totalResults - (page - 1) * resultsPerPage); i++) {
-    const ipOctet3 = Math.floor(Math.random() * 256);
-    const ipOctet4 = Math.floor(Math.random() * 256);
+    // Simulate network latency
+    await new Promise(resolve => setTimeout(resolve, 1200));
     
-    results.push({
-      ip: `185.193.${ipOctet3}.${ipOctet4}`,
-      services: isCameraQuery ? [
-        {
-          port: 554,
-          service_name: 'rtsp',
-          transport_protocol: 'tcp',
-          banner: 'RTSP/1.0 200 OK'
-        },
-        {
-          port: 80,
-          service_name: 'http',
-          transport_protocol: 'tcp',
-          http: {
-            response: {
-              html_title: 'Camera Web Interface',
-              status_code: 200,
-              headers: {
-                server: 'Hikvision-Webs'
+    // Generate random IP addresses based on query
+    const generateRandomIp = () => {
+      return `${Math.floor(Math.random() * 223) + 1}.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}`;
+    };
+    
+    // Generate camera types based on query
+    const getCameraType = () => {
+      const types = [
+        'Hikvision IP Camera', 
+        'AXIS Network Camera', 
+        'Dahua DVR', 
+        'Samsung SmartCam', 
+        'Foscam IP Camera',
+        'TP-Link Tapo', 
+        'Amcrest IP Camera',
+        'Reolink Camera',
+        'Ubiquiti UniFi Video Camera'
+      ];
+      return types[Math.floor(Math.random() * types.length)];
+    };
+    
+    // Generate port based on camera type
+    const getPort = (cameraType: string) => {
+      if (cameraType.includes('Hikvision')) return [80, 443, 554][Math.floor(Math.random() * 3)];
+      if (cameraType.includes('AXIS')) return [80, 443, 554][Math.floor(Math.random() * 3)];
+      if (cameraType.includes('Dahua')) return [80, 37777, 554][Math.floor(Math.random() * 3)];
+      return [80, 443, 554, 8000, 8080, 8081, 37777, 37778][Math.floor(Math.random() * 8)];
+    };
+    
+    // Generate location data based on query
+    const getLocation = () => {
+      let country = 'United States';
+      let countryCode = 'US';
+      
+      if (params.query.includes('country:ru')) {
+        country = 'Russia';
+        countryCode = 'RU';
+      } else if (params.query.includes('country:cn')) {
+        country = 'China';
+        countryCode = 'CN';
+      } else if (params.query.includes('country:ua')) {
+        country = 'Ukraine';
+        countryCode = 'UA';
+      } else if (params.query.includes('country:ge')) {
+        country = 'Georgia';
+        countryCode = 'GE';
+      } else if (params.query.includes('country:jp')) {
+        country = 'Japan';
+        countryCode = 'JP';
+      }
+      
+      return {
+        country,
+        country_code: countryCode,
+        city: ['New York', 'London', 'Tokyo', 'Moscow', 'Beijing', 'Berlin', 'Paris'][Math.floor(Math.random() * 7)],
+        longitude: (Math.random() * 360 - 180).toFixed(4),
+        latitude: (Math.random() * 180 - 90).toFixed(4)
+      };
+    };
+    
+    // Generate host data
+    const generateHostData = (ip: string) => {
+      const cameraType = getCameraType();
+      const port = getPort(cameraType);
+      const location = getLocation();
+      
+      return {
+        ip_str: ip,
+        ports: [port],
+        hostnames: [`cam-${Math.floor(Math.random() * 1000)}.example.com`],
+        country: location.country_code,
+        country_name: location.country,
+        city: location.city,
+        longitude: parseFloat(location.longitude),
+        latitude: parseFloat(location.latitude),
+        org: ['ISP Corp', 'Network LLC', 'Telecom Inc.', 'Fiber Co.'][Math.floor(Math.random() * 4)],
+        data: [
+          {
+            port,
+            transport: 'tcp',
+            product: cameraType,
+            version: `${Math.floor(Math.random() * 10)}.${Math.floor(Math.random() * 10)}.${Math.floor(Math.random() * 100)}`,
+            http: {
+              status: 200,
+              title: `${cameraType} Web Interface`,
+              server: `${cameraType} HTTP Server`,
+              host: ip,
+              html_hash: Math.floor(Math.random() * 1000000000).toString(16),
+              redirects: [],
+              securitytxt: null,
+              robots: null,
+              sitemap: null,
+              favicon: {
+                hash: Math.floor(Math.random() * 1000000000).toString(16)
               }
             }
           }
-        }
-      ] : [
-        {
-          port: 80,
-          service_name: 'http',
-          transport_protocol: 'tcp'
-        }
-      ],
-      location: {
-        continent: 'Europe',
-        country: ['United States', 'China', 'Russia', 'Germany', 'France'][Math.floor(Math.random() * 5)],
-        country_code: ['US', 'CN', 'RU', 'DE', 'FR'][Math.floor(Math.random() * 5)],
-        postal_code: `${Math.floor(Math.random() * 100000)}`,
-        timezone: 'Europe/Berlin',
-        coordinates: {
-          latitude: 40 + (Math.random() * 10),
-          longitude: -70 + (Math.random() * 10)
-        }
-      },
-      autonomous_system: {
-        asn: Math.floor(Math.random() * 65536),
-        name: `AS-${Math.floor(Math.random() * 1000)}`
+        ],
+        last_update: new Date().toISOString()
+      };
+    };
+    
+    // Generate hosts
+    const limit = params.limit || 10;
+    const hosts = Array.from({ length: limit }, () => generateHostData(generateRandomIp()));
+    
+    return {
+      success: true,
+      data: {
+        matches: hosts,
+        total: Math.floor(Math.random() * 10000) + 1000,
+        facets: params.facets?.reduce((acc, facet) => {
+          acc[facet] = [{
+            count: Math.floor(Math.random() * 1000) + 100,
+            value: facet === 'country' ? 'US' : facet === 'port' ? '80' : 'Other'
+          }];
+          return acc;
+        }, {} as Record<string, any>) || {}
       }
-    });
+    };
+  } catch (error) {
+    console.error('Error executing Shodan:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+      data: null
+    };
   }
-  
-  // Return formatted results
-  return {
-    success: true,
-    data: {
-      query: params.query,
-      total: totalResults,
-      page: page,
-      pages: totalPages,
-      results: results
-    },
-    simulatedData: true
-  };
 };
 
 /**
- * Execute httpx scan for web interfaces of cameras
+ * Execute Censys API search
  */
-export const executeHttpx = async (params: HttpxParams): Promise<any> => {
-  console.log('Executing httpx with params:', params);
+export const executeCensys = async (params: {
+  query: string;
+  fields?: string[];
+  page?: number;
+  perPage?: number;
+  apiId?: string;
+  apiSecret?: string;
+}) => {
+  console.log('Executing Censys with params:', params);
   
-  // Simulate network delay
-  await simulateNetworkDelay(4000);
-  
-  // Validate input parameters
-  if (!params.target) {
+  try {
+    // Simulate network latency
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    
+    // Generate random IP addresses and host data similar to Shodan
+    const generateHostData = () => {
+      const ip = `${Math.floor(Math.random() * 223) + 1}.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}`;
+      
+      return {
+        ip,
+        services: [
+          {
+            port: [80, 443, 554, 8000, 8080][Math.floor(Math.random() * 5)],
+            service_name: ['HTTP', 'HTTPS', 'RTSP'][Math.floor(Math.random() * 3)],
+            transport_protocol: 'TCP',
+            certificate: Math.random() > 0.7 ? {
+              fingerprint_sha256: Array.from({ length: 32 }, () => Math.floor(Math.random() * 256).toString(16).padStart(2, '0')).join(''),
+              issuer_dn: 'CN=Example CA',
+              subject_dn: `CN=${ip}`,
+              validity: {
+                start: new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString(),
+                end: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString()
+              }
+            } : null,
+            software: Math.random() > 0.5 ? [
+              {
+                product: ['Hikvision Camera', 'AXIS Camera', 'Dahua DVR'][Math.floor(Math.random() * 3)],
+                version: `${Math.floor(Math.random() * 10)}.${Math.floor(Math.random() * 10)}.${Math.floor(Math.random() * 100)}`,
+                vendor: ['Hikvision', 'AXIS', 'Dahua'][Math.floor(Math.random() * 3)]
+              }
+            ] : [],
+            banner: 'RTSP/1.0 200 OK\r\nServer: Hikvision RTSP Server\r\n'
+          }
+        ],
+        location: {
+          continent: 'North America',
+          country: params.query.includes('country_code=') ? 
+            params.query.match(/country_code="?([A-Z]{2})"?/)?.[1] || 'US' : 'US',
+          country_code: params.query.includes('country_code=') ? 
+            params.query.match(/country_code="?([A-Z]{2})"?/)?.[1] || 'US' : 'US',
+          timezone: 'America/New_York',
+          coordinates: {
+            latitude: (Math.random() * 180 - 90).toFixed(4),
+            longitude: (Math.random() * 360 - 180).toFixed(4)
+          }
+        },
+        autonomous_system: {
+          asn: Math.floor(Math.random() * 65535),
+          name: 'Example ISP',
+          organization: 'Example Network LLC'
+        },
+        last_updated_at: new Date().toISOString()
+      };
+    };
+    
+    const perPage = params.perPage || 10;
+    const hosts = Array.from({ length: perPage }, generateHostData);
+    
+    return {
+      success: true,
+      data: {
+        result: {
+          hits: hosts,
+          links: {
+            next: params.page && params.page < 5 ? `?page=${(params.page + 1)}` : null,
+            prev: params.page && params.page > 1 ? `?page=${(params.page - 1)}` : null
+          },
+          total: Math.floor(Math.random() * 10000) + 500
+        }
+      }
+    };
+  } catch (error) {
+    console.error('Error executing Censys:', error);
     return {
       success: false,
-      error: 'Target IP, range, or hostname is required',
-      simulatedData: true
+      error: error instanceof Error ? error.message : 'Unknown error',
+      data: null
     };
   }
+};
+
+/**
+ * Execute httpx scanner
+ */
+export const executeHttpx = async (params: {
+  target: string | string[];
+  ports?: string;
+  threads?: number;
+  statusCode?: boolean;
+  title?: boolean;
+  webServer?: boolean;
+  contentType?: boolean;
+  path?: string[];
+  outputFormat?: 'json' | 'csv';
+}) => {
+  console.log('Executing httpx with params:', params);
   
-  const ports = params.ports || '80,443,8000,8080,8443';
-  const threads = params.threads || 50;
-  const timeout = params.timeout || 5;
-  
-  // Generate number of hosts based on input
-  const isRange = params.target.includes('/');
-  const numHosts = isRange ? 5 + Math.floor(Math.random() * 15) : 1;
-  
-  // Generate sample results
-  const results = [];
-  
-  for (let i = 0; i < numHosts; i++) {
-    const ipOctet3 = Math.floor(Math.random() * 256);
-    const ipOctet4 = Math.floor(Math.random() * 256);
-    const ip = isRange ? `192.168.${ipOctet3}.${ipOctet4}` : params.target;
-    const port = ports.split(',')[Math.floor(Math.random() * ports.split(',').length)];
-    const isCamera = Math.random() > 0.6;
+  try {
+    // Simulate network latency
+    await new Promise(resolve => setTimeout(resolve, 1000));
     
-    results.push({
-      url: `http://${ip}:${port}`,
-      status_code: isCamera ? 200 : [200, 401, 403][Math.floor(Math.random() * 3)],
-      content_length: isCamera ? 2048 + Math.floor(Math.random() * 10000) : 256 + Math.floor(Math.random() * 1000),
-      title: isCamera ? [
-        'IP Camera Web Interface',
-        'Network Camera',
-        'Hikvision - Web Viewer',
-        'AXIS Camera Control Panel',
-        'Dahua Web Interface'
-      ][Math.floor(Math.random() * 5)] : 'Web Server',
-      technologies: isCamera ? [
-        'Hikvision',
-        'ONVIF',
-        'HTML5',
-        'JavaScript',
-        'WebRTC'
-      ].slice(0, Math.floor(Math.random() * 4) + 1) : ['HTML', 'JavaScript'],
-      response_time: `${Math.floor(Math.random() * 500)}ms`,
-      screenshot: params.screenshot ? `data:image/png;base64,iVBORw0KGgoAAA...` : undefined
-    });
+    const targets = typeof params.target === 'string' ? [params.target] : params.target;
+    
+    const results = targets.map(target => {
+      const ports = params.ports ? 
+        params.ports.split(',').map(p => parseInt(p.trim())) : 
+        [80, 443, 8080, 8443];
+      
+      return ports.map(port => {
+        const isSecure = port === 443 || port === 8443;
+        const protocol = isSecure ? 'https' : 'http';
+        
+        return {
+          url: `${protocol}://${target}:${port}`,
+          status_code: [200, 401, 403, 404, 500][Math.floor(Math.random() * (Math.random() > 0.7 ? 5 : 1))],
+          title: Math.random() > 0.3 ? 'Camera Web Interface' : '',
+          webserver: Math.random() > 0.5 ? ['nginx', 'Apache', 'Microsoft-IIS', 'Camera HTTP Server'][Math.floor(Math.random() * 4)] : '',
+          content_type: Math.random() > 0.5 ? 'text/html; charset=utf-8' : 'application/json',
+          content_length: Math.floor(Math.random() * 100000) + 5000,
+          response_time: Math.floor(Math.random() * 1000) + 50,
+          technologies: Math.random() > 0.5 ? ['jQuery', 'Bootstrap', 'JavaScript'][Math.floor(Math.random() * 3)] : '',
+        };
+      });
+    }).flat();
+    
+    return {
+      success: true,
+      data: {
+        results,
+        statistics: {
+          total_targets: targets.length,
+          total_requests: results.length,
+          successful_requests: results.filter(r => r.status_code < 500).length,
+          failed_requests: results.filter(r => r.status_code >= 500).length,
+          execution_time: Math.floor(Math.random() * 10) + 5
+        }
+      }
+    };
+  } catch (error) {
+    console.error('Error executing httpx:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+      data: null
+    };
   }
-  
-  // Return formatted results
-  return {
-    success: true,
-    data: {
-      target: params.target,
-      ports: ports,
-      threads: threads,
-      timeout: timeout,
-      duration: `${Math.floor(Math.random() * 10) + 2}s`,
-      total_hosts: numHosts,
-      results: results
-    },
-    simulatedData: true
-  };
 };
 
 /**
  * Execute nuclei vulnerability scanner
  */
-export const executeNuclei = async (params: NucleiParams): Promise<any> => {
+export const executeNuclei = async (params: {
+  target: string | string[];
+  templates?: string[];
+  severity?: string[];
+  tags?: string[];
+  rateLimit?: number;
+  timeout?: number;
+  outputFormat?: 'json' | 'csv';
+}) => {
   console.log('Executing nuclei with params:', params);
   
-  // Simulate network delay
-  await simulateNetworkDelay(5000);
-  
-  // Validate input parameters
-  if (!params.target) {
+  try {
+    // Simulate network latency
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    
+    const targets = typeof params.target === 'string' ? [params.target] : params.target;
+    
+    // Camera-related vulnerabilities
+    const vulnerabilities = [
+      {
+        name: 'Default Camera Credentials',
+        severity: 'high',
+        template: 'camera/default-credentials.yaml',
+        tags: ['camera', 'cve', 'default-login']
+      },
+      {
+        name: 'Camera Path Traversal',
+        severity: 'critical',
+        template: 'camera/path-traversal.yaml',
+        tags: ['camera', 'cve', 'lfi']
+      },
+      {
+        name: 'Camera Control Interface Exposure',
+        severity: 'medium',
+        template: 'camera/control-interface.yaml',
+        tags: ['camera', 'exposure', 'configuration']
+      },
+      {
+        name: 'Camera ONVIF Authentication Bypass',
+        severity: 'high',
+        template: 'camera/onvif-auth-bypass.yaml',
+        tags: ['camera', 'onvif', 'auth-bypass']
+      },
+      {
+        name: 'Camera Firmware Disclosure',
+        severity: 'medium',
+        template: 'camera/firmware-disclosure.yaml',
+        tags: ['camera', 'exposure', 'firmware']
+      },
+      {
+        name: 'Camera Stream Exposure',
+        severity: 'low',
+        template: 'camera/stream-exposure.yaml',
+        tags: ['camera', 'exposure', 'rtsp']
+      },
+      {
+        name: 'Outdated Camera Firmware',
+        severity: 'medium',
+        template: 'camera/outdated-firmware.yaml',
+        tags: ['camera', 'firmware', 'outdated']
+      },
+      {
+        name: 'Camera Snapshot Disclosure',
+        severity: 'low',
+        template: 'camera/snapshot-disclosure.yaml',
+        tags: ['camera', 'exposure', 'snapshot']
+      }
+    ];
+    
+    // Filter vulnerabilities by severity and tags if specified
+    let filteredVulns = vulnerabilities;
+    if (params.severity) {
+      filteredVulns = filteredVulns.filter(v => params.severity!.includes(v.severity));
+    }
+    if (params.tags) {
+      filteredVulns = filteredVulns.filter(v => v.tags.some(tag => params.tags!.includes(tag)));
+    }
+    
+    // Generate results
+    const results = targets.flatMap(target => {
+      // Random number of findings per target
+      const numFindings = Math.floor(Math.random() * 4) + (Math.random() > 0.7 ? 0 : 1);
+      
+      if (numFindings === 0) return [];
+      
+      // Randomly select vulnerabilities
+      const selectedVulns = [];
+      for (let i = 0; i < numFindings; i++) {
+        const randomIndex = Math.floor(Math.random() * filteredVulns.length);
+        selectedVulns.push(filteredVulns[randomIndex]);
+      }
+      
+      // Generate findings
+      return selectedVulns.map(vuln => {
+        return {
+          template: vuln.template,
+          name: vuln.name,
+          severity: vuln.severity,
+          tags: vuln.tags,
+          host: target,
+          matched_at: `http://${target}/` + ['cgi-bin', 'device', 'web', 'api', 'admin'][Math.floor(Math.random() * 5)],
+          extracted_results: Math.random() > 0.5 ? [
+            'admin:admin',
+            'root:' + Math.random().toString(36).substring(2, 10),
+            'version: ' + `${Math.floor(Math.random() * 10)}.${Math.floor(Math.random() * 10)}.${Math.floor(Math.random() * 100)}`
+          ] : null,
+          timestamp: new Date().toISOString(),
+          curl_command: `curl -X GET 'http://${target}/cgi-bin/device.cgi'`,
+          matcher_status: true
+        };
+      });
+    });
+    
+    return {
+      success: true,
+      data: {
+        results,
+        statistics: {
+          templates: filteredVulns.length,
+          hosts: targets.length,
+          matched: results.length,
+          total_requests: Math.floor(Math.random() * 1000) + 100,
+          execution_time: Math.floor(Math.random() * 60) + 10
+        }
+      }
+    };
+  } catch (error) {
+    console.error('Error executing nuclei:', error);
     return {
       success: false,
-      error: 'Target IP, range, or hostname is required',
-      simulatedData: true
+      error: error instanceof Error ? error.message : 'Unknown error',
+      data: null
     };
   }
-  
-  const templates = params.templates || ['cves', 'vulnerabilities', 'exposed-panels'];
-  const severity = params.severity || ['low', 'medium', 'high', 'critical'];
-  
-  // Generate number of hosts based on input
-  const isRange = params.target.includes('/');
-  const numHosts = isRange ? 3 + Math.floor(Math.random() * 10) : 1;
-  
-  // Generate sample vulnerability findings
-  const findings = [];
-  
-  // Camera-specific vulnerabilities
-  const cameraVulns = [
-    {
-      template: 'cves/2021/CVE-2021-36260.yaml',
-      name: 'Hikvision Authentication Bypass',
-      severity: 'critical', // Fixed: Using valid severity value
-      description: 'Command injection vulnerability in webserver allows unauthenticated root access'
-    },
-    {
-      template: 'cves/2020/CVE-2020-9285.yaml',
-      name: 'ONVIF Authentication Bypass',
-      severity: 'high', // Fixed: Using valid severity value
-      description: 'ONVIF stack allows unauthenticated snapshot retrieval'
-    },
-    {
-      template: 'default-logins/camera-default-credentials.yaml',
-      name: 'Default Camera Credentials',
-      severity: 'high', // Fixed: Using valid severity value
-      description: 'Camera is using default manufacturer credentials'
-    },
-    {
-      template: 'exposures/apis/camera-snapshot-exposure.yaml',
-      name: 'Exposed Camera Snapshot API',
-      severity: 'medium', // Fixed: Using valid severity value
-      description: 'Camera snapshot endpoint accessible without authentication'
-    },
-    {
-      template: 'vulnerabilities/dahua-dvr-auth-bypass.yaml',
-      name: 'Dahua DVR Auth Bypass',
-      severity: 'critical', // Fixed: Using valid severity value
-      description: 'Authentication bypass in Dahua DVRs and IP cameras'
-    },
-    {
-      template: 'misconfigurations/exposed-rtsp-stream.yaml',
-      name: 'Exposed RTSP Stream',
-      severity: 'medium', // Fixed: Using valid severity value
-      description: 'Camera RTSP stream accessible without authentication'
-    }
-  ];
-  
-  // Generate findings for each host
-  for (let i = 0; i < numHosts; i++) {
-    const ipOctet3 = Math.floor(Math.random() * 256);
-    const ipOctet4 = Math.floor(Math.random() * 256);
-    const ip = isRange ? `192.168.${ipOctet3}.${ipOctet4}` : params.target;
-    const numFindings = Math.floor(Math.random() * 4);
-    
-    // Add random findings for this host
-    for (let j = 0; j < numFindings; j++) {
-      const vuln = cameraVulns[Math.floor(Math.random() * cameraVulns.length)];
-      
-      // Only include if severity matches filter
-      // Fixed: Make sure we compare with the correct type
-      if (severity.includes(vuln.severity as any)) {
-        findings.push({
-          template: vuln.template,
-          info: {
-            name: vuln.name,
-            severity: vuln.severity,
-            description: vuln.description,
-            tags: ['camera', 'cctv', 'iot', vuln.severity]
-          },
-          host: `http://${ip}`,
-          matcher_name: 'default',
-          timestamp: new Date().toISOString(),
-          request: 'GET /device.rsp?opt=user&cmd=list HTTP/1.1\r\nHost: ' + ip + '\r\n\r\n',
-          response: 'HTTP/1.1 200 OK\r\nContent-Type: text/xml\r\n\r\n<user>admin</user><pass>admin</pass>'
-        });
-      }
-    }
-  }
-  
-  // Return formatted results
-  return {
-    success: true,
-    data: {
-      target: params.target,
-      templates: templates,
-      severity: severity,
-      concurrency: params.concurrency || 25,
-      scan_duration: `${Math.floor(Math.random() * 60) + 30}s`,
-      timestamp: new Date().toISOString(),
-      stats: {
-        templates: templates.length,
-        hosts: numHosts,
-        findings: findings.length,
-        critical: findings.filter(f => f.info.severity === 'critical').length,
-        high: findings.filter(f => f.info.severity === 'high').length,
-        medium: findings.filter(f => f.info.severity === 'medium').length,
-        low: findings.filter(f => f.info.severity === 'low').length,
-        info: findings.filter(f => f.info.severity === 'info').length
-      },
-      findings: findings
-    },
-    simulatedData: true
-  };
 };
 
 /**
- * Execute Amass subdomain enumeration
+ * Execute OWASP Amass subdomain enumeration tool
  */
-export const executeAmass = async (params: AmassParams): Promise<any> => {
+export const executeAmass = async (params: {
+  domain: string;
+  mode?: 'passive' | 'active' | 'enum' | 'intel';
+  timeout?: number;
+  resolvers?: string[];
+  ipv4?: boolean;
+  ipv6?: boolean;
+  asn?: string[];
+}) => {
   console.log('Executing Amass with params:', params);
   
-  // Simulate network delay
-  await simulateNetworkDelay(10000); // Amass is typically slow
-  
-  // Validate input parameters
-  if (!params.domain) {
+  try {
+    // Simulate network latency
+    await new Promise(resolve => setTimeout(resolve, 3000));
+    
+    // Generate domain/subdomain data
+    const domain = params.domain;
+    
+    // Generate camera-related subdomains
+    const cameraSubdomains = [
+      'cameras', 'cctv', 'surveillance', 'monitor', 'security', 
+      'cam', 'dvr', 'nvr', 'ipcamera', 'webwatch', 'observe',
+      'video', 'stream', 'view', 'secure', 'watch'
+    ];
+    
+    // Generate regional subdomains
+    const regionalSubdomains = [
+      'east', 'west', 'north', 'south', 'central',
+      'building1', 'office', 'warehouse', 'parking',
+      'entrance', 'exit', 'lobby', 'front', 'back',
+      'floor1', 'floor2', 'floor3'
+    ];
+    
+    // Generate numbered subdomains
+    const numberedSubdomains = Array.from(
+      { length: Math.floor(Math.random() * 5) + 3 }, 
+      (_, i) => `cam${i + 1}`
+    );
+    
+    // Combine all possible subdomains
+    const allSubdomains = [
+      ...cameraSubdomains,
+      ...regionalSubdomains,
+      ...numberedSubdomains,
+      ...regionalSubdomains.flatMap(r => cameraSubdomains.map(c => `${c}-${r}`)),
+      ...regionalSubdomains.flatMap(r => numberedSubdomains.map(n => `${n}-${r}`))
+    ];
+    
+    // Randomly select a subset of subdomains
+    const selectedCount = Math.floor(Math.random() * 15) + 5;
+    const shuffled = allSubdomains.sort(() => 0.5 - Math.random());
+    const selectedSubdomains = shuffled.slice(0, selectedCount);
+    
+    // Generate info for each subdomain
+    const domainInfo = selectedSubdomains.map(subdomain => {
+      const fqdn = `${subdomain}.${domain}`;
+      const hasCamera = subdomain.includes('cam') || 
+                        subdomain.includes('cctv') || 
+                        subdomain.includes('surveillance') ||
+                        Math.random() > 0.7;
+      
+      return {
+        name: fqdn,
+        domain: domain,
+        addresses: [
+          {
+            ip: `${Math.floor(Math.random() * 223) + 1}.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}`,
+            cidr: `${Math.floor(Math.random() * 223) + 1}.${Math.floor(Math.random() * 255)}.0.0/16`,
+            asn: Math.floor(Math.random() * 65535),
+            desc: 'Example Network LLC'
+          }
+        ],
+        ports: hasCamera ? 
+          [[80, 443, 554, 8000, 8080, 8443].sort(() => 0.5 - Math.random()).slice(0, Math.floor(Math.random() * 3) + 1)] : 
+          [[80, 443].sort(() => 0.5 - Math.random()).slice(0, Math.floor(Math.random() * 2) + 1)],
+        sources: ['dns', 'scrape', 'cert', 'archive'].sort(() => 0.5 - Math.random()).slice(0, Math.floor(Math.random() * 3) + 1)
+      };
+    });
+    
+    return {
+      success: true,
+      data: {
+        domains: domainInfo,
+        statistics: {
+          domains_discovered: domainInfo.length,
+          ip_addresses: domainInfo.reduce((sum, d) => sum + d.addresses.length, 0),
+          asns: new Set(domainInfo.flatMap(d => d.addresses.map(a => a.asn))).size,
+          cidr_blocks: new Set(domainInfo.flatMap(d => d.addresses.map(a => a.cidr))).size,
+          execution_time: Math.floor(Math.random() * 60) + 30
+        }
+      }
+    };
+  } catch (error) {
+    console.error('Error executing Amass:', error);
     return {
       success: false,
-      error: 'Domain is required',
-      simulatedData: true
+      error: error instanceof Error ? error.message : 'Unknown error',
+      data: null
     };
   }
-  
-  // Generate sample results
-  const domain = params.domain;
-  const isCameraDomain = domain.includes('camera') || domain.includes('cctv') || domain.includes('surveillance');
-  const numSubdomains = isCameraDomain ? 10 + Math.floor(Math.random() * 15) : 5 + Math.floor(Math.random() * 10);
-  
-  // Generate sample subdomains
-  const subdomains = [];
-  const cameraSubPrefixes = ['cam', 'cctv', 'camera', 'surveillance', 'monitor', 'security', 'webcam'];
-  const normalSubPrefixes = ['www', 'mail', 'dev', 'api', 'blog', 'shop', 'support'];
-  
-  for (let i = 0; i < numSubdomains; i++) {
-    const prefixes = isCameraDomain ? cameraSubPrefixes : normalSubPrefixes;
-    const prefix = prefixes[Math.floor(Math.random() * prefixes.length)];
-    
-    // Add region or numeric identifier
-    let subdomain;
-    if (Math.random() > 0.5) {
-      const regions = ['east', 'west', 'north', 'south', 'central'];
-      const region = regions[Math.floor(Math.random() * regions.length)];
-      subdomain = `${prefix}-${region}`;
-    } else {
-      subdomain = `${prefix}${Math.floor(Math.random() * 10) + 1}`;
-    }
-    
-    // Generate IP address
-    const ipOctet1 = Math.floor(Math.random() * 223) + 1;
-    const ipOctet2 = Math.floor(Math.random() * 256);
-    const ipOctet3 = Math.floor(Math.random() * 256);
-    const ipOctet4 = Math.floor(Math.random() * 254) + 1;
-    const ip = `${ipOctet1}.${ipOctet2}.${ipOctet3}.${ipOctet4}`;
-    
-    subdomains.push({
-      name: `${subdomain}.${domain}`,
-      domain: domain,
-      addresses: [{ ip: ip, cidr: '24', asn: Math.floor(Math.random() * 65536) }],
-      sources: ['cert', 'dns', 'scrape']
-    });
-  }
-  
-  // Return formatted results
-  return {
-    success: true,
-    data: {
-      domain: domain,
-      passive: params.passive || false,
-      timestamp: new Date().toISOString(),
-      duration: `${Math.floor(Math.random() * 180) + 60}s`,
-      subdomains: subdomains
-    },
-    simulatedData: true
-  };
 };
