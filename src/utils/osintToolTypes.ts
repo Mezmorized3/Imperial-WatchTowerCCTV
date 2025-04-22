@@ -1,4 +1,3 @@
-
 /**
  * Type definitions for OSINT tool parameters
  */
@@ -14,10 +13,15 @@ export interface FFmpegParams {
   inputStream?: string;
   resolution?: string;
   bitrate?: string;
-  framerate?: number;
+  framerate?: number | string;
   filters?: string[];
   outputPath?: string;
   outputFormat?: string;
+  // Add properties needed for StreamingTools.tsx
+  segmentDuration?: number | string;
+  playlistSize?: number | string;
+  streamUrl?: string;
+  format?: string;
 }
 
 export interface SherockParams {

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -20,6 +19,7 @@ import {
   ffmpegConvertRtspToHls,
   ffmpegRecordStream
 } from '@/utils/osintTools';
+import { FFmpegParams } from '@/utils/osintToolTypes';
 
 const StreamingTools: React.FC = () => {
   const { toast } = useToast();
@@ -149,12 +149,17 @@ const StreamingTools: React.FC = () => {
             throw new Error('Please enter an RTSP URL');
           }
           
-          result = await ffmpegConvertRtspToHls({
-            input: hlsRtspUrl, // Fixed: changed inputUrl to input
-            segmentDuration: parseInt(hlsSegmentDuration),
-            playlistSize: parseInt(hlsPlaylistSize),
-            outputPath: hlsOutputPath
-          });
+          const hlsParams: FFmpegParams = {
+            input: hlsRtspUrl,
+            output: 'output.m3u8',
+            options: {
+              segmentDuration: hlsSegmentDuration,
+              playlistSize: hlsPlaylistSize,
+              outputPath: hlsOutputPath
+            }
+          };
+          
+          result = await ffmpegConvertRtspToHls(hlsParams);
           
           if (result.success) {
             toast({
@@ -169,12 +174,14 @@ const StreamingTools: React.FC = () => {
             throw new Error('Please enter a stream URL');
           }
           
-          result = await ffmpegRecordStream({
-            streamUrl: recordStreamUrl,
-            duration: recordDuration, // Fixed: Changed int to string for duration
-            format: recordFormat,
+          const recordParams: FFmpegParams = {
+            input: recordStreamUrl,
+            duration: recordDuration,
+            outputFormat: recordFormat,
             outputPath: recordOutputPath
-          });
+          };
+          
+          result = await ffmpegRecordStream(recordParams);
           
           if (result.success) {
             toast({
