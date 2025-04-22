@@ -1,145 +1,33 @@
 
 /**
- * Implementation of OSINT and camera discovery tools
- * This file re-exports all tool implementations from their respective modules
+ * OSINT tools implementations
  */
 
-// Re-export all camera tools
-export {
-  executeCameradar,
-  executeIPCamSearch,
-  executeCCTV,
-  executeSpeedCamera,
-  executeCamerattack
-} from './osintImplementations/cameraTools';
+// Import implementations from individual files
+// Web and network tools
+import { executeWebCheck } from './osintImplementations/webTools';
+import { executeCCTV } from './osintImplementations/cameraTools';
+import { executeHackCCTV } from './osintImplementations/hackCCTVTools';
+import { executeZGrab } from './osintImplementations/networkTools';
+import { executeHydra } from './osintImplementations/rtspBruteTools';
+import { executeRtspServer } from './osintImplementations/streamingToolTypes';
 
-// Export the camera hacking tools
-export {
-  executeHackCCTV,
-  executeCamDumper,
-  executeOpenCCTV,
-  executeEyePwn,
-  executeIngram
-} from './osintImplementations/hackCCTVTools';
+// OSINT tools
+import { executeOSINT } from './osintImplementations/securityTools';
+import { executeTorBot } from './osintImplementations/advancedTools';
+import { executeTwint } from './osintImplementations/socialTools';
+import { executeUsernameSearch } from './osintImplementations/usernameSearchTools';
 
-// Re-export all web tools
+// Export all implementations
 export {
   executeWebCheck,
-  executeWebhack,
-  executePhoton,
-  executeBackHack
-} from './osintImplementations/webTools';
-
-// Re-export all network tools
-export {
-  executeTorBot,
-  executeImperialOculus,
-  executeBotExploits
-} from './osintImplementations/networkTools';
-
-// Re-export all security tools with correct import path
-export {
-  executeSecurityAdmin,
-  executeShieldAI
-} from './osintImplementations/securityTools';
-
-// Export the new advanced tools
-export {
-  executeRapidPayload,
-  executeHackingTool,
-} from './osintImplementations/advancedTools';
-
-// Export FFmpeg-related tools correctly
-import { executeFFmpeg, convertRtspToHls, recordStreamSegment } from './ffmpeg/ffmpegService';
-export { executeFFmpeg };
-// Rename to match expected exports
-export const ffmpegConvertRtspToHls = convertRtspToHls;
-export const ffmpegRecordStream = recordStreamSegment;
-export const applyMotionDetection = async (params: any) => {
-  console.log('Motion detection applied', params);
-  return { success: true, data: { applied: true } };
-};
-
-// Export the social tools from our implementation
-export {
-  executeUsernameSearch,
-  executeTwint,
-  executeOSINT
-} from './osintImplementations/socialTools';
-
-// Export CCTV Hacked tool
-import { executeCCTVHacked } from './osintImplementations/cctvHackedTools';
-export { executeCCTVHacked };
-
-// Export ONVIF and network scanning tools
-export {
-  executeONVIFScan,
-  executeMasscan,
+  executeCCTV,
+  executeHackCCTV,
   executeZGrab,
   executeHydra,
-  executeMotion,
-  executeMotionEye,
-  executeDeepstack,
-  executeFaceRecognition,
   executeRtspServer,
-  executeZoneMinder,
-  executeNmapONVIF,
-  executeOpenCV
-} from './osintImplementations/onvifTools';
-
-// Export ONVIF Fuzzer and additional tools
-export {
-  executeONVIFFuzzer,
-  executeWebRTCStreamer,
-  executeTapoPoC
-} from './osintImplementations/onvifFuzzerTools';
-
-// Export extended network tools
-export {
-  executeShodan,
-  executeCensys,
-  executeHttpx,
-  executeNuclei,
-  executeAmass
-} from './osintImplementations/extendedNetworkTools';
-
-// Export computer vision tools
-export {
-  executeLive555,
-  executeGoCV,
-  executeOpenALPR,
-  executeTensorFlow,
-  executeDarknet,
-  executeEyeWitness
-} from './osintImplementations/computerVisionTools';
-
-// Export RTSP brute-forcing tools
-export {
-  executeMegaRtspBruter,
-  getCommonRtspUsers,
-  getCommonRtspPasswords
-} from './osintImplementations/rtspBruteTools';
-
-// Export Advanced ONVIF and Network Tools
-export {
-  executeGSoap,
-  executeGstRTSPServer,
-  executeGortsplib,
-  executeRtspSimpleServer,
-  executeSenseCamDiscovery,
-  executeOrebroONVIFScanner,
-  executeONVIFCli,
-  executeNodeONVIF,
-  executePyONVIF,
-  executePythonONVIFZeep,
-  executeONVIFScout,
-  executePythonWSDiscovery,
-  executeValkkaONVIF,
-  executeFoscamExploit,
-  executeAgentDVR,
-  executeMetasploit,
-  executeZMap,
-  executeEasySNMP,
-  executeScapy,
-  executeMitmProxy
-} from './osintImplementations/advancedOnvifTools';
+  executeOSINT,
+  executeTorBot,
+  executeTwint,
+  executeUsernameSearch
+};
