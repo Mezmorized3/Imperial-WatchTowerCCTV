@@ -137,65 +137,47 @@ export const createOptimalPlayerConfig = (params: LiveStreamParams): {
   const { streamUrl, streamType, playerType, transport = 'tcp' } = params;
   
   // Determine best player based on stream type and browser support
-  let optimalPlayer = playerType;
+  let optimalPlayer: 'streamedian' | 'jsmpeg' | 'webrtc' | 'hls' = 
+    playerType === 'auto' ? 'streamedian' : playerType as 'streamedian' | 'jsmpeg' | 'webrtc' | 'hls';
+  
+  // If playerType is 'auto', select based on stream type
   if (playerType === 'auto') {
-    // Automatic player selection
     if (streamType === 'rtsp') {
-      // For RTSP, prefer Streamedian
       optimalPlayer = 'streamedian';
     } else if (streamType === 'websocket') {
-      // For WebSocket, use JSMpeg
       optimalPlayer = 'jsmpeg';
     } else if (streamType === 'webrtc') {
-      // For WebRTC, use WebRTC player
       optimalPlayer = 'webrtc';
     } else {
-      // Default to HLS for best compatibility
       optimalPlayer = 'hls';
     }
   }
   
-  // Configure based on selected player
   let url = streamUrl;
-  let config: any = {};
+  let config: any = {
+    autoplay: params.autoplay !== false,
+    muted: params.muted !== false
+  };
   
-  switch (optimalPlayer) {
-    case 'streamedian':
-      config = {
-        transport,
-        autoplay: params.autoplay !== false,
-        muted: params.muted !== false
-      };
-      break;
-      
-    case 'jsmpeg':
-      if (streamType === 'rtsp') {
-        // Convert RTSP to WebSocket URL
-        url = rtspToWebsocket(streamUrl);
-      }
-      config = {
-        autoplay: params.autoplay !== false
-      };
-      break;
-      
-    case 'webrtc':
-      config = {
-        autoplay: params.autoplay !== false,
-        muted: params.muted !== false
-      };
-      break;
-      
-    case 'hls':
-      // Convert to HLS URL if needed
-      if (streamType === 'rtsp') {
-        // This would normally require a server-side component
-        url = streamUrl.replace('rtsp://', 'https://') + '.m3u8';
-      }
-      config = {
-        autoplay: params.autoplay !== false,
-        muted: params.muted !== false
-      };
-      break;
+  // Configure based on selected player
+  if (optimalPlayer === 'streamedian') {
+    config = {
+      ...config,
+      rtspUrl: streamUrl,
+      transport: transport
+    };
+  } else if (optimalPlayer === 'jsmpeg') {
+    // For JSMpeg, we need a WebSocket URL
+    url = streamType === 'websocket' ? streamUrl : rtspToWebsocket(streamUrl);
+    config = {
+      ...config,
+      wsUrl: url
+    };
+  } else if (optimalPlayer === 'webrtc') {
+    config = {
+      ...config,
+      rtspUrl: streamUrl
+    };
   }
   
   return {
