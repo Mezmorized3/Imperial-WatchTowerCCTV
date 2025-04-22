@@ -1,420 +1,589 @@
 
 /**
- * Computer Vision Tools Implementation
+ * Implementation for computer vision and video analysis tools
  */
 
-import { toast } from 'sonner';
+import { simulateNetworkDelay } from '../networkUtils';
+import {
+  Live555Params,
+  GoCVParams,
+  OpenALPRParams,
+  TensorFlowParams,
+  DarknetParams,
+  EyeWitnessParams
+} from '../types/onvifToolTypes';
 
-interface LiveSSRParams {
-  sourceUrl: string;
-  captureInterval?: number;
-  options?: Record<string, any>;
-}
-
-interface GoCVParams {
-  source: string;
-  operation: string;
-  confidence?: number;
-  options?: Record<string, any>;
-}
-
-interface OpenALPRParams {
-  image: string | File;
-  region?: string;
-  detectVehicle?: boolean;
-  config?: Record<string, any>;
-}
-
-interface TensorFlowParams {
-  source: string;
-  model: string;
-  confidence?: number;
-  options?: Record<string, any>;
-}
-
-interface DarknetParams {
-  source: string;
-  model?: string;
-  confidence?: number;
-  options?: Record<string, any>;
-}
-
-interface EyeWitnessParams {
-  targets: string | string[];
-  timeout?: number;
-  threads?: number;
-  headless?: boolean;
-}
-
-export const executeLive555 = async (params: LiveSSRParams): Promise<any> => {
+/**
+ * Execute Live555 RTSP streaming toolkit
+ */
+export const executeLive555 = async (params: Live555Params): Promise<any> => {
   console.log('Executing Live555 with params:', params);
   
-  try {
-    // Simulate API delay
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    
-    const streamId = `live555_${Date.now()}`;
-    
-    toast.success(`Live555 stream started for ${params.sourceUrl}`);
-    
-    return {
-      success: true,
-      data: {
-        sourceUrl: params.sourceUrl,
-        streamUrl: `rtsp://localhost:8554/${streamId}`,
-        streamId,
-        captureInterval: params.captureInterval || 0,
-        status: 'streaming',
-        startTime: new Date().toISOString()
-      }
-    };
-  } catch (error) {
-    console.error('Live555 error:', error);
-    toast.error('Error executing Live555');
+  // Simulate network delay
+  await simulateNetworkDelay(2000);
+  
+  // Validate input parameters
+  if (!params.rtspUrl) {
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Unknown error'
+      error: 'RTSP URL is required',
+      simulatedData: true
     };
   }
+  
+  const outputFormat = params.outputFormat || 'mp4';
+  const saveFile = params.saveFile || 'output.' + outputFormat;
+  const duration = params.duration || 60;
+  
+  // Generate realistic response
+  return {
+    success: true,
+    data: {
+      rtspUrl: params.rtspUrl,
+      outputFormat: outputFormat,
+      saveFile: saveFile,
+      duration: duration,
+      status: 'completed',
+      streamInfo: {
+        videoCodec: 'H.264',
+        audioCodec: 'AAC',
+        resolution: '1280x720',
+        framerate: 30,
+        bitrate: '2 Mbps',
+        duration: `${duration} seconds`
+      },
+      command: `live555ProxyServer -r ${params.rtspUrl} -o ${outputFormat} -f ${saveFile} -d ${duration}`
+    },
+    simulatedData: true
+  };
 };
 
+/**
+ * Execute GoCV computer vision operations
+ */
 export const executeGoCV = async (params: GoCVParams): Promise<any> => {
   console.log('Executing GoCV with params:', params);
   
-  try {
-    // Simulate API delay
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-    
-    // Generate mock results
-    let detections: any = [];
-    
-    if (params.operation === 'detect_faces') {
-      const faceCount = Math.floor(Math.random() * 5) + 1;
-      for (let i = 0; i < faceCount; i++) {
+  // Simulate network delay
+  await simulateNetworkDelay(1500);
+  
+  // Validate input parameters
+  if (!params.source) {
+    return {
+      success: false,
+      error: 'Video source is required',
+      simulatedData: true
+    };
+  }
+  
+  const operation = params.operation || 'object_detect';
+  const outputFormat = params.outputFormat || 'window';
+  
+  // Generate sample detection results based on operation type
+  let detections = [];
+  let processingStats = {};
+  
+  switch (operation) {
+    case 'face_detect':
+      // Generate sample face detections
+      for (let i = 0; i < Math.floor(Math.random() * 5) + 1; i++) {
         detections.push({
           type: 'face',
           confidence: Math.random() * 0.3 + 0.7,
-          box: {
-            x: Math.floor(Math.random() * 400),
-            y: Math.floor(Math.random() * 300),
-            width: Math.floor(Math.random() * 100) + 50,
-            height: Math.floor(Math.random() * 100) + 50
+          boundingBox: {
+            x: Math.floor(Math.random() * 800),
+            y: Math.floor(Math.random() * 600),
+            width: 100 + Math.floor(Math.random() * 100),
+            height: 100 + Math.floor(Math.random() * 100)
           }
         });
       }
-    } else if (params.operation === 'detect_objects') {
-      const objectCount = Math.floor(Math.random() * 6) + 2;
-      const objects = ['person', 'car', 'bicycle', 'dog', 'chair', 'bottle', 'laptop'];
-      for (let i = 0; i < objectCount; i++) {
-        detections.push({
-          type: objects[Math.floor(Math.random() * objects.length)],
-          confidence: Math.random() * 0.4 + 0.6,
-          box: {
-            x: Math.floor(Math.random() * 400),
-            y: Math.floor(Math.random() * 300),
-            width: Math.floor(Math.random() * 150) + 50,
-            height: Math.floor(Math.random() * 150) + 50
-          }
-        });
-      }
-    } else if (params.operation === 'motion_detection') {
-      // Change this from an array to an object
-      detections = {
-        motion_detected: Math.random() > 0.3,
-        motion_regions: Math.random() > 0.5 ? [
-          {
-            x: Math.floor(Math.random() * 400),
-            y: Math.floor(Math.random() * 300),
-            width: Math.floor(Math.random() * 100) + 50,
-            height: Math.floor(Math.random() * 100) + 50
-          }
-        ] : [],
-        timestamp: new Date().toISOString()
+      processingStats = {
+        framesProcessed: 150,
+        avgProcessingTime: '25ms',
+        facesDetected: detections.length
       };
-    }
-    
-    toast.success(`GoCV ${params.operation} completed`);
-    
-    return {
-      success: true,
-      data: {
-        source: params.source,
-        operation: params.operation,
-        detections,
-        processingTime: Math.floor(Math.random() * 500) + 100
+      break;
+      
+    case 'object_detect':
+      // Generate sample object detections
+      const objectTypes = ['person', 'car', 'bicycle', 'dog', 'chair', 'cell phone'];
+      for (let i = 0; i < Math.floor(Math.random() * 7) + 1; i++) {
+        const objectType = objectTypes[Math.floor(Math.random() * objectTypes.length)];
+        detections.push({
+          type: objectType,
+          confidence: Math.random() * 0.4 + 0.6,
+          boundingBox: {
+            x: Math.floor(Math.random() * 800),
+            y: Math.floor(Math.random() * 600),
+            width: 50 + Math.floor(Math.random() * 200),
+            height: 50 + Math.floor(Math.random() * 200)
+          }
+        });
       }
-    };
-  } catch (error) {
-    console.error('GoCV error:', error);
-    toast.error('Error executing GoCV');
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Unknown error'
-    };
+      processingStats = {
+        framesProcessed: 120,
+        avgProcessingTime: '40ms',
+        objectsDetected: detections.length
+      };
+      break;
+      
+    case 'motion_track':
+      // Generate sample motion tracking results
+      for (let i = 0; i < Math.floor(Math.random() * 3) + 1; i++) {
+        detections.push({
+          type: 'motion',
+          status: 'tracking',
+          id: i + 1,
+          trackedPoints: [
+            { x: 100 + Math.floor(Math.random() * 500), y: 100 + Math.floor(Math.random() * 400) },
+            { x: 110 + Math.floor(Math.random() * 500), y: 110 + Math.floor(Math.random() * 400) },
+            { x: 120 + Math.floor(Math.random() * 500), y: 120 + Math.floor(Math.random() * 400) }
+          ]
+        });
+      }
+      processingStats = {
+        framesProcessed: 200,
+        avgProcessingTime: '15ms',
+        motionObjects: detections.length,
+        motionThreshold: 0.1
+      };
+      break;
+      
+    case 'text_read':
+      // Generate sample OCR results
+      detections = [
+        {
+          type: 'text',
+          content: 'EXIT',
+          confidence: 0.95,
+          position: { x: 100, y: 150 }
+        },
+        {
+          type: 'text',
+          content: 'ENTRANCE',
+          confidence: 0.88,
+          position: { x: 400, y: 300 }
+        },
+        {
+          type: 'text',
+          content: 'PARKING',
+          confidence: 0.92,
+          position: { x: 250, y: 450 }
+        }
+      ];
+      processingStats = {
+        textRegionsDetected: detections.length,
+        avgConfidence: 0.92
+      };
+      break;
   }
+  
+  // Return formatted results
+  return {
+    success: true,
+    data: {
+      source: params.source,
+      operation: operation,
+      outputFormat: outputFormat,
+      timestamp: new Date().toISOString(),
+      detections: detections,
+      processingStats: processingStats,
+      imageData: outputFormat === 'file' ? 'data:image/jpeg;base64,/9j/4AAQSkZJRgABA...' : undefined
+    },
+    simulatedData: true
+  };
 };
 
+/**
+ * Execute OpenALPR license plate recognition
+ */
 export const executeOpenALPR = async (params: OpenALPRParams): Promise<any> => {
   console.log('Executing OpenALPR with params:', params);
   
-  try {
-    // Simulate API delay
-    await new Promise((resolve) => setTimeout(resolve, 1500));
+  // Simulate network delay
+  await simulateNetworkDelay(1000);
+  
+  // Validate input parameters
+  if (!params.image) {
+    return {
+      success: false,
+      error: 'Image path or file is required',
+      simulatedData: true
+    };
+  }
+  
+  const region = params.region || 'us';
+  const topN = params.topN || 10;
+  
+  // Generate sample license plate detections
+  const plates = [];
+  const numPlates = Math.floor(Math.random() * 2) + 1;
+  
+  for (let i = 0; i < numPlates; i++) {
+    // Generate random license plate based on region
+    let plateText;
+    if (region === 'us') {
+      // US-style plate: 3 letters + 3-4 numbers
+      const letters = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
+      const randomLetters = Array(3).fill(0).map(() => letters[Math.floor(Math.random() * letters.length)]).join('');
+      const randomNumbers = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
+      plateText = `${randomLetters}${randomNumbers}`;
+    } else if (region === 'eu') {
+      // EU-style plate: 2 letters + 3 numbers + 2 letters
+      const letters = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
+      const randomLetters1 = Array(2).fill(0).map(() => letters[Math.floor(Math.random() * letters.length)]).join('');
+      const randomNumbers = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+      const randomLetters2 = Array(2).fill(0).map(() => letters[Math.floor(Math.random() * letters.length)]).join('');
+      plateText = `${randomLetters1} ${randomNumbers} ${randomLetters2}`;
+    } else {
+      // Generic plate: 7 alphanumeric characters
+      const chars = '0123456789ABCDEFGHJKLMNPQRSTUVWXYZ';
+      plateText = Array(7).fill(0).map(() => chars[Math.floor(Math.random() * chars.length)]).join('');
+    }
     
-    // Generate mock license plate results
-    const plateCount = Math.floor(Math.random() * 3) + 1;
-    const results = [];
+    // Generate candidates with different confidence levels
+    const candidates = [
+      { plate: plateText, confidence: 0.8 + Math.random() * 0.19 }
+    ];
     
-    const letters = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
-    const numbers = '0123456789';
-    
-    for (let i = 0; i < plateCount; i++) {
-      let plate = '';
-      // Generate a random license plate format (3 letters followed by 3 numbers is common)
-      for (let j = 0; j < 3; j++) {
-        plate += letters.charAt(Math.floor(Math.random() * letters.length));
-      }
-      for (let j = 0; j < 3; j++) {
-        plate += numbers.charAt(Math.floor(Math.random() * numbers.length));
-      }
+    // Add a few alternative readings with lower confidence
+    for (let j = 0; j < topN - 1; j++) {
+      // Modify one character to create an alternative
+      const altPlate = plateText.split('');
+      const randPos = Math.floor(Math.random() * plateText.length);
+      const chars = '0123456789ABCDEFGHJKLMNPQRSTUVWXYZ';
+      altPlate[randPos] = chars[Math.floor(Math.random() * chars.length)];
       
-      results.push({
-        plate,
-        confidence: Math.random() * 10 + 90,
-        region: params.region || 'us',
-        processing_time_ms: Math.floor(Math.random() * 100) + 10,
-        coordinates: [
-          { x: Math.floor(Math.random() * 400), y: Math.floor(Math.random() * 300) },
-          { x: Math.floor(Math.random() * 400) + 100, y: Math.floor(Math.random() * 300) },
-          { x: Math.floor(Math.random() * 400) + 100, y: Math.floor(Math.random() * 300) + 50 },
-          { x: Math.floor(Math.random() * 400), y: Math.floor(Math.random() * 300) + 50 }
-        ]
+      candidates.push({
+        plate: altPlate.join(''),
+        confidence: Math.random() * 0.6
       });
     }
     
-    // Add vehicle information if requested
-    let vehicle = undefined;
-    if (params.detectVehicle) {
-      const makes = ['Toyota', 'Honda', 'Ford', 'BMW', 'Mercedes', 'Audi', 'Nissan'];
-      const colors = ['White', 'Black', 'Silver', 'Red', 'Blue', 'Gray'];
-      vehicle = {
-        make: makes[Math.floor(Math.random() * makes.length)],
-        model: 'Unknown',
-        color: colors[Math.floor(Math.random() * colors.length)],
-        year: 2015 + Math.floor(Math.random() * 8),
-        confidence: Math.random() * 20 + 80
-      };
-    }
+    // Sort candidates by confidence
+    candidates.sort((a, b) => b.confidence - a.confidence);
     
-    toast.success(`OpenALPR detected ${plateCount} license plates`);
-    
-    return {
-      success: true,
-      data: {
-        results,
-        vehicle,
-        processing_time_ms: Math.floor(Math.random() * 500) + 100,
-        regions_of_interest: [
-          {
-            x: 0,
-            y: 0,
-            width: 500,
-            height: 400
-          }
-        ]
-      }
-    };
-  } catch (error) {
-    console.error('OpenALPR error:', error);
-    toast.error('Error executing OpenALPR');
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Unknown error'
-    };
+    // Add plate detection
+    plates.push({
+      plate: candidates[0].plate,
+      confidence: candidates[0].confidence,
+      region_confidence: Math.random(),
+      region: region,
+      processing_time_ms: Math.floor(Math.random() * 50) + 50,
+      candidates: candidates,
+      coordinates: [
+        { x: 100 + Math.floor(Math.random() * 100), y: 300 + Math.floor(Math.random() * 100) },
+        { x: 300 + Math.floor(Math.random() * 100), y: 300 + Math.floor(Math.random() * 100) },
+        { x: 300 + Math.floor(Math.random() * 100), y: 350 + Math.floor(Math.random() * 100) },
+        { x: 100 + Math.floor(Math.random() * 100), y: 350 + Math.floor(Math.random() * 100) }
+      ]
+    });
   }
+  
+  // Return formatted results
+  return {
+    success: true,
+    data: {
+      image_path: typeof params.image === 'string' ? params.image : 'uploaded-file',
+      region: region,
+      processing_time_ms: Math.floor(Math.random() * 200) + 100,
+      results: plates,
+      version: 2.3 + Math.random() * 0.5
+    },
+    simulatedData: true
+  };
 };
 
+/**
+ * Execute TensorFlow object detection
+ */
 export const executeTensorFlow = async (params: TensorFlowParams): Promise<any> => {
   console.log('Executing TensorFlow with params:', params);
   
-  try {
-    // Simulate API delay
-    await new Promise((resolve) => setTimeout(resolve, 2500));
-    
-    // Generate mock detection results
-    const models = {
-      'ssd_mobilenet': {
-        name: 'SSD MobileNet',
-        objects: ['person', 'car', 'truck', 'bicycle', 'dog', 'backpack', 'umbrella', 'handbag', 'cell phone']
-      },
-      'faster_rcnn': {
-        name: 'Faster R-CNN',
-        objects: ['person', 'car', 'bus', 'truck', 'traffic light', 'fire hydrant', 'stop sign', 'dog', 'cat']
-      },
-      'efficientdet': {
-        name: 'EfficientDet',
-        objects: ['person', 'car', 'motorcycle', 'bicycle', 'bus', 'truck', 'traffic light', 'fire hydrant']
-      }
-    };
-    
-    const modelInfo = models[params.model as keyof typeof models] || models['ssd_mobilenet'];
-    const detectionCount = Math.floor(Math.random() * 8) + 2;
-    const detections = [];
-    
-    for (let i = 0; i < detectionCount; i++) {
-      const objectType = modelInfo.objects[Math.floor(Math.random() * modelInfo.objects.length)];
-      
-      detections.push({
-        class: objectType,
-        confidence: Math.random() * (1 - (params.confidence || 0.5)) + (params.confidence || 0.5),
-        box: {
-          xmin: Math.floor(Math.random() * 400),
-          ymin: Math.floor(Math.random() * 300),
-          xmax: Math.floor(Math.random() * 400) + 100,
-          ymax: Math.floor(Math.random() * 300) + 100
-        }
-      });
-    }
-    
-    toast.success(`TensorFlow detected ${detectionCount} objects with ${modelInfo.name}`);
-    
-    return {
-      success: true,
-      data: {
-        source: params.source,
-        model: params.model,
-        model_info: modelInfo.name,
-        detections,
-        inference_time: Math.floor(Math.random() * 500) + 100,
-        image_size: {
-          width: 640,
-          height: 480
-        }
-      }
-    };
-  } catch (error) {
-    console.error('TensorFlow error:', error);
-    toast.error('Error executing TensorFlow');
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Unknown error'
-    };
-  }
-};
-
-export const executeDarknet = async (params: DarknetParams): Promise<any> => {
-  console.log('Executing Darknet (YOLO) with params:', params);
+  // Simulate network delay
+  await simulateNetworkDelay(3000);
   
-  try {
-    // Simulate API delay
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-    
-    // Generate mock detection results
-    const models = {
-      'yolov4': {
-        name: 'YOLOv4',
-        version: '4.0'
-      },
-      'yolov4-tiny': {
-        name: 'YOLOv4-tiny',
-        version: '4.0-tiny'
-      },
-      'yolov3': {
-        name: 'YOLOv3',
-        version: '3.0'
-      }
+  // Validate input parameters
+  if (!params.source) {
+    return {
+      success: false,
+      error: 'Video or image source is required',
+      simulatedData: true
     };
+  }
+  
+  if (!params.model) {
+    return {
+      success: false,
+      error: 'Model path is required',
+      simulatedData: true
+    };
+  }
+  
+  const threshold = params.threshold || 0.5;
+  
+  // Determine if camera-focused detection should be emphasized
+  const isCameraSource = typeof params.source === 'string' && (
+    params.source.includes('rtsp') || 
+    params.source.includes('camera') || 
+    params.source.includes('.mp4')
+  );
+  
+  // Generate sample detection results
+  const detections = [];
+  const numDetections = Math.floor(Math.random() * 6) + 2;
+  
+  // Define objects likely to appear in camera footage
+  const cameraObjects = [
+    { class: 'person', label: 'person' },
+    { class: 'car', label: 'car' },
+    { class: 'truck', label: 'truck' },
+    { class: 'bicycle', label: 'bicycle' },
+    { class: 'motorcycle', label: 'motorcycle' },
+    { class: 'dog', label: 'dog' },
+    { class: 'cat', label: 'cat' },
+    { class: 'backpack', label: 'backpack' },
+    { class: 'umbrella', label: 'umbrella' },
+    { class: 'handbag', label: 'handbag' }
+  ];
+  
+  const genericObjects = [
+    { class: 'laptop', label: 'laptop' },
+    { class: 'mouse', label: 'mouse' },
+    { class: 'keyboard', label: 'keyboard' },
+    { class: 'cell phone', label: 'cell phone' },
+    { class: 'book', label: 'book' },
+    { class: 'clock', label: 'clock' },
+    { class: 'vase', label: 'vase' },
+    { class: 'scissors', label: 'scissors' },
+    { class: 'teddy bear', label: 'teddy bear' }
+  ];
+  
+  const objectPool = isCameraSource ? [...cameraObjects, ...genericObjects.slice(0, 3)] : 
+                                     [...genericObjects, ...cameraObjects.slice(0, 3)];
+  
+  for (let i = 0; i < numDetections; i++) {
+    const object = objectPool[Math.floor(Math.random() * objectPool.length)];
+    const confidence = (Math.random() * 0.35) + 0.6; // 0.6 - 0.95
     
-    const model = params.model || 'yolov4';
-    const modelInfo = models[model as keyof typeof models] || models['yolov4'];
-    
-    const detectionCount = Math.floor(Math.random() * 10) + 3;
-    const detections = [];
-    
-    const objects = ['person', 'bicycle', 'car', 'motorcycle', 'bus', 'truck', 'traffic light', 'stop sign', 'bench', 'bird', 'cat', 'dog'];
-    
-    for (let i = 0; i < detectionCount; i++) {
-      const objectType = objects[Math.floor(Math.random() * objects.length)];
-      
+    if (confidence >= threshold) {
       detections.push({
-        class: objectType,
-        confidence: Math.random() * (1 - (params.confidence || 0.25)) + (params.confidence || 0.25),
+        class: object.class,
+        label: object.label,
+        score: confidence,
+        bbox: [
+          Math.floor(Math.random() * 300),           // x1
+          Math.floor(Math.random() * 300),           // y1
+          Math.floor(Math.random() * 300) + 300,     // x2
+          Math.floor(Math.random() * 300) + 300      // y2
+        ]
+      });
+    }
+  }
+  
+  // Return formatted results
+  return {
+    success: true,
+    data: {
+      source: params.source,
+      model: params.model,
+      threshold: threshold,
+      timestamp: new Date().toISOString(),
+      inference_time: `${Math.floor(Math.random() * 200) + 50}ms`,
+      detections: detections,
+      image: params.returnImage ? 'data:image/jpeg;base64,/9j/4AAQSkZJRgABA...' : undefined
+    },
+    simulatedData: true
+  };
+};
+
+/**
+ * Execute Darknet/YOLO object detection
+ */
+export const executeDarknet = async (params: DarknetParams): Promise<any> => {
+  console.log('Executing Darknet/YOLO with params:', params);
+  
+  // Simulate network delay
+  await simulateNetworkDelay(2500);
+  
+  // Validate input parameters
+  if (!params.source || !params.config || !params.weights) {
+    return {
+      success: false,
+      error: 'Source, config file, and weights file are required',
+      simulatedData: true
+    };
+  }
+  
+  const threshold = params.threshold || 0.25;
+  
+  // Generate sample YOLO detection results
+  const predictions = [];
+  const numPredictions = Math.floor(Math.random() * 10) + 3;
+  
+  // YOLO classes (subset of COCO dataset)
+  const yoloClasses = [
+    'person', 'bicycle', 'car', 'motorcycle', 'bus', 'truck',
+    'traffic light', 'fire hydrant', 'stop sign', 'cat', 'dog',
+    'backpack', 'umbrella', 'handbag', 'cell phone', 'laptop'
+  ];
+  
+  for (let i = 0; i < numPredictions; i++) {
+    const classIndex = Math.floor(Math.random() * yoloClasses.length);
+    const className = yoloClasses[classIndex];
+    const confidence = (Math.random() * 0.5) + 0.5; // 0.5 - 1.0
+    
+    if (confidence >= threshold) {
+      // Random box coordinates
+      const x = Math.floor(Math.random() * 800);
+      const y = Math.floor(Math.random() * 600);
+      const width = 50 + Math.floor(Math.random() * 200);
+      const height = 50 + Math.floor(Math.random() * 200);
+      
+      predictions.push({
+        class: className,
+        confidence: confidence,
         box: {
-          x: Math.floor(Math.random() * 600),
-          y: Math.floor(Math.random() * 400),
-          width: Math.floor(Math.random() * 200) + 50,
-          height: Math.floor(Math.random() * 200) + 50
+          x: x,
+          y: y,
+          width: width,
+          height: height,
+          left: x - width / 2,
+          top: y - height / 2,
+          right: x + width / 2,
+          bottom: y + height / 2
         }
       });
     }
-    
-    toast.success(`Darknet detected ${detectionCount} objects with ${modelInfo.name}`);
-    
-    return {
-      success: true,
-      data: {
-        source: params.source,
-        model: modelInfo.name,
-        model_version: modelInfo.version,
-        detections,
-        fps: Math.floor(Math.random() * 20) + 10,
-        inference_time: Math.floor(Math.random() * 100) + 20
-      }
-    };
-  } catch (error) {
-    console.error('Darknet error:', error);
-    toast.error('Error executing Darknet');
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Unknown error'
-    };
   }
+  
+  // Return formatted results
+  return {
+    success: true,
+    data: {
+      source: params.source,
+      config: params.config,
+      weights: params.weights,
+      threshold: threshold,
+      frame_process_fps: 15 + Math.floor(Math.random() * 20),
+      predictions: predictions,
+      imageWithBoxes: params.returnImage ? 'data:image/jpeg;base64,/9j/4AAQSkZJRgABA...' : undefined
+    },
+    simulatedData: true
+  };
 };
 
+/**
+ * Execute EyeWitness for capturing screenshots of camera web interfaces
+ */
 export const executeEyeWitness = async (params: EyeWitnessParams): Promise<any> => {
   console.log('Executing EyeWitness with params:', params);
   
-  try {
-    // Simulate API delay
-    await new Promise((resolve) => setTimeout(resolve, 3000));
-    
-    const targets = Array.isArray(params.targets) ? params.targets : [params.targets];
-    const results = [];
-    
-    for (const target of targets) {
-      if (Math.random() > 0.2) { // Not all targets will be available
-        results.push({
-          url: `http://${target}`,
-          status_code: [200, 302, 401, 403, 404, 500][Math.floor(Math.random() * 6)],
-          page_title: Math.random() > 0.5 ? 'IP Camera Web Interface' : 'Login - Security Camera',
-          server_header: Math.random() > 0.5 ? ['nginx/1.18.0', 'Apache/2.4.41', 'Microsoft-IIS/10.0', 'Hikvision-Webs/3.0'][Math.floor(Math.random() * 4)] : undefined,
-          screenshot_path: `/screenshots/${target.replace(/\./g, '_')}.png`,
-          has_basic_auth: Math.random() > 0.7,
-          has_forms: Math.random() > 0.4,
-          default_creds_attempted: Math.random() > 0.6,
-          default_creds_successful: Math.random() > 0.8
-        });
-      }
-    }
-    
-    toast.success(`EyeWitness completed with ${results.length} results`);
-    
-    return {
-      success: true,
-      data: {
-        results,
-        total_targets: targets.length,
-        successful_screenshots: results.length,
-        default_creds_found: results.filter(r => r.default_creds_successful).length,
-        report_path: '/reports/eyewitness_report.html'
-      }
-    };
-  } catch (error) {
-    console.error('EyeWitness error:', error);
-    toast.error('Error executing EyeWitness');
+  // Simulate network delay
+  await simulateNetworkDelay(5000);
+  
+  // Validate input parameters
+  if (!params.target) {
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Unknown error'
+      error: 'Target URL, IP, or file path is required',
+      simulatedData: true
     };
   }
+  
+  const timeout = params.timeout || 10;
+  const threads = params.threads || 5;
+  
+  // Generate sample screenshot results
+  const screenshots = [];
+  const numScreenshots = Math.floor(Math.random() * 5) + 2;
+  
+  // Generate random IPs or parse from input
+  let ips = [];
+  if (params.target.includes(',')) {
+    // Multiple targets specified
+    ips = params.target.split(',').map(ip => ip.trim());
+  } else if (params.target.includes('/')) {
+    // CIDR range specified - generate random IPs
+    for (let i = 0; i < numScreenshots; i++) {
+      ips.push(`192.168.1.${Math.floor(Math.random() * 254) + 1}`);
+    }
+  } else {
+    // Single target specified
+    ips = [params.target];
+  }
+  
+  // Camera web interface titles
+  const cameraTitles = [
+    'IP Camera Web Interface',
+    'Network Camera',
+    'Hikvision - Web Viewer',
+    'AXIS Camera Control Panel',
+    'FLIR Camera Interface',
+    'Dahua Web Interface',
+    'Amcrest Camera',
+    'Vivotek Network Camera',
+    'Samsung CCTV',
+    'Bosch IP Camera',
+    'Panasonic Network Camera',
+    'CCTV Admin Panel'
+  ];
+  
+  // Generate screenshots for each IP
+  for (let i = 0; i < Math.min(ips.length, numScreenshots); i++) {
+    const ip = ips[i];
+    const port = [80, 443, 8000, 8080, 8443][Math.floor(Math.random() * 5)];
+    const protocol = port === 443 || port === 8443 ? 'https' : 'http';
+    
+    const isCameraInterface = Math.random() > 0.3;
+    const pageTitle = isCameraInterface ? 
+      cameraTitles[Math.floor(Math.random() * cameraTitles.length)] : 
+      'Web Server';
+    
+    const hasLoginForm = Math.random() > 0.4;
+    const hasBasicAuth = !hasLoginForm && Math.random() > 0.6;
+    
+    screenshots.push({
+      url: `${protocol}://${ip}:${port}`,
+      status_code: Math.random() > 0.9 ? 404 : 200,
+      page_title: pageTitle,
+      headers: {
+        'Server': isCameraInterface ? [
+          'Hikvision-Webs',
+          'IP Camera HTTP Server',
+          'AXIS Camera HTTP Server',
+          'Dahua HTTP Server',
+          'Vivotek Network Camera'
+        ][Math.floor(Math.random() * 5)] : 'nginx',
+        'Content-Type': 'text/html',
+        'Connection': 'keep-alive'
+      },
+      has_login_form: hasLoginForm,
+      has_basic_auth: hasBasicAuth,
+      screenshot_path: `./screenshots/${ip}_${port}.png`,
+      notes: hasLoginForm ? 'Login form detected' : 
+             hasBasicAuth ? 'HTTP Basic Auth detected' : 
+             isCameraInterface ? 'Camera interface detected' : '',
+      screenshot_data: 'data:image/jpeg;base64,/9j/4AAQSkZJRgABA...',
+    });
+  }
+  
+  // Return formatted results
+  return {
+    success: true,
+    data: {
+      target: params.target,
+      timeout: timeout,
+      threads: threads,
+      timestamp: new Date().toISOString(),
+      runtime: `${Math.floor(Math.random() * 20) + 5} seconds`,
+      total_urls: ips.length,
+      successful: screenshots.length,
+      failed: ips.length - screenshots.length,
+      screenshots: screenshots,
+      report_path: './EyeWitness_Report.html'
+    },
+    simulatedData: true
+  };
 };

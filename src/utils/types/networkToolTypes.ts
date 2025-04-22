@@ -10,7 +10,7 @@ export interface TorBotParams {
   timeout?: number | string;
   dumpData?: boolean;
   savePath?: string;
-  mode?: string; // Add mode parameter
+  mode?: string;
 }
 
 export interface BotExploitsParams {
@@ -19,7 +19,7 @@ export interface BotExploitsParams {
   botType?: string;
   scanType?: string;
   attackType?: string;
-  timeout?: number; // Add timeout parameter
+  timeout?: number;
 }
 
 export interface ImperialOculusParams {
@@ -29,7 +29,7 @@ export interface ImperialOculusParams {
   timeout?: number;
   scanTechniques?: string[];
   outputFormat?: string;
-  saveResults?: boolean; // Add saveResults parameter
+  saveResults?: boolean;
 }
 
 export interface NetworkScanParams {
@@ -57,4 +57,94 @@ export interface PhotonParams {
   userAgent?: string;
   saveResults?: boolean;
   outputFormat?: 'json' | 'text' | 'html';
+}
+
+// Add new interfaces for network scanning tools
+export interface ZMapParams {
+  target: string;
+  port?: number | number[];
+  bandwidth?: string;
+  timeout?: number;
+  saveResults?: boolean;
+  outputFormat?: string;
+}
+
+export interface EasySNMPParams {
+  target: string;
+  community?: string;
+  version?: '1' | '2c' | '3';
+  oids?: string[];
+  credentials?: {
+    username: string;
+    password?: string;
+    privPassword?: string;
+    authProtocol?: string;
+    privProtocol?: string;
+  };
+  timeout?: number;
+}
+
+export interface ScapyParams {
+  target: string;
+  packetType?: 'tcp' | 'udp' | 'icmp' | 'arp' | 'custom';
+  payload?: string;
+  count?: number;
+  timeout?: number;
+  interface?: string;
+  saveResults?: boolean;
+}
+
+export interface MitmProxyParams {
+  listenPort?: number;
+  mode?: 'regular' | 'transparent' | 'socks5' | 'reverse';
+  targetHost?: string;
+  targetPort?: number;
+  sslInsecure?: boolean;
+  dumpTraffic?: boolean;
+  filterExpr?: string;
+  scripts?: string[];
+}
+
+export interface StreamedianParams {
+  rtspUrl: string;
+  autoplay?: boolean;
+  controls?: boolean;
+  muted?: boolean;
+  loop?: boolean;
+  width?: number | string;
+  height?: number | string;
+  transport?: 'tcp' | 'udp';
+}
+
+export interface JSMpegParams {
+  wsUrl: string;
+  canvas?: HTMLCanvasElement | string;
+  audio?: boolean;
+  video?: boolean;
+  loop?: boolean;
+  autoplay?: boolean;
+  preserveDrawingBuffer?: boolean;
+  progressive?: boolean;
+}
+
+export interface AgentDVRParams {
+  action: 'start' | 'stop' | 'add-camera' | 'remove-camera' | 'get-settings';
+  cameraParams?: {
+    url: string;
+    name?: string;
+    type?: string;
+    motionDetection?: boolean;
+    recordingSettings?: any;
+  };
+  configPath?: string;
+}
+
+export interface MetasploitParams {
+  target: string;
+  module: string;
+  options?: Record<string, string>;
+  payload?: string;
+  payloadOptions?: Record<string, string>;
+  exploitMode?: 'check' | 'run';
+  timeout?: number;
 }

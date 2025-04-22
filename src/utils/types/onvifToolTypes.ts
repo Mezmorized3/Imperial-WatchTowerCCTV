@@ -150,3 +150,127 @@ export interface OpenCVParams {
   saveResults?: boolean;
   outputFile?: string;
 }
+
+// New interfaces for the additional tools
+
+export interface ONVIFFuzzerParams {
+  target: string;
+  port?: number;
+  fuzzerType?: 'command' | 'auth' | 'discovery' | 'full';
+  timeout?: number;
+  intensity?: 'low' | 'medium' | 'high';
+  saveResults?: boolean;
+}
+
+export interface WebRTCStreamerParams {
+  rtspUrl: string;
+  webrtcPort?: number;
+  iceServers?: string[];
+  allowedOrigins?: string[];
+  videoCodec?: string;
+  audioCodec?: string;
+  enableTLS?: boolean;
+}
+
+export interface TapoPoCParams {
+  target: string;
+  exploit?: 'cve-2021-4045' | 'cve-2021-4046' | 'cve-2023-1596' | 'all';
+  timeout?: number;
+  dumpConfig?: boolean;
+  saveResults?: boolean;
+}
+
+export interface ShodanParams {
+  query: string;
+  facets?: string[];
+  page?: number;
+  minify?: boolean;
+  saveResults?: boolean;
+}
+
+export interface CensysParams {
+  query: string;
+  virtual_hosts?: 'include' | 'exclude' | 'only';
+  page?: number;
+  fields?: string[];
+  saveResults?: boolean;
+}
+
+export interface HttpxParams {
+  target: string;
+  ports?: string;
+  threads?: number;
+  timeout?: number;
+  statusCode?: boolean;
+  title?: boolean;
+  tech?: boolean;
+  screenshot?: boolean;
+  saveResults?: boolean;
+}
+
+export interface NucleiParams {
+  target: string;
+  templates?: string[];
+  severity?: ('info' | 'low' | 'medium' | 'high' | 'critical')[];
+  timeout?: number;
+  concurrency?: number;
+  saveResults?: boolean;
+}
+
+export interface AmassParams {
+  domain: string;
+  timeout?: number;
+  passive?: boolean;
+  ips?: boolean;
+  saveResults?: boolean;
+}
+
+export interface Live555Params {
+  rtspUrl: string;
+  outputFormat?: 'mp4' | 'hls' | 'mjpeg';
+  duration?: number;
+  saveFile?: string;
+}
+
+export interface GoCVParams {
+  source: string;
+  operation: 'object_detect' | 'face_detect' | 'motion_track' | 'text_read';
+  outputFormat?: 'window' | 'mjpeg' | 'file';
+  modelPath?: string;
+  saveResults?: boolean;
+}
+
+export interface OpenALPRParams {
+  image: string | File;
+  region?: string;
+  topN?: number;
+  pattern?: string;
+  saveResults?: boolean;
+}
+
+export interface TensorFlowParams {
+  source: string;
+  model: string;
+  labels?: string;
+  threshold?: number;
+  saveResults?: boolean;
+  returnImage?: boolean;
+}
+
+export interface DarknetParams {
+  source: string;
+  config: string;
+  weights: string;
+  threshold?: number;
+  saveResults?: boolean;
+  returnImage?: boolean;
+}
+
+export interface EyeWitnessParams {
+  target: string;
+  timeout?: number;
+  threads?: number;
+  headless?: boolean;
+  useVhost?: boolean;
+  saveResults?: boolean;
+}
