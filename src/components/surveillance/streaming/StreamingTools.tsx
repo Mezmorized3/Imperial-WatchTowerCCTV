@@ -150,7 +150,7 @@ const StreamingTools: React.FC = () => {
           }
           
           result = await ffmpegConvertRtspToHls({
-            inputUrl: hlsRtspUrl,
+            input: hlsRtspUrl, // Fixed: changed inputUrl to input
             segmentDuration: parseInt(hlsSegmentDuration),
             playlistSize: parseInt(hlsPlaylistSize),
             outputPath: hlsOutputPath
@@ -171,7 +171,7 @@ const StreamingTools: React.FC = () => {
           
           result = await ffmpegRecordStream({
             streamUrl: recordStreamUrl,
-            duration: parseInt(recordDuration),
+            duration: recordDuration, // Fixed: Changed int to string for duration
             format: recordFormat,
             outputPath: recordOutputPath
           });
@@ -729,22 +729,49 @@ const StreamingTools: React.FC = () => {
           </div>
         )}
       </CardContent>
-      
       <CardFooter>
         <Button
-          className="w-full"
           onClick={handleExecute}
           disabled={isLoading}
+          className="w-full"
         >
           {isLoading ? (
             <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
               Processing...
             </>
           ) : (
             <>
-              <Play className="mr-2 h-4 w-4" />
-              Start {activeTab.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
+              {activeTab === 'rtsp-server' && (
+                <>
+                  <Server className="h-4 w-4 mr-2" />
+                  Start RTSP Server
+                </>
+              )}
+              {activeTab === 'webrtc-streamer' && (
+                <>
+                  <Play className="h-4 w-4 mr-2" />
+                  Start WebRTC Streamer
+                </>
+              )}
+              {activeTab === 'zoneminder' && (
+                <>
+                  <Monitor className="h-4 w-4 mr-2" />
+                  Execute ZoneMinder Action
+                </>
+              )}
+              {activeTab === 'ffmpeg-hls' && (
+                <>
+                  <Video className="h-4 w-4 mr-2" />
+                  Convert to HLS
+                </>
+              )}
+              {activeTab === 'ffmpeg-record' && (
+                <>
+                  <FileVideo className="h-4 w-4 mr-2" />
+                  Start Recording
+                </>
+              )}
             </>
           )}
         </Button>
