@@ -1,31 +1,20 @@
 
 /**
- * OSINT tools connector 
+ * OSINT tools connector - Streamlined implementation
  */
 
+// Import the actual implementations we have
 import {
   executeWebCheck,
-  executeCCTV,
+  executeCCTV, 
   executeHackCCTV,
-  executeZGrab,
-  executeMegaRtspBruter,
-  executeRtspServer,
-  executeOSINT,
-  executeTorBot,
-  executeTwint,
-  executeUsernameSearch
+  executeRtspServer
 } from './osintImplementations';
 
-// Export all tools
+// Export only the tools we have implementations for
 export {
   executeWebCheck,
   executeCCTV,
   executeHackCCTV,
-  executeZGrab,
-  executeMegaRtspBruter,
-  executeRtspServer,
-  executeOSINT,
-  executeTorBot,
-  executeTwint,
-  executeUsernameSearch
+  executeRtspServer
 };

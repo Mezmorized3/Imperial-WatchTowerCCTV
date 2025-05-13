@@ -1,42 +1,28 @@
 
 /**
- * Empty data structures for country IP ranges - removed mock data
+ * Country IP ranges utility
+ * 
+ * Note: This file previously contained mock data that has been removed.
+ * In a production environment, this would connect to a real API or database.
  */
 
-// These IP ranges were mock data, now removed
-export const COUNTRY_IP_RANGES = {
-  ge: [],
-  ro: [],
-  ua: [],
-  ru: []
+// Empty placeholder for future implementation with real data
+export const getCountryIpRanges = (countryCode: string): string[] => {
+  console.log(`Fetching IP ranges for country: ${countryCode}`);
+  return [];
 };
 
-// More detailed information for each IP range - now empty
-export const DETAILED_COUNTRY_IP_RANGES = {
-  ge: [],
-  ro: [],
-  ua: [],
-  ru: []
+// Empty placeholder for Shodan queries
+export const getCountryShodanQueries = (countryCode: string): string[] => {
+  return [];
 };
 
-// Create search queries for different platforms - now empty
-export const COUNTRY_SHODAN_QUERIES = {
-  ge: [],
-  ro: [],
-  ua: [],
-  ru: []
+// Empty placeholder for ZoomEye queries
+export const getCountryZoomEyeQueries = (countryCode: string): string[] => {
+  return [];
 };
 
-export const COUNTRY_ZOOMEYE_QUERIES = {
-  ge: [],
-  ro: [],
-  ua: [],
-  ru: []
-};
-
-export const COUNTRY_CENSYS_QUERIES = {
-  ge: [],
-  ro: [],
-  ua: [],
-  ru: []
+// Empty placeholder for Censys queries
+export const getCountryCensysQueries = (countryCode: string): string[] => {
+  return [];
 };

@@ -1,287 +1,210 @@
 
 import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { toast } from 'sonner';
-import { Server, Radio, Video, Shield, Database } from 'lucide-react';
-import {
-  executeGstRTSPServer,
-  executeGortsplib,
-  executeRtspSimpleServer,
-  executeAgentDVR
-} from '@/utils/osintImplementations';
+import { AlertCircle, Play, Server, Video } from 'lucide-react';
+import { executeRtspServer } from '@/utils/osintImplementations';
 
 const RTSPServerTools: React.FC = () => {
-  const [activeTab, setActiveTab] = useState('gstreamer');
-  const [loading, setLoading] = useState(false);
-  const [results, setResults] = useState<any>(null);
-  
-  // gst-rtsp-server state
-  const [gstPort, setGstPort] = useState('8554');
-  const [gstMediaPath, setGstMediaPath] = useState('test');
-  const [gstAuth, setGstAuth] = useState(false);
-  
-  // gortsplib state
-  const [gortspMode, setGortspMode] = useState('server');
-  const [gortspPort, setGortspPort] = useState('8554');
-  const [gortspProtocol, setGortspProtocol] = useState('tcp');
-  
-  // rtsp-simple-server state
-  const [rtspPort, setRtspPort] = useState('8554');
-  const [rtspSourcePath, setRtspSourcePath] = useState('stream');
-  const [rtspHlsEnabled, setRtspHlsEnabled] = useState(true);
-  
-  // Agent DVR state
-  const [agentAction, setAgentAction] = useState('discover');
-  const [agentTarget, setAgentTarget] = useState('192.168.1.0/24');
+  const [listenIp, setListenIp] = useState('0.0.0.0');
+  const [listenPort, setListenPort] = useState(8554);
+  const [sourcePath, setSourcePath] = useState('');
+  const [recordPath, setRecordPath] = useState('');
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [enableTls, setEnableTls] = useState(false);
+  const [isRunning, setIsRunning] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [streamUrl, setStreamUrl] = useState('');
 
-  const handleExecute = async () => {
-    setLoading(true);
-    setResults(null);
-    
+  const handleStartServer = async () => {
+    setIsLoading(true);
     try {
-      let result;
+      const credentials = username && password ? { username, password } : undefined;
       
-      switch (activeTab) {
-        case 'gstreamer':
-          result = await executeGstRTSPServer({
-            listenPort: parseInt(gstPort),
-            mediaPath: gstMediaPath,
-            auth: gstAuth,
-            credentials: gstAuth ? { username: 'admin', password: 'admin' } : undefined
-          });
-          break;
-          
-        case 'gortsplib':
-          result = await executeGortsplib({
-            mode: gortspMode as any,
-            listenPort: parseInt(gortspPort),
-            protocols: [gortspProtocol as any]
-          });
-          break;
-          
-        case 'rtspsimple':
-          result = await executeRtspSimpleServer({
-            listenPort: parseInt(rtspPort),
-            sourcePath: rtspSourcePath,
-            hlsEnabled: rtspHlsEnabled
-          });
-          break;
-          
-        case 'agentdvr':
-          result = await executeAgentDVR({
-            action: agentAction as any,
-            target: agentTarget
-          });
-          break;
-      }
+      const result = await executeRtspServer({
+        listenIp,
+        listenPort,
+        sourcePath: sourcePath || undefined,
+        recordPath: recordPath || undefined,
+        credentials,
+        enableTls
+      });
       
       if (result && result.success) {
-        setResults(result.data);
-        toast.success('Tool executed successfully');
+        setIsRunning(true);
+        setStreamUrl(result.streamUrl || `rtsp://${listenIp}:${listenPort}/live`);
+        toast.success('RTSP server started successfully');
       } else {
-        toast.error('Error executing tool');
+        toast.error(result?.error || 'Failed to start RTSP server');
       }
     } catch (error) {
-      console.error('Error executing tool:', error);
-      toast.error('Error executing tool');
+      console.error('Error starting RTSP server:', error);
+      toast.error('Error starting RTSP server');
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
+  };
+
+  const handleStopServer = () => {
+    setIsRunning(false);
+    setStreamUrl('');
+    toast.info('RTSP server stopped');
   };
 
   return (
     <Card className="w-full">
       <CardHeader>
-        <CardTitle className="text-xl">RTSP Streaming Server Tools</CardTitle>
-        <CardDescription>
-          Tools for setting up and managing RTSP streaming servers
-        </CardDescription>
+        <CardTitle className="flex items-center">
+          <Server className="mr-2 h-5 w-5" />
+          RTSP Server Tools
+        </CardTitle>
       </CardHeader>
       <CardContent>
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid grid-cols-2 md:grid-cols-4 gap-1 mb-6">
-            <TabsTrigger value="gstreamer">
-              <Video className="h-4 w-4 mr-2" />
-              GStreamer RTSP
-            </TabsTrigger>
-            <TabsTrigger value="gortsplib">
-              <Server className="h-4 w-4 mr-2" />
-              Go RTSP Lib
-            </TabsTrigger>
-            <TabsTrigger value="rtspsimple">
-              <Radio className="h-4 w-4 mr-2" />
-              RTSP Simple
-            </TabsTrigger>
-            <TabsTrigger value="agentdvr">
-              <Database className="h-4 w-4 mr-2" />
-              Agent DVR (iSpy)
-            </TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="gstreamer">
-            <div className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="gstPort">Listen Port</Label>
-                  <Input
-                    id="gstPort"
-                    placeholder="8554"
-                    value={gstPort}
-                    onChange={(e) => setGstPort(e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="gstMediaPath">Media Path</Label>
-                  <Input
-                    id="gstMediaPath"
-                    placeholder="test"
-                    value={gstMediaPath}
-                    onChange={(e) => setGstMediaPath(e.target.value)}
-                  />
-                </div>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Switch
-                  id="gstAuth"
-                  checked={gstAuth}
-                  onCheckedChange={setGstAuth}
-                />
-                <Label htmlFor="gstAuth">Enable Authentication</Label>
-              </div>
-              <Button onClick={handleExecute} disabled={loading} className="w-full">
-                {loading ? 'Starting server...' : 'Start GStreamer RTSP Server'}
-              </Button>
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="listenIp">Listen IP</Label>
+              <Input
+                id="listenIp"
+                placeholder="0.0.0.0"
+                value={listenIp}
+                onChange={(e) => setListenIp(e.target.value)}
+                disabled={isRunning || isLoading}
+              />
             </div>
-          </TabsContent>
-          
-          <TabsContent value="gortsplib">
-            <div className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="gortspMode">Mode</Label>
-                  <Select value={gortspMode} onValueChange={setGortspMode}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select mode" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="server">Server</SelectItem>
-                      <SelectItem value="client">Client</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="gortspPort">Listen Port</Label>
-                  <Input
-                    id="gortspPort"
-                    placeholder="8554"
-                    value={gortspPort}
-                    onChange={(e) => setGortspPort(e.target.value)}
-                  />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="gortspProtocol">Protocol</Label>
-                <Select value={gortspProtocol} onValueChange={setGortspProtocol}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select protocol" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="tcp">TCP</SelectItem>
-                    <SelectItem value="udp">UDP</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <Button onClick={handleExecute} disabled={loading} className="w-full">
-                {loading ? 'Executing...' : 'Execute Go RTSP Lib'}
-              </Button>
+            <div className="space-y-2">
+              <Label htmlFor="listenPort">Listen Port</Label>
+              <Input
+                id="listenPort"
+                type="number"
+                placeholder="8554"
+                value={listenPort}
+                onChange={(e) => setListenPort(parseInt(e.target.value))}
+                disabled={isRunning || isLoading}
+              />
             </div>
-          </TabsContent>
-          
-          <TabsContent value="rtspsimple">
-            <div className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="rtspPort">Listen Port</Label>
-                  <Input
-                    id="rtspPort"
-                    placeholder="8554"
-                    value={rtspPort}
-                    onChange={(e) => setRtspPort(e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="rtspSourcePath">Source Path</Label>
-                  <Input
-                    id="rtspSourcePath"
-                    placeholder="stream"
-                    value={rtspSourcePath}
-                    onChange={(e) => setRtspSourcePath(e.target.value)}
-                  />
-                </div>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Switch
-                  id="rtspHlsEnabled"
-                  checked={rtspHlsEnabled}
-                  onCheckedChange={setRtspHlsEnabled}
-                />
-                <Label htmlFor="rtspHlsEnabled">Enable HLS</Label>
-              </div>
-              <Button onClick={handleExecute} disabled={loading} className="w-full">
-                {loading ? 'Starting server...' : 'Start RTSP Simple Server'}
-              </Button>
-            </div>
-          </TabsContent>
-          
-          <TabsContent value="agentdvr">
-            <div className="space-y-4">
-              <div className="grid grid-cols-1 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="agentAction">Action</Label>
-                  <Select value={agentAction} onValueChange={setAgentAction}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select action" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="discover">Discover Cameras</SelectItem>
-                      <SelectItem value="add-camera">Add Camera</SelectItem>
-                      <SelectItem value="get-settings">Get Settings</SelectItem>
-                      <SelectItem value="start">Start Agent</SelectItem>
-                      <SelectItem value="stop">Stop Agent</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="agentTarget">Target Network/IP</Label>
-                  <Input
-                    id="agentTarget"
-                    placeholder="192.168.1.0/24"
-                    value={agentTarget}
-                    onChange={(e) => setAgentTarget(e.target.value)}
-                  />
-                </div>
-              </div>
-              <Button onClick={handleExecute} disabled={loading} className="w-full">
-                {loading ? 'Executing...' : 'Execute Agent DVR'}
-              </Button>
-            </div>
-          </TabsContent>
-        </Tabs>
-        
-        {results && (
-          <div className="mt-6 p-4 bg-gray-100 dark:bg-gray-800 rounded border border-gray-300 dark:border-gray-700">
-            <h3 className="text-lg font-medium mb-2">Results</h3>
-            <pre className="text-xs overflow-auto max-h-96 p-2 bg-white dark:bg-gray-900 rounded">
-              {JSON.stringify(results, null, 2)}
-            </pre>
           </div>
-        )}
+
+          <div className="space-y-2">
+            <Label htmlFor="sourcePath">Source Path (Optional)</Label>
+            <Input
+              id="sourcePath"
+              placeholder="rtsp://source.example.com/stream"
+              value={sourcePath}
+              onChange={(e) => setSourcePath(e.target.value)}
+              disabled={isRunning || isLoading}
+            />
+            <p className="text-xs text-gray-500">
+              If provided, the server will act as a proxy for this source stream
+            </p>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="recordPath">Recording Path (Optional)</Label>
+            <Input
+              id="recordPath"
+              placeholder="/recordings"
+              value={recordPath}
+              onChange={(e) => setRecordPath(e.target.value)}
+              disabled={isRunning || isLoading}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label>Authentication (Optional)</Label>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Input
+                placeholder="Username"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                disabled={isRunning || isLoading}
+              />
+              <Input
+                type="password"
+                placeholder="Password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                disabled={isRunning || isLoading}
+              />
+            </div>
+          </div>
+
+          <div className="flex items-center space-x-2">
+            <Switch
+              id="enableTls"
+              checked={enableTls}
+              onCheckedChange={setEnableTls}
+              disabled={isRunning || isLoading}
+            />
+            <Label htmlFor="enableTls">Enable TLS</Label>
+          </div>
+
+          <Button
+            className="w-full"
+            onClick={isRunning ? handleStopServer : handleStartServer}
+            disabled={isLoading}
+            variant={isRunning ? "destructive" : "default"}
+          >
+            {isLoading ? (
+              'Starting server...'
+            ) : isRunning ? (
+              <>
+                <AlertCircle className="mr-2 h-4 w-4" />
+                Stop Server
+              </>
+            ) : (
+              <>
+                <Play className="mr-2 h-4 w-4" />
+                Start RTSP Server
+              </>
+            )}
+          </Button>
+
+          {isRunning && streamUrl && (
+            <div className="p-4 border rounded-md mt-4 bg-black/5 dark:bg-white/5">
+              <p className="text-sm font-medium mb-2">Stream URL</p>
+              <div className="flex items-center space-x-2">
+                <code className="px-2 py-1 bg-black/10 dark:bg-white/10 rounded text-sm overflow-auto flex-grow">
+                  {streamUrl}
+                </code>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => {
+                    navigator.clipboard.writeText(streamUrl);
+                    toast.info('Stream URL copied to clipboard');
+                  }}
+                >
+                  Copy
+                </Button>
+              </div>
+              
+              <div className="mt-4 flex items-center justify-between">
+                <span className="text-sm">Stream Preview</span>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => {
+                    window.open(`/viewer?url=${encodeURIComponent(streamUrl)}`, '_blank');
+                  }}
+                >
+                  <Video className="h-4 w-4 mr-2" />
+                  Open in Viewer
+                </Button>
+              </div>
+              <div className="h-40 bg-black/20 dark:bg-white/5 rounded-md mt-2 flex items-center justify-center">
+                <p className="text-sm text-gray-500">
+                  Preview not available - open in viewer to watch stream
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
       </CardContent>
     </Card>
   );
