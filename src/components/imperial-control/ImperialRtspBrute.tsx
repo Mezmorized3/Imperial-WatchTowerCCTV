@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -74,7 +73,7 @@ const ImperialRtspBrute: React.FC<ImperialRtspBruteProps> = ({ onBruteComplete }
     const simulatedResults: RtspCredential[] = [];
 
     // Create and store the interval ID
-    let intervalId: number;
+    let intervalId: ReturnType<typeof setInterval>;
     
     // Define the interval callback function
     const intervalCallback = () => {
@@ -134,11 +133,11 @@ const ImperialRtspBrute: React.FC<ImperialRtspBruteProps> = ({ onBruteComplete }
     };
     
     // Set up the interval
-    intervalId = window.setInterval(intervalCallback, 250);
+    intervalId = setInterval(intervalCallback, 250);
     
     // Return a cleanup function
     return () => {
-      window.clearInterval(intervalId);
+      clearInterval(intervalId);
     };
   }, [toast, onBruteComplete]);
 

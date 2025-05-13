@@ -17,10 +17,10 @@ export const executeZMap = async (options: any) => {
     data: {
       hosts: Array(Math.floor(Math.random() * 10) + 1).fill(0).map((_, i) => ({
         ip: `192.168.1.${10 + i}`,
-        ports: options.port.map((p: number) => ({
+        ports: options.port ? options.port.map((p: number) => ({
           port: p,
           status: Math.random() > 0.3 ? 'open' : 'closed'
-        }))
+        })) : []
       }))
     }
   };
@@ -89,7 +89,7 @@ export const executePyONVIF = async (options: any) => {
     data: {
       target: options.target,
       operation: options.operation,
-      streamUri: `rtsp://${options.username}:${options.password}@${options.target}:554/Streaming/Channels/101`,
+      streamUri: `rtsp://${options.username || 'admin'}:${options.password || 'admin'}@${options.target}:554/Streaming/Channels/101`,
       profiles: ['Profile1', 'Profile2']
     }
   };
@@ -122,7 +122,7 @@ export const executeScapy = async (options: any) => {
       target: options.target,
       packetType: options.packetType,
       count: options.count,
-      packets: Array(options.count).fill(0).map((_, i) => ({
+      packets: Array(options.count || 5).fill(0).map((_, i) => ({
         id: i + 1,
         time: `${(Math.random() * 0.5).toFixed(3)}s`,
         size: Math.floor(Math.random() * 100) + 40,
@@ -144,23 +144,6 @@ export const executeMitmProxy = async (options: any) => {
       status: 'running',
       pid: Math.floor(Math.random() * 10000),
       connections: Math.floor(Math.random() * 5)
-    }
-  };
-};
-
-export const executeRtspServer = async (options: any) => {
-  console.log("Simulating RTSP Server with options:", options);
-  await new Promise(resolve => setTimeout(resolve, 1200));
-  
-  return {
-    success: true,
-    data: {
-      listenIp: options.listenIp,
-      listenPort: options.listenPort,
-      serverUrl: `rtsp://${options.listenIp}:${options.listenPort}/live`,
-      status: 'running',
-      streamKey: 'livestream',
-      viewers: 0
     }
   };
 };

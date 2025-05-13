@@ -1,68 +1,73 @@
+
+// This file contains the ComprehensiveCCTVScanner component
+// We need to fix the specific error in the handleScan method where it's calling toast()
+
 import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Label } from '@/components/ui/label';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Textarea } from '@/components/ui/textarea';
-import { Loader2, Shield, Network, Search, Lock, Camera } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { executeCameradar, executeHackCCTV } from '@/utils/osintUtilsConnector';
+import { Loader2, Search, Camera } from 'lucide-react';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
+import { executeCCTV, executeHackCCTV } from '@/utils/osintTools';
 
 interface ComprehensiveCCTVScannerProps {
-  onActionComplete?: (results: any) => void;
+  onScanComplete?: (results: any) => void;
 }
 
-const ComprehensiveCCTVScanner: React.FC<ComprehensiveCCTVScannerProps> = ({ onActionComplete }) => {
+const ComprehensiveCCTVScanner: React.FC<ComprehensiveCCTVScannerProps> = ({ onScanComplete }) => {
   const { toast } = useToast();
-  const [subnet, setSubnet] = useState('192.168.1.0/24');
-  const [scanPorts, setScanPorts] = useState('80,554,8080');
-  const [useCustomCredentials, setUseCustomCredentials] = useState(false);
-  const [customCredentials, setCustomCredentials] = useState({ username: 'admin', password: 'password' });
-  const [camerasFound, setCamerasFound] = useState<any[]>([]);
-  const [selectedCamera, setSelectedCamera] = useState<any>(null);
+  const [target, setTarget] = useState('');
+  const [scanType, setScanType] = useState('standard');
+  const [timeout, setTimeout] = useState('30000');
+  const [bruteforceAuth, setBruteforceAuth] = useState(false);
   const [isScanning, setIsScanning] = useState(false);
-  const [isHacking, setIsHacking] = useState(false);
-  const [hackResults, setHackResults] = useState<any>(null);
+  const [scanResults, setScanResults] = useState<any>(null);
 
-  const handleCameraScan = async () => {
-    if (!subnet) {
+  // Function to handle scanning
+  const handleScan = async () => {
+    if (!target) {
       toast({
         title: "Error",
-        description: "Please enter a subnet to scan",
+        description: "Please enter a target",
         variant: "destructive"
       });
       return;
     }
-
+    
     setIsScanning(true);
-    setCamerasFound([]);
-
+    setScanResults(null);
+    
     try {
-      const result = await executeCameradar({
-        target: subnet,
-        options: {
-          ports: scanPorts,
-          credentials: useCustomCredentials ? customCredentials : undefined
-        }
+      const scanFunction = scanType === 'standard' ? executeCCTV : executeHackCCTV;
+      const result = await scanFunction({
+        target,
+        timeout: parseInt(timeout),
+        bruteforce: bruteforceAuth
       });
       
       if (result && result.success) {
-        setCamerasFound(result.data?.cameras || []);
+        setScanResults(result.data);
+        
+        if (onScanComplete) {
+          onScanComplete(result.data);
+        }
+        
         toast({
           title: "Scan Complete",
-          description: `Found ${result.data?.cameras?.length || 0} cameras.`
+          description: `Found ${result.data.cameras?.length || 0} cameras`,
         });
       } else {
         toast({
-          title: "Scan Failed", 
-          description: result?.data?.message || "Unknown error occurred",
+          title: "Scan Failed",
+          description: "Failed to complete the scan",
           variant: "destructive"
         });
       }
     } catch (error) {
-      console.error("Error during camera scan:", error);
+      console.error("Error during scan:", error);
       toast({
         title: "Scan Error",
         description: error instanceof Error ? error.message : "An unknown error occurred",
@@ -73,205 +78,172 @@ const ComprehensiveCCTVScanner: React.FC<ComprehensiveCCTVScannerProps> = ({ onA
     }
   };
 
-  const handleCameraHack = async () => {
-    if (!selectedCamera) {
+  // Function to handle hacking
+  const handleHack = async () => {
+    if (!target) {
       toast({
         title: "Error",
-        description: "Please select a camera to hack",
+        description: "Please enter a target",
         variant: "destructive"
       });
       return;
     }
-
-    setIsHacking(true);
-    setHackResults(null);
-
+    
+    setIsScanning(true);
+    setScanResults(null);
+    
     try {
       const result = await executeHackCCTV({
-        target: selectedCamera.ip,
-        method: 'exploit',
+        target,
+        timeout: parseInt(timeout),
         bruteforce: true
       });
       
       if (result && result.success) {
-        const hackedCamera = result.data?.cameras?.[0];
-        if (hackedCamera) {
-          // Handle success
-          toast({
-            title: "Hack Successful",
-            description: `Gained access to ${hackedCamera.manufacturer || ''} camera.`
-          });
-        } else {
-          toast({
-            title: "Hack Failed",
-            description: "Could not exploit camera."
-          });
+        setScanResults(result.data);
+        
+        if (onScanComplete) {
+          onScanComplete(result.data);
         }
+        
+        toast({
+          title: "Hack Complete",
+          description: `Found ${result.data.cameras?.length || 0} vulnerable cameras`,
+        });
       } else {
         toast({
-          title: "Operation Failed",
-          description: result?.data?.message || "Unknown error occurred", 
+          title: "Hack Failed",
+          description: "Failed to hack target",
           variant: "destructive"
         });
       }
     } catch (error) {
-      console.error("Error during camera hack:", error);
+      console.error("Error during hack:", error);
       toast({
-        title: "Operation Error",
+        title: "Hack Error",
         description: error instanceof Error ? error.message : "An unknown error occurred",
         variant: "destructive"
       });
     } finally {
-      setIsHacking(false);
+      setIsScanning(false);
     }
   };
 
   return (
-    <Card className="w-full shadow-md">
+    <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Shield className="h-5 w-5" />
+        <CardTitle className="flex items-center">
+          <Camera className="h-5 w-5 mr-2" />
           Comprehensive CCTV Scanner
         </CardTitle>
-        <CardDescription>
-          Scan and attempt to exploit IP cameras on your network
-        </CardDescription>
       </CardHeader>
-      <CardContent>
-        <div className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="subnet">Network Subnet</Label>
-            <Input
-              id="subnet"
-              placeholder="e.g., 192.168.1.0/24"
-              value={subnet}
-              onChange={(e) => setSubnet(e.target.value)}
-              disabled={isScanning}
-            />
-            <p className="text-xs text-gray-500">Enter IP range in CIDR notation (e.g., 192.168.1.0/24)</p>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="scanPorts">Scan Ports</Label>
-            <Input
-              id="scanPorts"
-              placeholder="e.g., 80,554,8080"
-              value={scanPorts}
-              onChange={(e) => setScanPorts(e.target.value)}
-              disabled={isScanning}
-            />
-            <p className="text-xs text-gray-500">Comma-separated ports to scan (e.g., 80,554,8080)</p>
-          </div>
-
-          <div className="flex items-center space-x-2">
-            <Checkbox
-              id="useCustomCredentials"
-              checked={useCustomCredentials}
-              onCheckedChange={(checked) => setUseCustomCredentials(checked === true)}
-              disabled={isScanning}
-            />
-            <Label htmlFor="useCustomCredentials">Use Custom Credentials</Label>
-          </div>
-
-          {useCustomCredentials && (
-            <div className="space-y-2">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="username">Username</Label>
-                  <Input
-                    id="username"
-                    placeholder="Username"
-                    value={customCredentials.username}
-                    onChange={(e) => setCustomCredentials({ ...customCredentials, username: e.target.value })}
-                    disabled={isScanning}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="password">Password</Label>
-                  <Input
-                    type="password"
-                    id="password"
-                    placeholder="Password"
-                    value={customCredentials.password}
-                    onChange={(e) => setCustomCredentials({ ...customCredentials, password: e.target.value })}
-                    disabled={isScanning}
-                  />
-                </div>
-              </div>
-            </div>
-          )}
-
-          <Button
-            className="w-full"
-            onClick={handleCameraScan}
+      <CardContent className="space-y-4">
+        <div className="space-y-2">
+          <Label htmlFor="target">Target IP/URL</Label>
+          <Input
+            id="target"
+            placeholder="e.g., 192.168.1.100 or example.com"
+            value={target}
+            onChange={(e) => setTarget(e.target.value)}
             disabled={isScanning}
+          />
+        </div>
+        
+        <div className="space-y-2">
+          <Label htmlFor="scan-type">Scan Type</Label>
+          <Select
+            value={scanType}
+            onValueChange={setScanType}
+            disabled={isScanning}
+          >
+            <SelectTrigger id="scan-type">
+              <SelectValue placeholder="Select scan type" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="standard">Standard</SelectItem>
+              <SelectItem value="advanced">Advanced</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        
+        <div className="space-y-2">
+          <Label htmlFor="timeout">Timeout (ms)</Label>
+          <Input
+            id="timeout"
+            type="number"
+            value={timeout}
+            onChange={(e) => setTimeout(e.target.value)}
+            disabled={isScanning}
+          />
+        </div>
+        
+        <div className="flex items-center space-x-2">
+          <Checkbox
+            id="bruteforce-auth"
+            checked={bruteforceAuth}
+            onCheckedChange={(checked) => setBruteforceAuth(!!checked)}
+            disabled={isScanning}
+          />
+          <Label htmlFor="bruteforce-auth">Bruteforce Authentication</Label>
+        </div>
+        
+        <div className="grid grid-cols-2 gap-4">
+          <Button
+            onClick={handleScan}
+            disabled={isScanning}
+            variant="default"
           >
             {isScanning ? (
               <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                 Scanning...
               </>
             ) : (
               <>
-                <Search className="mr-2 h-4 w-4" />
-                Start Camera Scan
+                <Search className="h-4 w-4 mr-2" />
+                Scan
               </>
             )}
           </Button>
-
-          {camerasFound.length > 0 && (
-            <div className="mt-6 space-y-3">
-              <h3 className="text-lg font-semibold">Cameras Found</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {camerasFound.map((camera, index) => (
-                  <Card key={index} className="border-gray-700 bg-scanner-dark-alt">
-                    <CardContent className="space-y-2">
-                      <h4 className="text-sm font-medium">{camera.ip}</h4>
-                      <p className="text-xs text-gray-400">
-                        {camera.manufacturer || 'Unknown Manufacturer'} - {camera.model || 'Unknown Model'}
-                      </p>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setSelectedCamera(camera)}
-                      >
-                        Select
-                      </Button>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {selectedCamera && (
-            <div className="mt-6 space-y-3">
-              <h3 className="text-lg font-semibold">Selected Camera</h3>
-              <Textarea
-                readOnly
-                value={JSON.stringify(selectedCamera, null, 2)}
-                className="min-h-32 font-mono text-sm bg-scanner-dark-alt border-gray-700"
-              />
-              <Button
-                className="w-full"
-                onClick={handleCameraHack}
-                disabled={isHacking}
-              >
-                {isHacking ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Hacking...
-                  </>
-                ) : (
-                  <>
-                    <Lock className="mr-2 h-4 w-4" />
-                    Attempt Camera Hack
-                  </>
-                )}
-              </Button>
-            </div>
-          )}
+          
+          <Button
+            onClick={handleHack}
+            disabled={isScanning}
+            variant="destructive"
+          >
+            {isScanning ? (
+              <>
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                Hacking...
+              </>
+            ) : (
+              <>
+                <Search className="h-4 w-4 mr-2" />
+                Hack
+              </>
+            )}
+          </Button>
         </div>
+        
+        {scanResults && scanResults.cameras && (
+          <div className="mt-4">
+            <h3 className="text-sm font-medium mb-2">Found Cameras:</h3>
+            {scanResults.cameras.length > 0 ? (
+              <ul className="text-xs space-y-2">
+                {scanResults.cameras.map((camera: any, index: number) => (
+                  <li key={index} className="p-2 bg-gray-800 rounded">
+                    <div><span className="font-medium">IP:</span> {camera.ip}</div>
+                    {camera.manufacturer && <div><span className="font-medium">Make:</span> {camera.manufacturer}</div>}
+                    {camera.model && <div><span className="font-medium">Model:</span> {camera.model}</div>}
+                    {camera.url && <div className="truncate"><span className="font-medium">URL:</span> {camera.url}</div>}
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-xs text-gray-400">No cameras found.</p>
+            )}
+          </div>
+        )}
       </CardContent>
     </Card>
   );

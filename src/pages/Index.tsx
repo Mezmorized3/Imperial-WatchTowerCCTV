@@ -1,164 +1,259 @@
 import React, { useState, useEffect } from 'react';
-import { ScanProgress, CameraResult, ScanTarget, ScanSettings } from '@/types/scanner';
-import { Toaster } from '@/components/ui/toaster';
-import DashboardHeader from '@/components/DashboardHeader';
-import CommandPalette from '@/components/CommandPalette';
-import { useRealTime } from '@/contexts/RealTimeContext';
-import RealTimeStatus from '@/components/RealTimeStatus';
+import { useNavigate } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useToast } from '@/hooks/use-toast';
+import { Loader2, ScanFace, Settings, HelpCircle, ShieldAlert, Network, Terminal, Globe } from 'lucide-react';
+import { executeWebCheck } from '@/utils/osintTools';
+import { Progress } from '@/components/ui/progress';
+import { Checkbox } from '@/components/ui/checkbox';
 
-// Import refactored components
-import ScanController from '@/components/dashboard/ScanController';
-import DashboardTabs from '@/components/dashboard/DashboardTabs';
-import ScanNotifications from '@/components/dashboard/ScanNotifications';
-import ScanPanel from '@/components/dashboard/ScanPanel';
-import ImperialBanner from '@/components/dashboard/ImperialBanner';
-import ImperialStartup from '@/components/dashboard/ImperialStartup';
-import { useIntegratedScanHandler } from '@/components/dashboard/IntegratedScanHandler';
+interface ScanTarget {
+  type: 'ip' | 'domain' | 'url';
+  value: string;
+}
+
+interface ScanSettings {
+  ports?: string;
+  timeout?: number;
+  aggressive?: boolean;
+}
 
 const Index = () => {
-  console.log('Index component mounting...');
-  
-  // Get real-time data from context
-  const { 
-    isConnected, 
-    connect,
-    scanProgress: realtimeScanProgress, 
-    cameras: realtimeCameras,
-    startScan: realtimeStartScan 
-  } = useRealTime();
-  
-  const [results, setResults] = useState<CameraResult[]>([]);
-  const [scanProgress, setScanProgress] = useState<ScanProgress>({
-    status: 'idle',
-    targetsTotal: 0,
-    targetsScanned: 0,
-    camerasFound: 0
-  });
-  const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<string>('map');
-  const [showAscii, setShowAscii] = useState(true);
-  const [commandOpen, setCommandOpen] = useState(false);
-  const [serverStarted, setServerStarted] = useState(false);
+  const navigate = useNavigate();
+  const { toast } = useToast();
 
-  // Sync with real-time data when available
+  const [scanTarget, setScanTarget] = useState<ScanTarget>({ type: 'ip', value: '' });
+  const [scanSettings, setScanSettings] = useState<ScanSettings>({});
+  const [isScanning, setIsScanning] = useState(false);
+  const [scanProgress, setScanProgress] = useState(0);
+  const [showAdvancedSettings, setShowAdvancedSettings] = useState(false);
+
   useEffect(() => {
-    if (isConnected) {
-      setScanProgress(realtimeScanProgress);
+    if (isScanning) {
+      const interval = setInterval(() => {
+        setScanProgress((prevProgress) => {
+          const newProgress = Math.min(prevProgress + 10, 99);
+          return newProgress;
+        });
+      }, 500);
+
+      return () => clearInterval(interval);
+    } else {
+      setScanProgress(0);
     }
-  }, [isConnected, realtimeScanProgress]);
+  }, [isScanning]);
 
-  useEffect(() => {
-    if (isConnected && realtimeCameras.length > 0) {
-      setResults(realtimeCameras);
+  const handleScan = ({ target, settings }: { target: ScanTarget, settings: ScanSettings }) => {
+    if (!target.value) {
+      toast({
+        title: "Error",
+        description: "Please enter a target to scan.",
+        variant: "destructive",
+      });
+      return;
     }
-  }, [isConnected, realtimeCameras]);
 
-  useEffect(() => {
-    setActiveTab('map');
-  }, []);
+    setIsScanning(true);
 
-  useEffect(() => {
-    if (scanProgress.status === 'running') {
-      setActiveTab('map');
-    }
-  }, [scanProgress.status]);
-
-  // Configure scan controller
-  const { handleStartScan } = ScanController({
-    onScanProgressUpdate: (progress) => {
-      setScanProgress(progress);
-      // If we're connected to real-time, send scan progress update
-      if (isConnected) {
-        // This would be handled by the real-time context
-      }
-    },
-    onResultsUpdate: (newResults) => {
-      setResults(newResults);
-    },
-    onErrorOccurred: setError
-  });
-
-  // Use the integrated scan handler
-  const { handleIntegratedScan } = useIntegratedScanHandler({
-    isConnected,
-    realtimeStartScan,
-    setScanProgress,
-    setResults,
-    handleStartScan
-  });
-
-  const toggleAscii = () => {
-    setShowAscii(!showAscii);
+    // Simulate scan execution
+    setTimeout(() => {
+      setIsScanning(false);
+      setScanProgress(100);
+      toast({
+        title: "Scan Complete",
+        description: `Scan of ${target.value} completed.`,
+      });
+    }, 5000);
   };
 
-  // Handle keyboard shortcut
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
-        e.preventDefault();
-        setCommandOpen((open) => !open);
+  const handleWebCheck = async () => {
+    if (!scanTarget.value) {
+      toast({
+        title: "Error",
+        description: "Please enter a URL to check.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsScanning(true);
+
+    try {
+      const result = await executeWebCheck({ url: scanTarget.value });
+
+      if (result.success) {
+        toast({
+          title: "Web Check Complete",
+          description: `Web check of ${scanTarget.value} completed.`,
+        });
+      } else {
+        toast({
+          title: "Web Check Failed",
+          description: `Web check of ${scanTarget.value} failed.`,
+          variant: "destructive",
+        });
       }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
-
-  // Convert connect function to void return type to fix TS error
-  const handleConnect = async () => {
-    await connect();
-    return;
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "An error occurred during the web check.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsScanning(false);
+    }
   };
 
-  useEffect(() => {
-    console.log('Index component mounted');
-    
-    return () => {
-      console.log('Index component unmounting');
-    };
-  }, []);
-
-  console.log('Rendering Index component', { activeTab, scanProgress, results });
-  
   return (
-    <div className="min-h-screen bg-scanner-dark text-white">
-      <main className="container mx-auto py-6 px-4">
-        {/* Imperial Army ASCII banner */}
-        <ImperialBanner showAscii={showAscii} toggleAscii={toggleAscii} />
-        
-        {/* Header with real-time status */}
-        <div className="flex justify-between items-center mb-4">
-          <DashboardHeader />
-          <RealTimeStatus />
-        </div>
-        
-        {/* Startup Button */}
-        <ImperialStartup setServerStarted={setServerStarted} connect={handleConnect} />
-        
-        <ScanNotifications error={error} />
-        
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
-          <div className="lg:col-span-1">
-            <ScanPanel 
-              onStartScan={handleIntegratedScan}
-              isScanning={scanProgress.status === 'running'} 
-              scanProgress={scanProgress}
-            />
-          </div>
-          
-          <div className="lg:col-span-2">
-            <DashboardTabs 
-              activeTab={activeTab}
-              setActiveTab={setActiveTab}
-              results={results}
-              scanProgress={scanProgress}
-            />
-          </div>
-        </div>
-      </main>
-      
-      <CommandPalette open={commandOpen} setOpen={setCommandOpen} />
-      <Toaster />
+    <div className="container mx-auto p-4">
+      <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+        <Card className="bg-scanner-dark-alt border-gray-700">
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              <ScanFace className="h-5 w-5 mr-2 text-scanner-success" />
+              Start Scanning
+            </CardTitle>
+            <CardDescription>Enter a target to begin scanning.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="target">Target</Label>
+              <Input
+                id="target"
+                placeholder="e.g., 192.168.1.1 or example.com"
+                value={scanTarget.value}
+                onChange={(e) => setScanTarget({ ...scanTarget, value: e.target.value })}
+                disabled={isScanning}
+                className="bg-scanner-dark border-gray-700"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="target-type">Target Type</Label>
+              <Select
+                value={scanTarget.type}
+                onValueChange={(value) => setScanTarget({ ...scanTarget, type: value as 'ip' | 'domain' | 'url' })}
+                disabled={isScanning}
+              >
+                <SelectTrigger id="target-type" className="bg-scanner-dark border-gray-700">
+                  <SelectValue placeholder="Select target type" />
+                </SelectTrigger>
+                <SelectContent className="bg-scanner-dark border-gray-700">
+                  <SelectItem value="ip">IP Address</SelectItem>
+                  <SelectItem value="domain">Domain</SelectItem>
+                  <SelectItem value="url">URL</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {showAdvancedSettings && (
+              <div className="space-y-2">
+                <Label htmlFor="ports">Ports (optional)</Label>
+                <Input
+                  id="ports"
+                  placeholder="e.g., 22,80,443"
+                  disabled={isScanning}
+                  className="bg-scanner-dark border-gray-700"
+                />
+              </div>
+            )}
+
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="advanced-settings"
+                checked={showAdvancedSettings}
+                onCheckedChange={() => setShowAdvancedSettings(!showAdvancedSettings)}
+                disabled={isScanning}
+              />
+              <Label htmlFor="advanced-settings">Show Advanced Settings</Label>
+            </div>
+
+            <Button
+              onClick={() => handleScan({ target: scanTarget, settings: scanSettings })}
+              disabled={isScanning}
+              className="w-full"
+            >
+              {isScanning ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Scanning...
+                </>
+              ) : (
+                <>
+                  <ScanFace className="mr-2 h-4 w-4" />
+                  Start Scan
+                </>
+              )}
+            </Button>
+
+            <Button
+              onClick={handleWebCheck}
+              disabled={isScanning}
+              variant="secondary"
+              className="w-full"
+            >
+              {isScanning ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Checking...
+                </>
+              ) : (
+                <>
+                  <Globe className="mr-2 h-4 w-4" />
+                  Web Check
+                </>
+              )}
+            </Button>
+
+            {isScanning && (
+              <Progress value={scanProgress} className="w-full" />
+            )}
+          </CardContent>
+        </Card>
+
+        <Card className="bg-scanner-dark-alt border-gray-700">
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              <Terminal className="h-5 w-5 mr-2 text-scanner-success" />
+              OSINT Tools
+            </CardTitle>
+            <CardDescription>Explore various OSINT tools.</CardDescription>
+          </CardHeader>
+          <CardContent className="flex flex-col space-y-4">
+            <Button onClick={() => navigate('/osint-tools')} variant="secondary">
+              <Network className="mr-2 h-4 w-4" />
+              Network Tools
+            </Button>
+            <Button onClick={() => navigate('/hacking-tool')} variant="secondary">
+              <ShieldAlert className="mr-2 h-4 w-4" />
+              Hacking Tools
+            </Button>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-scanner-dark-alt border-gray-700">
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              <Settings className="h-5 w-5 mr-2 text-scanner-success" />
+              Settings & Help
+            </CardTitle>
+            <CardDescription>Configure settings and get help.</CardDescription>
+          </CardHeader>
+          <CardContent className="flex flex-col space-y-4">
+            <Button onClick={() => navigate('/settings')} variant="secondary">
+              <Settings className="mr-2 h-4 w-4" />
+              Settings
+            </Button>
+            <Button onClick={() => navigate('/help')} variant="secondary">
+              <HelpCircle className="mr-2 h-4 w-4" />
+              Help & Documentation
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 };
