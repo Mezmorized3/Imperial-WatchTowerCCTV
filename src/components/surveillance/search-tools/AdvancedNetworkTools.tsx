@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -106,7 +105,7 @@ const AdvancedNetworkTools: React.FC<AdvancedNetworkToolsProps> = ({ onActionCom
     } else {
       toast({
         title: "Scan Failed",
-        description: result.error || "Unknown error occurred",
+        description: "error" in result ? result.error : "Unknown error occurred",
         variant: "destructive"
       });
     }
@@ -134,12 +133,12 @@ const AdvancedNetworkTools: React.FC<AdvancedNetworkToolsProps> = ({ onActionCom
     if (result.success) {
       toast({
         title: "Brute Force Complete",
-        description: `Found ${result.results.found || 0} valid credentials for ${hydraTarget}`
+        description: `Found ${result.results?.found || 0} valid credentials for ${hydraTarget}`
       });
     } else {
       toast({
         title: "Brute Force Failed",
-        description: result.error || "Unknown error occurred",
+        description: "error" in result ? result.error : "Unknown error occurred",
         variant: "destructive"
       });
     }

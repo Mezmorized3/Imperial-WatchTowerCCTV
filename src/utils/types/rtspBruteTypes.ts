@@ -1,43 +1,33 @@
 
-/**
- * Type definitions for RTSP Brute-forcing tool
- */
+export interface RtspCredential {
+  ip: string;
+  port: number;
+  username: string;
+  password: string;
+  manufacturer?: string;
+  model?: string;
+  firmware?: string;
+}
 
-export interface RtspBruteParams {
-  targets: string | string[];
-  userlist?: string[];
-  passlist?: string[];
-  workers?: number;
-  timeout?: number;
-  outputFile?: string;
+export interface RtspBruteOptions {
+  targets: string[];
+  userlist: string[];
+  passlist: string[];
+  workers: number;
+  timeout: number;
   useTor?: boolean;
   bypassTechniques?: boolean;
-  vendor?: 'any' | 'hikvision' | 'dahua' | 'axis' | 'bosch';
-  proxyList?: string[];
   stealthMode?: boolean;
-  maxAttempts?: number;
   smartCredentials?: boolean;
-  userAgent?: string;
+  vendor?: string;
 }
 
 export interface RtspBruteResult {
   success: boolean;
   found: RtspCredential[];
-  error?: string;
-  scanDetails?: {
+  scanDetails: {
     targetsScanned: number;
-    attemptsPerTarget: number;
+    credentialsAttempted: number;
     timeElapsed: string;
-    targetType: string;
   };
-}
-
-export interface RtspCredential {
-  target: string;
-  user: string;
-  pass: string;
-  vendor?: string;
-  port?: number;
-  streamUrl?: string;
-  timestamp?: string;
 }

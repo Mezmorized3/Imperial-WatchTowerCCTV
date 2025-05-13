@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { executeCamerattack } from '@/utils/osintImplementations';
+import { executeCamerattack } from '@/utils/osintTools';
 
 const CamerattackTool: React.FC = () => {
   const [target, setTarget] = useState('');

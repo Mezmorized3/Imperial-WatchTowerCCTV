@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -13,7 +12,16 @@ import { Slider } from '@/components/ui/slider';
 import { Loader2, Lock, Network, Shield, Terminal, Video } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { executeMegaRtspBruter, getCommonRtspUsers, getCommonRtspPasswords } from '@/utils/osintImplementations';
-import { RtspCredential } from '@/utils/types/rtspBruteTypes';
+
+interface RtspCredential {
+  ip: string;
+  port: number;
+  username: string;
+  password: string;
+  manufacturer?: string;
+  model?: string;
+  firmware?: string;
+}
 
 const ImperialRtspBrute: React.FC = () => {
   const { toast } = useToast();
@@ -129,36 +137,26 @@ const ImperialRtspBrute: React.FC = () => {
         setResults(result.found);
         setScanDetails(result.scanDetails);
         
-        if (result.found.length > 0) {
-          toast({
-            title: "Credentials Found!",
-            description: `Found ${result.found.length} valid credentials`,
-            variant: "default",
-          });
-        } else {
-          toast({
-            title: "Scan Complete",
-            description: "No valid credentials found",
-            variant: "default",
-          });
-        }
+        toast({
+          title: "Scan Complete",
+          description: `Found ${result.found.length} valid credentials`,
+        });
       } else {
         toast({
           title: "Scan Failed",
-          description: result.error || "Unknown error occurred",
+          description: "An error occurred during the scan",
           variant: "destructive",
         });
       }
     } catch (error) {
-      console.error("Error during RTSP brute-force:", error);
+      console.error("Error during RTSP brute force:", error);
       toast({
-        title: "Execution Error",
+        title: "Scan Error",
         description: error instanceof Error ? error.message : "An unknown error occurred",
         variant: "destructive",
       });
     } finally {
       setIsLoading(false);
-      setActiveTab('results');
     }
   };
 
