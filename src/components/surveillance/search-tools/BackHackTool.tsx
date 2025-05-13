@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -27,29 +26,31 @@ const BackHackTool = () => {
       }
       
       const result = await executeBackHack({
-        target,
         url: urlValue,
-        scanType: scanType as 'basic' | 'full',
-        timeout: 30000
+        options: {
+          target,
+          scanType: scanType as 'basic' | 'full',
+          timeout: 30000
+        }
       });
       
       if (result && result.success) {
         setResults(result.data);
         toast({
-          title: "Scan Complete",
-          description: `Found ${result.data?.cameras?.length || 0} cameras.`
+          title: "Hack Complete", 
+          description: `Found ${result.data?.cameras?.length || 0} cameras and ${result.data?.backupFiles?.length || 0} backup files.`
         });
       } else {
         toast({
-          title: "Scan Failed",
-          description: result?.error || "Unknown error occurred",
+          title: "Operation Failed",
+          description: result?.data?.message || "Unknown error occurred",
           variant: "destructive"
         });
       }
     } catch (error) {
-      console.error("Error during scan:", error);
+      console.error("Error during back hack:", error);
       toast({
-        title: "Scan Error",
+        title: "Operation Error",
         description: error instanceof Error ? error.message : "An unknown error occurred",
         variant: "destructive"
       });

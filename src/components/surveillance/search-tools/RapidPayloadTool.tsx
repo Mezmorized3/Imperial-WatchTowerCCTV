@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -57,7 +56,7 @@ const RapidPayloadTool: React.FC<RapidPayloadToolProps> = ({ onPayloadGenerated 
       } else {
         toast({
           title: "Generation Failed",
-          description: result?.error || "Unknown error occurred",
+          description: result?.data?.message || "Unknown error occurred",
           variant: "destructive"
         });
       }

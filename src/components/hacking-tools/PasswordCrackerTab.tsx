@@ -1,320 +1,359 @@
-
 import React, { useState } from 'react';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { toast } from '@/components/ui/use-toast';
-import { Copy, Check, Key, Unlock } from 'lucide-react';
-import { executeHackingTool } from '@/utils/osintTools';
+import { Textarea } from '@/components/ui/textarea';
+import { Loader2, KeyRound, ListChecks } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import { Checkbox } from '@/components/ui/checkbox';
+import { executeHackingTool } from '@/utils/osintUtilsConnector';
 
-interface PasswordCrackerTabProps {
-  isExecuting: boolean;
-  setIsExecuting: (isExecuting: boolean) => void;
-  toolOutput: string | null;
-  setToolOutput: (output: string | null) => void;
-  executeSelectedTool: (toolType: string) => void;
-  isRealmode?: boolean; // Add the optional property to fix the error
-}
+const PasswordCrackerTab: React.FC = () => {
+  const [crackTarget, setCrackTarget] = useState('');
+  const [crackMethod, setCrackMethod] = useState('dictionary');
+  const [crackDictionary, setCrackDictionary] = useState('common');
+  const [crackCustomDictionary, setCrackCustomDictionary] = useState('');
+  const [crackBruteforceCharset, setCrackBruteforceCharset] = useState('alphanumeric');
+  const [crackBruteforceMinLength, setCrackBruteforceMinLength] = useState(6);
+  const [crackBruteforceMaxLength, setCrackBruteforceMaxLength] = useState(8);
+  const [isCracking, setIsCracking] = useState(false);
+  const [crackResults, setCrackResults] = useState<string[]>([]);
 
-const PasswordCrackerTab: React.FC<PasswordCrackerTabProps> = ({ 
-  isExecuting, 
-  setIsExecuting, 
-  toolOutput, 
-  setToolOutput,
-  executeSelectedTool,
-  isRealmode
-}) => {
-  const [selectedHashType, setSelectedHashType] = useState('md5');
-  const [customHash, setCustomHash] = useState('');
-  const [selectedWordlist, setSelectedWordlist] = useState('rockyou');
-  const [customRules, setCustomRules] = useState('');
-  const [copySuccess, setCopySuccess] = useState<string | null>(null);
-  
-  const [selectedCharset, setSelectedCharset] = useState('alphanum');
-  const [customTemplate, setCustomTemplate] = useState('');
-  const [customLength, setCustomLength] = useState('8');
-  
-  const hashTypes = {
-    'md5': 'MD5',
-    'sha1': 'SHA1',
-    'sha256': 'SHA256',
-    'ntlm': 'NTLM (Windows)',
-    'bcrypt': 'bcrypt',
-    'wpa': 'WPA/WPA2'
-  };
-  
-  const wordlists = {
-    'rockyou': 'RockYou (14 million)',
-    'darkweb2017': 'Dark Web 2017 (10 million)',
-    'crackstation': 'CrackStation (1.5 billion)',
-    'custom': 'Custom Wordlist'
-  };
-  
-  const charsets = {
-    'alpha': 'Alphabetic (a-zA-Z)',
-    'alphanum': 'Alphanumeric (a-zA-Z0-9)',
-    'full': 'Full (a-zA-Z0-9!@#$%^&*)',
-    'numeric': 'Numeric (0-9)',
-    'custom': 'Custom Charset'
-  };
-  
-  const handleCopyToClipboard = (text: string, type: string) => {
-    navigator.clipboard.writeText(text).then(() => {
-      setCopySuccess(type);
-      setTimeout(() => setCopySuccess(null), 2000);
+  const [generateLength, setGenerateLength] = useState(12);
+  const [generateCharset, setGenerateCharset] = useState('alphanumeric');
+  const [generateCount, setGenerateCount] = useState(10);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [generationResults, setGenerationResults] = useState<string[]>([]);
+
+  const { toast } = useToast();
+
+  const handleCrack = async () => {
+    if (!crackTarget) {
       toast({
-        title: "Copied to clipboard!",
-        description: `The ${type} has been copied to your clipboard.`,
+        title: "Error",
+        description: "Please enter a target to crack",
+        variant: "destructive"
       });
-    });
-  };
-  
-  const handleHashCrack = async () => {
-    setIsExecuting(true);
-    setToolOutput(null);
-    
+      return;
+    }
+
+    setIsCracking(true);
+    setCrackResults([]);
+
+    const params = {
+      tool: 'passwordCracker',
+      target: crackTarget,
+      method: crackMethod,
+      dictionary: crackMethod === 'dictionary' ? crackDictionary : undefined,
+      customDictionary: crackMethod === 'custom' ? crackCustomDictionary : undefined,
+      bruteforceCharset: crackMethod === 'bruteforce' ? crackBruteforceCharset : undefined,
+      bruteforceMinLength: crackMethod === 'bruteforce' ? crackBruteforceMinLength : undefined,
+      bruteforceMaxLength: crackMethod === 'bruteforce' ? crackBruteforceMaxLength : undefined
+    };
+
     try {
-      // Execute hash cracking tool
-      const result = await executeHackingTool({
-        tool: 'hashcat',
-        options: {
-          hashType: selectedHashType,
-          hashValue: customHash,
-          wordlist: selectedWordlist,
-          rules: customRules,
-          mode: 'crack'
-        }
-      });
+      const result = await executeHackingTool(params);
       
-      toast({
-        title: "Hash Cracking Started",
-        description: `Attempting to crack ${selectedHashType} hash`,
-      });
-      
-      if (result?.data) {
-        // Format and display the tool output
-        const formattedOutput = typeof result.data === 'string' ? 
-          result.data : 
-          JSON.stringify(result.data, null, 2);
-        
-        setToolOutput(formattedOutput);
-      } else if (result?.error) {
-        setToolOutput(`Error: ${result.error}`);
+      if (result && result.success) {
+        setCrackResults(result.data.results);
+        toast({
+          title: "Cracking Complete",
+          description: `Found ${result.data.results.length} passwords.`
+        });
+      } else {
+        toast({
+          title: "Operation Failed",
+          description: result?.data?.message || "Unknown error occurred",
+          variant: "destructive"
+        });
       }
     } catch (error) {
-      console.error('Tool execution error:', error);
-      setToolOutput(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
-      
+      console.error("Error during password cracking:", error);
       toast({
-        title: "Execution Failed",
+        title: "Cracking Error",
         description: error instanceof Error ? error.message : "An unknown error occurred",
         variant: "destructive"
       });
     } finally {
-      setIsExecuting(false);
+      setIsCracking(false);
     }
   };
-  
-  const handleDictGenerate = async () => {
-    setIsExecuting(true);
-    setToolOutput(null);
-    
+
+  const handleGenerate = async () => {
+    setIsGenerating(true);
+    setGenerationResults([]);
+
+    const params = {
+      tool: 'passwordGenerator',
+      length: generateLength,
+      charset: generateCharset,
+      count: generateCount
+    };
+
     try {
-      // Execute wordlist generator tool
-      const result = await executeHackingTool({
-        tool: 'wordlist-generator',
-        options: {
-          template: customTemplate,
-          length: customLength,
-          charset: selectedCharset,
-          mode: 'generate'
-        }
-      });
+      const result = await executeHackingTool(params);
       
-      toast({
-        title: "Wordlist Generator Started",
-        description: `Generating wordlist with template: ${customTemplate || 'default'}`,
-      });
-      
-      if (result?.data) {
-        // Format and display the tool output
-        const formattedOutput = typeof result.data === 'string' ? 
-          result.data : 
-          JSON.stringify(result.data, null, 2);
-        
-        setToolOutput(formattedOutput);
-      } else if (result?.error) {
-        setToolOutput(`Error: ${result.error}`);
+      if (result && result.success) {
+        setGenerationResults(result.data.results);
+        toast({
+          title: "Generation Complete",
+          description: `Generated ${result.data.results.length} passwords.`
+        });
+      } else {
+        toast({
+          title: "Operation Failed",
+          description: result?.data?.message || "Unknown error occurred",
+          variant: "destructive"
+        });
       }
     } catch (error) {
-      console.error('Tool execution error:', error);
-      setToolOutput(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
-      
+      console.error("Error during password generation:", error);
       toast({
-        title: "Execution Failed",
+        title: "Generation Error",
         description: error instanceof Error ? error.message : "An unknown error occurred",
         variant: "destructive"
       });
     } finally {
-      setIsExecuting(false);
+      setIsGenerating(false);
     }
   };
 
   return (
-    <div className="space-y-4">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="space-y-4">
-          <div>
-            <Label htmlFor="hash-type">Hash Type</Label>
-            <Select 
-              value={selectedHashType} 
-              onValueChange={setSelectedHashType}
-            >
-              <SelectTrigger id="hash-type" className="bg-scanner-dark-alt border-gray-700">
-                <SelectValue placeholder="Select a hash type" />
-              </SelectTrigger>
-              <SelectContent className="bg-scanner-dark border-gray-700">
-                {Object.entries(hashTypes).map(([key, value]) => (
-                  <SelectItem key={key} value={key}>{value}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          
-          <div>
-            <Label htmlFor="hash-value">Hash Value</Label>
-            <Textarea 
-              id="hash-value" 
-              placeholder="Enter hash to crack" 
-              value={customHash} 
-              onChange={(e) => setCustomHash(e.target.value)}
-              className="min-h-24 font-mono text-sm bg-scanner-dark-alt border-gray-700"
-            />
-          </div>
-          
-          <div>
-            <Label htmlFor="wordlist">Wordlist</Label>
-            <Select 
-              value={selectedWordlist} 
-              onValueChange={setSelectedWordlist}
-            >
-              <SelectTrigger id="wordlist" className="bg-scanner-dark-alt border-gray-700">
-                <SelectValue placeholder="Select a wordlist" />
-              </SelectTrigger>
-              <SelectContent className="bg-scanner-dark border-gray-700">
-                {Object.entries(wordlists).map(([key, value]) => (
-                  <SelectItem key={key} value={key}>{value}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          
-          <div>
-            <Label htmlFor="rules">Custom Rules (Optional)</Label>
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      {/* Password Cracker Section */}
+      <Card className="bg-scanner-dark-alt border-gray-700">
+        <CardHeader>
+          <CardTitle className="flex items-center">
+            <KeyRound className="mr-2 h-4 w-4" />
+            Password Cracker
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="crack-target">Target</Label>
             <Input
-              id="rules"
-              placeholder="e.g., -r best64.rule"
-              value={customRules}
-              onChange={(e) => setCustomRules(e.target.value)}
-              className="bg-scanner-dark-alt border-gray-700"
+              id="crack-target"
+              placeholder="Enter target (e.g., username, hash)"
+              value={crackTarget}
+              onChange={(e) => setCrackTarget(e.target.value)}
+              className="bg-scanner-dark border-gray-700"
             />
           </div>
-          
+
+          <div className="space-y-2">
+            <Label htmlFor="crack-method">Method</Label>
+            <Select
+              value={crackMethod}
+              onValueChange={setCrackMethod}
+              className="bg-scanner-dark border-gray-700"
+            >
+              <SelectTrigger id="crack-method" className="bg-scanner-dark border-gray-700">
+                <SelectValue placeholder="Select method" />
+              </SelectTrigger>
+              <SelectContent className="bg-scanner-dark border-gray-700">
+                <SelectItem value="dictionary">Dictionary</SelectItem>
+                {/* <SelectItem value="custom">Custom Dictionary</SelectItem> */}
+                <SelectItem value="bruteforce">Brute Force</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {crackMethod === 'dictionary' && (
+            <div className="space-y-2">
+              <Label htmlFor="crack-dictionary">Dictionary</Label>
+              <Select
+                value={crackDictionary}
+                onValueChange={setCrackDictionary}
+                className="bg-scanner-dark border-gray-700"
+              >
+                <SelectTrigger id="crack-dictionary" className="bg-scanner-dark border-gray-700">
+                  <SelectValue placeholder="Select dictionary" />
+                </SelectTrigger>
+                <SelectContent className="bg-scanner-dark border-gray-700">
+                  <SelectItem value="common">Common Passwords</SelectItem>
+                  {/* <SelectItem value="large">Large Dictionary</SelectItem> */}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
+          {crackMethod === 'custom' && (
+            <div className="space-y-2">
+              <Label htmlFor="crack-custom-dictionary">Custom Dictionary</Label>
+              <Textarea
+                id="crack-custom-dictionary"
+                placeholder="Enter custom dictionary (one password per line)"
+                value={crackCustomDictionary}
+                onChange={(e) => setCrackCustomDictionary(e.target.value)}
+                className="bg-scanner-dark border-gray-700 min-h-[100px]"
+              />
+            </div>
+          )}
+
+          {crackMethod === 'bruteforce' && (
+            <>
+              <div className="space-y-2">
+                <Label htmlFor="crack-bruteforce-charset">Charset</Label>
+                <Select
+                  value={crackBruteforceCharset}
+                  onValueChange={setCrackBruteforceCharset}
+                  className="bg-scanner-dark border-gray-700"
+                >
+                  <SelectTrigger id="crack-bruteforce-charset" className="bg-scanner-dark border-gray-700">
+                    <SelectValue placeholder="Select charset" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-scanner-dark border-gray-700">
+                    <SelectItem value="alphanumeric">Alphanumeric</SelectItem>
+                    <SelectItem value="numeric">Numeric</SelectItem>
+                    <SelectItem value="alphabetic">Alphabetic</SelectItem>
+                    <SelectItem value="custom">Custom</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="crack-bruteforce-min-length">Min Length</Label>
+                  <Input
+                    type="number"
+                    id="crack-bruteforce-min-length"
+                    placeholder="Min Length"
+                    value={crackBruteforceMinLength}
+                    onChange={(e) => setCrackBruteforceMinLength(parseInt(e.target.value))}
+                    className="bg-scanner-dark border-gray-700"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="crack-bruteforce-max-length">Max Length</Label>
+                  <Input
+                    type="number"
+                    id="crack-bruteforce-max-length"
+                    placeholder="Max Length"
+                    value={crackBruteforceMaxLength}
+                    onChange={(e) => setCrackBruteforceMaxLength(parseInt(e.target.value))}
+                    className="bg-scanner-dark border-gray-700"
+                  />
+                </div>
+              </div>
+            </>
+          )}
+
           <Button
-            onClick={handleHashCrack}
-            disabled={isExecuting || !customHash}
-            variant="default"
-            className="bg-scanner-primary"
+            onClick={handleCrack}
+            disabled={isCracking}
+            className="w-full"
           >
-            <Key className="h-4 w-4 mr-2" />
-            {isExecuting ? "Cracking..." : "Crack Hash"}
+            {isCracking ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Cracking...
+              </>
+            ) : (
+              <>
+                <KeyRound className="mr-2 h-4 w-4" />
+                Start Cracking
+              </>
+            )}
           </Button>
-        </div>
-        
-        <div className="space-y-4">
-          <div>
-            <Label htmlFor="charset">Character Set</Label>
-            <Select 
-              value={selectedCharset} 
-              onValueChange={setSelectedCharset}
-            >
-              <SelectTrigger id="charset" className="bg-scanner-dark-alt border-gray-700">
-                <SelectValue placeholder="Select a character set" />
-              </SelectTrigger>
-              <SelectContent className="bg-scanner-dark border-gray-700">
-                {Object.entries(charsets).map(([key, value]) => (
-                  <SelectItem key={key} value={key}>{value}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          
-          <div>
-            <Label htmlFor="template">Template (Optional)</Label>
+
+          {crackResults.length > 0 && (
+            <div className="mt-4 space-y-2">
+              <h3 className="text-sm font-medium text-gray-400">Cracked Passwords</h3>
+              <Textarea
+                readOnly
+                value={crackResults.join('\n')}
+                className="min-h-[100px] font-mono text-sm bg-scanner-dark border-gray-700"
+              />
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Password Generator Section */}
+      <Card className="bg-scanner-dark-alt border-gray-700">
+        <CardHeader>
+          <CardTitle className="flex items-center">
+            <ListChecks className="mr-2 h-4 w-4" />
+            Password Generator
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="generate-length">Length</Label>
             <Input
-              id="template"
-              placeholder="e.g., password?d?d?d"
-              value={customTemplate}
-              onChange={(e) => setCustomTemplate(e.target.value)}
-              className="bg-scanner-dark-alt border-gray-700"
-            />
-            <p className="text-gray-400 text-xs mt-1">
-              Use ?l for lowercase, ?u for uppercase, ?d for digits, ?s for special
-            </p>
-          </div>
-          
-          <div>
-            <Label htmlFor="length">Length</Label>
-            <Input
-              id="length"
               type="number"
-              min="1"
-              max="16"
-              placeholder="8"
-              value={customLength}
-              onChange={(e) => setCustomLength(e.target.value)}
-              className="bg-scanner-dark-alt border-gray-700"
+              id="generate-length"
+              placeholder="Enter password length"
+              value={generateLength}
+              onChange={(e) => setGenerateLength(parseInt(e.target.value))}
+              className="bg-scanner-dark border-gray-700"
             />
           </div>
-          
-          <Button
-            onClick={handleDictGenerate}
-            disabled={isExecuting}
-            variant="default"
-            className="bg-scanner-primary mt-6"
-          >
-            <Unlock className="h-4 w-4 mr-2" />
-            {isExecuting ? "Generating..." : "Generate Wordlist"}
-          </Button>
-        </div>
-      </div>
-      
-      {toolOutput && (
-        <div className="mt-4">
-          <Label>Tool Output</Label>
-          <div className="relative mt-1.5">
-            <Textarea 
-              readOnly 
-              value={toolOutput}
-              className="min-h-32 font-mono text-sm bg-scanner-dark-alt border-gray-700"
-            />
-            <Button 
-              size="sm" 
-              variant="outline" 
-              className="absolute right-2 top-2 h-8 border-gray-700 hover:bg-scanner-dark-alt"
-              onClick={() => handleCopyToClipboard(toolOutput, 'tool output')}
+
+          <div className="space-y-2">
+            <Label htmlFor="generate-charset">Charset</Label>
+            <Select
+              value={generateCharset}
+              onValueChange={setGenerateCharset}
+              className="bg-scanner-dark border-gray-700"
             >
-              {copySuccess === 'tool output' ? (
-                <Check className="h-4 w-4" />
-              ) : (
-                <Copy className="h-4 w-4" />
-              )}
-            </Button>
+              <SelectTrigger id="generate-charset" className="bg-scanner-dark border-gray-700">
+                <SelectValue placeholder="Select charset" />
+              </SelectTrigger>
+              <SelectContent className="bg-scanner-dark border-gray-700">
+                <SelectItem value="alphanumeric">Alphanumeric</SelectItem>
+                <SelectItem value="numeric">Numeric</SelectItem>
+                <SelectItem value="alphabetic">Alphabetic</SelectItem>
+                <SelectItem value="custom">Custom</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
-        </div>
-      )}
+
+          <div className="space-y-2">
+            <Label htmlFor="generate-count">Count</Label>
+            <Input
+              type="number"
+              id="generate-count"
+              placeholder="Enter number of passwords to generate"
+              value={generateCount}
+              onChange={(e) => setGenerateCount(parseInt(e.target.value))}
+              className="bg-scanner-dark border-gray-700"
+            />
+          </div>
+
+          <Button
+            onClick={handleGenerate}
+            disabled={isGenerating}
+            className="w-full"
+          >
+            {isGenerating ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Generating...
+              </>
+            ) : (
+              <>
+                <ListChecks className="mr-2 h-4 w-4" />
+                Generate Passwords
+              </>
+            )}
+          </Button>
+
+          {generationResults.length > 0 && (
+            <div className="mt-4 space-y-2">
+              <h3 className="text-sm font-medium text-gray-400">Generated Passwords</h3>
+              <Textarea
+                readOnly
+                value={generationResults.join('\n')}
+                className="min-h-[100px] font-mono text-sm bg-scanner-dark border-gray-700"
+              />
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 };

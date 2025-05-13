@@ -39,3 +39,22 @@ export interface ZGrabResult {
     timestamp: string;
   };
 }
+
+export interface PhotonParams {
+  url: string;
+  depth?: number;
+  timeout?: number;
+  threads?: number;
+  delay?: number;
+  userAgent?: string;
+  saveResults?: boolean;
+}
+
+export interface FFmpegParams {
+  input: string;
+  output: string;
+  duration?: string;
+  videoCodec?: string;
+  audioCodec?: string;
+  options?: Record<string, string>;
+}

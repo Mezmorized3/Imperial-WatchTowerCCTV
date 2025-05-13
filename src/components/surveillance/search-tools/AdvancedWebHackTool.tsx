@@ -67,7 +67,7 @@ const AdvancedWebHackTool: React.FC<AdvancedWebHackToolProps> = ({ onScanComplet
       } else {
         toast({
           title: "Scan Failed",
-          description: result?.error || "Unknown error occurred",
+          description: result?.data?.message || "Unknown error occurred",
           variant: "destructive"
         });
       }

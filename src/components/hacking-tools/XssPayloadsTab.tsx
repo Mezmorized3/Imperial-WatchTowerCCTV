@@ -1,171 +1,108 @@
-
 import React, { useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { toast } from '@/components/ui/use-toast';
-import { Bug, Copy, Check } from 'lucide-react';
-import { executeHackingTool } from '@/utils/osintTools';
+import { Search, Code } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import { executeHackingTool } from '@/utils/osintUtilsConnector';
 
-interface XssPayloadsTabProps {
-  isRealmode: boolean;
-  isExecuting: boolean;
-  setIsExecuting: (isExecuting: boolean) => void;
-  setToolOutput: (output: string | null) => void;
-}
+const XssPayloadsTab: React.FC = () => {
+  const [searchTerm, setSearchTerm] = useState('');
+  const [results, setResults] = useState<string[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const { toast } = useToast();
 
-const XssPayloadsTab: React.FC<XssPayloadsTabProps> = ({ 
-  isRealmode,
-  isExecuting, 
-  setIsExecuting, 
-  setToolOutput 
-}) => {
-  const [selectedXssPayload, setSelectedXssPayload] = useState('');
-  const [xssTarget, setXssTarget] = useState('');
-  const [copySuccess, setCopySuccess] = useState<string | null>(null);
-  
-  const xssPayloads = {
-    'basic-alert': `<script>alert('XSS')</script>`,
-    'image-onerror': `<img src="x" onerror="alert('XSS')">`,
-    'svg-onload': `<svg onload="alert('XSS')">`,
-    'body-onload': `<body onload="alert('XSS')">`,
-    'iframe-src': `<iframe src="javascript:alert('XSS')">`,
-    'input-autofocus': `<input autofocus onfocus="alert('XSS')">`,
-    'data-uri': `<a href="data:text/html;base64,PHNjcmlwdD5hbGVydCgnWFNTJyk8L3NjcmlwdD4=">Click me</a>`,
-    'dom-based': `<script>document.getElementById("demo").innerHTML = location.hash.substring(1);</script>`
-  };
-  
-  const handleCopyToClipboard = (text: string, type: string) => {
-    navigator.clipboard.writeText(text).then(() => {
-      setCopySuccess(type);
-      setTimeout(() => setCopySuccess(null), 2000);
+  const handleSearch = async () => {
+    if (!searchTerm) {
       toast({
-        title: "Copied to clipboard!",
-        description: `The ${type} has been copied to your clipboard.`,
+        title: "Error",
+        description: "Please enter a search term",
+        variant: "destructive"
       });
-    });
-  };
-  
-  const executeXssTool = async () => {
-    setIsExecuting(true);
-    setToolOutput(null);
-    
+      return;
+    }
+
+    setIsLoading(true);
+    setResults([]);
+
     try {
-      if (!isRealmode) {
-        setToolOutput('XSS test simulation (real mode disabled)');
+      const params = {
+        tool: 'xssPayloadSearch',
+        searchTerm: searchTerm
+      };
+      const result = await executeHackingTool(params);
+      
+      if (result && result.success) {
+        setResults(result.data.results);
         toast({
-          title: "Simulation Mode",
-          description: "Enable Real Mode to test XSS vulnerabilities",
+          title: "Search Complete",
+          description: `Found ${result.data.results.length} XSS payloads.`
         });
-        return;
-      }
-      
-      // Execute XSS vulnerability test using selected payload
-      const payload = selectedXssPayload ? xssPayloads[selectedXssPayload as keyof typeof xssPayloads] : '';
-      
-      const result = await executeHackingTool({
-        tool: 'xss-scanner',
-        options: {
-          url: xssTarget,
-          payload: payload
-        }
-      });
-      
-      toast({
-        title: "XSS Test Executed",
-        description: "Test executed against target",
-      });
-      
-      if (result?.data) {
-        setToolOutput(typeof result.data === 'string' ? result.data : JSON.stringify(result.data, null, 2));
-      } else if (result?.error) {
-        setToolOutput(`Error: ${result.error}`);
+      } else {
+        toast({
+          title: "Search Failed",
+          description: result?.data?.message || "Unknown error occurred",
+          variant: "destructive"
+        });
       }
     } catch (error) {
-      console.error('Tool execution error:', error);
-      setToolOutput(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
-      
+      console.error("Error during XSS payloads search:", error);
       toast({
-        title: "Execution Failed",
+        title: "Search Error",
         description: error instanceof Error ? error.message : "An unknown error occurred",
         variant: "destructive"
       });
     } finally {
-      setIsExecuting(false);
+      setIsLoading(false);
     }
   };
 
   return (
-    <div className="space-y-4">
-      <div>
-        <Label htmlFor="xss-type">XSS Payload Type</Label>
-        <Select 
-          value={selectedXssPayload} 
-          onValueChange={setSelectedXssPayload}
-        >
-          <SelectTrigger className="bg-scanner-dark-alt border-gray-700">
-            <SelectValue placeholder="Select an XSS payload" />
-          </SelectTrigger>
-          <SelectContent className="bg-scanner-dark border-gray-700">
-            {Object.keys(xssPayloads).map((key) => (
-              <SelectItem key={key} value={key}>{key}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-      
-      {selectedXssPayload && (
-        <div className="mt-4">
-          <Label>Generated XSS Payload</Label>
-          <div className="relative mt-1.5">
-            <Textarea 
-              readOnly 
-              value={xssPayloads[selectedXssPayload as keyof typeof xssPayloads]}
-              className="min-h-24 font-mono text-sm bg-scanner-dark-alt border-gray-700"
-            />
-            <Button 
-              size="sm" 
-              variant="outline" 
-              className="absolute right-2 top-2 h-8 border-gray-700 hover:bg-scanner-dark-alt"
-              onClick={() => handleCopyToClipboard(
-                xssPayloads[selectedXssPayload as keyof typeof xssPayloads], 
-                'XSS payload'
-              )}
-            >
-              {copySuccess === 'XSS payload' ? (
-                <Check className="h-4 w-4" />
-              ) : (
-                <Copy className="h-4 w-4" />
-              )}
-            </Button>
-          </div>
-          <p className="text-gray-400 text-xs mt-2">
-            Use this payload to test for XSS vulnerabilities
-          </p>
-          
-          <div className="mt-4">
-            <Label htmlFor="xss-target">Target URL</Label>
-            <Textarea
-              id="xss-target"
-              placeholder="https://example.com/vulnerable-page"
-              value={xssTarget}
-              onChange={(e) => setXssTarget(e.target.value)}
-              className="min-h-16 bg-scanner-dark-alt border-gray-700"
-            />
-          </div>
-          
-          <Button
-            onClick={executeXssTool}
-            disabled={isExecuting || !xssTarget}
-            className="mt-4 bg-scanner-primary"
-          >
-            <Bug className="h-4 w-4 mr-2" />
-            {isExecuting ? "Testing..." : "Test XSS Vulnerability"}
-          </Button>
+    <Card className="w-full">
+      <CardHeader>
+        <CardTitle className="flex items-center">
+          <Code className="h-4 w-4 mr-2" />
+          XSS Payloads Search
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="space-y-2">
+          <Label htmlFor="search-term">Search Term</Label>
+          <Input
+            id="search-term"
+            placeholder="e.g., alert, prompt, etc."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            disabled={isLoading}
+          />
         </div>
-      )}
-    </div>
+        <Button onClick={handleSearch} disabled={isLoading} className="w-full">
+          {isLoading ? (
+            <>
+              <Search className="mr-2 h-4 w-4 animate-spin" />
+              Searching...
+            </>
+          ) : (
+            <>
+              <Search className="mr-2 h-4 w-4" />
+              Search Payloads
+            </>
+          )}
+        </Button>
+        {results.length > 0 && (
+          <div className="space-y-2">
+            <Label>Results</Label>
+            <Textarea
+              readOnly
+              value={results.join('\n')}
+              className="min-h-[100px] font-mono text-sm"
+            />
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 };
 
