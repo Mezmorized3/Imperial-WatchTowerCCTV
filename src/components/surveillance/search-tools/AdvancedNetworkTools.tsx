@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -8,7 +9,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Textarea } from '@/components/ui/textarea';
 import { Loader2, Shield, Network, Search, Lock } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { executeRtspServer } from '@/utils/osintImplementations';
+import { executeRtspServer } from '@/utils/osintUtilsConnector';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 interface AdvancedNetworkToolsProps {
@@ -56,17 +57,17 @@ const AdvancedNetworkTools: React.FC<AdvancedNetworkToolsProps> = ({ onActionCom
         operation,
         timestamp: new Date().toISOString(),
         options,
-        results: {
+        data: {
           status: "success",
           found: Math.floor(Math.random() * 5),
           details: options
         }
       };
       
-      setResults(mockResult.results);
+      setResults(mockResult.data);
       
       if (onActionComplete) {
-        onActionComplete(mockResult.results);
+        onActionComplete(mockResult.data);
       }
       
       return mockResult;
@@ -105,7 +106,7 @@ const AdvancedNetworkTools: React.FC<AdvancedNetworkToolsProps> = ({ onActionCom
     } else {
       toast({
         title: "Scan Failed",
-        description: "error" in result ? result.error : "Unknown error occurred",
+        description: result.success === false && "error" in result ? result.error : "Unknown error occurred",
         variant: "destructive"
       });
     }
@@ -133,12 +134,12 @@ const AdvancedNetworkTools: React.FC<AdvancedNetworkToolsProps> = ({ onActionCom
     if (result.success) {
       toast({
         title: "Brute Force Complete",
-        description: `Found ${result.results?.found || 0} valid credentials for ${hydraTarget}`
+        description: `Found ${result.data?.found || 0} valid credentials for ${hydraTarget}`
       });
     } else {
       toast({
         title: "Brute Force Failed",
-        description: "error" in result ? result.error : "Unknown error occurred",
+        description: result.success === false && "error" in result ? result.error : "Unknown error occurred",
         variant: "destructive"
       });
     }
@@ -177,7 +178,7 @@ const AdvancedNetworkTools: React.FC<AdvancedNetworkToolsProps> = ({ onActionCom
       } else {
         toast({
           title: "Server Failed",
-          description: result?.error || "Unknown error occurred",
+          description: result && !result.success && "error" in result ? result.error : "Unknown error occurred",
           variant: "destructive"
         });
       }

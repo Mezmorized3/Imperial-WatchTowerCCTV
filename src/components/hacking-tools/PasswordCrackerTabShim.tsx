@@ -42,12 +42,16 @@ const PasswordCrackerTabShim: React.FC<PasswordCrackerTabShimProps> = ({
         setToolOutputState(output);
         setIsExecuting(false);
       }, 2000);
+      
+      return Promise.resolve();
     } catch (error) {
       console.error('Error executing tool:', error);
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       setToolOutput(`Error: ${errorMessage}`);
       setToolOutputState(`Error: ${errorMessage}`);
       setIsExecuting(false);
+      
+      return Promise.reject(error);
     }
   };
   

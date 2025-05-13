@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -8,11 +9,27 @@ import { Search, Code } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { executeHackingTool } from '@/utils/osintUtilsConnector';
 
-const XssPayloadsTab: React.FC = () => {
+interface XssPayloadsTabProps {
+  isExecuting?: boolean;
+  setIsExecuting?: (isExecuting: boolean) => void;
+  setToolOutput?: (output: string | null) => void;
+  isRealmode?: boolean;
+}
+
+const XssPayloadsTab: React.FC<XssPayloadsTabProps> = ({
+  isExecuting: propIsLoading,
+  setIsExecuting: propSetIsLoading,
+  setToolOutput,
+  isRealmode = false
+}) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [results, setResults] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+
+  // Use props if provided, otherwise use local state
+  const effectiveIsLoading = propIsLoading !== undefined ? propIsLoading : isLoading;
+  const effectiveSetIsLoading = propSetIsLoading || setIsLoading;
 
   const handleSearch = async () => {
     if (!searchTerm) {
@@ -24,7 +41,7 @@ const XssPayloadsTab: React.FC = () => {
       return;
     }
 
-    setIsLoading(true);
+    effectiveSetIsLoading(true);
     setResults([]);
 
     try {
@@ -36,6 +53,9 @@ const XssPayloadsTab: React.FC = () => {
       
       if (result && result.success) {
         setResults(result.data.results);
+        if (setToolOutput) {
+          setToolOutput(result.data.results.join('\n'));
+        }
         toast({
           title: "Search Complete",
           description: `Found ${result.data.results.length} XSS payloads.`
@@ -55,7 +75,7 @@ const XssPayloadsTab: React.FC = () => {
         variant: "destructive"
       });
     } finally {
-      setIsLoading(false);
+      effectiveSetIsLoading(false);
     }
   };
 
@@ -75,11 +95,11 @@ const XssPayloadsTab: React.FC = () => {
             placeholder="e.g., alert, prompt, etc."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            disabled={isLoading}
+            disabled={effectiveIsLoading}
           />
         </div>
-        <Button onClick={handleSearch} disabled={isLoading} className="w-full">
-          {isLoading ? (
+        <Button onClick={handleSearch} disabled={effectiveIsLoading} className="w-full">
+          {effectiveIsLoading ? (
             <>
               <Search className="mr-2 h-4 w-4 animate-spin" />
               Searching...

@@ -87,6 +87,55 @@ export const executeTorBot = async (options: any) => {
   };
 };
 
+// Add the missing executeHackingTool function
+export const executeHackingTool = async (options: any) => {
+  console.log("Executing hacking tool with options:", options);
+  
+  // Simulate a delay
+  await new Promise(resolve => setTimeout(resolve, 1500));
+  
+  if (options.tool === 'passwordCracker') {
+    return {
+      success: true,
+      data: {
+        results: ['password123', 'admin1234', 'qwerty', '123456']
+      }
+    };
+  } else if (options.tool === 'passwordGenerator') {
+    const count = options.count || 5;
+    const results = Array(count).fill(0).map(() => 
+      Math.random().toString(36).substring(2, 10) + Math.random().toString(36).substring(2, 10)
+    );
+    
+    return {
+      success: true,
+      data: {
+        results
+      }
+    };
+  } else if (options.tool === 'xssPayloadSearch') {
+    return {
+      success: true,
+      data: {
+        results: [
+          '<script>alert("XSS")</script>',
+          '<img src="x" onerror="alert(\'XSS\')">',
+          '<body onload="alert(\'XSS\')">',
+          '<svg/onload=alert("XSS")>'
+        ]
+      }
+    };
+  }
+  
+  return {
+    success: true,
+    data: {
+      results: [],
+      message: "Operation simulated successfully"
+    }
+  };
+};
+
 // Re-export other functions from osintTools that may be needed
 export const { 
   executeWebCheck,

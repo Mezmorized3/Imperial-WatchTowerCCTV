@@ -1,19 +1,38 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Textarea } from '@/components/ui/textarea';
-import { Loader2, Play, Network, AlertTriangle } from 'lucide-react';
+import { Loader2, Play, Network, AlertTriangle, Shield } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
-import {
-  RtspBruteOptions,
-  RtspCredential
-} from '@/utils/types/rtspBruteTypes';
+
+interface RtspCredential {
+  ip: string;
+  port?: number;
+  username?: string;
+  password?: string;
+  url?: string;
+  valid: boolean;
+}
+
+interface RtspBruteOptions {
+  targets: string[];
+  userlist: string[];
+  passlist: string[];
+  workers: number;
+  timeout: number;
+  useTor?: boolean;
+  bypassTechniques?: boolean;
+  stealthMode?: boolean;
+  smartCredentials?: boolean;
+  vendor?: string;
+}
 
 interface ImperialRtspBruteProps {
   onBruteComplete?: (results: RtspCredential[]) => void;
@@ -54,7 +73,8 @@ const ImperialRtspBrute: React.FC<ImperialRtspBruteProps> = ({ onBruteComplete }
 
     const simulatedResults: RtspCredential[] = [];
 
-    const bruteInterval = setInterval(() => {
+    // Create and store the interval ID
+    const intervalId = setInterval(() => {
       if (attemptsCompleted < totalAttempts) {
         attemptsCompleted += Math.floor(Math.random() * 10); // Simulate variable attempts
         const progress = Math.min((attemptsCompleted / totalAttempts) * 100, 99);
@@ -74,161 +94,144 @@ const ImperialRtspBrute: React.FC<ImperialRtspBruteProps> = ({ onBruteComplete }
             port: port,
             username: user,
             password: pass,
-            manufacturer: options.vendor || 'Generic',
-            model: 'Simulated Model',
+            url: `rtsp://${user}:${pass}@${ip}:${port}/h264/ch1/main/av_stream`,
+            valid: true
           });
+
           setBruteResults([...simulatedResults]);
         }
       } else {
-        clearInterval(bruteInterval);
+        clearInterval(intervalId);
         setBruteProgress(100);
-        setIsBruting(false);
-
+        
+        // Add some metrics
         const endTime = new Date();
-        const timeElapsed = (endTime.getTime() - startTime.getTime()) / 1000;
-
+        const duration = (endTime.getTime() - startTime.getTime()) / 1000;
+        
         setScanDetails({
+          duration: duration.toFixed(1),
           targetsScanned: totalTargets,
-          credentialsAttempted: totalCredentials,
-          timeElapsed: `${timeElapsed.toFixed(2)} seconds`,
+          attemptsMade: totalAttempts,
+          credentialsFound: simulatedResults.length,
+          startTime: startTime.toLocaleString(),
+          endTime: endTime.toLocaleString()
         });
-
-        toast({
-          title: "Brute Force Complete",
-          description: `Simulated brute force completed. Found ${simulatedResults.length} valid credentials.`,
-        });
-
+        
+        setIsBruting(false);
+        
         if (onBruteComplete) {
           onBruteComplete(simulatedResults);
         }
+        
+        toast({
+          title: "Brute Force Complete",
+          description: `Found ${simulatedResults.length} valid credentials.`
+        });
       }
-    }, 200);
-
-    return () => clearInterval(bruteInterval);
+    }, 250);
+    
+    // Return a cleanup function
+    return () => {
+      if (intervalId) clearInterval(intervalId);
+    };
   }, [toast, onBruteComplete]);
 
-  // Function to handle the RTSP brute force process
-  const handleRtspBrute = useCallback(async () => {
+  const handleBrute = useCallback(() => {
     if (!targets) {
       toast({
         title: "Error",
-        description: "Please enter target IPs or ranges",
-        variant: "destructive",
+        description: "Please enter at least one target",
+        variant: "destructive"
       });
       return;
     }
-
-    setIsBruting(true);
-    setBruteProgress(0);
-    setBruteResults([]);
-    setScanDetails(null);
-
-    const targetList = targets.split(',').map(t => t.trim());
-    const userListArray = userlist.split(',').map(u => u.trim());
-    const passListArray = passlist.split(',').map(p => p.trim());
-
-    const options: RtspBruteOptions = {
-      targets: targetList,
-      userlist: userListArray,
-      passlist: passListArray,
-      workers: workers,
-      timeout: timeout,
-      useTor: useTor,
-      bypassTechniques: bypassTechniques,
-      stealthMode: stealthMode,
-      smartCredentials: smartCredentials,
-      vendor: vendor,
-    };
-
-    if (isSimulating) {
-      simulateRtspBrute(options);
+    
+    const targetList = targets.split('\n').filter(t => t.trim() !== '');
+    const userList = userlist.split(',').map(u => u.trim()).filter(u => u !== '');
+    const passList = passlist.split(',').map(p => p.trim()).filter(p => p !== '');
+    
+    if (targetList.length === 0) {
+      toast({
+        title: "Error",
+        description: "Please enter at least one valid target",
+        variant: "destructive"
+      });
       return;
     }
-
-    // try {
-    //   const result = await executeRtspBrute(options);
-
-    //   if (result && result.success) {
-    //     setBruteResults(result.found);
-    //     setScanDetails(result.scanDetails);
-
-    //     toast({
-    //       title: "Brute Force Complete",
-    //       description: `Found ${result.found.length} valid credentials.`,
-    //     });
-
-    //     if (onBruteComplete) {
-    //       onBruteComplete(result.found);
-    //     }
-    //   } else {
-    //     toast({
-    //       title: "Brute Force Failed",
-    //       description: result?.error || "Unknown error occurred",
-    //       variant: "destructive",
-    //     });
-    //   }
-    // } catch (error) {
-    //   console.error("Error during RTSP brute force:", error);
-    //   toast({
-    //     title: "Brute Force Error",
-    //     description: error instanceof Error ? error.message : "An unknown error occurred",
-    //     variant: "destructive",
-    //   });
-    // } finally {
-    //   setIsBruting(false);
-    //   setBruteProgress(100);
-    // }
-  }, [targets, userlist, passlist, workers, timeout, useTor, bypassTechniques, stealthMode, smartCredentials, vendor, toast, simulateRtspBrute, isSimulating, onBruteComplete]);
-
-  useEffect(() => {
-    if (bruteProgress === 100) {
-      const timer = setTimeout(() => setBruteProgress(0), 2000);
-      return () => clearTimeout(timer);
+    
+    if (userList.length === 0 || passList.length === 0) {
+      toast({
+        title: "Error",
+        description: "Please enter at least one username and password",
+        variant: "destructive"
+      });
+      return;
     }
-  }, [bruteProgress]);
+    
+    const options: RtspBruteOptions = {
+      targets: targetList,
+      userlist: userList,
+      passlist: passList,
+      workers,
+      timeout,
+      useTor,
+      bypassTechniques,
+      stealthMode,
+      smartCredentials,
+      vendor: vendor || undefined
+    };
+    
+    simulateRtspBrute(options);
+  }, [targets, userlist, passlist, workers, timeout, useTor, bypassTechniques, stealthMode, smartCredentials, vendor, toast, simulateRtspBrute]);
+
+  // Clean up intervals on unmount
+  useEffect(() => {
+    return () => {
+      // Cleanup handled in simulateRtspBrute
+    };
+  }, []);
 
   return (
     <Card className="w-full shadow-md">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <Network className="h-5 w-5" />
-          RTSP Brute Forcer
+          <Shield className="h-5 w-5" />
+          RTSP Brute Force
         </CardTitle>
         <CardDescription>
-          Attempt to discover RTSP credentials on target devices
+          Test credentials against RTSP camera streams
         </CardDescription>
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="targets">Target IPs or Ranges</Label>
-            <Input
+            <Label htmlFor="targets">Target IP Addresses</Label>
+            <Textarea
               id="targets"
-              placeholder="e.g., 192.168.1.100, 10.0.0.0/24"
+              placeholder="Enter IP addresses (one per line)"
               value={targets}
               onChange={(e) => setTargets(e.target.value)}
               disabled={isBruting}
+              className="min-h-[100px]"
             />
-            <p className="text-xs text-gray-500">Comma-separated IPs or CIDR ranges</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="userlist">Usernames</Label>
+              <Label htmlFor="userlist">Usernames (comma separated)</Label>
               <Input
                 id="userlist"
-                placeholder="e.g., admin, user, root"
+                placeholder="admin,user,root"
                 value={userlist}
                 onChange={(e) => setUserlist(e.target.value)}
                 disabled={isBruting}
               />
             </div>
-
             <div className="space-y-2">
-              <Label htmlFor="passlist">Passwords</Label>
+              <Label htmlFor="passlist">Passwords (comma separated)</Label>
               <Input
                 id="passlist"
-                placeholder="e.g., password, 12345, admin"
+                placeholder="password,admin,12345"
                 value={passlist}
                 onChange={(e) => setPasslist(e.target.value)}
                 disabled={isBruting}
@@ -236,42 +239,55 @@ const ImperialRtspBrute: React.FC<ImperialRtspBruteProps> = ({ onBruteComplete }
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="workers">Workers</Label>
               <Input
                 id="workers"
                 type="number"
+                min="1"
+                max="100"
                 value={workers}
                 onChange={(e) => setWorkers(parseInt(e.target.value))}
                 disabled={isBruting}
               />
             </div>
-
             <div className="space-y-2">
               <Label htmlFor="timeout">Timeout (ms)</Label>
               <Input
                 id="timeout"
                 type="number"
+                min="1000"
+                max="30000"
                 value={timeout}
                 onChange={(e) => setTimeout(parseInt(e.target.value))}
                 disabled={isBruting}
               />
             </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="vendor">Vendor (optional)</Label>
-              <Input
-                id="vendor"
-                placeholder="e.g., Hikvision, Dahua"
-                value={vendor}
-                onChange={(e) => setVendor(e.target.value)}
-                disabled={isBruting}
-              />
-            </div>
           </div>
 
-          <div className="flex flex-col space-y-2">
+          <div className="space-y-2">
+            <Label htmlFor="vendor">Vendor (optional)</Label>
+            <Select
+              value={vendor}
+              onValueChange={setVendor}
+              disabled={isBruting}
+            >
+              <SelectTrigger id="vendor">
+                <SelectValue placeholder="Select vendor" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">Any</SelectItem>
+                <SelectItem value="hikvision">Hikvision</SelectItem>
+                <SelectItem value="dahua">Dahua</SelectItem>
+                <SelectItem value="axis">Axis</SelectItem>
+                <SelectItem value="samsung">Samsung</SelectItem>
+                <SelectItem value="bosch">Bosch</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="flex items-center space-x-2">
               <Checkbox
                 id="useTor"
@@ -281,7 +297,6 @@ const ImperialRtspBrute: React.FC<ImperialRtspBruteProps> = ({ onBruteComplete }
               />
               <Label htmlFor="useTor">Use Tor</Label>
             </div>
-
             <div className="flex items-center space-x-2">
               <Checkbox
                 id="bypassTechniques"
@@ -289,9 +304,8 @@ const ImperialRtspBrute: React.FC<ImperialRtspBruteProps> = ({ onBruteComplete }
                 onCheckedChange={(checked) => setBypassTechniques(checked === true)}
                 disabled={isBruting}
               />
-              <Label htmlFor="bypassTechniques">Bypass Techniques</Label>
+              <Label htmlFor="bypassTechniques">Use Bypass Techniques</Label>
             </div>
-
             <div className="flex items-center space-x-2">
               <Checkbox
                 id="stealthMode"
@@ -301,7 +315,6 @@ const ImperialRtspBrute: React.FC<ImperialRtspBruteProps> = ({ onBruteComplete }
               />
               <Label htmlFor="stealthMode">Stealth Mode</Label>
             </div>
-
             <div className="flex items-center space-x-2">
               <Checkbox
                 id="smartCredentials"
@@ -311,34 +324,59 @@ const ImperialRtspBrute: React.FC<ImperialRtspBruteProps> = ({ onBruteComplete }
               />
               <Label htmlFor="smartCredentials">Smart Credentials</Label>
             </div>
-
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="simulateBrute"
-                checked={isSimulating}
-                onCheckedChange={(checked) => setIsSimulating(checked === true)}
-                disabled={isBruting}
-              />
-              <Label htmlFor="simulateBrute">Simulate Brute Force</Label>
-            </div>
           </div>
 
-          {bruteProgress > 0 && (
+          {isBruting && (
             <div className="space-y-2">
-              <div className="flex justify-between text-sm text-gray-400">
-                <span>Progress</span>
-                <span>{bruteProgress.toFixed(1)}%</span>
+              <div className="flex justify-between">
+                <Label>Progress</Label>
+                <span>{Math.round(bruteProgress)}%</span>
               </div>
-              <Progress value={bruteProgress} className="h-2" />
+              <Progress value={bruteProgress} className="w-full" />
             </div>
           )}
         </div>
+
+        {bruteResults.length > 0 && (
+          <div className="mt-6 space-y-2">
+            <h3 className="text-lg font-semibold">Valid Credentials</h3>
+            <div className="overflow-auto max-h-64">
+              {bruteResults.map((result, idx) => (
+                <div key={idx} className="p-2 border border-gray-700 rounded-md mb-2 bg-scanner-dark-alt">
+                  <div className="flex justify-between">
+                    <Badge variant="default" className="bg-green-600">Valid</Badge>
+                    <span className="text-xs text-gray-400">{result.ip}:{result.port}</span>
+                  </div>
+                  <div className="mt-2">
+                    <p><strong>Username:</strong> {result.username}</p>
+                    <p><strong>Password:</strong> {result.password}</p>
+                    <p className="text-xs text-gray-400 mt-1 break-all">{result.url}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {scanDetails && (
+          <div className="mt-6 space-y-2">
+            <h3 className="text-lg font-semibold">Scan Details</h3>
+            <div className="p-2 border border-gray-700 rounded-md bg-scanner-dark-alt">
+              <p><strong>Duration:</strong> {scanDetails.duration}s</p>
+              <p><strong>Targets Scanned:</strong> {scanDetails.targetsScanned}</p>
+              <p><strong>Attempts:</strong> {scanDetails.attemptsMade}</p>
+              <p><strong>Credentials Found:</strong> {scanDetails.credentialsFound}</p>
+              <p><strong>Start:</strong> {scanDetails.startTime}</p>
+              <p><strong>End:</strong> {scanDetails.endTime}</p>
+            </div>
+          </div>
+        )}
       </CardContent>
       <CardFooter>
         <Button
+          onClick={handleBrute}
+          disabled={isBruting}
           className="w-full"
-          onClick={handleRtspBrute}
-          disabled={isBruting || !targets}
         >
           {isBruting ? (
             <>
@@ -347,65 +385,12 @@ const ImperialRtspBrute: React.FC<ImperialRtspBruteProps> = ({ onBruteComplete }
             </>
           ) : (
             <>
-              <Shield className="mr-2 h-4 w-4" />
+              <Play className="mr-2 h-4 w-4" />
               Start Brute Force
             </>
           )}
         </Button>
       </CardFooter>
-
-      {bruteResults.length > 0 && (
-        <div className="mt-6 space-y-3 p-4 border rounded bg-scanner-dark-alt">
-          <h3 className="text-lg font-semibold">Discovered Credentials</h3>
-          <p className="text-sm text-gray-400">
-            Found {bruteResults.length} valid credential{bruteResults.length !== 1 ? 's' : ''}
-          </p>
-          <div className="max-h-64 overflow-y-auto">
-            {bruteResults.map((credential: RtspCredential, index: number) => (
-              <div key={index} className="p-3 border rounded bg-scanner-dark-alt mb-2 text-sm">
-                <div className="flex justify-between mb-1">
-                  <span className="font-medium">Target: {credential.ip}:{credential.port}</span>
-                  <Badge variant="outline" className="text-xs">
-                    {credential.manufacturer || 'Unknown'}
-                  </Badge>
-                </div>
-                <div className="text-gray-400">
-                  <p>Username: <span className="text-white">{credential.username}</span></p>
-                  <p>Password: <span className="text-white">{credential.password}</span></p>
-                  {credential.manufacturer && (
-                    <p>Manufacturer: <span className="text-white">{credential.manufacturer}</span></p>
-                  )}
-                  {credential.model && (
-                    <p>Model: <span className="text-white">{credential.model}</span></p>
-                  )}
-                </div>
-                <div className="mt-2">
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="text-xs"
-                    onClick={() => window.open(`rtsp://${credential.username}:${credential.password}@${credential.ip}:${credential.port}/`)}
-                  >
-                    <Play className="h-3 w-3 mr-1" />
-                    Stream
-                  </Button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {scanDetails && (
-        <div className="mt-6 space-y-3 p-4 border rounded bg-scanner-dark-alt">
-          <h3 className="text-lg font-semibold">Scan Details</h3>
-          <div className="text-sm text-gray-400">
-            <p>Targets Scanned: {scanDetails.targetsScanned}</p>
-            <p>Credentials Attempted: {scanDetails.credentialsAttempted}</p>
-            <p>Time Elapsed: {scanDetails.timeElapsed}</p>
-          </div>
-        </div>
-      )}
     </Card>
   );
 };

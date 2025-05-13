@@ -1,14 +1,4 @@
 
-export interface RtspCredential {
-  ip: string;
-  port: number;
-  username: string;
-  password: string;
-  manufacturer?: string;
-  model?: string;
-  firmware?: string;
-}
-
 export interface RtspBruteOptions {
   targets: string[];
   userlist: string[];
@@ -22,12 +12,11 @@ export interface RtspBruteOptions {
   vendor?: string;
 }
 
-export interface RtspBruteResult {
-  success: boolean;
-  found: RtspCredential[];
-  scanDetails: {
-    targetsScanned: number;
-    credentialsAttempted: number;
-    timeElapsed: string;
-  };
+export interface RtspCredential {
+  ip: string;
+  port?: number;
+  username?: string;
+  password?: string;
+  url?: string;
+  valid: boolean;
 }

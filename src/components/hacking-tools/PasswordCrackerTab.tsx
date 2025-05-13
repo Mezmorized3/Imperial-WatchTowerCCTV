@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -10,7 +11,23 @@ import { useToast } from '@/hooks/use-toast';
 import { Checkbox } from '@/components/ui/checkbox';
 import { executeHackingTool } from '@/utils/osintUtilsConnector';
 
-const PasswordCrackerTab: React.FC = () => {
+interface PasswordCrackerTabProps {
+  isExecuting: boolean;
+  setIsExecuting: (isExecuting: boolean) => void;
+  setToolOutput: (output: string | null) => void;
+  toolOutput: string | null;
+  executeSelectedTool: (toolType: string) => Promise<void>;
+  isRealmode?: boolean;
+}
+
+const PasswordCrackerTab: React.FC<PasswordCrackerTabProps> = ({
+  isExecuting,
+  setIsExecuting,
+  setToolOutput,
+  toolOutput,
+  executeSelectedTool,
+  isRealmode = false
+}) => {
   const [crackTarget, setCrackTarget] = useState('');
   const [crackMethod, setCrackMethod] = useState('dictionary');
   const [crackDictionary, setCrackDictionary] = useState('common');
@@ -18,13 +35,11 @@ const PasswordCrackerTab: React.FC = () => {
   const [crackBruteforceCharset, setCrackBruteforceCharset] = useState('alphanumeric');
   const [crackBruteforceMinLength, setCrackBruteforceMinLength] = useState(6);
   const [crackBruteforceMaxLength, setCrackBruteforceMaxLength] = useState(8);
-  const [isCracking, setIsCracking] = useState(false);
   const [crackResults, setCrackResults] = useState<string[]>([]);
 
   const [generateLength, setGenerateLength] = useState(12);
   const [generateCharset, setGenerateCharset] = useState('alphanumeric');
   const [generateCount, setGenerateCount] = useState(10);
-  const [isGenerating, setIsGenerating] = useState(false);
   const [generationResults, setGenerationResults] = useState<string[]>([]);
 
   const { toast } = useToast();
@@ -39,7 +54,7 @@ const PasswordCrackerTab: React.FC = () => {
       return;
     }
 
-    setIsCracking(true);
+    setIsExecuting(true);
     setCrackResults([]);
 
     const params = {
@@ -77,12 +92,12 @@ const PasswordCrackerTab: React.FC = () => {
         variant: "destructive"
       });
     } finally {
-      setIsCracking(false);
+      setIsExecuting(false);
     }
   };
 
   const handleGenerate = async () => {
-    setIsGenerating(true);
+    setIsExecuting(true);
     setGenerationResults([]);
 
     const params = {
@@ -116,7 +131,7 @@ const PasswordCrackerTab: React.FC = () => {
         variant: "destructive"
       });
     } finally {
-      setIsGenerating(false);
+      setIsExecuting(false);
     }
   };
 
@@ -147,7 +162,6 @@ const PasswordCrackerTab: React.FC = () => {
             <Select
               value={crackMethod}
               onValueChange={setCrackMethod}
-              className="bg-scanner-dark border-gray-700"
             >
               <SelectTrigger id="crack-method" className="bg-scanner-dark border-gray-700">
                 <SelectValue placeholder="Select method" />
@@ -166,7 +180,6 @@ const PasswordCrackerTab: React.FC = () => {
               <Select
                 value={crackDictionary}
                 onValueChange={setCrackDictionary}
-                className="bg-scanner-dark border-gray-700"
               >
                 <SelectTrigger id="crack-dictionary" className="bg-scanner-dark border-gray-700">
                   <SelectValue placeholder="Select dictionary" />
@@ -199,7 +212,6 @@ const PasswordCrackerTab: React.FC = () => {
                 <Select
                   value={crackBruteforceCharset}
                   onValueChange={setCrackBruteforceCharset}
-                  className="bg-scanner-dark border-gray-700"
                 >
                   <SelectTrigger id="crack-bruteforce-charset" className="bg-scanner-dark border-gray-700">
                     <SelectValue placeholder="Select charset" />
@@ -243,10 +255,10 @@ const PasswordCrackerTab: React.FC = () => {
 
           <Button
             onClick={handleCrack}
-            disabled={isCracking}
+            disabled={isExecuting}
             className="w-full"
           >
-            {isCracking ? (
+            {isExecuting ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 Cracking...
@@ -298,7 +310,6 @@ const PasswordCrackerTab: React.FC = () => {
             <Select
               value={generateCharset}
               onValueChange={setGenerateCharset}
-              className="bg-scanner-dark border-gray-700"
             >
               <SelectTrigger id="generate-charset" className="bg-scanner-dark border-gray-700">
                 <SelectValue placeholder="Select charset" />
@@ -326,10 +337,10 @@ const PasswordCrackerTab: React.FC = () => {
 
           <Button
             onClick={handleGenerate}
-            disabled={isGenerating}
+            disabled={isExecuting}
             className="w-full"
           >
-            {isGenerating ? (
+            {isExecuting ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 Generating...

@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -6,15 +7,25 @@ import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Globe, Search, Shield } from 'lucide-react';
-import { toast } from '@/components/ui/use-toast';
-import { executeWebhack } from '@/utils/osintTools';
-import { WebHackParams } from '@/utils/types/webToolTypes';
+import { useToast } from '@/hooks/use-toast';
+import { executeWebhack } from '@/utils/osintUtilsConnector';
+
+interface WebHackParams {
+  url: string;
+  scanType: 'basic' | 'full';
+  timeout: number;
+  checkVulnerabilities: boolean;
+  checkSubdomains: boolean;
+  userAgent?: string;
+  saveResults: boolean;
+}
 
 interface AdvancedWebHackToolProps {
   onScanComplete?: (results: any) => void;
 }
 
 const AdvancedWebHackTool: React.FC<AdvancedWebHackToolProps> = ({ onScanComplete }) => {
+  const { toast } = useToast();
   const [targetUrl, setTargetUrl] = useState('');
   const [scanType, setScanType] = useState('basic');
   const [timeout, setTimeout] = useState('30000');
@@ -67,7 +78,7 @@ const AdvancedWebHackTool: React.FC<AdvancedWebHackToolProps> = ({ onScanComplet
       } else {
         toast({
           title: "Scan Failed",
-          description: result?.data?.message || "Unknown error occurred",
+          description: "An error occurred during the scan",
           variant: "destructive"
         });
       }
