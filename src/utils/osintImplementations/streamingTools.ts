@@ -17,6 +17,8 @@ interface RtspServerOptions {
 
 interface RtspServerResult {
   success: boolean;
+  streamUrl?: string;
+  error?: string;
   data: {
     serverUrl: string;
     status: string;
@@ -31,13 +33,29 @@ export const executeRtspServer = async (options: RtspServerOptions): Promise<Rts
   // Simulate a delay
   await new Promise(resolve => setTimeout(resolve, 1500));
   
-  return {
-    success: true,
-    data: {
-      serverUrl: `rtsp://${options.listenIp}:${options.listenPort}/stream`,
-      status: "running",
-      streamKey: Math.random().toString(36).substring(2, 10),
-      viewers: 0
-    }
-  };
+  try {
+    const streamUrl = `rtsp://${options.listenIp}:${options.listenPort}/stream`;
+    
+    return {
+      success: true,
+      streamUrl: streamUrl,
+      data: {
+        serverUrl: streamUrl,
+        status: "running",
+        streamKey: Math.random().toString(36).substring(2, 10),
+        viewers: 0
+      }
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Unknown error",
+      data: {
+        serverUrl: "",
+        status: "error",
+        streamKey: "",
+        viewers: 0
+      }
+    };
+  }
 };

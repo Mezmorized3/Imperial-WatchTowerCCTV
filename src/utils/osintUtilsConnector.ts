@@ -1,5 +1,8 @@
 
 import * as osintTools from './osintTools';
+import * as networkTools from './osintImplementations/networkTools';
+import * as securityTools from './osintImplementations/securityTools';
+import * as streamingTools from './osintImplementations/streamingTools';
 
 // Re-export existing functions 
 export const executeTwint = async (options: any) => {
@@ -87,7 +90,7 @@ export const executeTorBot = async (options: any) => {
   };
 };
 
-// Add the missing executeHackingTool function
+// Add the executeHackingTool function
 export const executeHackingTool = async (options: any) => {
   console.log("Executing hacking tool with options:", options);
   
@@ -125,6 +128,18 @@ export const executeHackingTool = async (options: any) => {
         ]
       }
     };
+  } else if (options.tool === 'sqlmap') {
+    return {
+      success: true,
+      data: {
+        results: [
+          "Found SQL injection vulnerability in parameter 'id'",
+          "Database: MySQL 5.7.34",
+          "Tables found: users, products, orders",
+          "Extracting data from 'users' table..."
+        ]
+      }
+    };
   }
   
   return {
@@ -136,11 +151,34 @@ export const executeHackingTool = async (options: any) => {
   };
 };
 
+// Re-export functions from network tools
+export const {
+  executeZMap,
+  executeMetasploit,
+  executeOrebroONVIFScanner,
+  executeNodeONVIF,
+  executePyONVIF,
+  executePythonWSDiscovery,
+  executeScapy,
+  executeMitmProxy
+} = networkTools;
+
+// Re-export security tools
+export const {
+  executeRtspBrute,
+  executeSecurityAdmin,
+  executeShieldAI
+} = securityTools;
+
+// Re-export streaming tools
+export const {
+  executeRtspServer
+} = streamingTools;
+
 // Re-export other functions from osintTools that may be needed
 export const { 
   executeWebCheck,
   executeHackCCTV, 
-  executeRtspServer,
   executeWebhack,
   executeBackHack,
   executeBotExploits,
@@ -152,12 +190,15 @@ export const {
   executeONVIFScan,
   executeNmapONVIF,
   executeMasscan,
-  executeShieldAI,
   executeCCTVHacked,
   executeCamDumper,
   executeCameradar,
   executeOpenCCTV,
   executeEyePwn,
   executeIngram,
-  executeRapidPayload
+  executeRapidPayload,
+  executeZGrab,
+  executeHydra,
+  executeTapoPoC,
+  executeCCTV
 } = osintTools;

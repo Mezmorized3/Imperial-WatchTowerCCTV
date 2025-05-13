@@ -63,7 +63,7 @@ const XssPayloadsTab: React.FC<XssPayloadsTabProps> = ({
       } else {
         toast({
           title: "Search Failed",
-          description: result?.data?.message || "Unknown error occurred",
+          description: (result?.data?.message || result?.error || "Unknown error occurred") as string,
           variant: "destructive"
         });
       }

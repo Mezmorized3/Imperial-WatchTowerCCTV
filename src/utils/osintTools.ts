@@ -1,4 +1,3 @@
-
 /**
  * OSINT tools API - Streamlined version
  */
@@ -297,3 +296,201 @@ export {
   executeTwint,
   executeUsernameSearch
 };
+
+// Add missing functions
+export const executeZGrab = async (options: any) => {
+  console.log("Executing ZGrab with options:", options);
+  await simulateNetworkDelay(1500);
+  
+  return {
+    success: true,
+    data: {
+      results: [
+        { host: options.target, port: options.port || 80, protocol: "http", banner: "Apache/2.4.41" },
+        { host: options.target, port: options.port || 443, protocol: "https", banner: "nginx/1.18.0" }
+      ]
+    }
+  };
+};
+
+export const executeHydra = async (options: any) => {
+  console.log("Executing Hydra with options:", options);
+  await simulateNetworkDelay(2000);
+  
+  return {
+    success: true,
+    data: {
+      credentials: [
+        { host: options.target, service: options.service, username: "admin", password: "admin123" }
+      ],
+      summary: {
+        attempted: 50,
+        successful: 1,
+        duration: "1.2s"
+      }
+    }
+  };
+};
+
+export const executeTapoPoC = async (options: any) => {
+  console.log("Executing Tapo PoC with options:", options);
+  await simulateNetworkDelay(1800);
+  
+  return {
+    success: true,
+    data: {
+      vulnerable: true,
+      details: {
+        version: "1.2.3",
+        cve: "CVE-2021-12345",
+        mitigation: "Update firmware to latest version"
+      }
+    }
+  };
+};
+
+export const executeCCTV = async (options: any) => {
+  console.log("Executing CCTV search with options:", options);
+  await simulateNetworkDelay(2000);
+  
+  return {
+    success: true,
+    simulatedData: true,
+    data: {
+      cameras: [
+        {
+          id: "cam123",
+          ip: "192.168.1.100",
+          port: 554,
+          manufacturer: "Hikvision",
+          model: "DS-2CD2032-I",
+          url: "rtsp://admin:admin@192.168.1.100:554/Streaming/Channels/101",
+          location: { latitude: 37.7749, longitude: -122.4194 }
+        },
+        {
+          id: "cam124",
+          ip: "192.168.1.101",
+          port: 8000,
+          manufacturer: "Dahua",
+          model: "DH-IPC-HFW2325S",
+          url: "rtsp://admin:admin@192.168.1.101:554/cam/realmonitor?channel=1&subtype=0",
+          location: { latitude: 37.7750, longitude: -122.4195 }
+        }
+      ]
+    }
+  };
+};
+
+// Export other simulation functions
+export const executeWebCheck = async () => ({ success: true, data: { /* ... */ } });
+export const executeHackCCTV = async () => ({ 
+  success: true, 
+  data: { 
+    cameras: [
+      {
+        id: "cam123",
+        ip: "192.168.1.100",
+        manufacturer: "Hikvision",
+        model: "DS-2CD2032-I"
+      }
+    ],
+    message: "Operation completed successfully"
+  } 
+});
+
+export const executeWebhack = async () => ({ 
+  success: true, 
+  data: { 
+    vulnerabilities: [], 
+    subdomains: [],
+    technologies: [],
+    message: "Scan completed successfully"
+  } 
+});
+
+export const executeBackHack = async () => ({ 
+  success: true, 
+  data: { 
+    cameras: [], 
+    adminPanel: {},
+    backupFiles: [],
+    message: "Operation completed successfully"
+  } 
+});
+
+export const executeBotExploits = async () => ({ 
+  success: true, 
+  data: { 
+    tokens: [],
+    apis: [],
+    message: "Operation completed successfully"
+  } 
+});
+
+export const executeOpenCV = async () => ({
+  success: true,
+  data: {
+    detections: [],
+    processedImage: "data:image/png;base64,",
+    found: 0,
+    error: null
+  }
+});
+
+export const executeDeepstack = async () => ({
+  success: true,
+  data: {
+    predictions: [],
+    confidenceScores: [],
+    found: 0,
+    error: null
+  }
+});
+
+export const executeFaceRecognition = async () => ({
+  success: true,
+  data: {
+    faces: [],
+    matches: [],
+    found: 0,
+    error: null
+  }
+});
+
+export const executeMotion = async () => ({
+  success: true,
+  data: {
+    motionDetected: false,
+    regions: [],
+    found: 0,
+    error: null
+  }
+});
+
+export const executeFFmpeg = async () => ({ success: true, data: {} });
+export const executeONVIFScan = async () => ({ success: true, data: {} });
+export const executeNmapONVIF = async () => ({ success: true, data: {} });
+export const executeMasscan = async () => ({ success: true, data: {} });
+export const executeShieldAI = async () => ({ success: true, data: {} });
+export const executeCCTVHacked = async () => ({ success: true, data: {} });
+export const executeCamDumper = async () => ({ success: true, data: {} });
+export const executeCameradar = async () => ({ 
+  success: true, 
+  data: { 
+    cameras: [],
+    message: "Operation completed successfully" 
+  } 
+});
+
+export const executeOpenCCTV = async () => ({ success: true, data: {} });
+export const executeEyePwn = async () => ({ success: true, data: {} });
+export const executeIngram = async () => ({ success: true, data: {} });
+export const executeRapidPayload = async () => ({ 
+  success: true, 
+  data: { 
+    payload: "",
+    size: "",
+    type: "",
+    message: "Payload generated successfully"
+  } 
+});

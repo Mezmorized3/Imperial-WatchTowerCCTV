@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { toast } from 'sonner';
 import { AlertCircle, Play, Server, Video } from 'lucide-react';
-import { executeRtspServer } from '@/utils/osintImplementations';
+import { executeRtspServer } from '@/utils/osintImplementations/streamingTools';
 
 const RTSPServerTools: React.FC = () => {
   const [listenIp, setListenIp] = useState('0.0.0.0');
@@ -37,10 +37,13 @@ const RTSPServerTools: React.FC = () => {
       
       if (result && result.success) {
         setIsRunning(true);
-        setStreamUrl(result.streamUrl || `rtsp://${listenIp}:${listenPort}/live`);
+        // Use the streamUrl property if available, otherwise fall back to data.serverUrl
+        setStreamUrl(result.streamUrl || result.data.serverUrl);
         toast.success('RTSP server started successfully');
       } else {
-        toast.error(result?.error || 'Failed to start RTSP server');
+        // Check for error property first, then fall back to a generic message
+        const errorMessage = result?.error || 'Failed to start RTSP server';
+        toast.error(errorMessage);
       }
     } catch (error) {
       console.error('Error starting RTSP server:', error);

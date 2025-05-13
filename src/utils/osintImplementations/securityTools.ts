@@ -69,3 +69,68 @@ export const executeRtspBrute = async (options: RtspBruteOptions): Promise<RtspB
     }
   };
 };
+
+// Add missing security admin function
+export const executeSecurityAdmin = async (params: any): Promise<any> => {
+  console.log('Executing security admin with params:', params);
+  
+  await new Promise(resolve => setTimeout(resolve, 2000));
+  
+  return {
+    success: true,
+    findings: [
+      {
+        id: `vuln-${Date.now()}-1`,
+        type: 'authentication',
+        severity: 'critical',
+        description: 'Default credentials detected on surveillance system',
+        recommendation: 'Change default passwords and implement MFA'
+      },
+      {
+        id: `vuln-${Date.now()}-2`,
+        type: 'encryption',
+        severity: 'high',
+        description: 'Unencrypted RTSP streams',
+        recommendation: 'Enable encryption for all video streams'
+      }
+    ],
+    summary: {
+      total: 2,
+      successful: 2,
+      failed: 0
+    }
+  };
+};
+
+// Add missing Shield AI function
+export const executeShieldAI = async (params: any): Promise<any> => {
+  console.log('Executing Shield AI with params:', params);
+  
+  await new Promise(resolve => setTimeout(resolve, 2500));
+  
+  return {
+    success: true,
+    timestamp: new Date().toISOString(),
+    findings: [
+      {
+        id: `vuln-${Date.now()}-1`,
+        type: 'authentication',
+        severity: 'critical',
+        description: 'Default credentials detected on surveillance system',
+        recommendation: 'Change default passwords and implement MFA'
+      },
+      {
+        id: `vuln-${Date.now()}-2`,
+        type: 'encryption',
+        severity: 'high',
+        description: 'Unencrypted RTSP streams',
+        recommendation: 'Enable encryption for all video streams'
+      }
+    ],
+    summary: {
+      total: 2,
+      successful: 2,
+      failed: 0
+    }
+  };
+};

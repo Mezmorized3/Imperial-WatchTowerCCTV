@@ -74,7 +74,10 @@ const ImperialRtspBrute: React.FC<ImperialRtspBruteProps> = ({ onBruteComplete }
     const simulatedResults: RtspCredential[] = [];
 
     // Create and store the interval ID
-    const intervalId = setInterval(() => {
+    let intervalId: number;
+    
+    // Define the interval callback function
+    const intervalCallback = () => {
       if (attemptsCompleted < totalAttempts) {
         attemptsCompleted += Math.floor(Math.random() * 10); // Simulate variable attempts
         const progress = Math.min((attemptsCompleted / totalAttempts) * 100, 99);
@@ -128,11 +131,14 @@ const ImperialRtspBrute: React.FC<ImperialRtspBruteProps> = ({ onBruteComplete }
           description: `Found ${simulatedResults.length} valid credentials.`
         });
       }
-    }, 250);
+    };
+    
+    // Set up the interval
+    intervalId = window.setInterval(intervalCallback, 250);
     
     // Return a cleanup function
     return () => {
-      if (intervalId) clearInterval(intervalId);
+      window.clearInterval(intervalId);
     };
   }, [toast, onBruteComplete]);
 

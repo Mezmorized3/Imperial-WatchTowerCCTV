@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -159,36 +158,40 @@ const PasswordCrackerTab: React.FC<PasswordCrackerTabProps> = ({
 
           <div className="space-y-2">
             <Label htmlFor="crack-method">Method</Label>
-            <Select
-              value={crackMethod}
-              onValueChange={setCrackMethod}
-            >
-              <SelectTrigger id="crack-method" className="bg-scanner-dark border-gray-700">
-                <SelectValue placeholder="Select method" />
-              </SelectTrigger>
-              <SelectContent className="bg-scanner-dark border-gray-700">
-                <SelectItem value="dictionary">Dictionary</SelectItem>
-                {/* <SelectItem value="custom">Custom Dictionary</SelectItem> */}
-                <SelectItem value="bruteforce">Brute Force</SelectItem>
-              </SelectContent>
-            </Select>
+            <div className="bg-scanner-dark border-gray-700">
+              <Select
+                value={crackMethod}
+                onValueChange={setCrackMethod}
+              >
+                <SelectTrigger id="crack-method">
+                  <SelectValue placeholder="Select method" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="dictionary">Dictionary</SelectItem>
+                  {/* <SelectItem value="custom">Custom Dictionary</SelectItem> */}
+                  <SelectItem value="bruteforce">Brute Force</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
           {crackMethod === 'dictionary' && (
             <div className="space-y-2">
               <Label htmlFor="crack-dictionary">Dictionary</Label>
-              <Select
-                value={crackDictionary}
-                onValueChange={setCrackDictionary}
-              >
-                <SelectTrigger id="crack-dictionary" className="bg-scanner-dark border-gray-700">
-                  <SelectValue placeholder="Select dictionary" />
-                </SelectTrigger>
-                <SelectContent className="bg-scanner-dark border-gray-700">
-                  <SelectItem value="common">Common Passwords</SelectItem>
-                  {/* <SelectItem value="large">Large Dictionary</SelectItem> */}
-                </SelectContent>
-              </Select>
+              <div className="bg-scanner-dark border-gray-700">
+                <Select
+                  value={crackDictionary}
+                  onValueChange={setCrackDictionary}
+                >
+                  <SelectTrigger id="crack-dictionary">
+                    <SelectValue placeholder="Select dictionary" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="common">Common Passwords</SelectItem>
+                    {/* <SelectItem value="large">Large Dictionary</SelectItem> */}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           )}
 
@@ -209,20 +212,22 @@ const PasswordCrackerTab: React.FC<PasswordCrackerTabProps> = ({
             <>
               <div className="space-y-2">
                 <Label htmlFor="crack-bruteforce-charset">Charset</Label>
-                <Select
-                  value={crackBruteforceCharset}
-                  onValueChange={setCrackBruteforceCharset}
-                >
-                  <SelectTrigger id="crack-bruteforce-charset" className="bg-scanner-dark border-gray-700">
-                    <SelectValue placeholder="Select charset" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-scanner-dark border-gray-700">
-                    <SelectItem value="alphanumeric">Alphanumeric</SelectItem>
-                    <SelectItem value="numeric">Numeric</SelectItem>
-                    <SelectItem value="alphabetic">Alphabetic</SelectItem>
-                    <SelectItem value="custom">Custom</SelectItem>
-                  </SelectContent>
-                </Select>
+                <div className="bg-scanner-dark border-gray-700">
+                  <Select
+                    value={crackBruteforceCharset}
+                    onValueChange={setCrackBruteforceCharset}
+                  >
+                    <SelectTrigger id="crack-bruteforce-charset">
+                      <SelectValue placeholder="Select charset" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="alphanumeric">Alphanumeric</SelectItem>
+                      <SelectItem value="numeric">Numeric</SelectItem>
+                      <SelectItem value="alphabetic">Alphabetic</SelectItem>
+                      <SelectItem value="custom">Custom</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -307,20 +312,22 @@ const PasswordCrackerTab: React.FC<PasswordCrackerTabProps> = ({
 
           <div className="space-y-2">
             <Label htmlFor="generate-charset">Charset</Label>
-            <Select
-              value={generateCharset}
-              onValueChange={setGenerateCharset}
-            >
-              <SelectTrigger id="generate-charset" className="bg-scanner-dark border-gray-700">
-                <SelectValue placeholder="Select charset" />
-              </SelectTrigger>
-              <SelectContent className="bg-scanner-dark border-gray-700">
-                <SelectItem value="alphanumeric">Alphanumeric</SelectItem>
-                <SelectItem value="numeric">Numeric</SelectItem>
-                <SelectItem value="alphabetic">Alphabetic</SelectItem>
-                <SelectItem value="custom">Custom</SelectItem>
-              </SelectContent>
-            </Select>
+            <div className="bg-scanner-dark border-gray-700">
+              <Select
+                value={generateCharset}
+                onValueChange={setGenerateCharset}
+              >
+                <SelectTrigger id="generate-charset">
+                  <SelectValue placeholder="Select charset" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="alphanumeric">Alphanumeric</SelectItem>
+                  <SelectItem value="numeric">Numeric</SelectItem>
+                  <SelectItem value="alphabetic">Alphabetic</SelectItem>
+                  <SelectItem value="custom">Custom</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
           <div className="space-y-2">
