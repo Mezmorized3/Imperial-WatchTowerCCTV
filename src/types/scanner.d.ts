@@ -3,71 +3,39 @@ export interface CameraResult {
   id: string;
   ip: string;
   port?: number;
-  model?: string;
   manufacturer?: string;
-  location?: {
-    country: string;
+  model?: string;
+  status?: 'online' | 'offline' | 'vulnerable' | 'authenticated';
+  location?: string | {
+    country?: string;
     city?: string;
-    coordinates?: [number, number];
+    latitude?: number;
+    longitude?: number;
   };
-  status?: string;
-  type?: string;
-  protocol?: string;
-  rtspUrl?: string;
-  httpUrl?: string;
+  accessLevel?: string;
+  lastSeen?: string;
+  firmwareVersion?: string;
+  url?: string;
   credentials?: {
     username: string;
     password: string;
-  } | null;
-  geolocation?: {
-    country: string;
-    city?: string;
-    coordinates?: [number, number];
   };
-  vulnerabilities?: Array<{
-    id?: string;
+  vulnerabilities?: {
     name: string;
-    severity: 'low' | 'medium' | 'high' | 'critical';
+    severity: 'critical' | 'high' | 'medium' | 'low';
     description: string;
-  }>;
-  accessible?: boolean;
-  threatIntel?: {
-    associatedMalware?: string[];
-    knownExploits?: string[];
-    lastUpdated?: string;
-  };
-  firmware?: {
-    version?: string;
-    vulnerabilities?: string[];
-    updateAvailable?: boolean;
-    lastChecked?: string;
-  };
-  firmwareVersion?: string;
-  firmwareAnalysis?: any;
-  lastSeen?: string;
-  accessLevel?: 'none' | 'view' | 'control' | 'admin';
+  }[];
 }
 
-export interface ScanSettings {
-  detailed?: boolean;
-  aggressive?: boolean;
-  targetSubnet?: string;
-  portRange?: string;
-  timeout?: number;
-  testCredentials?: boolean;
-  checkVulnerabilities?: boolean;
-  saveSnapshots?: boolean;
-  regionFilter?: string[];
-  threadsCount?: number;
-}
-
-export interface ScanResult {
-  success: boolean;
-  data: {
-    cameras?: CameraResult[];
-    total?: number;
-    vulnerabilities?: any[];
-  };
-  error?: string;
-  simulatedData?: boolean;
+export interface AlertConfig {
+  id: string;
+  name: string;
+  type: string;
+  severity: string;
+  enabled: boolean;
+  triggeredBy: string[];
+  level: string;
+  action: string;
+  createdAt: string;
+  notificationMethod: string;
 }

@@ -1,264 +1,114 @@
-/**
- * Real-Time Context Provider
- * 
- * Provides real-time state and WebSocket communication to the application
- */
 
-import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { ScanProgress, CameraResult, ScanTarget, ScanSettings } from '@/types/scanner';
-import { useWebSocket } from '@/hooks/useWebSocket';
-import { toast } from '@/components/ui/use-toast';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 
+// Types for the context data
 interface ServerStatus {
-  status: 'online' | 'offline' | 'degraded';
+  status: 'online' | 'offline' | 'degraded' | 'pending';
   message?: string;
-  lastUpdated: Date;
 }
 
-interface Alert {
-  id: string;
-  type: string;
-  message: string;
-  severity: 'low' | 'medium' | 'high' | 'critical';
-  timestamp: Date;
-  read: boolean;
-}
-
-interface RealTimeContextValue {
-  // Connection state
+interface RealTimeContextType {
   isConnected: boolean;
-  connectionState: string;
-  connect: () => Promise<boolean>;  // Modified to return a Promise<boolean>
-  disconnect: () => void;
-  
-  // Real-time data
+  connectionState: 'connecting' | 'connected' | 'disconnected';
   serverStatus: ServerStatus;
-  scanProgress: ScanProgress;
-  alerts: Alert[];
-  cameras: CameraResult[];
-  
-  // Actions
-  markAlertAsRead: (alertId: string) => void;
-  startScan: (options: { target: ScanTarget, settings: ScanSettings }) => void;
-  updateCameraStatus: (cameraId: string, status: string) => void;
+  connect: () => Promise<void>;
+  disconnect: () => void;
 }
 
 // Default context values
-const defaultContext: RealTimeContextValue = {
+const defaultContext: RealTimeContextType = {
   isConnected: false,
   connectionState: 'disconnected',
-  connect: async () => false,  // Default now returns false
+  serverStatus: { status: 'pending' },
+  connect: async () => {},
   disconnect: () => {},
-  
-  serverStatus: {
-    status: 'offline',
-    lastUpdated: new Date()
-  },
-  
-  scanProgress: {
-    status: 'idle',
-    targetsTotal: 0,
-    targetsScanned: 0,
-    camerasFound: 0
-  },
-  
-  alerts: [],
-  cameras: [],
-  
-  markAlertAsRead: () => {},
-  startScan: () => {},
-  updateCameraStatus: () => {}
 };
 
 // Create the context
-const RealTimeContext = createContext<RealTimeContextValue>(defaultContext);
+const RealTimeContext = createContext<RealTimeContextType>(defaultContext);
 
-// Custom hook to use the context
+// Custom hook to use the real-time context
 export const useRealTime = () => useContext(RealTimeContext);
 
+// Provider component
 interface RealTimeProviderProps {
   children: ReactNode;
-  serverUrl?: string;
 }
 
-// Context provider component
-export const RealTimeProvider: React.FC<RealTimeProviderProps> = ({ 
-  children,
-  serverUrl = 'ws://localhost:8080'
-}) => {
-  // State for real-time data
-  const [serverStatus, setServerStatus] = useState<ServerStatus>(defaultContext.serverStatus);
-  const [scanProgress, setScanProgress] = useState<ScanProgress>(defaultContext.scanProgress);
-  const [alerts, setAlerts] = useState<Alert[]>([]);
-  const [cameras, setCameras] = useState<CameraResult[]>([]);
-  
-  // Get WebSocket functionality from our hook
-  const {
-    isConnected,
-    connectionState,
-    connect: connectToServer,
-    disconnect,
-    subscribe,
-    sendMessage
-  } = useWebSocket({
-    serverUrl,
-    autoConnect: true,
-    onOpen: () => {
-      console.log('WebSocket connection opened');
-      toast({
-        title: "Real-time Connection Established",
-        description: "You are now receiving live updates from the Imperial Server",
-      });
-    },
-    onClose: () => {
-      console.log('WebSocket connection closed');
-    },
-    onError: (error) => {
-      console.error('WebSocket error:', error);
-      toast({
-        title: "Connection Error",
-        description: "Failed to establish real-time connection to the server",
-        variant: "destructive"
-      });
+export const RealTimeProvider: React.FC<RealTimeProviderProps> = ({ children }) => {
+  const [isConnected, setIsConnected] = useState(false);
+  const [connectionState, setConnectionState] = useState<'connecting' | 'connected' | 'disconnected'>('disconnected');
+  const [serverStatus, setServerStatus] = useState<ServerStatus>({ status: 'pending' });
+
+  const connect = async () => {
+    try {
+      setConnectionState('connecting');
+      
+      // Simulate connection delay
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Mock successful connection
+      setIsConnected(true);
+      setConnectionState('connected');
+      setServerStatus({ status: 'online', message: 'Real-time updates active' });
+      
+      // Schedule periodic status updates
+      startStatusChecks();
+    } catch (error) {
+      console.error('Connection error:', error);
+      setIsConnected(false);
+      setConnectionState('disconnected');
+      setServerStatus({ status: 'offline', message: 'Failed to connect to server' });
     }
-  });
-  
-  // Connect to the WebSocket server
-  const connect = async (): Promise<boolean> => {
-    return await connectToServer();
   };
-  
-  // Subscribe to WebSocket events when connected
+
+  const disconnect = () => {
+    setIsConnected(false);
+    setConnectionState('disconnected');
+    setServerStatus({ status: 'offline', message: 'Disconnected' });
+  };
+
+  const startStatusChecks = () => {
+    // Simulate periodic status updates
+    const interval = setInterval(() => {
+      // Randomly determine server status for demonstration
+      const statuses: ServerStatus[] = [
+        { status: 'online', message: 'All systems operational' },
+        { status: 'online', message: 'Connection stable' },
+        { status: 'degraded', message: 'High server load, possible delays' },
+      ];
+      
+      const randomStatus = statuses[Math.floor(Math.random() * statuses.length)];
+      setServerStatus(randomStatus);
+    }, 30000); // Check every 30 seconds
+    
+    return () => clearInterval(interval);
+  };
+
+  // Auto-connect on component mount
   useEffect(() => {
-    if (!isConnected) return;
-    
-    // Server status updates
-    const unsubServerStatus = subscribe('server_status', (data) => {
-      setServerStatus({
-        status: data.status,
-        message: data.message,
-        lastUpdated: new Date()
-      });
-    });
-    
-    // Scan progress updates
-    const unsubScanProgress = subscribe('scan_progress', (data) => {
-      setScanProgress(data);
-    });
-    
-    // Camera status updates
-    const unsubCameraStatus = subscribe('camera_status', (data) => {
-      setCameras(currentCameras => {
-        // Update the camera if it exists, otherwise add it
-        const cameraIndex = currentCameras.findIndex(cam => cam.id === data.id);
-        if (cameraIndex >= 0) {
-          const updatedCameras = [...currentCameras];
-          updatedCameras[cameraIndex] = { ...updatedCameras[cameraIndex], ...data };
-          return updatedCameras;
-        } else {
-          return [...currentCameras, data];
-        }
-      });
-    });
-    
-    // Threat alerts
-    const unsubThreatAlert = subscribe('threat_alert', (data) => {
-      const newAlert: Alert = {
-        id: data.id || `alert-${Date.now()}`,
-        type: data.type,
-        message: data.message,
-        severity: data.severity,
-        timestamp: new Date(),
-        read: false
-      };
-      
-      setAlerts(currentAlerts => [newAlert, ...currentAlerts]);
-      
-      // Show toast for new alerts
-      toast({
-        title: `${data.severity.charAt(0).toUpperCase() + data.severity.slice(1)} Alert`,
-        description: data.message,
-        variant: data.severity === 'critical' || data.severity === 'high' ? "destructive" : "default",
-      });
-    });
-    
-    // General notifications
-    const unsubNotification = subscribe('notification', (data) => {
-      if (data.message) {
-        toast({
-          title: data.title || "Notification",
-          description: data.message,
-          variant: data.level === 'error' ? "destructive" : "default",
-        });
+    const autoConnect = async () => {
+      // Check if auto-connect is enabled in local storage
+      const autoConnectEnabled = localStorage.getItem('autoconnect') !== 'false';
+      if (autoConnectEnabled) {
+        await connect();
       }
-    });
-    
-    // Clean up subscriptions
-    return () => {
-      unsubServerStatus();
-      unsubScanProgress();
-      unsubCameraStatus();
-      unsubThreatAlert();
-      unsubNotification();
     };
-  }, [isConnected, subscribe]);
-  
-  // Start a scan with the updated parameters
-  const startScan = (options: { target: ScanTarget, settings: ScanSettings }) => {
-    if (!isConnected) {
-      toast({
-        title: "Not Connected",
-        description: "Cannot start scan: No connection to the server",
-        variant: "destructive"
-      });
-      return;
-    }
     
-    sendMessage('scan_progress', { 
-      command: 'start_scan',
-      options 
-    });
-  };
-  
-  // Update camera status
-  const updateCameraStatus = (cameraId: string, status: string) => {
-    if (!isConnected) return;
-    
-    sendMessage('camera_status', {
-      command: 'update_status',
-      cameraId,
-      status
-    });
-  };
-  
-  // Mark an alert as read
-  const markAlertAsRead = (alertId: string) => {
-    setAlerts(currentAlerts => 
-      currentAlerts.map(alert => 
-        alert.id === alertId ? { ...alert, read: true } : alert
-      )
-    );
-  };
-  
-  // Create the context value
-  const contextValue: RealTimeContextValue = {
+    autoConnect();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const value = {
     isConnected,
     connectionState,
+    serverStatus,
     connect,
     disconnect,
-    
-    serverStatus,
-    scanProgress,
-    alerts,
-    cameras,
-    
-    markAlertAsRead,
-    startScan,
-    updateCameraStatus
   };
-  
+
   return (
-    <RealTimeContext.Provider value={contextValue}>
+    <RealTimeContext.Provider value={value}>
       {children}
     </RealTimeContext.Provider>
   );
