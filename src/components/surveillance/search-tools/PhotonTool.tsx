@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import { PhotonParams } from '@/utils/types/networkToolTypes';
+import { PhotonParams } from '@/utils/types/webToolTypes';
 import { toast } from '@/components/ui/use-toast';
 
 interface PhotonToolProps {

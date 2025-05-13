@@ -1,25 +1,12 @@
 
-export interface WebCheckParams {
+export interface PhotonParams {
   url: string;
-  scanType?: 'basic' | 'full';
+  depth?: number;
   timeout?: number;
+  threads?: number;
+  delay?: number;
   userAgent?: string;
-}
-
-export interface WebCheckResult {
-  success: boolean;
-  error?: string;
-  data?: {
-    url: string;
-    status: number;
-    title?: string;
-    description?: string;
-    technologies?: string[];
-    headers?: Record<string, string>;
-    screenshot?: string;
-    links?: string[];
-    timestamp: string;
-  };
+  saveResults?: boolean;
 }
 
 export interface WebHackParams {
@@ -30,4 +17,6 @@ export interface WebHackParams {
   checkSubdomains: boolean;
   userAgent?: string;
   saveResults: boolean;
+  target?: string;
+  method?: string;
 }

@@ -1,22 +1,26 @@
 
-export interface RtspBruteOptions {
-  targets: string[];
-  userlist: string[];
-  passlist: string[];
-  workers: number;
-  timeout: number;
-  useTor?: boolean;
-  bypassTechniques?: boolean;
-  stealthMode?: boolean;
-  smartCredentials?: boolean;
-  vendor?: string;
+export interface RtspBruteParams {
+  targets: string | string[];
+  userlist?: string[];
+  passlist?: string[];
+  workers?: number;
+  timeout?: number;
+  output?: string;
+  proxy?: string;
+  useragent?: string;
+  target?: string; // For compatibility
 }
 
 export interface RtspCredential {
-  ip: string;
-  port?: number;
-  username?: string;
-  password?: string;
-  url?: string;
-  valid: boolean;
+  username: string;
+  password: string;
+  found: boolean;
+  streamUrl?: string;
+}
+
+export interface RtspBruteResult {
+  success: boolean;
+  credentials?: RtspCredential[];
+  errors?: string[];
+  message?: string;
 }

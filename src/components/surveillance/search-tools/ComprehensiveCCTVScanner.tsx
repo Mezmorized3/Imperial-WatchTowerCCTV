@@ -1,4 +1,3 @@
-
 // This file contains the ComprehensiveCCTVScanner component
 // We need to fix the specific error in the handleScan method where it's calling toast()
 
@@ -11,7 +10,8 @@ import { Loader2, Search, Camera } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
-import { executeCCTV, executeHackCCTV } from '@/utils/osintTools';
+import { executeCCTV } from '@/utils/osintTools';
+import { executeHackCCTV } from '@/utils/osintUtilsConnector';
 
 interface ComprehensiveCCTVScannerProps {
   onScanComplete?: (results: any) => void;
@@ -57,7 +57,7 @@ const ComprehensiveCCTVScanner: React.FC<ComprehensiveCCTVScannerProps> = ({ onS
         
         toast({
           title: "Scan Complete",
-          description: `Found ${result.data.cameras?.length || 0} cameras`,
+          description: `Found ${result.data.cameras?.length || 0} cameras`
         });
       } else {
         toast({

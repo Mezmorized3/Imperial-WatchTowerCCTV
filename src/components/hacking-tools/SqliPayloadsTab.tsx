@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -7,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from '@/components/ui/use-toast';
 import { Copy, Check, Bug } from 'lucide-react';
-import { executeHackingTool } from '@/utils/osintTools';
+import { executeHackingTool } from '@/utils/osintUtilsConnector';
 
 interface SqliPayloadsTabProps {
   isExecuting: boolean;

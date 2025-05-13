@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, ScanFace, Settings, HelpCircle, ShieldAlert, Network, Terminal, Globe } from 'lucide-react';
-import { executeWebCheck } from '@/utils/osintTools';
+import { executeWebCheck } from '@/utils/osintUtilsConnector';
 import { Progress } from '@/components/ui/progress';
 import { Checkbox } from '@/components/ui/checkbox';
 
@@ -47,7 +47,9 @@ const Index = () => {
     }
   }, [isScanning]);
 
-  const handleScan = ({ target, settings }: { target: ScanTarget, settings: ScanSettings }) => {
+  const handleScan = async (params: { target: ScanTarget, settings: ScanSettings }) => {
+    const { target, settings } = params;
+    
     if (!target.value) {
       toast({
         title: "Error",

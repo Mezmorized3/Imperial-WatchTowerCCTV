@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { executeCCTVHacked } from '@/utils/osintTools';
+import { executeCCTVHacked } from '@/utils/osintUtilsConnector';
 import { Shield, Loader2, Search, Camera } from 'lucide-react';
 
 const CCTVHackedTool = () => {
@@ -30,7 +30,7 @@ const CCTVHackedTool = () => {
       });
 
       if (response?.success) {
-        setResults(response.data?.results || []);
+        setResults(response.data?.cameras || []);
       }
     } catch (error) {
       console.error('CCTV Hacked error:', error);

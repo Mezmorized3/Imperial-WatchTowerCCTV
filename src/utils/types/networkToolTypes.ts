@@ -171,4 +171,27 @@ export interface WebHackParams {
   checkSubdomains: boolean;
   userAgent?: string;
   saveResults: boolean;
+  target?: string; // Added for backward compatibility
+  method?: string; // Added for backward compatibility
+}
+
+// Adding missing types
+export interface PhotonParams {
+  url: string;
+  depth?: number;
+  timeout?: number;
+  threads?: number;
+  delay?: number;
+  userAgent?: string;
+  saveResults?: boolean;
+}
+
+export interface ONVIFFuzzerParams {
+  target: string;
+  port?: number;
+  timeout?: number;
+  protocol?: 'soap' | 'http';
+  method?: string;
+  payloadSize?: number;
+  iterations?: number;
 }
