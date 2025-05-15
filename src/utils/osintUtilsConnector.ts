@@ -2,6 +2,7 @@
 // Re-export other functions from osintTools that may be needed
 
 import * as osintTools from './osintTools';
+import { executeWebhack, executePhoton } from './osintImplementations/webTools';
 
 // Add missing exported functions
 export const executeWebCheck = async (options: any) => {
@@ -103,7 +104,7 @@ export const executeOpenCCTV = async (options: any) => {
         id: `dev-${i}`,
         type: ['IP Camera', 'DVR', 'NVR'][Math.floor(Math.random() * 3)],
         ip: `192.168.1.${20 + i}`,
-        mac: `00:1A:2B:3C:${i}D:${i}E`,
+        mac: `00:11:22:33:44:${i < 10 ? '0' + i : i}`,
         ports: [
           { port: 80, service: 'HTTP', open: true },
           { port: 554, service: 'RTSP', open: Math.random() > 0.3 },
@@ -179,44 +180,39 @@ export const executeCamerattack = async (options: any) => {
   };
 };
 
-// Re-export existing functions 
-export {
-  executeTwint,
-  executeUsernameSearch,
-  executeOSINT,
-  executeTorBot,
-  executeHackingTool,
-  executeZMap,
-  executeMetasploit,
-  executeOrebroONVIFScanner,
-  executeNodeONVIF,
-  executePyONVIF,
-  executePythonWSDiscovery,
-  executeScapy,
-  executeMitmProxy,
-  executeRtspBrute,
-  executeSecurityAdmin,
-  executeShieldAI,
-  executeRtspServer,
-  executeWebhack,
-  executeBackHack,
-  executeBotExploits,
-  executeOpenCV,
-  executeDeepstack,
-  executeFaceRecognition,
-  executeMotion,
-  executeFFmpeg,
-  executeONVIFScan,
-  executeNmapONVIF,
-  executeMasscan,
-  executeCCTV,
-  executeZGrab,
-  executeHydra,
-  executeTapoPoC,
-  executeRapidPayload
-} from './osintImplementations';
+// Let's fix the export of osintImplementations functions
+export const executeZMap = osintTools.executeZMap;
+export const executeMetasploit = osintTools.executeMetasploit;
+export const executeOrebroONVIFScanner = osintTools.executeOrebroONVIFScanner;
+export const executeNodeONVIF = osintTools.executeNodeONVIF;
+export const executePyONVIF = osintTools.executePyONVIF;
+export const executePythonWSDiscovery = osintTools.executePythonWSDiscovery;
+export const executeScapy = osintTools.executeScapy;
+export const executeMitmProxy = osintTools.executeMitmProxy;
+export const executeRtspBrute = osintTools.executeRtspBrute || function() { return { success: false, error: 'Not implemented' }; };
+export const executeSecurityAdmin = osintTools.executeSecurityAdmin || function() { return { success: false, error: 'Not implemented' }; };
+export const executeShieldAI = osintTools.executeShieldAI || function() { return { success: false, error: 'Not implemented' }; };
+export const executeRtspServer = osintTools.executeRtspServer || function() { return { success: false, error: 'Not implemented' }; };
+export const executeBackHack = osintTools.executeBackHack || function() { return { success: false, error: 'Not implemented' }; };
+export const executeBotExploits = osintTools.executeBotExploits || function() { return { success: false, error: 'Not implemented' }; };
+export const executeOpenCV = osintTools.executeOpenCV || function() { return { success: false, error: 'Not implemented' }; };
+export const executeDeepstack = osintTools.executeDeepstack || function() { return { success: false, error: 'Not implemented' }; };
+export const executeFaceRecognition = osintTools.executeFaceRecognition || function() { return { success: false, error: 'Not implemented' }; };
+export const executeMotion = osintTools.executeMotion || function() { return { success: false, error: 'Not implemented' }; };
+export const executeFFmpeg = osintTools.executeFFmpeg || function() { return { success: false, error: 'Not implemented' }; };
+export const executeONVIFScan = osintTools.executeONVIFScan || function() { return { success: false, error: 'Not implemented' }; };
+export const executeNmapONVIF = osintTools.executeNmapONVIF || function() { return { success: false, error: 'Not implemented' }; };
+export const executeMasscan = osintTools.executeMasscan || function() { return { success: false, error: 'Not implemented' }; };
+export const executeCCTV = osintTools.executeCCTV || function() { return { success: false, error: 'Not implemented' }; };
+export const executeZGrab = osintTools.executeZGrab || function() { return { success: false, error: 'Not implemented' }; };
+export const executeHydra = osintTools.executeHydra || function() { return { success: false, error: 'Not implemented' }; };
+export const executeTapoPoC = osintTools.executeTapoPoC || function() { return { success: false, error: 'Not implemented' }; };
+export const executeRapidPayload = osintTools.executeRapidPayload || function() { return { success: false, error: 'Not implemented' }; };
 
-// Add missing exports from osintUtilsConnector.ts that were previously in the file
+// Export functions from osintImplementations/webTools.ts
+export { executeWebhack, executePhoton };
+
+// Add proper exports for these functions that were referenced
 export const executeTwint = async (options: any) => {
   console.log("Executing Twitter search with options:", options);
   return {

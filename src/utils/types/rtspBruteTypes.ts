@@ -1,4 +1,8 @@
 
+/**
+ * Types for RTSP brute force tools
+ */
+
 export interface RtspBruteParams {
   targets: string | string[];
   userlist?: string[];
@@ -16,6 +20,7 @@ export interface RtspCredential {
   password: string;
   found: boolean;
   streamUrl?: string;
+  target?: string; // Adding this to fix the error
 }
 
 export interface RtspBruteResult {

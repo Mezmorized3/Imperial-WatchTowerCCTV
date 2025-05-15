@@ -1,24 +1,23 @@
 import React, { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import { toast } from 'sonner';
-import { Network, Search, Server, Radio, Code, Globe, Shield } from 'lucide-react';
+import { toast } from '@/components/ui/use-toast';
 import { 
   executeZMap, 
   executeMetasploit, 
-  executeOrebroONVIFScanner, 
+  executeOrebroONVIFScanner,
   executeNodeONVIF,
   executePyONVIF,
   executePythonWSDiscovery,
   executeScapy,
   executeMitmProxy
-} from '@/utils/osintImplementations';
+} from '@/utils/osintUtilsConnector';
+import { Network, Search, Shield, Terminal, Layers, Radio } from 'lucide-react';
 
 const AdvancedNetworkTools: React.FC = () => {
   const [activeTab, setActiveTab] = useState('zmap');

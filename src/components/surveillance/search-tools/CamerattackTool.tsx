@@ -1,9 +1,10 @@
+
 import React, { useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent } from '@/components/ui/card';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from '@/components/ui/use-toast';
 import { executeCamerattack } from '@/utils/osintUtilsConnector';
 
 const CamerattackTool: React.FC = () => {
@@ -11,7 +12,6 @@ const CamerattackTool: React.FC = () => {
   const [port, setPort] = useState('80');
   const [method, setMethod] = useState('GET');
   const [isAttacking, setIsAttacking] = useState(false);
-  const { toast } = useToast();
 
   const executeAttack = async () => {
     if (!target) {
@@ -39,10 +39,10 @@ const CamerattackTool: React.FC = () => {
       });
       console.log("Camerattack Results:", result);
     } catch (error) {
-      console.error('Camerattack error:', error);
+      console.error("Camerattack error:", error);
       toast({
-        title: "Attack Failed",
-        description: error instanceof Error ? error.message : "An unknown error occurred",
+        title: "Error",
+        description: "Failed to initiate camerattack",
         variant: "destructive"
       });
     } finally {

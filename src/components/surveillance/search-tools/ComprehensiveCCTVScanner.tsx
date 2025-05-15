@@ -2,16 +2,22 @@
 // We need to fix the specific error in the handleScan method where it's calling toast()
 
 import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { useToast } from '@/hooks/use-toast';
-import { Loader2, Search, Camera } from 'lucide-react';
+import { useToast } from '@/components/ui/use-toast';
+import { Loader2, Search, Camera, Shield, Scan } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { executeCCTV } from '@/utils/osintTools';
-import { executeHackCCTV } from '@/utils/osintUtilsConnector';
+import { 
+  executeHackCCTV,
+  executeCameradar,
+  executeOpenCCTV, 
+  executeEyePwn,
+  executeZGrab
+} from '@/utils/osintUtilsConnector';
 
 interface ComprehensiveCCTVScannerProps {
   onScanComplete?: (results: any) => void;
@@ -136,6 +142,9 @@ const ComprehensiveCCTVScanner: React.FC<ComprehensiveCCTVScannerProps> = ({ onS
           <Camera className="h-5 w-5 mr-2" />
           Comprehensive CCTV Scanner
         </CardTitle>
+        <CardDescription>
+          A comprehensive tool for scanning and hacking CCTV cameras.
+        </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="space-y-2">

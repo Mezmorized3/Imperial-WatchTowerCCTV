@@ -1,4 +1,8 @@
 
+/**
+ * Types for web-related tools
+ */
+
 export interface PhotonParams {
   url: string;
   depth?: number;
@@ -17,6 +21,6 @@ export interface WebHackParams {
   checkSubdomains: boolean;
   userAgent?: string;
   saveResults: boolean;
-  target?: string;
-  method?: string;
+  target?: string; // Adding for compatibility
+  method?: string; // Adding for compatibility
 }
