@@ -1,364 +1,83 @@
 
-// Re-export other functions from osintTools that may be needed
+import {
+  executeEncoderDecoder,
+  executeReverseShellListener,
+  executeRapidPayload,
+  executeSqliPayloadTest,
+  executeXssPayloadSearch,
+  executePasswordCracker,
+  executePasswordGenerator,
+  executeIpInfo,
+  executeDnsLookup,
+  executePortScan,
+  executeTraceroute,
+  executeSubnetScan,
+  executeWhoisLookup,
+  executeHttpHeaders,
+  executeBotExploits,      // Added
+  executeCCTVHackedScan,   // Added
+  executeCCTVScan          // Added
+  // ... import other specific tool executors from osintTools.ts
+} from './osintTools';
 
-import * as osintTools from './osintTools';
-import { executeWebhack, executePhoton } from './osintImplementations/webTools';
+import { 
+  HackingToolResult,
+  // Ensure all relevant Param types are imported if needed for specific validation
+  EncoderDecoderParams,
+  ReverseShellParams,
+  RapidPayloadParams,
+  SqliPayloadParams,
+  XssPayloadParams,
+  PasswordCrackerParams,
+  PasswordGeneratorParams,
+  IpInfoParams, DnsLookupParams, PortScanParams, TracerouteParams, SubnetScanParams, WhoisLookupParams, HttpHeadersParams,
+  BotExploitsParams, CCTVHackedParams, CCTVScanParams // Added
+} from './types/osintToolTypes';
 
-// Add missing exported functions
-export const executeWebCheck = async (options: any) => {
-  console.log("Executing Web Check with options:", options);
-  await new Promise(resolve => setTimeout(resolve, 1500));
-  
-  return {
-    success: true,
-    data: {
-      url: options.url,
-      statusCode: 200,
-      headers: {
-        'server': 'nginx/1.18.0',
-        'content-type': 'text/html; charset=UTF-8'
-      },
-      technologies: ['PHP', 'MySQL', 'jQuery', 'Bootstrap'],
-      cookies: ['session_id', 'user_pref'],
-      links: ['/about', '/contact', '/products']
-    }
-  };
+const toolFunctionMap: { [key: string]: (params: any) => Promise<HackingToolResult<any, any>> } = {
+  encoderDecoder: executeEncoderDecoder,
+  listener: executeReverseShellListener, // Assuming 'listener' is the key for ReverseShell
+  rapidPayload: executeRapidPayload,
+  sqliPayloadTest: executeSqliPayloadTest, // Assuming 'sqliPayloadTest' is the key
+  xssPayloadSearch: executeXssPayloadSearch,
+  passwordCracker: executePasswordCracker,
+  passwordGenerator: executePasswordGenerator,
+  ipInfo: executeIpInfo,
+  dnsLookup: executeDnsLookup,
+  portScan: executePortScan,
+  traceroute: executeTraceroute,
+  subnetScan: executeSubnetScan,
+  whois: executeWhoisLookup, // Assuming 'whois' is the key
+  httpHeaders: executeHttpHeaders, // Assuming 'httpHeaders' is the key
+  botExploits: executeBotExploits, // Added
+  cctvHackedScan: executeCCTVHackedScan, // Added
+  cctvScan: executeCCTVScan // Added
+  // ... map other tools
 };
 
-export const executeHackCCTV = async (options: any) => {
-  console.log("Executing Hack CCTV with options:", options);
-  await new Promise(resolve => setTimeout(resolve, 2000));
-  
-  return {
-    success: true,
-    data: {
-      cameras: Array(Math.floor(Math.random() * 5) + 1).fill(0).map((_, i) => ({
-        id: `cam-${i}`,
-        ip: options.target.includes('/') 
-          ? `192.168.1.${10 + i}` 
-          : options.target,
-        port: 554,
-        manufacturer: ['Hikvision', 'Dahua', 'Axis', 'Samsung'][Math.floor(Math.random() * 4)],
-        model: `IP Camera ${1000 + Math.floor(Math.random() * 1000)}`,
-        username: 'admin',
-        password: ['admin', '12345', 'password', ''][Math.floor(Math.random() * 4)],
-        url: `rtsp://admin:admin@192.168.1.${10 + i}:554/stream`,
-        location: {
-          latitude: 40.7128 + (Math.random() * 0.1),
-          longitude: -74.006 + (Math.random() * 0.1),
-          accuracy: 10
-        }
-      }))
-    }
-  };
-};
+export const executeHackingTool = async (
+  params: { tool: string; [key: string]: any }
+): Promise<HackingToolResult<any, any>> => {
+  const { tool, ...toolParams } = params;
+  const toolFunction = toolFunctionMap[tool];
 
-export const executeCamDumper = async (options: any) => {
-  console.log("Executing CamDumper with options:", options);
-  await new Promise(resolve => setTimeout(resolve, 1800));
-  
-  return {
-    success: true,
-    data: {
-      cameras: Array(Math.floor(Math.random() * 8) + 2).fill(0).map((_, i) => ({
-        id: `dump-${i}`,
-        ip: `${i % 2 === 0 ? '203.0.113' : '198.51.100'}.${10 + i}`,
-        port: [80, 554, 8080][Math.floor(Math.random() * 3)],
-        type: ['IP Camera', 'CCTV', 'Webcam'][Math.floor(Math.random() * 3)],
-        manufacturer: ['Hikvision', 'Dahua', 'Axis', 'Foscam', 'Mobotix'][Math.floor(Math.random() * 5)],
-        model: i % 3 === 0 ? `Camera${1000 + i}` : undefined,
-        location: i % 2 === 0 ? `${options.region || 'Unknown Region'}` : undefined
-      }))
-    }
-  };
-};
+  if (!toolFunction) {
+    console.error(`Tool not found: ${tool}`);
+    return { success: false, error: `Tool "${tool}" not implemented or mapped.` };
+  }
 
-export const executeCameradar = async (options: any) => {
-  console.log("Executing Cameradar with options:", options);
-  await new Promise(resolve => setTimeout(resolve, 1600));
-  
-  return {
-    success: true,
-    data: {
-      cameras: Array(Math.floor(Math.random() * 6) + 1).fill(0).map((_, i) => ({
-        id: `cam-${i}`,
-        address: options.target || `192.168.1.${10 + i}`,
-        port: 554,
-        username: ['admin', 'root', 'user'][Math.floor(Math.random() * 3)],
-        password: ['admin', '12345', 'password', ''][Math.floor(Math.random() * 4)],
-        path: ['/cam/realmonitor', '/h264/ch1/main/av_stream', '/stream1'][Math.floor(Math.random() * 3)],
-        url: `rtsp://admin:admin@192.168.1.${10 + i}:554/stream`
-      }))
-    }
-  };
-};
-
-export const executeOpenCCTV = async (options: any) => {
-  console.log("Executing OpenCCTV with options:", options);
-  await new Promise(resolve => setTimeout(resolve, 2200));
-  
-  return {
-    success: true,
-    data: {
-      devices: Array(Math.floor(Math.random() * 5) + 1).fill(0).map((_, i) => ({
-        id: `dev-${i}`,
-        type: ['IP Camera', 'DVR', 'NVR'][Math.floor(Math.random() * 3)],
-        ip: `192.168.1.${20 + i}`,
-        mac: `00:11:22:33:44:${i < 10 ? '0' + i : i}`,
-        ports: [
-          { port: 80, service: 'HTTP', open: true },
-          { port: 554, service: 'RTSP', open: Math.random() > 0.3 },
-          { port: 443, service: 'HTTPS', open: Math.random() > 0.7 }
-        ]
-      }))
-    }
-  };
-};
-
-export const executeEyePwn = async (options: any) => {
-  console.log("Executing EyePwn with options:", options);
-  await new Promise(resolve => setTimeout(resolve, 1700));
-  
-  return {
-    success: true,
-    data: {
-      cameras: Array(Math.floor(Math.random() * 4) + 1).fill(0).map((_, i) => ({
-        id: `eye-${i}`,
-        ip: options.target || `192.168.1.${30 + i}`,
-        vulnerabilities: [
-          { cve: `CVE-2021-123${i}`, severity: ['High', 'Medium', 'Critical'][Math.floor(Math.random() * 3)] },
-          { cve: `CVE-2020-456${i}`, severity: ['Medium', 'Low'][Math.floor(Math.random() * 2)] }
-        ],
-        exploitable: Math.random() > 0.5,
-        accessGained: Math.random() > 0.7
-      }))
-    }
-  };
-};
-
-export const executeIngram = async (options: any) => {
-  console.log("Executing Ingram with options:", options);
-  await new Promise(resolve => setTimeout(resolve, 2000));
-  
-  return {
-    success: true,
-    data: {
-      results: Array(Math.floor(Math.random() * 7) + 2).fill(0).map((_, i) => ({
-        id: `res-${i}`,
-        type: ['Router', 'Camera', 'DVR', 'NVR', 'IoT Device'][Math.floor(Math.random() * 5)],
-        ip: `192.168.1.${40 + i}`,
-        openPorts: [
-          { port: 22, service: 'SSH', banner: 'SSH-2.0-OpenSSH_7.4' },
-          { port: 80, service: 'HTTP', banner: 'nginx/1.14.0' }
-        ].slice(0, Math.floor(Math.random() * 2) + 1),
-        osDetails: {
-          name: ['Linux', 'Embedded Linux', 'VxWorks'][Math.floor(Math.random() * 3)],
-          version: `${Math.floor(Math.random() * 5)}.${Math.floor(Math.random() * 10)}`
-        }
-      }))
-    }
-  };
-};
-
-export const executeCamerattack = async (options: any) => {
-  console.log("Executing Camerattack with options:", options);
-  await new Promise(resolve => setTimeout(resolve, 1500));
-  
-  return {
-    success: true,
-    data: {
-      status: "Completed",
-      target: options.target,
-      port: options.port,
-      method: options.method,
-      attackResults: {
-        success: Math.random() > 0.4,
-        vulnerabilitiesFound: Math.floor(Math.random() * 5),
-        cameraStatus: ['Online', 'Unresponsive', 'Restarting'][Math.floor(Math.random() * 3)]
-      }
-    }
-  };
-};
-
-// Let's fix the export of osintImplementations functions
-export const executeZMap = osintTools.executeZMap;
-export const executeMetasploit = osintTools.executeMetasploit;
-export const executeOrebroONVIFScanner = osintTools.executeOrebroONVIFScanner;
-export const executeNodeONVIF = osintTools.executeNodeONVIF;
-export const executePyONVIF = osintTools.executePyONVIF;
-export const executePythonWSDiscovery = osintTools.executePythonWSDiscovery;
-export const executeScapy = osintTools.executeScapy;
-export const executeMitmProxy = osintTools.executeMitmProxy;
-export const executeRtspBrute = osintTools.executeRtspBrute || function() { return { success: false, error: 'Not implemented' }; };
-export const executeSecurityAdmin = osintTools.executeSecurityAdmin || function() { return { success: false, error: 'Not implemented' }; };
-export const executeShieldAI = osintTools.executeShieldAI || function() { return { success: false, error: 'Not implemented' }; };
-export const executeRtspServer = osintTools.executeRtspServer || function() { return { success: false, error: 'Not implemented' }; };
-export const executeBackHack = osintTools.executeBackHack || function() { return { success: false, error: 'Not implemented' }; };
-export const executeBotExploits = osintTools.executeBotExploits || function() { return { success: false, error: 'Not implemented' }; };
-export const executeOpenCV = osintTools.executeOpenCV || function() { return { success: false, error: 'Not implemented' }; };
-export const executeDeepstack = osintTools.executeDeepstack || function() { return { success: false, error: 'Not implemented' }; };
-export const executeFaceRecognition = osintTools.executeFaceRecognition || function() { return { success: false, error: 'Not implemented' }; };
-export const executeMotion = osintTools.executeMotion || function() { return { success: false, error: 'Not implemented' }; };
-export const executeFFmpeg = osintTools.executeFFmpeg || function() { return { success: false, error: 'Not implemented' }; };
-export const executeONVIFScan = osintTools.executeONVIFScan || function() { return { success: false, error: 'Not implemented' }; };
-export const executeNmapONVIF = osintTools.executeNmapONVIF || function() { return { success: false, error: 'Not implemented' }; };
-export const executeMasscan = osintTools.executeMasscan || function() { return { success: false, error: 'Not implemented' }; };
-export const executeCCTV = osintTools.executeCCTV || function() { return { success: false, error: 'Not implemented' }; };
-export const executeZGrab = osintTools.executeZGrab || function() { return { success: false, error: 'Not implemented' }; };
-export const executeHydra = osintTools.executeHydra || function() { return { success: false, error: 'Not implemented' }; };
-export const executeTapoPoC = osintTools.executeTapoPoC || function() { return { success: false, error: 'Not implemented' }; };
-export const executeRapidPayload = osintTools.executeRapidPayload || function() { return { success: false, error: 'Not implemented' }; };
-
-// Export functions from osintImplementations/webTools.ts
-export { executeWebhack, executePhoton };
-
-// Add proper exports for these functions that were referenced
-export const executeTwint = async (options: any) => {
-  console.log("Executing Twitter search with options:", options);
-  return {
-    success: true,
-    data: {
-      tweets: [
-        {
-          id: "123456789",
-          username: "user1",
-          tweet: "This is a sample tweet with the search term",
-          date: "2025-01-15 14:30:00"
-        },
-        {
-          id: "987654321",
-          username: "user2",
-          tweet: "Another tweet matching your search criteria",
-          date: "2025-01-14 09:15:00"
-        }
-      ]
-    }
-  };
-};
-
-export const executeUsernameSearch = async (options: any) => {
-  const { username } = options;
-  console.log("Searching for username:", username);
-  
-  // Simulate a delay
-  await new Promise(resolve => setTimeout(resolve, 1000));
-  
-  return {
-    success: true,
-    data: {
-      results: [
-        { platform: "Twitter", exists: true, url: `https://twitter.com/${username}` },
-        { platform: "Instagram", exists: true, url: `https://instagram.com/${username}` },
-        { platform: "GitHub", exists: false, url: `https://github.com/${username}` },
-        { platform: "Facebook", exists: true, url: `https://facebook.com/${username}` },
-        { platform: "LinkedIn", exists: false, url: `https://linkedin.com/in/${username}` },
-        { platform: "Reddit", exists: true, url: `https://reddit.com/user/${username}` }
-      ]
-    }
-  };
-};
-
-export const executeOSINT = async (options: any) => {
-  console.log("Executing OSINT search with options:", options);
-  
-  // Simulate a delay
-  await new Promise(resolve => setTimeout(resolve, 1500));
-  
-  return {
-    success: true,
-    data: {
-      results: [
-        { source: "Google", title: "Result 1 for " + options.target, url: "https://example.com/1" },
-        { source: "DuckDuckGo", title: "Result 2 for " + options.target, url: "https://example.com/2" },
-        { source: "Bing", title: "Result 3 for " + options.target, url: "https://example.com/3" }
-      ],
-      metadata: {
-        queryTime: "0.75s",
-        total: 3
-      }
-    }
-  };
-};
-
-export const executeTorBot = async (options: any) => {
-  console.log("Executing TorBot search with options:", options);
-  
-  // Simulate a delay
-  await new Promise(resolve => setTimeout(resolve, 2000));
-  
-  return {
-    success: true,
-    links_found: [
-      options.url + "/page1.html",
-      options.url + "/hidden/index.html",
-      options.url + "/admin/login.php",
-      options.url + "/forum/index.php",
-    ],
-    simulatedData: true
-  };
-};
-
-export const executeHackingTool = async (options: any) => {
-  console.log("Executing hacking tool with options:", options);
-  
-  // Simulate a delay
-  await new Promise(resolve => setTimeout(resolve, 1500));
-  
-  if (options.tool === 'passwordCracker') {
-    return {
-      success: true,
-      data: {
-        results: ['password123', 'admin1234', 'qwerty', '123456']
-      }
-    };
-  } else if (options.tool === 'passwordGenerator') {
-    const count = options.count || 5;
-    const results = Array(count).fill(0).map(() => 
-      Math.random().toString(36).substring(2, 10) + Math.random().toString(36).substring(2, 10)
-    );
-    
-    return {
-      success: true,
-      data: {
-        results
-      }
-    };
-  } else if (options.tool === 'xssPayloadSearch') {
-    return {
-      success: true,
-      data: {
-        results: [
-          '<script>alert("XSS")</script>',
-          '<img src="x" onerror="alert(\'XSS\')">',
-          '<body onload="alert(\'XSS\')">',
-          '<svg/onload=alert("XSS")>'
-        ]
-      }
-    };
-  } else if (options.tool === 'sqlmap') {
-    return {
-      success: true,
-      data: {
-        results: [
-          "Found SQL injection vulnerability in parameter 'id'",
-          "Database: MySQL 5.7.34",
-          "Tables found: users, products, orders",
-          "Extracting data from 'users' table..."
-        ]
-      }
-    };
-  } else if (options.tool === 'listener') {
-    return {
-      success: true,
-      data: `Started listener on ${options.options?.ip || '0.0.0.0'}:${options.options?.port || '4444'}\nWaiting for connections...`
+  try {
+    // Type assertion for toolParams might be needed if specific tools have very distinct param structures not covered by 'any'
+    // For instance, if executeRapidPayload expects RapidPayloadParams specifically.
+    // However, the map already uses `(params: any)`, so this should broadly work.
+    const result = await toolFunction(toolParams as any); // Cast toolParams if necessary or ensure map value types are specific
+    return result;
+  } catch (error) {
+    console.error(`Error executing tool ${tool}:`, error);
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : `An unknown error occurred while executing ${tool}.`,
+      data: { message: error instanceof Error ? error.message : `An unknown error occurred while executing ${tool}.` }
     };
   }
-  
-  return {
-    success: true,
-    data: {
-      results: [],
-      message: "Operation simulated successfully"
-    }
-  };
 };

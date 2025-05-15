@@ -1,7 +1,8 @@
 
 import React from 'react';
 import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
+import { Switch } from '@/components/ui/switch'; // Added Switch import
+import { ShieldAlert, ShieldCheck } from 'lucide-react';
 
 interface HackingToolHeaderProps {
   isRealmode: boolean;
@@ -9,43 +10,28 @@ interface HackingToolHeaderProps {
 }
 
 const HackingToolHeader: React.FC<HackingToolHeaderProps> = ({ isRealmode, onRealmodeToggle }) => {
-  const imperialProtocolBanner = `
-    ██╗███╗   ███╗██████╗ ███████╗██████╗ ██╗ █████╗ ██╗         ██╗  ██╗ █████╗  ██████╗██╗  ██╗███████╗██████╗ 
-    ██║████╗ ████║██╔══██╗██╔════╝██╔══██╗██║██╔══██╗██║         ██║  ██║██╔══██╗██╔════╝██║ ██╔╝██╔════╝██╔══██╗
-    ██║██╔████╔██║██████╔╝█████╗  ██████╔╝██║███████║██║         ███████║███████║██║     █████╔╝ █████╗  ██████╔╝
-    ██║██║╚██╔╝██║██╔═══╝ ██╔══╝  ██╔══██╗██║██╔══██║██║         ██╔══██║██╔══██║██║     ██╔═██╗ ██╔══╝  ██╔══██╗
-    ██║██║ ╚═╝ ██║██║     ███████╗██║  ██║██║██║  ██║███████╗    ██║  ██║██║  ██║╚██████╗██║  ██╗███████╗██║  ██║
-    ╚═╝╚═╝     ╚═╝╚═╝     ╚══════╝╚═╝  ╚═╝╚═╝╚═╝  ╚═╝╚══════╝    ╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝╚═╝  ╚═╝╚══════╝╚═╝  ╚═╝
-  `;
-
   return (
-    <>
-      <header className="bg-scanner-dark-alt border-b border-gray-800 py-4 px-6">
-        <div className="container mx-auto">
-          <div className="flex justify-between items-center">
-            <div className="flex items-center">
-              <h1 className="text-2xl font-bold text-white">Hacking Tools</h1>
-            </div>
-            <div className="flex items-center space-x-4">
-              <Label htmlFor="realmode-toggle" className="text-sm text-gray-400">
-                Realmode
-              </Label>
-              <Switch
-                id="realmode-toggle"
-                checked={isRealmode}
-                onCheckedChange={onRealmodeToggle}
-              />
-            </div>
-          </div>
-        </div>
-      </header>
-      
-      <div className="mx-auto mt-2 mb-4">
-        <div className="bg-scanner-dark p-4 rounded-md overflow-x-auto w-full">
-          <pre className="text-[#ea384c] text-xs font-mono">{imperialProtocolBanner}</pre>
+    <header className="bg-scanner-card-alt border-b border-gray-700 p-4 shadow-md">
+      <div className="container mx-auto flex justify-between items-center">
+        <h1 className="text-2xl font-bold text-gray-100">Offensive Toolkit</h1>
+        <div className="flex items-center space-x-3">
+          {isRealmode ? (
+            <ShieldAlert className="h-6 w-6 text-red-500" />
+          ) : (
+            <ShieldCheck className="h-6 w-6 text-green-500" />
+          )}
+          <Label htmlFor="realmode-toggle" className={`font-medium ${isRealmode ? 'text-red-400' : 'text-green-400'}`}>
+            {isRealmode ? "Real Mode Active" : "Sandbox Mode"}
+          </Label>
+          <Switch
+            id="realmode-toggle"
+            checked={isRealmode}
+            onCheckedChange={onRealmodeToggle}
+            className="data-[state=checked]:bg-red-600 data-[state=unchecked]:bg-green-600"
+          />
         </div>
       </div>
-    </>
+    </header>
   );
 };
 

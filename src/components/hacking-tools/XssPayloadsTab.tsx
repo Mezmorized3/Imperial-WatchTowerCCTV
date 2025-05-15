@@ -8,26 +8,26 @@ import { Textarea } from '@/components/ui/textarea';
 import { Search, Code } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { executeHackingTool } from '@/utils/osintUtilsConnector';
+import { HackingToolErrorData, HackingToolSuccessData } from '@/utils/types/osintToolTypes';
 
 interface XssPayloadsTabProps {
   isExecuting?: boolean;
   setIsExecuting?: (isExecuting: boolean) => void;
   setToolOutput?: (output: string | null) => void;
-  isRealmode?: boolean;
+  isRealmode?: boolean; // isRealmode marked as unused, keeping for prop consistency
 }
 
 const XssPayloadsTab: React.FC<XssPayloadsTabProps> = ({
   isExecuting: propIsLoading,
   setIsExecuting: propSetIsLoading,
   setToolOutput,
-  isRealmode = false
+  // isRealmode = false // Marked as unused
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [results, setResults] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
-  // Use props if provided, otherwise use local state
   const effectiveIsLoading = propIsLoading !== undefined ? propIsLoading : isLoading;
   const effectiveSetIsLoading = propSetIsLoading || setIsLoading;
 
@@ -52,28 +52,42 @@ const XssPayloadsTab: React.FC<XssPayloadsTabProps> = ({
       const result = await executeHackingTool(params);
       
       if (result && result.success) {
-        setResults(result.data.results);
-        if (setToolOutput) {
-          setToolOutput(result.data.results.join('\n'));
+        const successData = result.data as HackingToolSuccessData<string[]>;
+        if (successData && successData.results) {
+          setResults(successData.results);
+          if (setToolOutput) {
+            setToolOutput(successData.results.join('\n'));
+          }
+          toast({
+            title: "Search Complete",
+            description: `Found ${successData.results.length} XSS payloads.${successData.message ? ` ${successData.message}` : ''}`
+          });
+        } else {
+          toast({ title: "Search Error", description: "Unexpected data format on success.", variant: "destructive" });
         }
-        toast({
-          title: "Search Complete",
-          description: `Found ${result.data.results.length} XSS payloads.`
-        });
       } else {
+        const errorData = result?.data as HackingToolErrorData | undefined;
+        const errorMessage = errorData?.message || result?.error || "Unknown error occurred";
         toast({
           title: "Search Failed",
-          description: (result?.data?.message || "Unknown error occurred") as string,
+          description: errorMessage,
           variant: "destructive"
         });
+        if (setToolOutput) {
+          setToolOutput(`Error: ${errorMessage}`);
+        }
       }
     } catch (error) {
       console.error("Error during XSS payloads search:", error);
+      const errorMessage = error instanceof Error ? error.message : "An unknown error occurred";
       toast({
         title: "Search Error",
-        description: error instanceof Error ? error.message : "An unknown error occurred",
+        description: errorMessage,
         variant: "destructive"
       });
+      if (setToolOutput) {
+        setToolOutput(`Error: ${errorMessage}`);
+      }
     } finally {
       effectiveSetIsLoading(false);
     }
