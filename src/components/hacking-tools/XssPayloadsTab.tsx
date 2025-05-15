@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -14,14 +13,13 @@ interface XssPayloadsTabProps {
   isExecuting?: boolean;
   setIsExecuting?: (isExecuting: boolean) => void;
   setToolOutput?: (output: string | null) => void;
-  isRealmode?: boolean; // isRealmode marked as unused, keeping for prop consistency
+  isRealmode?: boolean;
 }
 
 const XssPayloadsTab: React.FC<XssPayloadsTabProps> = ({
   isExecuting: propIsLoading,
   setIsExecuting: propSetIsLoading,
   setToolOutput,
-  // isRealmode = false // Marked as unused
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [results, setResults] = useState<string[]>([]);
@@ -67,7 +65,7 @@ const XssPayloadsTab: React.FC<XssPayloadsTabProps> = ({
         }
       } else {
         const errorData = result?.data as HackingToolErrorData | undefined;
-        const errorMessage = errorData?.message || result?.error || "Unknown error occurred";
+        const errorMessage = errorData?.message || (result as any)?.error || "Unknown error occurred";
         toast({
           title: "Search Failed",
           description: errorMessage,

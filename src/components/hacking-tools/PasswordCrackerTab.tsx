@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -8,7 +7,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { Loader2, KeyRound, ListChecks } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-// import { Checkbox } from '@/components/ui/checkbox'; // Checkbox was unused
 import { executeHackingTool } from '@/utils/osintUtilsConnector';
 import { HackingToolErrorData, HackingToolSuccessData } from '@/utils/types/osintToolTypes';
 
@@ -16,8 +14,8 @@ interface PasswordCrackerTabProps {
   isExecuting: boolean;
   setIsExecuting: (isExecuting: boolean) => void;
   setToolOutput: (output: string | null) => void;
-  toolOutput: string | null; // toolOutput is marked as unused, but it's a prop. Let's keep it for now.
-  executeSelectedTool: (toolType: string) => Promise<void>; // executeSelectedTool is marked as unused, but it's a prop.
+  toolOutput: string | null;
+  executeSelectedTool: (toolType: string) => Promise<void>;
   isRealmode?: boolean;
 }
 
@@ -85,7 +83,7 @@ const PasswordCrackerTab: React.FC<PasswordCrackerTabProps> = ({
         }
       } else {
         const errorData = result?.data as HackingToolErrorData | undefined;
-        const errorMessage = errorData?.message || result?.error || "Unknown error occurred";
+        const errorMessage = errorData?.message || (result as any)?.error || "Unknown error occurred";
         toast({
           title: "Operation Failed",
           description: errorMessage,
@@ -131,7 +129,7 @@ const PasswordCrackerTab: React.FC<PasswordCrackerTabProps> = ({
         }
       } else {
         const errorData = result?.data as HackingToolErrorData | undefined;
-        const errorMessage = errorData?.message || result?.error || "Unknown error occurred";
+        const errorMessage = errorData?.message || (result as any)?.error || "Unknown error occurred";
         toast({
           title: "Operation Failed",
           description: errorMessage,

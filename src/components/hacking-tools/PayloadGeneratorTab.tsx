@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
@@ -6,22 +5,22 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from '@/hooks/use-toast';
 import { Copy, Check, Terminal, Loader2 } from 'lucide-react';
-import { executeHackingTool } from '@/utils/osintUtilsConnector'; // Corrected: use executeHackingTool
-import { RapidPayloadParams } from '@/utils/types/osintToolTypes'; // Assuming this type exists for params
+import { executeHackingTool } from '@/utils/osintUtilsConnector'; 
+import { RapidPayloadParams } from '@/utils/types/osintToolTypes';
 
 interface PayloadGeneratorTabProps {
-  isExecuting: boolean; // Prop isExecuting is marked as unused. For consistency, we'll manage loading state internally.
-  setIsExecuting: (isExecuting: boolean) => void; // Prop setIsExecuting is marked as unused.
-  setToolOutput: (output: string | null) => void; // Prop setToolOutput is marked as unused.
+  isExecuting: boolean;
+  setIsExecuting: (isExecuting: boolean) => void;
+  setToolOutput: (output: string | null) => void;
 }
 
 const PayloadGeneratorTab: React.FC<PayloadGeneratorTabProps> = ({ 
-  // isExecuting: propIsExecuting,  // Use internal loading state
+  // isExecuting: propIsExecuting,
   // setIsExecuting: propSetIsExecuting, 
   // setToolOutput: propSetToolOutput
 }) => {
   const [isLoading, setIsLoading] = useState(false);
-  const [customIp, setCustomIp] = useState('10.0.0.1'); // Default to a common private IP
+  const [customIp, setCustomIp] = useState('10.0.0.1');
   const [customPort, setCustomPort] = useState('4444');
   const [targetPlatform, setTargetPlatform] = useState<RapidPayloadParams['platform']>('windows');
   const [payloadType, setPayloadType] = useState<RapidPayloadParams['payloadType']>('windows/meterpreter/reverse_tcp');
@@ -42,22 +41,19 @@ const PayloadGeneratorTab: React.FC<PayloadGeneratorTabProps> = ({
   
   const executePayloadGenerator = async () => {
     setIsLoading(true);
-    // if (propSetIsExecuting) propSetIsExecuting(true);
-    // if (propSetToolOutput) propSetToolOutput(null);
     setPayloadOutput('');
     
     const params: RapidPayloadParams & { tool: string } = {
-      tool: 'rapidPayload', // Added tool name for executeHackingTool
+      tool: 'rapidPayload',
       platform: targetPlatform,
       payloadType: payloadType,
       format: payloadFormat,
       lhost: customIp,
       lport: parseInt(customPort),
-      // Defaulting encode and encryption, make them configurable if needed
       options: { 
-        encoder: undefined, // e.g., 'x86/shikata_ga_nai'
+        encoder: undefined,
         iterations: 1,
-        bad_chars: '', // e.g. '\x00\x0a\x0d'
+        bad_chars: '',
         nops: 0,
       }
     };
@@ -66,13 +62,11 @@ const PayloadGeneratorTab: React.FC<PayloadGeneratorTabProps> = ({
       const result = await executeHackingTool(params);
       
       if (result.success && result.data) {
-        // Assuming result.data for rapidPayload is { payload: string, message?: string } or similar
         const data = result.data as { payload?: string; results?: { payload: string }[]; message?: string };
         const actualPayload = data.payload || (data.results && data.results[0]?.payload);
 
         if (actualPayload) {
           setPayloadOutput(actualPayload);
-          // if (propSetToolOutput) propSetToolOutput(actualPayload);
           toast({
             title: "Payload Generated",
             description: data.message || `${targetPlatform} payload created successfully.`,
@@ -80,14 +74,12 @@ const PayloadGeneratorTab: React.FC<PayloadGeneratorTabProps> = ({
         } else {
           const errorMessage = data.message || "Payload generation succeeded but no payload returned.";
           setPayloadOutput(`Error: ${errorMessage}`);
-          // if (propSetToolOutput) propSetToolOutput(`Error: ${errorMessage}`);
           toast({ title: "Payload Generation Info", description: errorMessage, variant: "default" });
         }
       } else {
         const errorData = result?.data as { message: string } | undefined;
-        const errorMessage = errorData?.message || result?.error || "Unknown error occurred";
+        const errorMessage = errorData?.message || (result as any)?.error || "Unknown error occurred";
         setPayloadOutput(`Error: ${errorMessage}`);
-        // if (propSetToolOutput) propSetToolOutput(`Error: ${errorMessage}`);
         toast({
           title: "Execution Failed",
           description: errorMessage,
@@ -97,7 +89,6 @@ const PayloadGeneratorTab: React.FC<PayloadGeneratorTabProps> = ({
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error during payload generation';
       setPayloadOutput(`Error: ${errorMessage}`);
-      // if (propSetToolOutput) propSetToolOutput(`Error: ${errorMessage}`);
       toast({
         title: "Generation Error",
         description: errorMessage,
@@ -105,7 +96,6 @@ const PayloadGeneratorTab: React.FC<PayloadGeneratorTabProps> = ({
       });
     } finally {
       setIsLoading(false);
-      // if (propSetIsExecuting) propSetIsExecuting(false);
     }
   };
 

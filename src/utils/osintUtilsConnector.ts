@@ -14,15 +14,13 @@ import {
   executeSubnetScan,
   executeWhoisLookup,
   executeHttpHeaders,
-  executeBotExploits,      // Added
-  executeCCTVHackedScan,   // Added
-  executeCCTVScan          // Added
-  // ... import other specific tool executors from osintTools.ts
+  executeBotExploits,
+  executeCCTVHackedScan,
+  executeCCTVScan
 } from './osintTools';
 
 import { 
   HackingToolResult,
-  // Ensure all relevant Param types are imported if needed for specific validation
   EncoderDecoderParams,
   ReverseShellParams,
   RapidPayloadParams,
@@ -31,14 +29,63 @@ import {
   PasswordCrackerParams,
   PasswordGeneratorParams,
   IpInfoParams, DnsLookupParams, PortScanParams, TracerouteParams, SubnetScanParams, WhoisLookupParams, HttpHeadersParams,
-  BotExploitsParams, CCTVHackedParams, CCTVScanParams // Added
+  BotExploitsParams, CCTVHackedParams, CCTVScanParams
 } from './types/osintToolTypes';
+
+// Import all the surveillance network tools
+import {
+  executeScapy,
+  executeZMap,
+  executeZGrab,
+  executeMasscan,
+  executeHydra
+} from './components/surveillance/network/NetworkScanTools';
+
+import {
+  executeWebCheck,
+  executeWebhack,
+  executeBackHack,
+  executePhoton,
+  executeTorBot
+} from './components/surveillance/network/WebTools';
+
+import {
+  executeUsernameSearch,
+  executeTwint,
+  executeOSINT
+} from './components/surveillance/network/SocialTools';
+
+import {
+  executeOpenCV,
+  executeDeepstack,
+  executeFaceRecognition,
+  executeMotion,
+  executeONVIFScan,
+  executeNmapONVIF
+} from './components/surveillance/network/VisionTools';
+
+import {
+  executeFFmpeg,
+  executeTapoPoC,
+  executeShieldAI
+} from './components/surveillance/network/UtilityTools';
+
+import {
+  executeCCTVScan as execCCTV,
+  executeCCTVHacked as execCCTVHacked,
+  executeHackCCTV,
+  executeCameradar,
+  executeOpenCCTV,
+  executeEyePwn,
+  executeCamDumper,
+  executeCamerattack
+} from './components/surveillance/network/CCTVTools';
 
 const toolFunctionMap: { [key: string]: (params: any) => Promise<HackingToolResult<any, any>> } = {
   encoderDecoder: executeEncoderDecoder,
-  listener: executeReverseShellListener, // Assuming 'listener' is the key for ReverseShell
+  listener: executeReverseShellListener,
   rapidPayload: executeRapidPayload,
-  sqliPayloadTest: executeSqliPayloadTest, // Assuming 'sqliPayloadTest' is the key
+  sqliPayloadTest: executeSqliPayloadTest,
   xssPayloadSearch: executeXssPayloadSearch,
   passwordCracker: executePasswordCracker,
   passwordGenerator: executePasswordGenerator,
@@ -47,12 +94,53 @@ const toolFunctionMap: { [key: string]: (params: any) => Promise<HackingToolResu
   portScan: executePortScan,
   traceroute: executeTraceroute,
   subnetScan: executeSubnetScan,
-  whois: executeWhoisLookup, // Assuming 'whois' is the key
-  httpHeaders: executeHttpHeaders, // Assuming 'httpHeaders' is the key
-  botExploits: executeBotExploits, // Added
-  cctvHackedScan: executeCCTVHackedScan, // Added
-  cctvScan: executeCCTVScan // Added
-  // ... map other tools
+  whois: executeWhoisLookup,
+  httpHeaders: executeHttpHeaders,
+  botExploits: executeBotExploits,
+  cctvHackedScan: executeCCTVHackedScan,
+  cctvScan: executeCCTVScan,
+  
+  // Export network tools
+  scapy: executeScapy,
+  zmap: executeZMap,
+  zgrab: executeZGrab,
+  masscan: executeMasscan,
+  hydra: executeHydra,
+  
+  // Export web tools
+  webCheck: executeWebCheck,
+  webhack: executeWebhack,
+  backHack: executeBackHack,
+  photon: executePhoton,
+  torBot: executeTorBot,
+  
+  // Export social tools
+  usernameSearch: executeUsernameSearch,
+  twint: executeTwint,
+  osint: executeOSINT,
+  
+  // Export vision tools
+  openCV: executeOpenCV,
+  deepstack: executeDeepstack,
+  faceRecognition: executeFaceRecognition,
+  motion: executeMotion,
+  onvifScan: executeONVIFScan,
+  nmapONVIF: executeNmapONVIF,
+  
+  // Export utility tools
+  ffmpeg: executeFFmpeg,
+  tapoPoC: executeTapoPoC,
+  shieldAI: executeShieldAI,
+  
+  // Export CCTV tools
+  cctv: execCCTV,
+  cctvHacked: execCCTVHacked,
+  hackCCTV: executeHackCCTV,
+  cameradar: executeCameradar,
+  openCCTV: executeOpenCCTV,
+  eyePwn: executeEyePwn,
+  camDumper: executeCamDumper,
+  camerattack: executeCamerattack
 };
 
 export const executeHackingTool = async (
@@ -67,10 +155,7 @@ export const executeHackingTool = async (
   }
 
   try {
-    // Type assertion for toolParams might be needed if specific tools have very distinct param structures not covered by 'any'
-    // For instance, if executeRapidPayload expects RapidPayloadParams specifically.
-    // However, the map already uses `(params: any)`, so this should broadly work.
-    const result = await toolFunction(toolParams as any); // Cast toolParams if necessary or ensure map value types are specific
+    const result = await toolFunction(toolParams as any);
     return result;
   } catch (error) {
     console.error(`Error executing tool ${tool}:`, error);
@@ -80,4 +165,36 @@ export const executeHackingTool = async (
       data: { message: error instanceof Error ? error.message : `An unknown error occurred while executing ${tool}.` }
     };
   }
+};
+
+// Re-export all the tool functions
+export {
+  executeScapy,
+  executeZMap,
+  executeZGrab,
+  executeMasscan,
+  executeHydra,
+  executeWebCheck,
+  executeWebhack,
+  executeBackHack,
+  executePhoton,
+  executeTorBot,
+  executeUsernameSearch,
+  executeTwint,
+  executeOSINT,
+  executeOpenCV,
+  executeDeepstack,
+  executeFaceRecognition,
+  executeMotion,
+  executeONVIFScan,
+  executeNmapONVIF,
+  executeFFmpeg,
+  executeTapoPoC,
+  executeShieldAI,
+  executeHackCCTV,
+  executeCameradar,
+  executeOpenCCTV,
+  executeEyePwn,
+  executeCamDumper,
+  executeCamerattack
 };
