@@ -5,6 +5,7 @@ export interface ScapyParams extends BaseToolParams {
   target: string;
   packetType: 'TCP' | 'UDP' | 'ICMP';
   count?: number;
+  filter?: string; // Add missing filter property
 }
 export interface ScapyData {
   summary: string;
@@ -13,7 +14,7 @@ export interface ScapyData {
 }
 
 export interface ZMapParams extends BaseToolParams {
-  targetSubnet: string;
+  targetSubnet: string; // Keep as is
   port: number;
   rate?: number;
   outputFile?: string;
@@ -35,7 +36,6 @@ export interface ZGrabData {
   banner?: string;
   tlsLog?: any; // Specific structure for TLS data
 }
-
 
 export interface MasscanParams extends BaseToolParams {
   targets: string; // e.g., "10.0.0.0/8" or "192.168.1.1-192.168.1.255"
@@ -145,4 +145,3 @@ export interface ONVIFDevice {
 export interface ONVIFScanData {
   devices: ONVIFDevice[];
 }
-

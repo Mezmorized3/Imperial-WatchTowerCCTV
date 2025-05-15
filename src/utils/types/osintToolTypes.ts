@@ -1,3 +1,18 @@
+import { BaseToolParams, HackingToolResult } from './osintToolTypes';
+
+export interface ProxyConfig {
+  enabled: boolean;
+  type: string;
+  host: string;
+  port: number;
+  rotationEnabled: boolean;
+  rotationInterval?: number;
+  credentials?: {
+    username: string;
+    password: string;
+  };
+}
+
 export interface BaseToolParams {
   tool: string;
   [key: string]: any;

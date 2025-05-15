@@ -1,7 +1,7 @@
 
-import { SecurityAdminData, ShieldAIData } from '@/utils/types/securityToolTypes';
+import { SecurityAdminParams, SecurityAdminData, ShieldAIData } from '@/utils/types/securityToolTypes';
 
-export const mockSecurityAdminData: Record<SecurityAdminParams['action'], SecurityAdminData> = {
+export const mockSecurityAdminData: Record<string, SecurityAdminData> = {
   check: {
     status: "checked",
     message: "System check complete. No critical vulnerabilities found.",

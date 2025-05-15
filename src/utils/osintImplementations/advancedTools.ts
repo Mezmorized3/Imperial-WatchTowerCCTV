@@ -10,7 +10,9 @@ export const executeRapidPayload = async (params: RapidPayloadParams): Promise<H
   return {
     success: true,
     data: {
-      results: { payload: mockPayload }, // Ensure `results` contains the RapidPayloadData structure
+      results: { 
+        payload: mockPayload 
+      },
       message: 'Rapid payload generated successfully.'
     }
   };

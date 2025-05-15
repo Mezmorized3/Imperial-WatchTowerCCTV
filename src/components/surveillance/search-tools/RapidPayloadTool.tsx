@@ -2,258 +2,161 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
-import { Badge } from '@/components/ui/badge';
-import { Loader2, Terminal, Copy, Check } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
 import { executeRapidPayload } from '@/utils/osintUtilsConnector';
-import { RapidPayloadParams, RapidPayloadData, HackingToolResult } from '@/utils/types/osintToolTypes';
+import { RapidPayloadParams } from '@/utils/types/osintToolTypes';
 
-interface RapidPayloadToolProps {
-  isRealmode?: boolean;
-}
-
-const RapidPayloadTool: React.FC<RapidPayloadToolProps> = ({ isRealmode = false }) => {
-  const [ipAddress, setIpAddress] = useState('192.168.1.100');
-  const [port, setPort] = useState('4444');
-  const [selectedPlatform, setSelectedPlatform] = useState<RapidPayloadParams['platform']>('windows');
-  const [payloadType, setPayloadType] = useState('windows/meterpreter/reverse_tcp');
-  const [output, setOutput] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [copied, setCopied] = useState(false);
-  
+const RapidPayloadTool = () => {
   const { toast } = useToast();
-  
-  const platforms: RapidPayloadParams['platform'][] = [
-    'windows', 
-    'linux', 
-    'macos', 
-    'android', 
-    'python', 
-    'php', 
-    'bash', 
-    'powershell'
-  ];
-  
-  const payloadTypes: Record<string, string[]> = {
-    windows: ['windows/meterpreter/reverse_tcp', 'windows/shell/reverse_tcp', 'windows/x64/meterpreter/reverse_tcp'],
-    linux: ['linux/x86/meterpreter/reverse_tcp', 'linux/x64/shell_reverse_tcp'],
-    macos: ['osx/x64/meterpreter/reverse_tcp', 'osx/x64/shell_reverse_tcp'],
-    android: ['android/meterpreter/reverse_tcp', 'android/shell/reverse_tcp'],
-    python: ['python/meterpreter_reverse_tcp', 'python/shell_reverse_tcp'],
-    php: ['php/meterpreter_reverse_tcp', 'php/reverse_php'],
-    bash: ['cmd/unix/reverse_bash'],
-    powershell: ['cmd/windows/powershell_reverse_tcp']
-  };
-  
-  const handleGeneratePayload = async () => {
+  const [platform, setPlatform] = useState<"windows" | "linux" | "macos" | "android" | "php" | "python" | "bash" | "powershell">("windows");
+  const [payloadType, setPayloadType] = useState("reverse_shell");
+  const [lhost, setLhost] = useState("");
+  const [lport, setLport] = useState(4444);
+  const [format, setFormat] = useState("raw");
+  const [generatedPayload, setGeneratedPayload] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const generatePayload = async () => {
+    if (!lhost) {
+      toast({
+        title: "Error",
+        description: "LHOST is required",
+        variant: "destructive"
+      });
+      return;
+    }
+
     setLoading(true);
-    setOutput(null);
-    
+    setGeneratedPayload("");
+
     try {
+      // Add the required 'tool' parameter to match RapidPayloadParams
       const params: RapidPayloadParams = {
-        tool: 'rapidPayload',
-        platform: selectedPlatform,
-        payloadType: payloadType,
-        lhost: ipAddress,
-        lport: parseInt(port),
-        format: 'raw',
+        tool: 'rapidpayload',
+        platform,
+        payloadType,
+        lhost,
+        lport,
+        format,
         encode: false
       };
-      const result: HackingToolResult<RapidPayloadData> = await executeRapidPayload(params);
-      
-      if (result.success && result.data.results) {
-        const payloadData = result.data.results;
-        
-        if (payloadData.payload) {
-          setOutput(payloadData.payload);
-          toast({
-            title: "Payload Generated",
-            description: "The payload has been successfully generated."
-          });
-        } else {
-          setOutput("No payload content was returned from the service.");
-          toast({
-            title: "Generation Issue",
-            description: "Payload was generated but no content was returned.",
-            variant: "destructive"
-          });
-        }
-      } else {
-        const errorMsg = !result.success ? result.error : (result.data as any)?.message || "Failed to generate payload";
-        setOutput(`Error: ${errorMsg}`);
+
+      const result = await executeRapidPayload(params);
+
+      if (result.success) {
+        // Access payload correctly through results
+        setGeneratedPayload(result.data.results.payload);
         toast({
-          title: "Generation Failed",
-          description: errorMsg,
+          title: "Success",
+          description: `${platform} ${payloadType} payload generated`
+        });
+      } else {
+        // Fix error access
+        const errorMessage = result.success === false ? result.error : "Failed to generate payload";
+        toast({
+          title: "Error",
+          description: errorMessage,
           variant: "destructive"
         });
       }
     } catch (error) {
-      console.error("Error generating payload:", error);
-      const errorMsg = error instanceof Error ? error.message : "An unknown error occurred";
-      setOutput(`Error: ${errorMsg}`);
+      console.error("Payload generation error:", error);
       toast({
-        title: "Generation Error",
-        description: errorMsg,
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to generate payload",
         variant: "destructive"
       });
     } finally {
       setLoading(false);
     }
   };
-  
-  const copyToClipboard = () => {
-    if (output) {
-      navigator.clipboard.writeText(output)
-        .then(() => {
-          setCopied(true);
-          setTimeout(() => setCopied(false), 2000);
-          toast({
-            title: "Copied!",
-            description: "Payload copied to clipboard"
-          });
-        })
-        .catch(err => {
-          console.error('Could not copy text: ', err);
-          toast({
-            title: "Copy Failed",
-            description: "Failed to copy to clipboard",
-            variant: "destructive"
-          });
-        });
-    }
-  };
-  
+
   return (
-    <Card>
+    <Card className="w-full">
       <CardHeader>
-        <CardTitle className="flex items-center justify-between">
-          <div className="flex items-center">
-            <Terminal className="mr-2 h-5 w-5" />
-            Rapid Payload Generator
-          </div>
-          {!isRealmode && <Badge variant="outline">Demo Mode</Badge>}
-        </CardTitle>
+        <CardTitle>Rapid Payload Generator</CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="grid gap-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <label htmlFor="platform" className="text-sm font-medium">Target Platform</label>
-            <Select 
-              value={selectedPlatform} 
-              onValueChange={(value) => {
-                setSelectedPlatform(value as RapidPayloadParams['platform']);
-                if (payloadTypes[value] && payloadTypes[value].length > 0) {
-                  setPayloadType(payloadTypes[value][0]);
-                }
-              }}
-            >
+          <div>
+            <Label htmlFor="platform">Platform</Label>
+            <Select value={platform} onValueChange={(value) => setPlatform(value as "windows" | "linux" | "macos" | "android" | "php" | "python" | "bash" | "powershell")}>
               <SelectTrigger id="platform">
                 <SelectValue placeholder="Select platform" />
               </SelectTrigger>
               <SelectContent>
-                {platforms.map(platform => (
-                  <SelectItem key={platform} value={platform}>
-                    {platform.charAt(0).toUpperCase() + platform.slice(1)}
-                  </SelectItem>
-                ))}
+                <SelectItem value="windows">Windows</SelectItem>
+                <SelectItem value="linux">Linux</SelectItem>
+                <SelectItem value="macos">MacOS</SelectItem>
+                <SelectItem value="android">Android</SelectItem>
+                <SelectItem value="php">PHP</SelectItem>
+                <SelectItem value="python">Python</SelectItem>
+                <SelectItem value="bash">Bash</SelectItem>
+                <SelectItem value="powershell">PowerShell</SelectItem>
               </SelectContent>
             </Select>
           </div>
-          
-          <div className="space-y-2">
-            <label htmlFor="payload-type" className="text-sm font-medium">Payload Type</label>
-            <Select 
-              value={payloadType} 
-              onValueChange={setPayloadType}
-            >
-              <SelectTrigger id="payload-type">
-                <SelectValue placeholder="Select payload type" />
-              </SelectTrigger>
-              <SelectContent>
-                {payloadTypes[selectedPlatform]?.map(type => (
-                  <SelectItem key={type} value={type}>
-                    {type}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <label htmlFor="ip-address" className="text-sm font-medium">IP Address (LHOST)</label>
-            <Input 
-              id="ip-address"
-              value={ipAddress}
-              onChange={(e) => setIpAddress(e.target.value)}
-              placeholder="e.g., 192.168.1.100"
+          <div>
+            <Label htmlFor="payloadType">Payload Type</Label>
+            <Input
+              type="text"
+              id="payloadType"
+              value={payloadType}
+              onChange={(e) => setPayloadType(e.target.value)}
+              placeholder="e.g., reverse_tcp"
             />
           </div>
-          
-          <div className="space-y-2">
-            <label htmlFor="port" className="text-sm font-medium">Port (LPORT)</label>
-            <Input 
-              id="port"
-              value={port}
-              onChange={(e) => setPort(e.target.value)}
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <Label htmlFor="lhost">LHOST</Label>
+            <Input
+              type="text"
+              id="lhost"
+              value={lhost}
+              onChange={(e) => setLhost(e.target.value)}
+              placeholder="e.g., 10.0.0.1"
+            />
+          </div>
+          <div>
+            <Label htmlFor="lport">LPORT</Label>
+            <Input
+              type="number"
+              id="lport"
+              value={lport}
+              onChange={(e) => setLport(parseInt(e.target.value))}
               placeholder="e.g., 4444"
             />
           </div>
         </div>
-        
-        <Button 
-          onClick={handleGeneratePayload}
-          disabled={loading}
-          className="w-full"
-        >
-          {loading ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Generating...
-            </>
-          ) : (
-            <>
-              <Terminal className="mr-2 h-4 w-4" />
-              Generate Payload
-            </>
-          )}
+        <div>
+          <Label htmlFor="format">Format</Label>
+          <Select value={format} onValueChange={(value) => setFormat(value)}>
+            <SelectTrigger id="format">
+              <SelectValue placeholder="Select format" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="raw">Raw</SelectItem>
+              <SelectItem value="base64">Base64</SelectItem>
+              <SelectItem value="hex">Hex</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <Button onClick={generatePayload} disabled={loading}>
+          {loading ? "Generating..." : "Generate Payload"}
         </Button>
-        
-        {output && (
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <label className="text-sm font-medium">Generated Payload</label>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={copyToClipboard}
-              >
-                {copied ? (
-                  <>
-                    <Check className="mr-2 h-4 w-4" />
-                    Copied
-                  </>
-                ) : (
-                  <>
-                    <Copy className="mr-2 h-4 w-4" />
-                    Copy
-                  </>
-                )}
-              </Button>
-            </div>
-            <Textarea 
-              readOnly 
-              value={output} 
-              className="font-mono text-xs h-40"
+        {generatedPayload && (
+          <div>
+            <Label>Generated Payload</Label>
+            <Input
+              type="text"
+              readOnly
+              value={generatedPayload}
+              className="mt-2"
             />
-            <p className="text-xs text-muted-foreground">
-              {isRealmode 
-                ? "This payload can be used in a real penetration testing environment." 
-                : "This is a demonstration payload and has been sanitized for safety."}
-            </p>
           </div>
         )}
       </CardContent>

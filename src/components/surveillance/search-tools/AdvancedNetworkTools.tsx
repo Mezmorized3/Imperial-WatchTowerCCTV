@@ -35,10 +35,12 @@ const AdvancedNetworkTools: React.FC<AdvancedNetworkToolsProps> = ({
     setError(null);
     
     try {
+      // Update parameters to match ZMapParams type
       const result = await executeZMap({
-        target,
+        tool: 'zmap', // Add required tool parameter
+        targetSubnet: target, // Change target to targetSubnet
         port: parseInt(port),
-        scanType
+        rate: 1000 // Add a default rate
       });
       
       if (result.success) {
@@ -47,7 +49,9 @@ const AdvancedNetworkTools: React.FC<AdvancedNetworkToolsProps> = ({
           onScanComplete(result);
         }
       } else {
-        setError(result.error || 'Scan failed');
+        // Fix error access
+        const errorMessage = result.success === false ? result.error : "Scan failed";
+        setError(errorMessage);
       }
     } catch (error) {
       console.error('Scan error:', error);
@@ -68,9 +72,11 @@ const AdvancedNetworkTools: React.FC<AdvancedNetworkToolsProps> = ({
     setError(null);
     
     try {
+      // Update parameters to match ScapyParams type
       const result = await executeScapy({
-        target,
-        filter: `port ${port}`,
+        tool: 'scapy', // Add required tool parameter
+        target: target,
+        packetType: 'TCP', // Add required packetType
         count: 10
       });
       
@@ -80,7 +86,9 @@ const AdvancedNetworkTools: React.FC<AdvancedNetworkToolsProps> = ({
           onScanComplete(result);
         }
       } else {
-        setError(result.error || 'Packet capture failed');
+        // Fix error access
+        const errorMessage = result.success === false ? result.error : "Packet capture failed";
+        setError(errorMessage);
       }
     } catch (error) {
       console.error('Capture error:', error);
