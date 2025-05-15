@@ -1,5 +1,6 @@
+import { BaseToolParams } from './osintToolTypes';
 
-export interface WebCheckParams {
+export interface WebCheckParams extends BaseToolParams {
   url: string;
   options?: {
     checkSecurity?: boolean;
@@ -7,6 +8,13 @@ export interface WebCheckParams {
     checkSEO?: boolean;
     checkTechnologies?: boolean;
   };
+}
+
+export interface WebCheckData {
+  status: number;
+  title?: string;
+  headers?: Record<string, string>;
+  technologies?: string[];
 }
 
 export interface WebCheckResult {
@@ -35,7 +43,7 @@ export interface WebCheckResult {
   seo: {
     score: number;
     issues: {
-      severity: 'low' | 'medium' | 'high';
+      severity: 'low' | 'medium';
       description: string;
       recommendation: string;
     }[];
@@ -43,7 +51,7 @@ export interface WebCheckResult {
   message?: string;
 }
 
-export interface WebhackParams {
+export interface WebhackParams extends BaseToolParams {
   url: string;
   options?: {
     checkXSS?: boolean;
@@ -51,6 +59,12 @@ export interface WebhackParams {
     checkCSRF?: boolean;
     checkClickjacking?: boolean;
   };
+}
+
+export interface WebhackData {
+  vulnerable?: boolean;
+  details?: string;
+  response?: any;
 }
 
 export interface WebhackResult {
@@ -65,9 +79,26 @@ export interface WebhackResult {
   message?: string;
 }
 
-export interface BackHackParams {
+export interface BackHackParams extends BaseToolParams {
   url: string;
-  options?: any;
+  options?: {
+    target?: string;
+    scanType?: 'basic' | 'full';
+    timeout?: number;
+  };
+}
+
+export interface BackHackData {
+  adminPanels?: string[];
+  backupFiles?: string[];
+  configFiles?: string[];
+  vulnerabilities?: Array<{
+    type: string;
+    url: string;
+    parameter?: string;
+    severity: 'low' | 'medium' | 'high' | 'critical';
+  }>;
+  message?: string;
 }
 
 export interface BackHackResult {
@@ -81,48 +112,34 @@ export interface BackHackResult {
   message?: string;
 }
 
-export interface PhotonParams {
+export interface PhotonParams extends BaseToolParams {
   url: string;
-  options?: {
-    threads?: number;
-    timeout?: number;
-    delay?: number;
-    cookies?: string;
-    user_agent?: string;
-    exclude?: string[];
-  };
+  depth?: number;
+  timeout?: number;
+  threads?: number;
+  delay?: number;
+  userAgent?: string;
+  saveResults?: boolean;
 }
 
-export interface PhotonResult {
-  url: string;
-  urls: string[];
-  emails: string[];
-  social: {
-    platform: string;
-    url: string;
-  }[];
-  files: {
-    type: string;
-    url: string;
-  }[];
-  message?: string;
+export interface PhotonData {
+  links?: string[];
+  emails?: string[];
+  subdomains?: string[];
+  files?: string[];
+  intel?: any;
+  js_files?: string[];
+  robots?: string[];
 }
 
-export interface TorBotParams {
-  url: string;
-  options?: {
-    mode?: 'standard' | 'deep' | 'destructive';
-    verbose?: boolean;
-    savefile?: string;
-  };
+export interface TorBotParams extends BaseToolParams {
+  query: string;
+  pages?: number;
 }
 
-export interface TorBotResult {
-  url: string;
-  onions: string[];
-  emails: string[];
-  bitcoin_addresses: string[];
-  message?: string;
+export interface TorBotData {
+  onionLinks?: string[];
+  relatedInfo?: any;
 }
 
 export interface UsernameSearchParams {
