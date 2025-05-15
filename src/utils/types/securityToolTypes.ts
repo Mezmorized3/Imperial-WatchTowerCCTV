@@ -4,7 +4,7 @@ export interface ShieldAIParams extends BaseToolParams {
   targetSystem: string; // e.g., IP, hostname, or system ID
   scanType: 'vulnerability' | 'compliance' | 'threat_detection';
   policyFile?: string; // Path to compliance policy
-  tool?: string; // Made tool optional
+  // tool is inherited from BaseToolParams
 }
 export interface ShieldAIData {
   scanId: string;
@@ -21,9 +21,8 @@ export interface SecurityAdminParams extends BaseToolParams {
   scope?: 'system' | 'network' | 'application';
   level?: 'basic' | 'advanced';
   timeout?: number;
-  tool?: string; // Made tool optional
+  // tool is inherited from BaseToolParams
 }
-
 export interface SecurityAdminData {
     status: string;
     message: string;

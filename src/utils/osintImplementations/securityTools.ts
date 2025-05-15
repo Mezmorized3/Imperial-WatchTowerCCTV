@@ -1,24 +1,47 @@
 
 import { HackingToolResult } from '../types/osintToolTypes';
-import { SecurityAdminParams, SecurityAdminData, ShieldAIParams, ShieldAIData } from '@/utils/types/securityToolTypes'; // Corrected path
-// Assuming mockData.ts exists and exports these
-import { mockSecurityAdminData, mockShieldAIData } from './security/mockData'; 
+import { 
+    ShieldAIParams, ShieldAIData, 
+    SecurityAdminParams, SecurityAdminData 
+} from '../types/securityToolTypes'; // Corrected path
+import { mockSecurityAdminData_check, mockSecurityAdminData_patch, mockSecurityAdminData_report, mockShieldAIData_scan } from './security/mockData'; // Use more specific names if needed
 
-export const executeSecurityAdmin = async (params: SecurityAdminParams): Promise<HackingToolResult<SecurityAdminData>> => {
-  console.log('Executing SecurityAdmin with:', params);
-  await new Promise(resolve => setTimeout(resolve, 1000));
-  // Use mockSecurityAdminData or simulate based on params
-  const resultData = mockSecurityAdminData[params.action] || { status: "error", message: "Invalid action" };
-  return { 
-    success: resultData.status === "success" || resultData.status === "patched" || resultData.status === "checked", // Adjust success criteria
+export const executeShieldAI = async (params: ShieldAIParams): Promise<HackingToolResult<ShieldAIData>> => {
+  console.log('Executing ShieldAI with:', params);
+  // Simulate ShieldAI scan
+  await new Promise(resolve => setTimeout(resolve, 2500));
+  // Return mock data based on scanType or other params if needed
+  return {
+    success: true,
     data: { 
-      results: resultData, 
-      message: `Security admin action ${params.action} ${resultData.status}` 
+        results: mockShieldAIData_scan, // Use the renamed mock data
+        message: `ShieldAI ${params.scanType} scan completed.`
     }
   };
 };
 
-// executeShieldAI is now in utilityTools.ts, this file might not need it unless it's a different version.
-// For now, remove from here to avoid conflict if it's the same one.
-// If it's a different tool also named executeShieldAI, it needs a distinct name or purpose.
-
+export const executeSecurityAdmin = async (params: SecurityAdminParams): Promise<HackingToolResult<SecurityAdminData>> => {
+  console.log('Executing SecurityAdmin with:', params);
+  // Simulate SecurityAdmin action
+  await new Promise(resolve => setTimeout(resolve, 1000));
+  let actionResult: SecurityAdminData;
+  switch (params.action) {
+    case 'patch':
+      actionResult = mockSecurityAdminData_patch; // Use renamed mock data
+      break;
+    case 'report':
+      actionResult = mockSecurityAdminData_report; // Use renamed mock data
+      break;
+    case 'check':
+    default:
+      actionResult = mockSecurityAdminData_check; // Use renamed mock data
+      break;
+  }
+  return {
+    success: true,
+    data: {
+        results: actionResult,
+        message: `SecurityAdmin action '${params.action}' for target '${params.target}' completed.`
+    }
+  };
+};

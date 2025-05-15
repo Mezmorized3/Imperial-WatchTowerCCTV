@@ -1,11 +1,11 @@
-
 import { executeHackingTool } from '@/utils/osintUtilsConnector';
 import { 
     CCTVScanData, 
     CCTVHackedData, 
     CCTVCamera as OsintCCTVCamera, 
     CCTVHackedCamera as OsintCCTVHackedCamera,
-    HackingToolResult // Import HackingToolResult
+    HackingToolResult, // Import HackingToolResult
+    HackingToolErrorData // Assuming this type is correctly defined here or re-exported
 } from '@/utils/types/osintToolTypes'; // Assuming these types are correctly defined here or re-exported
 
 export interface CCTVScanParams {
@@ -28,22 +28,20 @@ export interface CCTVScanResult {
 
 export const executeCCTVScan = async (params: CCTVScanParams): Promise<CCTVScanResult> => {
   try {
-    const result: HackingToolResult<CCTVScanData> = await executeHackingTool({ // Type the result
+    const result: HackingToolResult<CCTVScanData> = await executeHackingTool({
       tool: 'cctvScan', 
       ...params 
     });
     
     if (result.success) {
-      // Access data via result.data.results as per HackingToolSuccessData structure
       return {
         success: true,
         cameras: result.data.results?.cameras,
       };
     } else {
-      // Access error via result.error when success is false
       return {
         success: false,
-        error: result.error || (result.data as any)?.message || 'Unknown error during CCTV scan'
+        error: result.error || (result.data as HackingToolErrorData)?.message || 'Unknown error during CCTV scan'
       };
     }
   } catch (error) {
@@ -57,7 +55,7 @@ export const executeCCTVScan = async (params: CCTVScanParams): Promise<CCTVScanR
 
 export const executeCCTVHacked = async (params: CCTVScanParams): Promise<CCTVScanResult> => {
   try {
-    const result: HackingToolResult<CCTVHackedData> = await executeHackingTool({ // Type the result
+    const result: HackingToolResult<CCTVHackedData> = await executeHackingTool({
       tool: 'cctvHackedScan', 
       ...params
     });
@@ -70,7 +68,7 @@ export const executeCCTVHacked = async (params: CCTVScanParams): Promise<CCTVSca
     } else {
       return {
         success: false,
-        error: result.error || (result.data as any)?.message || 'Unknown error during CCTV hacked scan'
+        error: result.error || (result.data as HackingToolErrorData)?.message || 'Unknown error during CCTV hacked scan'
       };
     }
   } catch (error) {
@@ -84,19 +82,19 @@ export const executeCCTVHacked = async (params: CCTVScanParams): Promise<CCTVSca
 
 export const executeHackCCTV = async (params: CCTVScanParams): Promise<CCTVScanResult> => {
   try {
-    const result: HackingToolResult<CCTVScanData> = await executeHackingTool({ // Type the result
+    const result: HackingToolResult<CCTVHackedData> = await executeHackingTool({ // CCTVHackedData is more likely for a "hack" tool
       tool: 'hackCCTV',
       ...params
     });
     if (result.success) {
       return {
         success: true,
-        cameras: result.data.results?.cameras,
+        cameras: result.data.results?.cameras, // Assuming cameras are part of CCTVHackedData
       };
     } else {
       return {
         success: false,
-        error: result.error || (result.data as any)?.message || 'Unknown error during hack CCTV'
+        error: result.error || (result.data as HackingToolErrorData)?.message || 'Unknown error during hack CCTV'
       };
     }
   } catch (error) {
@@ -110,7 +108,7 @@ export const executeHackCCTV = async (params: CCTVScanParams): Promise<CCTVScanR
 
 export const executeCameradar = async (params: CCTVScanParams): Promise<CCTVScanResult> => {
   try {
-    const result: HackingToolResult<CCTVScanData> = await executeHackingTool({ // Type the result
+    const result: HackingToolResult<CCTVScanData> = await executeHackingTool({
       tool: 'cameradar',
       ...params
     });
@@ -122,7 +120,7 @@ export const executeCameradar = async (params: CCTVScanParams): Promise<CCTVScan
     } else {
       return {
         success: false,
-        error: result.error || (result.data as any)?.message || 'Unknown error during cameradar scan'
+        error: result.error || (result.data as HackingToolErrorData)?.message || 'Unknown error during cameradar scan'
       };
     }
   } catch (error) {
@@ -136,7 +134,7 @@ export const executeCameradar = async (params: CCTVScanParams): Promise<CCTVScan
 
 export const executeOpenCCTV = async (params: CCTVScanParams): Promise<CCTVScanResult> => {
   try {
-    const result: HackingToolResult<CCTVScanData> = await executeHackingTool({ // Type the result
+    const result: HackingToolResult<CCTVScanData> = await executeHackingTool({
       tool: 'openCCTV',
       ...params
     });
@@ -148,7 +146,7 @@ export const executeOpenCCTV = async (params: CCTVScanParams): Promise<CCTVScanR
     } else {
       return {
         success: false,
-        error: result.error || (result.data as any)?.message || 'Unknown error during OpenCCTV scan'
+        error: result.error || (result.data as HackingToolErrorData)?.message || 'Unknown error during OpenCCTV scan'
       };
     }
   } catch (error) {
@@ -162,7 +160,7 @@ export const executeOpenCCTV = async (params: CCTVScanParams): Promise<CCTVScanR
 
 export const executeEyePwn = async (params: CCTVScanParams): Promise<CCTVScanResult> => {
   try {
-    const result: HackingToolResult<CCTVScanData> = await executeHackingTool({ // Type the result
+    const result: HackingToolResult<CCTVHackedData> = await executeHackingTool({ // EyePwn sounds like it might find hacked/vulnerable cams
       tool: 'eyePwn',
       ...params
     });
@@ -174,7 +172,7 @@ export const executeEyePwn = async (params: CCTVScanParams): Promise<CCTVScanRes
     } else {
       return {
         success: false,
-        error: result.error || (result.data as any)?.message || 'Unknown error during EyePwn scan'
+        error: result.error || (result.data as HackingToolErrorData)?.message || 'Unknown error during EyePwn scan'
       };
     }
   } catch (error) {
@@ -188,19 +186,19 @@ export const executeEyePwn = async (params: CCTVScanParams): Promise<CCTVScanRes
 
 export const executeCamDumper = async (params: CCTVScanParams): Promise<CCTVScanResult> => {
   try {
-    const result: HackingToolResult<CCTVScanData> = await executeHackingTool({ // Type the result
+    const result: HackingToolResult<CCTVHackedData> = await executeHackingTool({ // CamDumper sounds like it gets data from cams
       tool: 'camDumper',
       ...params
     });
     if (result.success) {
       return {
         success: true,
-        cameras: result.data.results?.cameras,
+        cameras: result.data.results?.cameras, // Assuming it returns hacked camera data
       };
     } else {
       return {
         success: false,
-        error: result.error || (result.data as any)?.message || 'Unknown error during CamDumper scan'
+        error: result.error || (result.data as HackingToolErrorData)?.message || 'Unknown error during CamDumper scan'
       };
     }
   } catch (error) {
@@ -214,7 +212,7 @@ export const executeCamDumper = async (params: CCTVScanParams): Promise<CCTVScan
 
 export const executeCamerattack = async (params: CCTVScanParams): Promise<CCTVScanResult> => {
   try {
-    const result: HackingToolResult<CCTVScanData> = await executeHackingTool({ // Type the result
+    const result: HackingToolResult<CCTVHackedData> = await executeHackingTool({ // Camerattack implies finding vulnerable/hacked cams
       tool: 'camerattack',
       ...params
     });
@@ -226,7 +224,7 @@ export const executeCamerattack = async (params: CCTVScanParams): Promise<CCTVSc
     } else {
       return {
         success: false,
-        error: result.error || (result.data as any)?.message || 'Unknown error during Camerattack scan'
+        error: result.error || (result.data as HackingToolErrorData)?.message || 'Unknown error during Camerattack scan'
       };
     }
   } catch (error) {

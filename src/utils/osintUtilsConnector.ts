@@ -1,7 +1,8 @@
+
 import {
+  // Base OSINT tools (ensure these are correctly exported from baseOsintTools)
   executeEncoderDecoder,
   executeReverseShellListener,
-  // executeRapidPayload, // This will be handled by the specific import below
   executeSqliPayloadTest,
   executeXssPayloadSearch,
   executePasswordCracker,
@@ -13,28 +14,32 @@ import {
   executeSubnetScan,
   executeWhoisLookup,
   executeHttpHeaders,
-  // executeBotExploits, // To be imported from osintImplementations
-  // executeCCTVHackedScan, // To be imported from osintImplementations or specific CCTV files
-  // executeCCTVScan // To be imported from osintImplementations or specific CCTV files
-} from './osintImplementations/baseOsintTools'; // Assuming these are now in baseOsintTools
+  executeBotExploits,
+  executeCCTVScan as executeBaseCCTVScan, // Specific name for base implementation
+  executeCCTVHackedScan as executeBaseCCTVHackedScan, // Specific name for base implementation
+} from './osintImplementations/baseOsintTools';
 
 import { 
-  HackingToolResult,
+  HackingToolResult, HackingToolErrorData, // Added HackingToolErrorData
   EncoderDecoderParams,
   ReverseShellParams,
-  RapidPayloadParams, RapidPayloadData, // Import RapidPayloadData
+  RapidPayloadParams, RapidPayloadData,
   SqliPayloadParams,
   XssPayloadParams,
   PasswordCrackerParams,
   PasswordGeneratorParams,
   IpInfoParams, DnsLookupParams, PortScanParams, TracerouteParams, SubnetScanParams, WhoisLookupParams, HttpHeadersParams,
-  BotExploitsParams, // Corrected type
-  CCTVHackedParams, // Corrected type
-  CCTVScanParams,   // Corrected type
-  BaseToolParams    // Import BaseToolParams
+  BotExploitsParams,
+  CCTVHackedParams, CCTVHackedData,
+  CCTVScanParams, CCTVScanData,
+  BaseToolParams,
+  WebhackParams, WebhackData,
+  BackHackParams, BackHackData,
+  PhotonParams, PhotonData,
+  // Add other specific Params/Data types as needed by imported tools
 } from './types/osintToolTypes';
 
-// Import implementations from their new locations in osintImplementations
+// Network Scan Tools
 import {
   executeScapy,
   executeZMap,
@@ -42,7 +47,9 @@ import {
   executeMasscan,
   executeHydra
 } from './osintImplementations/networkScanTools';
+// Add Params/Data types for networkScanTools if not already in osintToolTypes
 
+// Web Tools
 import {
   executeWebCheck,
   executeWebhack,
@@ -50,56 +57,46 @@ import {
   executePhoton,
   executeTorBot
 } from './osintImplementations/webTools';
+// Add Params/Data types for webTools (WebCheckParams/Data, TorBotParams/Data)
 
+// Social Tools
 import {
-  executeUsernameSearch, // Consider aliasing if baseOsintTools has a different one.
+  executeSocialUsernameSearch, // Using aliased import
   executeTwint,
-  executeOSINT
+  executeSocialOSINT // Using aliased import
 } from './osintImplementations/socialTools';
+// Add Params/Data types for socialTools
 
+// Vision Tools
 import {
   executeOpenCV,
   executeDeepstack,
   executeFaceRecognition,
   executeMotion,
-  executeONVIFScan, // This is the one from visionTools.ts
+  executeGenericONVIFScan, // Using generic ONVIF scan from onvifTools.ts
   executeNmapONVIF
-} from './osintImplementations/visionTools';
+} from './osintImplementations/visionTools'; // visionTools should export these
+// Add Params/Data types for visionTools
 
+// Utility Tools
 import {
   executeFFmpeg,
   executeTapoPoC,
-  executeShieldAI
+  // executeShieldAI is from securityTools now
 } from './osintImplementations/utilityTools';
+// Add Params/Data types for utilityTools
 
-// Import CCTV tool wrappers from the components/surveillance/network directory as they are service-like
+// Security Tools
 import {
-  executeCCTVScan as execCCTVConnector, 
-  executeCCTVHacked as execCCTVHackedConnector, 
-  executeHackCCTV as execHackCCTVConnector, // Use distinct names for these connector-level functions
-  executeCameradar as execCameradarConnector,
-  executeOpenCCTV as execOpenCCTVConnector,
-  executeEyePwn as execEyePwnConnector,
-  executeCamDumper as execCamDumperConnector,
-  executeCamerattack as execCamerattackConnector
-} from '../components/surveillance/network/CCTVTools'; // Corrected path
+  executeShieldAI,
+  executeSecurityAdmin
+} from './osintImplementations/securityTools';
+// Security Params/Data types are in securityToolTypes.ts, imported via osintToolTypes re-export or directly
 
-// Import the actual executeRapidPayload implementation
+// Advanced Tools (like RapidPayload)
 import { executeRapidPayload as actualExecuteRapidPayload } from './osintImplementations/advancedTools';
 
-// This executeRapidPayload is the one components should import from the connector.
-export const executeRapidPayload = async (params: RapidPayloadParams): Promise<HackingToolResult<RapidPayloadData, any>> => {
-  return actualExecuteRapidPayload(params);
-};
-
-// Import base tool implementations for cctvScan, cctvHackedScan, botExploits if they are in baseOsintTools
-import { 
-    executeCCTVScan as executeBaseCCTVScan,
-    executeCCTVHackedScan as executeBaseCCTVHackedScan,
-    executeBotExploits 
-} from './osintImplementations/baseOsintTools';
-
-// Import specific implementations for hackCCTV, cameradar etc. from their dedicated files in osintImplementations
+// Specialized CCTV/ONVIF tools from dedicated files (if not covered by generic ones)
 import { executeHackCCTV as implHackCCTV } from './osintImplementations/hackCCTVTools';
 import { 
     executeCameradar as implCameradar, 
@@ -109,11 +106,19 @@ import {
     executeCamerattack as implCamerattack 
 } from './osintImplementations/cctvHackedTools';
 
+// Connector-level functions for CCTV that components will call
+// These now wrap the direct implementations from osintImplementations/* or could be direct mappings
+// For simplicity, we can map directly in toolFunctionMap and export those.
+// The CCTVTools.ts in components/surveillance/network contains wrappers that call executeHackingTool.
+
+export const executeRapidPayload = async (params: RapidPayloadParams): Promise<HackingToolResult<RapidPayloadData>> => {
+  return actualExecuteRapidPayload(params);
+};
 
 const toolFunctionMap: { [key: string]: (params: BaseToolParams) => Promise<HackingToolResult<any, any>> } = {
+  // Base OSINT
   encoderDecoder: executeEncoderDecoder,
   listener: executeReverseShellListener,
-  rapidPayload: actualExecuteRapidPayload, // Use the actual implementation here
   sqliPayloadTest: executeSqliPayloadTest,
   xssPayloadSearch: executeXssPayloadSearch,
   passwordCracker: executePasswordCracker,
@@ -125,40 +130,49 @@ const toolFunctionMap: { [key: string]: (params: BaseToolParams) => Promise<Hack
   subnetScan: executeSubnetScan,
   whois: executeWhoisLookup,
   httpHeaders: executeHttpHeaders,
-  botExploits: executeBotExploits, // From baseOsintTools
-
-  // Mapped to implementations from osintImplementations (not the wrappers from ../components)
-  cctvHackedScan: executeBaseCCTVHackedScan, // From baseOsintTools
-  cctvScan: executeBaseCCTVScan,             // From baseOsintTools
+  botExploits: executeBotExploits,
   
+  // Advanced
+  rapidPayload: actualExecuteRapidPayload,
+
+  // Network Scan
   scapy: executeScapy,
   zmap: executeZMap,
   zgrab: executeZGrab,
   masscan: executeMasscan,
   hydra: executeHydra,
   
+  // Web
   webCheck: executeWebCheck,
   webhack: executeWebhack,
   backHack: executeBackHack,
   photon: executePhoton,
   torBot: executeTorBot,
   
-  usernameSearch: executeUsernameSearch,
+  // Social
+  usernameSearch: executeSocialUsernameSearch,
   twint: executeTwint,
-  osint: executeOSINT,
+  osint: executeSocialOSINT,
   
+  // Vision
   openCV: executeOpenCV,
   deepstack: executeDeepstack,
   faceRecognition: executeFaceRecognition,
-  motion: executeMotion,
-  onvifScan: executeONVIFScan, // from visionTools
+  motion: executeMotion, // from visionTools
+  onvifScan: executeGenericONVIFScan, // generic ONVIF scan
   nmapONVIF: executeNmapONVIF,
   
+  // Utility
   ffmpeg: executeFFmpeg,
   tapoPoC: executeTapoPoC,
-  shieldAI: executeShieldAI,
   
-  // These map to the *implementations* from osintImplementations, not the wrappers in CCTVTools.ts
+  // Security
+  shieldAI: executeShieldAI,
+  securityAdmin: executeSecurityAdmin,
+  
+  // Specialized CCTV (implementations)
+  cctvScan: executeBaseCCTVScan, // Base version for generic cctv scan
+  cctvHackedScan: executeBaseCCTVHackedScan, // Base version for generic hacked scan
   hackCCTV: implHackCCTV,
   cameradar: implCameradar,
   openCCTV: implOpenCCTV,
@@ -170,7 +184,6 @@ const toolFunctionMap: { [key: string]: (params: BaseToolParams) => Promise<Hack
 export const executeHackingTool = async (
   params: { tool: string; [key: string]: any }
 ): Promise<HackingToolResult<any, any>> => {
-  // ... keep existing code (executeHackingTool implementation)
   const { tool, ...toolParams } = params;
   const toolFunction = toolFunctionMap[tool];
 
@@ -180,20 +193,23 @@ export const executeHackingTool = async (
   }
 
   try {
-    const result = await toolFunction(toolParams as BaseToolParams); 
+    // Ensure the 'tool' property is part of toolParams if the specific function expects it (most do via BaseToolParams)
+    const fullParams = { tool, ...toolParams } as BaseToolParams;
+    const result = await toolFunction(fullParams); 
     return result;
   } catch (error) {
     console.error(`Error executing tool ${tool}:`, error);
+    const errorMessage = error instanceof Error ? error.message : `An unknown error occurred while executing ${tool}.`;
     return { 
       success: false, 
-      error: error instanceof Error ? error.message : `An unknown error occurred while executing ${tool}.`,
-      data: { message: error instanceof Error ? error.message : `An unknown error occurred while executing ${tool}.` }
+      error: errorMessage,
+      data: { message: errorMessage } as HackingToolErrorData
     };
   }
 };
 
-// Re-export all the tool functions that components might call directly
-// These should be the "user-facing" functions, which might be wrappers or direct implementations.
+// Re-export all the tool functions that components might call directly for type safety and convenience
+// These should now point to the actual implementations or the executeRapidPayload wrapper.
 export {
   executeEncoderDecoder,
   executeReverseShellListener,
@@ -209,11 +225,10 @@ export {
   executeSubnetScan,
   executeWhoisLookup,
   executeHttpHeaders,
-  executeBotExploits,      // From baseOsintTools
-  executeBaseCCTVHackedScan as executeCCTVHackedScan, // Re-export the base implementation
-  executeBaseCCTVScan as executeCCTVScan,          // Re-export the base implementation
+  executeBotExploits,
+  executeBaseCCTVScan as executeCCTVScan, // Exporting the base implementation for direct use
+  executeBaseCCTVHackedScan as executeCCTVHackedScan, // Exporting the base implementation
 
-  // Re-export surveillance tools (implementations from osintImplementations)
   executeScapy,
   executeZMap,
   executeZGrab,
@@ -224,27 +239,33 @@ export {
   executeBackHack,
   executePhoton,
   executeTorBot,
-  executeUsernameSearch, // Or aliased executeSocialUsernameSearch
+  executeSocialUsernameSearch,
   executeTwint,
-  executeOSINT,          // Or aliased executeSocialOSINT
+  executeSocialOSINT,
   executeOpenCV,
   executeDeepstack,
   executeFaceRecognition,
   executeMotion,
-  executeONVIFScan,      // From visionTools
+  executeGenericONVIFScan as executeONVIFScan, // Exporting the generic ONVIF scan
   executeNmapONVIF,
   executeFFmpeg,
   executeTapoPoC,
   executeShieldAI,
+  executeSecurityAdmin,
   
-  // Re-export CCTV tool wrappers from CCTVTools.ts (components/surveillance/network/CCTVTools)
-  // These are the functions components like HackCCTVTool.tsx would call.
-  execCCTVConnector as executeCCTV, 
-  execCCTVHackedConnector as executeCCTVHacked,
-  execHackCCTVConnector,    // Exporting the connector version
-  execCameradarConnector,   
-  execOpenCCTVConnector,    
-  execEyePwnConnector,      
-  execCamDumperConnector,   
-  execCamerattackConnector  
+  // Export direct implementations of specialized CCTV tools
+  implHackCCTV as executeActualHackCCTV, // Giving distinct names if needed to avoid confusion with component wrappers
+  implCameradar as executeActualCameradar,
+  implOpenCCTV as executeActualOpenCCTV,
+  implEyePwn as executeActualEyePwn,
+  implCamDumper as executeActualCamDumper,
+  implCamerattack as executeActualCamerattack
 };
+
+// Note: The CCTVTools.ts in components/surveillance/network/ exports functions
+// like executeCCTVScan, executeCCTVHacked etc. which internally call executeHackingTool.
+// If components directly import from there, that's fine.
+// If components import from here (osintUtilsConnector), they should use the names exported above.
+// For clarity, if CCTVTools.ts functions are the intended public API for components,
+// then this connector might not need to re-export every single CCTV implementation under those exact names.
+// However, toolFunctionMap needs the direct implementations.

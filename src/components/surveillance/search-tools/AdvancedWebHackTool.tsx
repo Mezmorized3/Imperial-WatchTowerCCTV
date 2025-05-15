@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -9,32 +8,23 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Globe, Search, Shield } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { executeWebhack } from '@/utils/osintUtilsConnector';
-
-interface WebHackParams {
-  url: string;
-  scanType: 'basic' | 'full';
-  timeout: number;
-  checkVulnerabilities: boolean;
-  checkSubdomains: boolean;
-  userAgent?: string;
-  saveResults: boolean;
-}
+import { WebhackParams, WebhackData, HackingToolResult } from '@/utils/types/osintToolTypes';
 
 interface AdvancedWebHackToolProps {
-  onScanComplete?: (results: any) => void;
+  onScanComplete?: (results: WebhackData) => void;
 }
 
 const AdvancedWebHackTool: React.FC<AdvancedWebHackToolProps> = ({ onScanComplete }) => {
   const { toast } = useToast();
   const [targetUrl, setTargetUrl] = useState('');
-  const [scanType, setScanType] = useState('basic');
-  const [timeout, setTimeout] = useState('30000');
+  const [scanType, setScanType] = useState<'basic' | 'full'>('basic');
+  const [timeout, setTimeoutValue] = useState('30000');
   const [checkVulnerabilities, setCheckVulnerabilities] = useState(true);
   const [checkSubdomains, setCheckSubdomains] = useState(false);
   const [userAgent, setUserAgent] = useState('');
   const [saveResults, setSaveResults] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [results, setResults] = useState<any>(null);
+  const [results, setResults] = useState<WebhackData | null>(null);
   
   const scanTypes = ['basic', 'full'];
   
@@ -52,9 +42,10 @@ const AdvancedWebHackTool: React.FC<AdvancedWebHackToolProps> = ({ onScanComplet
     setResults(null);
     
     try {
-      const params: WebHackParams = {
+      const params: WebhackParams = {
+        tool: 'webhack',
         url: targetUrl,
-        scanType: scanType as 'basic' | 'full',
+        scanType: scanType,
         timeout: parseInt(timeout),
         checkVulnerabilities: checkVulnerabilities,
         checkSubdomains: checkSubdomains,
@@ -62,23 +53,23 @@ const AdvancedWebHackTool: React.FC<AdvancedWebHackToolProps> = ({ onScanComplet
         saveResults: saveResults
       };
       
-      const result = await executeWebhack(params);
+      const result: HackingToolResult<WebhackData> = await executeWebhack(params);
       
-      if (result && result.success) {
-        setResults(result.data);
+      if (result.success) {
+        setResults(result.data.results);
         
         if (onScanComplete) {
-          onScanComplete(result.data);
+          onScanComplete(result.data.results);
         }
         
         toast({
           title: "Scan Complete",
-          description: `Found ${result.data?.vulnerabilities?.length || 0} vulnerabilities.`
+          description: `Found ${result.data.results?.vulnerabilities?.length || 0} vulnerabilities.`
         });
       } else {
         toast({
           title: "Scan Failed",
-          description: "An error occurred during the scan",
+          description: result.error || "An error occurred during the scan",
           variant: "destructive"
         });
       }
@@ -117,7 +108,7 @@ const AdvancedWebHackTool: React.FC<AdvancedWebHackToolProps> = ({ onScanComplet
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <Label htmlFor="scan-type">Scan Type</Label>
-            <Select value={scanType} onValueChange={setScanType}>
+            <Select value={scanType} onValueChange={(value) => setScanType(value as 'basic' | 'full')}>
               <SelectTrigger id="scan-type" className="bg-scanner-dark-alt border-gray-700">
                 <SelectValue placeholder="Select scan type" />
               </SelectTrigger>
@@ -136,7 +127,7 @@ const AdvancedWebHackTool: React.FC<AdvancedWebHackToolProps> = ({ onScanComplet
               type="number"
               placeholder="30000"
               value={timeout}
-              onChange={(e) => setTimeout(e.target.value)}
+              onChange={(e) => setTimeoutValue(e.target.value)}
               className="bg-scanner-dark-alt border-gray-700"
             />
           </div>

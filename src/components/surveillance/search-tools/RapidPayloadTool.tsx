@@ -4,18 +4,17 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
 import { executeRapidPayload } from '@/utils/osintUtilsConnector';
-import { RapidPayloadParams } from '@/utils/types/osintToolTypes';
+import { RapidPayloadParams, RapidPayloadData, HackingToolResult, HackingToolErrorData } from '@/utils/types/osintToolTypes';
 
 const RapidPayloadTool = () => {
   const { toast } = useToast();
-  const [platform, setPlatform] = useState<"windows" | "linux" | "macos" | "android" | "php" | "python" | "bash" | "powershell">("windows");
+  const [platform, setPlatform] = useState<RapidPayloadParams['platform']>("windows");
   const [payloadType, setPayloadType] = useState("reverse_shell");
   const [lhost, setLhost] = useState("");
   const [lport, setLport] = useState(4444);
-  const [format, setFormat] = useState("raw");
+  const [format, setFormat] = useState<RapidPayloadParams['format']>("raw");
   const [generatedPayload, setGeneratedPayload] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -33,9 +32,8 @@ const RapidPayloadTool = () => {
     setGeneratedPayload("");
 
     try {
-      // Add the required 'tool' parameter to match RapidPayloadParams
       const params: RapidPayloadParams = {
-        tool: 'rapidpayload',
+        tool: 'rapidPayload',
         platform,
         payloadType,
         lhost,
@@ -44,18 +42,16 @@ const RapidPayloadTool = () => {
         encode: false
       };
 
-      const result = await executeRapidPayload(params);
+      const result: HackingToolResult<RapidPayloadData> = await executeRapidPayload(params);
 
       if (result.success) {
-        // Access payload correctly through results
         setGeneratedPayload(result.data.results.payload);
         toast({
           title: "Success",
-          description: `${platform} ${payloadType} payload generated`
+          description: `${platform} ${payloadType} payload generated for ${result.data.results.payload}`
         });
       } else {
-        // Fix error access
-        const errorMessage = result.success === false ? result.error : "Failed to generate payload";
+        const errorMessage = result.error || (result.data as HackingToolErrorData)?.message || "Failed to generate payload";
         toast({
           title: "Error",
           description: errorMessage,
@@ -83,7 +79,7 @@ const RapidPayloadTool = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <Label htmlFor="platform">Platform</Label>
-            <Select value={platform} onValueChange={(value) => setPlatform(value as "windows" | "linux" | "macos" | "android" | "php" | "python" | "bash" | "powershell")}>
+            <Select value={platform} onValueChange={(value) => setPlatform(value as RapidPayloadParams['platform'])}>
               <SelectTrigger id="platform">
                 <SelectValue placeholder="Select platform" />
               </SelectTrigger>
@@ -106,13 +102,13 @@ const RapidPayloadTool = () => {
               id="payloadType"
               value={payloadType}
               onChange={(e) => setPayloadType(e.target.value)}
-              placeholder="e.g., reverse_tcp"
+              placeholder="e.g., reverse_tcp, meterpreter/reverse_tcp"
             />
           </div>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <Label htmlFor="lhost">LHOST</Label>
+            <Label htmlFor="lhost">LHOST (Your IP)</Label>
             <Input
               type="text"
               id="lhost"
@@ -122,7 +118,7 @@ const RapidPayloadTool = () => {
             />
           </div>
           <div>
-            <Label htmlFor="lport">LPORT</Label>
+            <Label htmlFor="lport">LPORT (Your Port)</Label>
             <Input
               type="number"
               id="lport"
@@ -134,7 +130,7 @@ const RapidPayloadTool = () => {
         </div>
         <div>
           <Label htmlFor="format">Format</Label>
-          <Select value={format} onValueChange={(value) => setFormat(value)}>
+          <Select value={format} onValueChange={(value) => setFormat(value as RapidPayloadParams['format'])}>
             <SelectTrigger id="format">
               <SelectValue placeholder="Select format" />
             </SelectTrigger>
@@ -142,6 +138,10 @@ const RapidPayloadTool = () => {
               <SelectItem value="raw">Raw</SelectItem>
               <SelectItem value="base64">Base64</SelectItem>
               <SelectItem value="hex">Hex</SelectItem>
+              <SelectItem value="c">C</SelectItem>
+              <SelectItem value="python">Python</SelectItem>
+              <SelectItem value="powershell">PowerShell</SelectItem>
+              {/* Add other formats as supported by the tool */}
             </SelectContent>
           </Select>
         </div>
@@ -150,12 +150,13 @@ const RapidPayloadTool = () => {
         </Button>
         {generatedPayload && (
           <div>
-            <Label>Generated Payload</Label>
+            <Label className="mt-4 block">Generated Payload</Label>
             <Input
               type="text"
               readOnly
               value={generatedPayload}
-              className="mt-2"
+              className="mt-2 font-mono"
+              onClick={(e) => (e.target as HTMLInputElement).select()}
             />
           </div>
         )}

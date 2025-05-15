@@ -2,12 +2,15 @@ import { BaseToolParams, HackingToolResult } from './osintToolTypes';
 
 export interface ProxyConfig {
   enabled: boolean;
-  type: string;
+  type: 'http' | 'socks4' | 'socks5' | 'tor'; // Added tor
   host: string;
   port: number;
-  rotationEnabled: boolean;
-  rotationInterval?: number;
-  credentials?: {
+  username?: string; // Made optional
+  password?: string; // Made optional
+  country?: string; // Added
+  rotationEnabled: boolean; // Added
+  rotationInterval?: number; // Added
+  credentials?: { // Added
     username: string;
     password: string;
   };
@@ -211,6 +214,11 @@ export type PasswordCrackerSuccessData = { results: string[] };
 export type PasswordGeneratorSuccessData = { results: string[] };
 export type XssPayloadsSuccessData = { results: string[] };
 
+export interface BotExploitsParams extends BaseToolParams {
+    targetService: string;
+    credentials?: Record<string, string>;
+}
+
 export interface BotExploitsData {
   tokens: { id: string; value: string; type: string; expiration: string }[];
   apis: { id: string; endpoint: string; method: string; authentication: boolean }[];
@@ -256,3 +264,71 @@ export interface CCTVScanData {
 export type CCTVScanResult = 
   | { success: true; data: CCTVScanData }
   | { success: false; error: string };
+
+export interface WebhackParams extends BaseToolParams {
+  url: string;
+  scanType: 'basic' | 'full';
+  timeout: number;
+  checkVulnerabilities: boolean;
+  checkSubdomains: boolean;
+  userAgent?: string;
+  saveResults: boolean;
+}
+
+export interface WebhackData {
+  vulnerabilities?: { type: string; url: string; parameter: string; severity: string }[];
+  technologies?: string[];
+  subdomains?: string[];
+  responseHeaders?: Record<string, string>;
+  cookies?: Record<string, string>;
+  ports?: { port: number; service: string }[];
+  // Add other relevant fields based on actual tool output
+}
+
+export interface BackHackParams extends BaseToolParams {
+  targetUrl: string; // Renamed from url to be more specific
+  target?: string; // Optional specific target entity for the hack
+  mode: 'basic' | 'full'; // scanType renamed to mode to match common tool terminology
+}
+
+export interface BackHackData {
+  cameras?: { id: string; ip: string; port: number; model: string; url: string }[];
+  backupFiles?: string[];
+  adminPanel?: string;
+  vulnerabilities?: { type: string; url: string; parameter: string; severity: string }[];
+  // Add other relevant fields
+}
+
+export interface CCTVHackedParams extends BaseToolParams {
+    target: string;
+    country?: string;
+    exploitType?: 'default_creds' | 'known_vuln';
+}
+
+export interface CCTVScanParams extends BaseToolParams {
+    query?: string;
+    brand?: string;
+    country?: string;
+    limit?: number;
+    target?: string; // Added target as it's used by some CCTV tools
+    port?: number; // Added port
+    timeout?: number; // Added timeout
+}
+
+export interface PhotonParams extends BaseToolParams {
+  url: string;
+  depth?: number;
+  timeout?: number;
+  threads?: number;
+  delay?: number;
+  userAgent?: string;
+  saveResults?: boolean;
+  outputDir?: string; // Example of another common Photon param
+}
+
+export interface PhotonData {
+  urls_found: string[];
+  subdomains_found: string[];
+  files_found: string[];
+  intel: string[]; // For emails, social media links etc.
+}

@@ -1,11 +1,10 @@
-
 import { BaseToolParams, HackingToolResult } from './osintToolTypes';
 
 export interface ScapyParams extends BaseToolParams {
   target: string;
   packetType: 'TCP' | 'UDP' | 'ICMP';
   count?: number;
-  filter?: string; // Add missing filter property
+  filter?: string;
 }
 export interface ScapyData {
   summary: string;
@@ -14,7 +13,7 @@ export interface ScapyData {
 }
 
 export interface ZMapParams extends BaseToolParams {
-  targetSubnet: string; // Keep as is
+  targetSubnet: string;
   port: number;
   rate?: number;
   outputFile?: string;
@@ -27,19 +26,19 @@ export interface ZMapData {
 export interface ZGrabParams extends BaseToolParams {
   ip: string;
   port: number;
-  protocol: 'http' | 'tls' | 'ssh'; // Example protocols
+  protocol: 'http' | 'tls' | 'ssh';
 }
 export interface ZGrabData {
   ip: string;
   port: number;
   protocol: string;
   banner?: string;
-  tlsLog?: any; // Specific structure for TLS data
+  tlsLog?: any;
 }
 
 export interface MasscanParams extends BaseToolParams {
-  targets: string; // e.g., "10.0.0.0/8" or "192.168.1.1-192.168.1.255"
-  ports: string; // e.g., "80,443" or "0-65535"
+  targets: string;
+  ports: string;
   rate?: number;
   outputFile?: string;
 }
@@ -49,21 +48,20 @@ export interface MasscanData {
 
 export interface HydraParams extends BaseToolParams {
   target: string;
-  service: string; // e.g., "ftp", "ssh", "http-post-form"
+  service: string;
   username?: string;
   password?: string;
   userList?: string;
   passList?: string;
-  options?: string; // Additional Hydra options
+  options?: string;
 }
 export interface HydraData {
   foundCredentials: { host: string; port: number; service: string; login: string; pass: string }[];
 }
 
-// For advancedOnvifTools.ts
 export interface GSoapParams extends BaseToolParams {
   endpoint: string;
-  operation: string; // Added missing property
+  operation: string;
   requestXml: string;
 }
 export interface GSoapData {
@@ -71,9 +69,9 @@ export interface GSoapData {
 }
 
 export interface GstRTSPServerParams extends BaseToolParams {
-  listenIp?: string;    // Added
-  listenPort?: number;  // Added
-  pipeline: string;     // Added
+  listenIp?: string;
+  listenPort?: number;
+  pipeline: string;
   mountPoint: string;
 }
 export interface GstRTSPServerData {
@@ -84,7 +82,7 @@ export interface GstRTSPServerData {
 export interface GortsplibParams extends BaseToolParams {
   sourceUrl: string;
   destinationUrl?: string;
-  protocol?: 'udp' | 'tcp'; // Added
+  protocol?: 'udp' | 'tcp';
   action: 'proxy' | 'record' | 'publish';
 }
 export interface GortsplibData {
@@ -106,10 +104,9 @@ export interface SenseCamDiscoParams extends BaseToolParams {
   outputFile?: string;
 }
 export interface SenseCamDiscoData {
-  discoveredCameras: any[]; // Define more specifically if possible
+  discoveredCameras: any[];
 }
 
-// For onvifFuzzerTools.ts
 export interface ONVIFFuzzerParams extends BaseToolParams {
   target: string;
   port?: number;
@@ -121,15 +118,13 @@ export interface ONVIFFuzzerData {
   log: string;
 }
 
-// Shared ONVIFScanParams
 export interface ONVIFScanParams extends BaseToolParams {
-  target: string; // Can be IP, range, or subnet
+  target: string;
   port?: number;
   timeout?: number;
   credentials?: { user: string; pass: string }[];
-  subnet?: string; // Added missing property
+  subnet?: string;
 }
-
 export interface ONVIFDevice {
   ip: string;
   port: number;
@@ -144,4 +139,83 @@ export interface ONVIFDevice {
 }
 export interface ONVIFScanData {
   devices: ONVIFDevice[];
+}
+
+export interface MotionParams extends BaseToolParams {
+  configFile: string;
+  daemon?: boolean;
+}
+export interface MotionData {
+  status: string;
+  pid?: number;
+}
+
+export interface MotionEyeParams extends BaseToolParams {
+  port?: number;
+  configDir?: string;
+}
+export interface MotionEyeData {
+  url: string;
+  camerasConfigured: number;
+}
+
+export interface DeepstackParams extends BaseToolParams {
+  imagePath: string;
+  apiKey?: string;
+  endpoint?: string;
+  mode: 'detection' | 'recognition' | 'scene';
+}
+export interface DeepstackData {
+  success: boolean;
+  predictions?: any[];
+  error?: string;
+}
+
+export interface FaceRecognitionParams extends BaseToolParams {
+  knownImagesDir: string;
+  unknownImagePath: string;
+  tolerance?: number;
+}
+export interface FaceRecognitionData {
+  matches: { name: string; distance: number }[];
+}
+
+export interface RtspServerParams extends BaseToolParams {
+  source: string;
+  mountPoint: string;
+  port?: number;
+}
+export interface RtspServerData {
+  serverUrl: string;
+  status: string;
+}
+
+export interface ZoneMinderParams extends BaseToolParams {
+  apiUrl: string;
+  username?: string;
+  password?: string;
+  action: 'getMonitors' | 'getEvents';
+  monitorId?: number;
+}
+export interface ZoneMinderData {
+  monitors?: any[];
+  events?: any[];
+}
+
+export interface NmapONVIFParams extends BaseToolParams {
+  target: string;
+  scriptArgs?: string;
+}
+export interface NmapONVIFData {
+  devices: ONVIFDevice[];
+}
+
+export interface OpenCVParams extends BaseToolParams {
+  imagePath: string;
+  operation: 'edge_detection' | 'face_detection' | 'object_detection';
+  cascadeFile?: string;
+}
+export interface OpenCVData {
+  resultImagePath?: string;
+  details?: any;
 }
