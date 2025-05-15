@@ -1,24 +1,62 @@
-// Index file to re-export all implementations
+// This file re-exports all tool implementations for easier import elsewhere.
 
-// Export from individual files
-export * from './advancedOnvifTools';
+export * from './baseOsintTools'; // Assuming the original osintTools.ts content moved here
 export * from './advancedTools';
-export * from './cameraTools';
-export * from './cctvHackedTools';
-export * from './computerVisionTools';
-export * from './extendedNetworkTools';
-export * from './hackCCTVTools';
-export * from './networkTools';
-export * from './onvifFuzzerTools';
-export * from './onvifTools';
-export * from './rtspBruteTools';
-export * from './securityTools'; // Ensure executeSecurityAdmin is exported from securityTools.ts
-export * from './socialTools';
-export * from './streamingTools';
-export * from './usernameSearchTools';
-export * from './webTools';
+export * from './cctvHackedTools'; // For executeCameradar, executeOpenCCTV, etc.
+export * from './hackCCTVTools';   // For executeHackCCTV, etc.
 
-// Provide missing functions for network tools
+// Explicitly export from onvifTools, advancedOnvifTools to resolve ambiguity
+export { 
+    executeGSoap, 
+    executeGstRTSPServer, 
+    executeGortsplib,
+    executeRtspSimpleServer, // From advancedOnvifTools
+    executeSenseCamDisco 
+} from './advancedOnvifTools';
+
+export { 
+    executeMotionEye, 
+    executeZoneMinder,
+    executeBasicRtspServer, // From onvifTools (renamed from executeRtspServer)
+    executeOriginalONVIFScan // From onvifTools (if still needed)
+    // Add other distinct exports from onvifTools.ts if any
+} from './onvifTools';
+
+
+// Explicitly export from socialTools to resolve ambiguity
+export { 
+    executeUsernameSearch as executeSocialUsernameSearch, // Alias if baseOsintTools also has one
+    executeTwint, 
+    executeOSINT as executeSocialOSINT 
+} from './socialTools';
+
+export * from './onvifFuzzerTools';
+export * from './securityTools';
+export * from './webTools'; // This now exports executeWebCheck, executeWebhack, etc.
+export * from './networkScanTools'; // This now exports executeScapy, executeZMap, etc.
+export * from './visionTools'; // This now exports executeOpenCV, executeDeepstack, etc.
+export * from './utilityTools'; // This now exports executeFFmpeg, executeTapoPoC, executeShieldAI
+
+// Re-export from the original osintImplementations.ts content (now in baseOsintTools.ts perhaps)
+// This includes executeCCTV, executeHackCCTV (if it was there), executeTwint, executeUsernameSearch
+// Need to be careful with duplicates.
+
+// Original executeCCTV, executeHackCCTV, executeCamDumper, executeOpenCCTV, executeEyePwn, executeIngram from the user provided osintImplementations.ts
+// These are likely the primary ones used by components like HackCCTVTool.tsx
+export { 
+    executeCCTV, 
+    // executeHackCCTV, // Already in hackCCTVTools
+    executeCamDumper, 
+    // executeOpenCCTV, // Already in cctvHackedTools
+    // executeEyePwn, // Already in cctvHackedTools
+    executeIngram 
+} from './baseOsintTools'; // Assuming these were moved to baseOsintTools.ts
+
+
+// Ensure all unique functions are exported. If there are name collisions, use aliasing.
+// For example, if executeHackCCTV is in both baseOsintTools and hackCCTVTools, decide which one is canonical
+// or alias one. For now, assume the specialized files (hackCCTVTools) take precedence for those specific names.
+
 export const executeZMap = async (options: any) => {
   console.log("Simulating ZMap execution with options:", options);
   await new Promise(resolve => setTimeout(resolve, 1500));

@@ -1,176 +1,50 @@
 
-/**
- * Advanced ONVIF Tools Implementation
- */
-
+import { HackingToolResult } from '../types/osintToolTypes';
 import { 
-  GSoapParams, GstRTSPServerParams, GortsplibParams, RtspSimpleServerParams, 
-  SenseCamDiscoParams, ONVIFScanParams 
+  GSoapParams, GSoapData, 
+  GstRTSPServerParams, GstRTSPServerData, 
+  GortsplibParams, GortsplibData,
+  RtspSimpleServerParams, RtspSimpleServerData, // Corrected import
+  SenseCamDiscoParams, SenseCamDiscoData,       // Corrected import
+  ONVIFScanParams                               // Corrected import
 } from '../types/networkToolTypes';
 
-// GSoap ONVIF implementation
-export const executeGSoap = async (options: GSoapParams) => {
-  console.log(`Executing GSoap with options:`, options);
-  
-  // Simulate a delay
-  await new Promise(resolve => setTimeout(resolve, 1800));
-  
-  return {
-    success: true,
-    data: {
-      target: options.target,
-      operation: options.operation,
-      result: {
-        status: "success",
-        deviceInfo: {
-          manufacturer: "Simulated Company",
-          model: "Camera Model X",
-          firmwareVersion: "1.2.3",
-          serialNumber: "SN12345"
-        }
-      }
-    }
-  };
+
+export const executeGSoap = async (params: GSoapParams): Promise<HackingToolResult<GSoapData>> => {
+  console.log('Executing GSoap with:', params);
+  // Mock implementation
+  await new Promise(resolve => setTimeout(resolve, 500));
+  return { success: true, data: { results: { responseXml: `<soap:Envelope><soap:Body><${params.operation}Response/></soap:Body></soap:Envelope>` }, message: "GSoap call successful" } };
 };
 
-// GStreamer RTSP Server implementation
-export const executeGstRtspServer = async (options: GstRTSPServerParams) => {
-  console.log(`Starting GStreamer RTSP Server on ${options.listenIp}:${options.listenPort}`);
-  
-  // Simulate a delay
-  await new Promise(resolve => setTimeout(resolve, 1500));
-  
-  return {
-    success: true,
-    data: {
-      serverUrl: `rtsp://${options.listenIp}:${options.listenPort}/stream`,
-      status: "running",
-      pipeline: options.pipeline || "videotestsrc ! x264enc ! rtph264pay name=pay0 pt=96",
-      pid: Math.floor(Math.random() * 10000)
-    }
-  };
+export const executeGstRTSPServer = async (params: GstRTSPServerParams): Promise<HackingToolResult<GstRTSPServerData>> => {
+  console.log('Executing GstRTSPServer with:', params);
+  await new Promise(resolve => setTimeout(resolve, 500));
+  return { success: true, data: { results: { serverUrl: `rtsp://${params.listenIp || 'localhost'}:${params.listenPort || 8554}/${params.mountPoint}`, status: "running" }, message: "GStreamer RTSP Server started" } };
 };
 
-// Go RTSP lib implementation
-export const executeGortslib = async (options: GortsplibParams) => {
-  console.log(`Executing gortsplib with URL: ${options.url}`);
-  
-  // Simulate a delay
-  await new Promise(resolve => setTimeout(resolve, 1200));
-  
-  return {
-    success: true,
-    data: {
-      url: options.url,
-      protocol: options.protocol || "tcp",
-      status: "connected",
-      mediaInfo: {
-        videoCodec: "h264",
-        audioCodec: "aac",
-        resolution: "1920x1080",
-        framerate: 25
-      }
-    }
-  };
+export const executeGortsplib = async (params: GortsplibParams): Promise<HackingToolResult<GortsplibData>> => {
+  console.log('Executing Gortsplib with:', params);
+  await new Promise(resolve => setTimeout(resolve, 500));
+  return { success: true, data: { results: { status: "active", message: `Gortsplib ${params.action} from ${params.sourceUrl} processed` }, message: "Gortsplib operation successful" } };
 };
 
-// RTSP Simple Server implementation
-export const executeRtspSimpleServer = async (options: RtspSimpleServerParams) => {
-  const ip = options.listenIp || "0.0.0.0";
-  const port = options.listenPort || 8554;
-  
-  console.log(`Starting RTSP Simple Server on ${ip}:${port}`);
-  
-  // Simulate a delay
-  await new Promise(resolve => setTimeout(resolve, 1600));
-  
-  return {
-    success: true,
-    data: {
-      serverUrl: `rtsp://${ip}:${port}/`,
-      status: "running",
-      rtmpEnabled: options.rtmpEnabled || false,
-      hlsEnabled: options.hlsEnabled || false,
-      paths: options.paths || [{
-        name: "stream",
-        source: "publisher"
-      }],
-      pid: Math.floor(Math.random() * 10000)
-    }
-  };
+export const executeRtspSimpleServer = async (params: RtspSimpleServerParams): Promise<HackingToolResult<RtspSimpleServerData>> => {
+  console.log('Executing RtspSimpleServer with:', params);
+  await new Promise(resolve => setTimeout(resolve, 500));
+  return { success: true, data: { results: { paths: [], sessions: [] }, message: "RTSP Simple Server info retrieved" } };
 };
 
-// SenseCam Discovery implementation
-export const executeSenseCamDisco = async (options: SenseCamDiscoParams) => {
-  console.log(`Executing SenseCam Discovery with options:`, options);
-  
-  // Simulate a delay
-  await new Promise(resolve => setTimeout(resolve, 2000));
-  
-  const numDevices = Math.floor(Math.random() * 5) + 1;
-  
-  return {
-    success: true,
-    data: {
-      scanMode: options.scanMode || "quick",
-      protocols: options.protocols || ["onvif", "upnp"],
-      devicesFound: numDevices,
-      devices: Array(numDevices).fill(0).map((_, i) => ({
-        id: `device-${i}`,
-        ip: `192.168.1.${10 + i}`,
-        port: 80,
-        manufacturer: ["Hikvision", "Dahua", "Axis", "Samsung", "Bosch"][i % 5],
-        model: `Model-${1000 + i}`,
-        protocols: ["onvif", "rtsp"],
-        mac: `00:11:22:33:44:${i < 10 ? '0' + i : i}`
-      })),
-      networkInfo: {
-        interface: options.interface || "eth0",
-        subnetMask: "255.255.255.0",
-        broadcastAddress: "192.168.1.255"
-      }
-    }
-  };
+export const executeSenseCamDisco = async (params: SenseCamDiscoParams): Promise<HackingToolResult<SenseCamDiscoData>> => {
+  console.log('Executing SenseCamDisco with:', params);
+  await new Promise(resolve => setTimeout(resolve, 500));
+  return { success: true, data: { results: { discoveredCameras: [{ ip: "192.168.1.123", model: "Unknown Cam" }] }, message: "SenseCamDisco scan complete" } };
 };
 
-// Additional utility functions
-export const executeOnvifProbe = async (options: ONVIFScanParams) => {
-  console.log(`Executing ONVIF Probe with options:`, options);
-  
-  // Simulate a delay
-  await new Promise(resolve => setTimeout(resolve, 1700));
-  
-  const numDevices = Math.floor(Math.random() * 5) + 1;
-  
-  return {
-    success: true,
-    data: {
-      subnet: options.subnet,
-      scanMode: options.scanMode || "quick",
-      devicesFound: numDevices,
-      devices: Array(numDevices).fill(0).map((_, i) => ({
-        id: `device-${i}`,
-        ip: `192.168.1.${20 + i}`,
-        port: 80,
-        manufacturer: ["Hikvision", "Dahua", "Axis", "Samsung", "Bosch"][i % 5],
-        model: `Model-${2000 + i}`,
-        onvifVersion: "2.5",
-        profiles: Array(Math.floor(Math.random() * 2) + 1).fill(0).map((_, j) => ({
-          name: `Profile${j}`,
-          resolution: j === 0 ? "1920x1080" : "640x480",
-          fps: j === 0 ? 25 : 15
-        }))
-      }))
-    }
-  };
+// Example of using ONVIFScanParams if needed here
+export const executeAdvancedONVIFScan = async (params: ONVIFScanParams): Promise<HackingToolResult<any>> => {
+    console.log('Executing Advanced ONVIF Scan with:', params);
+    await new Promise(resolve => setTimeout(resolve, 500));
+    return { success: true, data: { results: { message: "Advanced scan complete for " + params.target }, message: "Advanced ONVIF Scan done." } };
 };
 
-// Export all functions
-export default {
-  executeGSoap,
-  executeGstRtspServer,
-  executeGortslib,
-  executeRtspSimpleServer,
-  executeSenseCamDisco,
-  executeOnvifProbe
-};

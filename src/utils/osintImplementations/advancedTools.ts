@@ -1,51 +1,19 @@
 
-/**
- * Advanced OSINT tools implementation
- */
+import { HackingToolResult, RapidPayloadParams, RapidPayloadData } from '../types/osintToolTypes';
 
-interface TorBotOptions {
-  target: string;
-  depth?: number;
-  saveResults?: boolean;
-  includeScreenshots?: boolean;
-  timeout?: number;
-}
-
-interface TorBotResult {
-  success: boolean;
-  error?: string;
-  data?: {
-    target: string;
-    links: string[];
-    emails: string[];
-    keywords: Record<string, number>;
-    screenshots?: string[];
-    timestamp: string;
+// Mock implementation for executeRapidPayload
+export const executeRapidPayload = async (params: RapidPayloadParams): Promise<HackingToolResult<RapidPayloadData>> => {
+  console.log('Executing RapidPayload with (advancedTools):', params);
+  // Simulate payload generation
+  await new Promise(resolve => setTimeout(resolve, 1000));
+  const mockPayload = `Generated payload for ${params.platform}, type ${params.payloadType}, LHOST=${params.lhost}, LPORT=${params.lport}`;
+  return {
+    success: true,
+    data: {
+      results: { payload: mockPayload }, // Ensure `results` contains the RapidPayloadData structure
+      message: 'Rapid payload generated successfully.'
+    }
   };
-}
-
-export const executeTorBot = async (options: TorBotOptions): Promise<TorBotResult> => {
-  try {
-    console.log(`Executing TorBot for ${options.target} with depth ${options.depth || 1}`);
-    
-    // This is a simulated implementation
-    await new Promise(resolve => setTimeout(resolve, 3000));
-    
-    return {
-      success: true,
-      data: {
-        target: options.target,
-        links: [],
-        emails: [],
-        keywords: {},
-        timestamp: new Date().toISOString()
-      }
-    };
-  } catch (error) {
-    console.error("Error in executeTorBot:", error);
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "Unknown error executing TorBot"
-    };
-  }
 };
+
+// Add other advanced tool implementations here if any

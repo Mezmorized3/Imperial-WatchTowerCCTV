@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -9,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Loader2, Terminal, Copy, Check } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { executeRapidPayload } from '@/utils/osintUtilsConnector';
-import { RapidPayloadParams } from '@/utils/types/osintToolTypes';
+import { RapidPayloadParams, RapidPayloadData, HackingToolResult } from '@/utils/types/osintToolTypes';
 
 interface RapidPayloadToolProps {
   isRealmode?: boolean;
@@ -53,32 +52,22 @@ const RapidPayloadTool: React.FC<RapidPayloadToolProps> = ({ isRealmode = false 
     setOutput(null);
     
     try {
-      const result = await executeRapidPayload({
+      const params: RapidPayloadParams = {
+        tool: 'rapidPayload',
         platform: selectedPlatform,
         payloadType: payloadType,
         lhost: ipAddress,
         lport: parseInt(port),
         format: 'raw',
         encode: false
-      });
+      };
+      const result: HackingToolResult<RapidPayloadData> = await executeRapidPayload(params);
       
-      if (result.success && result.data) {
-        // Check for payload in various formats
-        let payloadOutput = '';
+      if (result.success && result.data.results) {
+        const payloadData = result.data.results;
         
-        if (result.data.results && Array.isArray(result.data.results) && result.data.results.length > 0) {
-          // If we have results array, get the first result's payload
-          payloadOutput = result.data.results[0].payload || '';
-        } else if (typeof result.data.payload === 'string') {
-          // If we have a direct payload property
-          payloadOutput = result.data.payload;
-        } else if (typeof result.data === 'string') {
-          // If the data itself is a string
-          payloadOutput = result.data;
-        }
-        
-        if (payloadOutput) {
-          setOutput(payloadOutput);
+        if (payloadData.payload) {
+          setOutput(payloadData.payload);
           toast({
             title: "Payload Generated",
             description: "The payload has been successfully generated."
@@ -92,7 +81,7 @@ const RapidPayloadTool: React.FC<RapidPayloadToolProps> = ({ isRealmode = false 
           });
         }
       } else {
-        const errorMsg = result.error || (result.data as any)?.message || "Failed to generate payload";
+        const errorMsg = !result.success ? result.error : (result.data as any)?.message || "Failed to generate payload";
         setOutput(`Error: ${errorMsg}`);
         toast({
           title: "Generation Failed",
@@ -155,7 +144,6 @@ const RapidPayloadTool: React.FC<RapidPayloadToolProps> = ({ isRealmode = false 
               value={selectedPlatform} 
               onValueChange={(value) => {
                 setSelectedPlatform(value as RapidPayloadParams['platform']);
-                // Set first payload type from the selected platform
                 if (payloadTypes[value] && payloadTypes[value].length > 0) {
                   setPayloadType(payloadTypes[value][0]);
                 }

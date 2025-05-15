@@ -2,19 +2,18 @@ import { BaseToolParams } from './osintToolTypes';
 
 export interface WebCheckParams extends BaseToolParams {
   url: string;
-  options?: {
-    checkSecurity?: boolean;
-    checkPerformance?: boolean;
-    checkSEO?: boolean;
-    checkTechnologies?: boolean;
-  };
+  scanType?: 'basic' | 'full' | 'security';
+  screenshot?: boolean;
+  saveResults?: boolean;
+  timeout?: number;
 }
 
 export interface WebCheckData {
+  url: string;
   status: number;
   title?: string;
-  headers?: Record<string, string>;
   technologies?: string[];
+  headers?: Record<string, string>;
 }
 
 export interface WebCheckResult {
@@ -53,18 +52,15 @@ export interface WebCheckResult {
 
 export interface WebhackParams extends BaseToolParams {
   url: string;
-  options?: {
-    checkXSS?: boolean;
-    checkSQLi?: boolean;
-    checkCSRF?: boolean;
-    checkClickjacking?: boolean;
-  };
+  scanType: 'basic' | 'full' | 'xss' | 'sqli';
+  timeout?: number;
+  checkVulnerabilities?: boolean;
+  checkSubdomains?: boolean;
 }
 
 export interface WebhackData {
-  vulnerable?: boolean;
-  details?: string;
-  response?: any;
+  vulnerabilities: { name: string; severity: string; cwe: string }[];
+  subdomains?: string[];
 }
 
 export interface WebhackResult {
@@ -80,25 +76,14 @@ export interface WebhackResult {
 }
 
 export interface BackHackParams extends BaseToolParams {
-  url: string;
-  options?: {
-    target?: string;
-    scanType?: 'basic' | 'full';
-    timeout?: number;
-  };
+  target: string;
+  mode: 'info_gathering' | 'vulnerability_scan' | 'exploit_attempt';
+  modules?: string[];
 }
 
 export interface BackHackData {
-  adminPanels?: string[];
-  backupFiles?: string[];
-  configFiles?: string[];
-  vulnerabilities?: Array<{
-    type: string;
-    url: string;
-    parameter?: string;
-    severity: 'low' | 'medium' | 'high' | 'critical';
-  }>;
-  message?: string;
+  findings: any[];
+  log: string;
 }
 
 export interface BackHackResult {
@@ -120,26 +105,25 @@ export interface PhotonParams extends BaseToolParams {
   delay?: number;
   userAgent?: string;
   saveResults?: boolean;
+  extract?: ('links' | 'emails' | 'files' | 'subdomains')[];
 }
 
 export interface PhotonData {
   links?: string[];
   emails?: string[];
-  subdomains?: string[];
   files?: string[];
+  subdomains?: string[];
   intel?: any;
-  js_files?: string[];
-  robots?: string[];
 }
 
 export interface TorBotParams extends BaseToolParams {
   query: string;
+  searchEngine?: 'ahmia' | 'duckduckgo_onion';
   pages?: number;
 }
 
 export interface TorBotData {
-  onionLinks?: string[];
-  relatedInfo?: any;
+  results: { title: string; url: string; description?: string }[];
 }
 
 export interface UsernameSearchParams {

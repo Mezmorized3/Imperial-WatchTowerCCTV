@@ -9,7 +9,8 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from '@/components/ui/use-toast';
 import { executePhoton } from '@/utils/osintUtilsConnector';
 import { Globe, Link, Mail, Search } from 'lucide-react';
-import { PhotonParams } from '@/utils/types/webToolTypes';
+import { PhotonParams, PhotonData } from '@/utils/types/webToolTypes';
+import { HackingToolResult } from '@/utils/types/osintToolTypes';
 
 const PhotonTool: React.FC = () => {
   const [url, setUrl] = useState('');
@@ -20,7 +21,7 @@ const PhotonTool: React.FC = () => {
   const [userAgent, setUserAgent] = useState('');
   const [saveResults, setSaveResults] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [results, setResults] = useState<any>(null);
+  const [results, setResults] = useState<PhotonData | null>(null);
 
   const handleExecute = async () => {
     if (!url) {
@@ -36,6 +37,7 @@ const PhotonTool: React.FC = () => {
 
     try {
       const params: PhotonParams = {
+        tool: 'photon',
         url,
         depth,
         timeout,
@@ -45,18 +47,18 @@ const PhotonTool: React.FC = () => {
         saveResults
       };
 
-      const result = await executePhoton(params);
+      const result: HackingToolResult<PhotonData> = await executePhoton(params);
 
       if (result.success) {
-        setResults(result.data);
+        setResults(result.data.results);
         toast({
           title: "Scan Complete",
-          description: `Found ${result.data.links?.length || 0} links, ${result.data.emails?.length || 0} emails, and ${result.data.subdomains?.length || 0} subdomains`
+          description: `Found ${result.data.results.links?.length || 0} links, ${result.data.results.emails?.length || 0} emails, and ${result.data.results.subdomains?.length || 0} subdomains`
         });
       } else {
         toast({
           title: "Error",
-          description: result.error || "Failed to execute Photon",
+          description: result.error || (result.data as any)?.message || "Failed to execute Photon",
           variant: "destructive"
         });
       }
