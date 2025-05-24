@@ -22,7 +22,7 @@ const BackHackTool: React.FC = () => {
     checkVulnerabilities: false
   });
   const [isScanning, setIsScanning] = useState(false);
-  const [results, setResults: any] = useState(null);
+  const [results, setResults] = useState<any>(null);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setUrl(e.target.value);
