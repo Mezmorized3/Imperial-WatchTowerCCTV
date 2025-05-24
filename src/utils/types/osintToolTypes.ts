@@ -2,15 +2,15 @@ import { BaseToolParams, HackingToolResult } from './osintToolTypes';
 
 export interface ProxyConfig {
   enabled: boolean;
-  type: 'http' | 'socks4' | 'socks5' | 'tor'; // Added tor
+  type: 'http' | 'socks4' | 'socks5' | 'tor';
   host: string;
   port: number;
-  username?: string; // Made optional
-  password?: string; // Made optional
-  country?: string; // Added
-  rotationEnabled: boolean; // Added
-  rotationInterval?: number; // Added
-  credentials?: { // Added
+  username?: string;
+  password?: string;
+  country?: string;
+  rotationEnabled: boolean;
+  rotationInterval?: number;
+  credentials?: {
     username: string;
     password: string;
   };
@@ -27,17 +27,17 @@ export type ToolExecutionFunction<T extends BaseToolParams, R> = (
 
 export interface HackingToolSuccessData<R = any> {
   results: R;
-  message?: string; // Optional message for success cases
+  message?: string;
 }
 
 export interface HackingToolErrorData {
   message: string;
-  results?: any[]; // Optional results even in error cases, e.g. partial results
+  results?: any[];
 }
 
 export type HackingToolResult<R = any, EData = HackingToolErrorData> =
   | { success: true; data: HackingToolSuccessData<R> }
-  | { success: false; error?: string; data?: EData };
+  | { success: false; error: string; data?: EData };
 
 export interface EncoderDecoderParams extends BaseToolParams {
   text: string;
@@ -331,4 +331,32 @@ export interface PhotonData {
   subdomains_found: string[];
   files_found: string[];
   intel: string[]; // For emails, social media links etc.
+}
+
+export interface FFmpegParams extends BaseToolParams {
+  inputFile: string;
+  outputFile: string;
+  options: string[];
+}
+
+export interface FFmpegData {
+  success: boolean;
+  outputFile: string;
+  duration: number;
+  size: number;
+}
+
+export interface SecurityAdminParams extends BaseToolParams {
+  target: string;
+  action: 'check' | 'patch' | 'report';
+  scope?: 'system' | 'network' | 'application';
+  level?: 'basic' | 'advanced';
+  timeout?: number;
+}
+
+export interface SecurityAdminData {
+  status: string;
+  message: string;
+  reportUrl?: string;
+  patchedItems?: string[];
 }

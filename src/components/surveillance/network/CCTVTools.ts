@@ -1,12 +1,13 @@
+
 import { executeHackingTool } from '@/utils/osintUtilsConnector';
 import { 
     CCTVScanData, 
     CCTVHackedData, 
     CCTVCamera as OsintCCTVCamera, 
     CCTVHackedCamera as OsintCCTVHackedCamera,
-    HackingToolResult, // Import HackingToolResult
-    HackingToolErrorData // Assuming this type is correctly defined here or re-exported
-} from '@/utils/types/osintToolTypes'; // Assuming these types are correctly defined here or re-exported
+    HackingToolResult,
+    HackingToolErrorData
+} from '@/utils/types/osintToolTypes';
 
 export interface CCTVScanParams {
   tool: string; 
@@ -18,7 +19,6 @@ export interface CCTVScanParams {
 
 export interface CCTVCamera extends OsintCCTVCamera {}
 export interface CCTVHackedCamera extends OsintCCTVHackedCamera {}
-
 
 export interface CCTVScanResult {
   success: boolean;

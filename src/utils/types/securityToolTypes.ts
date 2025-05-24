@@ -1,18 +1,19 @@
+
 import { BaseToolParams } from './osintToolTypes';
 
 export interface ShieldAIParams extends BaseToolParams {
-  targetSystem: string; // e.g., IP, hostname, or system ID
+  targetSystem: string;
   scanType: 'vulnerability' | 'compliance' | 'threat_detection';
-  policyFile?: string; // Path to compliance policy
-  // tool is inherited from BaseToolParams
+  policyFile?: string;
 }
+
 export interface ShieldAIData {
   scanId: string;
   status: 'running' | 'completed' | 'failed';
   summary?: string;
-  vulnerabilities?: any[]; // Define more specifically
-  complianceReport?: any; // Define more specifically
-  threatsDetected?: any[]; // Define more specifically
+  vulnerabilities?: any[];
+  complianceReport?: any;
+  threatsDetected?: any[];
 }
 
 export interface SecurityAdminParams extends BaseToolParams {
@@ -21,11 +22,11 @@ export interface SecurityAdminParams extends BaseToolParams {
   scope?: 'system' | 'network' | 'application';
   level?: 'basic' | 'advanced';
   timeout?: number;
-  // tool is inherited from BaseToolParams
 }
+
 export interface SecurityAdminData {
-    status: string;
-    message: string;
-    reportUrl?: string;
-    patchedItems?: string[];
+  status: string;
+  message: string;
+  reportUrl?: string;
+  patchedItems?: string[];
 }

@@ -14,6 +14,7 @@ const AdditionalTools: React.FC<AdditionalToolsProps> = ({ isRealmode }) => {
   const handleSecurityAdmin = async () => {
     try {
       const result = await executeSecurityAdmin({
+        tool: 'securityAdmin',
         target: 'localhost',
         action: 'check',
         scope: 'system',

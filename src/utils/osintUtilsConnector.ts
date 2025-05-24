@@ -1,4 +1,3 @@
-
 import {
   // Base OSINT tools (ensure these are correctly exported from baseOsintTools)
   executeEncoderDecoder,
@@ -113,6 +112,34 @@ import {
 
 export const executeRapidPayload = async (params: RapidPayloadParams): Promise<HackingToolResult<RapidPayloadData>> => {
   return actualExecuteRapidPayload(params);
+};
+
+export const executeCamDumper = async (params: any) => {
+  return executeHackingTool({ tool: 'camDumper', ...params });
+};
+
+export const executeCamerattack = async (params: any) => {
+  return executeHackingTool({ tool: 'camerattack', ...params });
+};
+
+export const executeHackCCTV = async (params: any) => {
+  return executeHackingTool({ tool: 'hackCCTV', ...params });
+};
+
+export const executeCameradar = async (params: any) => {
+  return executeHackingTool({ tool: 'cameradar', ...params });
+};
+
+export const executeOpenCCTV = async (params: any) => {
+  return executeHackingTool({ tool: 'openCCTV', ...params });
+};
+
+export const executeEyePwn = async (params: any) => {
+  return executeHackingTool({ tool: 'eyePwn', ...params });
+};
+
+export const executeOSINT = async (params: any) => {
+  return executeHackingTool({ tool: 'osint', ...params });
 };
 
 const toolFunctionMap: { [key: string]: (params: BaseToolParams) => Promise<HackingToolResult<any, any>> } = {
