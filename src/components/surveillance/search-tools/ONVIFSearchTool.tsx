@@ -31,7 +31,7 @@ const ONVIFSearchTool: React.FC = () => {
       const result = await executeNmapONVIF({
         tool: 'nmapONVIF',
         target,
-        ports,
+        ports: ports.split(','),
         timeout: 30,
         saveResults: true
       });

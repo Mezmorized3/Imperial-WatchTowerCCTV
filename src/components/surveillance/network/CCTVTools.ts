@@ -1,4 +1,3 @@
-
 import { executeHackingTool } from '@/utils/osintUtilsConnector';
 import { 
     CCTVScanData, 
@@ -41,7 +40,7 @@ export const executeCCTVScan = async (params: CCTVScanParams): Promise<CCTVScanR
     } else {
       return {
         success: false,
-        error: result.error || (result.data as HackingToolErrorData)?.message || 'Unknown error during CCTV scan'
+        error: result.error || 'Unknown error during CCTV scan'
       };
     }
   } catch (error) {
@@ -68,7 +67,7 @@ export const executeCCTVHacked = async (params: CCTVScanParams): Promise<CCTVSca
     } else {
       return {
         success: false,
-        error: result.error || (result.data as HackingToolErrorData)?.message || 'Unknown error during CCTV hacked scan'
+        error: result.error || 'Unknown error during CCTV hacked scan'
       };
     }
   } catch (error) {

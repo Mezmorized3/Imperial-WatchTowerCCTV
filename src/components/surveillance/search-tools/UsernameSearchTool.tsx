@@ -1,141 +1,118 @@
 
 import React, { useState } from 'react';
-import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
-import { useToast } from '@/hooks/use-toast';
-import { User, ExternalLink } from 'lucide-react';
-import { executeUsernameSearch } from '@/utils/osintUtilsConnector';
+import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
+import { Search, User } from 'lucide-react';
+import { toast } from '@/components/ui/use-toast';
+import { executeSocialUsernameSearch } from '@/utils/osintUtilsConnector';
 
-export const UsernameSearchTool: React.FC = () => {
+interface UsernameSearchToolProps {
+  onSearchComplete?: (results: any) => void;
+}
+
+const UsernameSearchTool: React.FC<UsernameSearchToolProps> = ({ onSearchComplete }) => {
   const [username, setUsername] = useState('');
-  const [isSearching, setIsSearching] = useState(false);
-  const [searchProgress, setSearchProgress] = useState(0);
-  const [searchResults, setSearchResults] = useState<Array<{
-    platform: string;
-    url: string;
-    exists: boolean;
-    username?: string;
-    note?: string;
-  }>>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [results, setResults] = useState<any>(null);
   
-  const { toast } = useToast();
-
   const handleSearch = async () => {
-    if (!username.trim()) {
+    if (!username) {
       toast({
-        title: "Empty Username",
-        description: "Please enter a username to search",
-        variant: "destructive",
+        title: "Error",
+        description: "Please enter a username",
+        variant: "destructive"
       });
       return;
     }
-
-    setIsSearching(true);
-    setSearchProgress(0);
-    setSearchResults([]);
     
-    const progressInterval = setInterval(() => {
-      setSearchProgress(prev => Math.min(prev + 2, 95));
-    }, 100);
+    setIsLoading(true);
     
     try {
-      const result = await executeUsernameSearch({ username });
-      
-      // Transform the results to match our component's expected format
-      const formattedResults = result.data.results.map((item: any) => ({
-        platform: item.platform,
-        url: item.url,
-        exists: item.exists,
-        username: username,
-        note: item.exists ? undefined : 'Profile not found'
-      }));
-      
-      setSearchResults(formattedResults);
-      
-      const foundCount = formattedResults.filter(r => r.exists).length;
-      
-      toast({
-        title: "Search Complete",
-        description: `Found ${foundCount} profiles for username "${username}"`,
+      const result = await executeSocialUsernameSearch({ 
+        tool: 'usernameSearch',
+        username
       });
+      
+      if (result && result.success) {
+        setResults(result.data.results);
+        
+        if (onSearchComplete) {
+          onSearchComplete(result.data.results);
+        }
+        
+        toast({
+          title: "Username Search Complete",
+          description: `Found ${result.data.results?.profiles?.length || 0} profiles.`
+        });
+      } else {
+        toast({
+          title: "Search Failed",
+          description: "Failed to retrieve username data",
+          variant: "destructive"
+        });
+      }
     } catch (error) {
-      console.error('Error searching username:', error);
+      console.error("Error during search:", error);
       toast({
-        title: "Error",
-        description: "Failed to search for username",
-        variant: "destructive",
+        title: "Search Error",
+        description: error instanceof Error ? error.message : "An unknown error occurred",
+        variant: "destructive"
       });
     } finally {
-      clearInterval(progressInterval);
-      setSearchProgress(100);
-      setIsSearching(false);
-      
-      setTimeout(() => setSearchProgress(0), 1000);
+      setIsLoading(false);
     }
   };
 
   return (
-    <div className="flex flex-col space-y-4">
-      <div className="flex space-x-2">
-        <Input
-          placeholder="Enter a username to search"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-          className="bg-scanner-dark border-gray-700 text-white"
-        />
-        <Button 
-          onClick={handleSearch} 
-          disabled={isSearching}
-        >
-          {isSearching ? "Searching..." : "Search"}
-        </Button>
-      </div>
-      
-      {searchProgress > 0 && (
-        <Progress value={searchProgress} className="h-2" />
-      )}
-      
-      {searchResults.length > 0 && (
-        <div className="mt-4 space-y-4">
-          <h3 className="text-lg font-medium border-b border-gray-700 pb-2">
-            Results for "{username}" ({searchResults.filter(r => r.exists).length}/{searchResults.length})
-          </h3>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {searchResults.map((result, index) => (
-              <div key={index} className={`p-4 rounded border ${result.exists ? 'bg-green-900/20 border-green-700' : 'bg-scanner-dark border-gray-700'}`}>
-                <div className="flex items-center justify-between mb-2">
-                  <h4 className="font-medium flex items-center">
-                    <User className="h-4 w-4 mr-2" />
-                    {result.platform}
-                  </h4>
-                  <Badge className={result.exists ? 'bg-green-600' : 'bg-gray-600'}>
-                    {result.exists ? 'Found' : 'Not Found'}
-                  </Badge>
-                </div>
-                
-                {result.exists ? (
-                  <a 
-                    href={result.url} 
-                    target="_blank" 
-                    rel="noopener noreferrer" 
-                    className="text-sm text-blue-400 flex items-center mt-1 hover:underline"
-                  >
-                    Visit Profile <ExternalLink className="h-3 w-3 ml-1" />
-                  </a>
-                ) : (
-                  <p className="text-sm text-gray-400 mt-1">
-                    {result.note || 'No profile found'}
-                  </p>
-                )}
-              </div>
-            ))}
-          </div>
+    <Card className="border-gray-700 bg-scanner-dark shadow-lg">
+      <CardHeader>
+        <CardTitle className="flex items-center">
+          <User className="h-5 w-5 text-green-400 mr-2" />
+          Username Search
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="space-y-2">
+          <Label htmlFor="username">Username</Label>
+          <Input
+            id="username"
+            placeholder="Enter username to search"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            className="bg-scanner-dark-alt border-gray-700"
+          />
         </div>
-      )}
-    </div>
+        
+        <Button
+          onClick={handleSearch}
+          disabled={isLoading}
+          variant="default"
+          className="bg-scanner-primary w-full"
+        >
+          <Search className="h-4 w-4 mr-2" />
+          {isLoading ? "Searching..." : "Search Username"}
+        </Button>
+        
+        {results && (
+          <div className="mt-4">
+            <h3 className="text-sm font-semibold mb-2">Results:</h3>
+            {results.profiles && results.profiles.length > 0 ? (
+              <ul className="text-xs text-gray-400 space-y-1 pl-5 list-disc">
+                {results.profiles.map((profile: any, index: number) => (
+                  <li key={index}>
+                    {profile.platform}: {profile.url}
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-xs text-gray-400">No profiles found.</p>
+            )}
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 };
 

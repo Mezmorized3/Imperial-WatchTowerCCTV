@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -7,9 +8,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Checkbox } from '@/components/ui/checkbox';
 import { Globe, HardDrive, Search } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
-import { executeWebhack } from '@/utils/osintTools';
+import { executeWebhack } from '@/utils/osintUtilsConnector';
+import { WebhackData } from '@/utils/types/osintToolTypes';
 
-// Define the properties for the WebHackTool component
 interface WebHackToolProps {
   onScanComplete?: (results: any) => void;
 }
@@ -21,7 +22,7 @@ const WebHackTool = () => {
   const [checkVulnerabilities, setCheckVulnerabilities] = useState(true);
   const [checkSubdomains, setCheckSubdomains] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [results, setResults] = useState<any>(null);
+  const [results, setResults] = useState<WebhackData | null>(null);
   
   const handleScan = async () => {
     if (!url) {
@@ -37,23 +38,25 @@ const WebHackTool = () => {
     
     try {
       const result = await executeWebhack({
+        tool: 'webhack',
         url,
-        scanType: scanType as 'basic' | 'full', // Cast to valid enum value
+        scanType: scanType as 'basic' | 'full',
         timeout: parseInt(timeout),
         checkVulnerabilities: true,
-        checkSubdomains: true
+        checkSubdomains: true,
+        saveResults: false
       });
       
       if (result && result.success) {
-        setResults(result.data);
+        setResults(result.data.results);
         toast({
           title: "Scan Complete",
-          description: `Found ${result.data?.vulnerabilities?.length || 0} vulnerabilities.`
+          description: `Found ${result.data.results?.vulnerabilities?.length || 0} vulnerabilities.`
         });
       } else {
         toast({
           title: "Scan Failed",
-          description: result?.data?.message || "Unknown error occurred",
+          description: result?.error || "Unknown error occurred",
           variant: "destructive"
         });
       }
@@ -151,7 +154,7 @@ const WebHackTool = () => {
               <ul className="text-xs text-gray-400 space-y-1 pl-5 list-disc">
                 {results.vulnerabilities.map((vuln: any, index: number) => (
                   <li key={index}>
-                    {vuln.name} - {vuln.severity}
+                    {vuln.type} - {vuln.severity}
                   </li>
                 ))}
               </ul>

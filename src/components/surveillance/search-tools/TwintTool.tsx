@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -8,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Search, Twitter } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
 import { executeTwint } from '@/utils/osintImplementations/socialTools';
+import { TwintData } from '@/utils/types/osintToolTypes';
 
 interface TwintToolProps {
   onSearchComplete?: (results: any) => void;
@@ -18,7 +18,7 @@ const TwintTool: React.FC<TwintToolProps> = ({ onSearchComplete }) => {
   const [query, setQuery] = useState('');
   const [limit, setLimit] = useState('10');
   const [isLoading, setIsLoading] = useState(false);
-  const [results, setResults] = useState<any>(null);
+  const [results, setResults] = useState<TwintData | null>(null);
   
   const handleSearch = async () => {
     if (!username && !query) {
@@ -34,21 +34,22 @@ const TwintTool: React.FC<TwintToolProps> = ({ onSearchComplete }) => {
     
     try {
       const result = await executeTwint({ 
+        tool: 'twint',
         username: username || undefined,
         query: query || undefined,
         limit: limit ? parseInt(limit) : undefined
       });
       
       if (result && result.success) {
-        setResults(result.data);
+        setResults(result.data.results);
         
         if (onSearchComplete) {
-          onSearchComplete(result.data);
+          onSearchComplete(result.data.results);
         }
         
         toast({
           title: "Twitter Search Complete",
-          description: `Found ${result.data?.posts?.length || 0} tweets.`
+          description: `Found ${result.data.results?.posts?.length || 0} tweets.`
         });
       } else {
         toast({
@@ -118,6 +119,7 @@ const TwintTool: React.FC<TwintToolProps> = ({ onSearchComplete }) => {
         <Button
           onClick={handleSearch}
           disabled={isLoading}
+          variant="default"
           className="bg-scanner-primary"
         >
           <Search className="h-4 w-4 mr-2" />
@@ -128,28 +130,15 @@ const TwintTool: React.FC<TwintToolProps> = ({ onSearchComplete }) => {
           <div className="mt-4">
             <h3 className="text-sm font-semibold mb-2">Results:</h3>
             {results.posts && results.posts.length > 0 ? (
-              <div className="max-h-60 overflow-y-auto">
-                {results.posts.map((post: any, index: number) => (
-                  <div key={index} className="p-2 border-b border-gray-700 last:border-b-0">
-                    <p className="text-sm">{post.content}</p>
-                    <div className="flex justify-between items-center mt-1 text-xs text-gray-400">
-                      <span>
-                        {new Date(post.timestamp).toLocaleDateString()} • {post.likes} likes
-                      </span>
-                      <a 
-                        href={post.url} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="text-blue-400 hover:underline"
-                      >
-                        View on Twitter
-                      </a>
-                    </div>
-                  </div>
+              <ul className="text-xs text-gray-400 space-y-1 pl-5 list-disc">
+                {results.posts.slice(0, 5).map((post: any, index: number) => (
+                  <li key={index}>
+                    {post.content || post.text || 'No content available'}
+                  </li>
                 ))}
-              </div>
+              </ul>
             ) : (
-              <p className="text-xs text-gray-400">No tweets found matching your criteria.</p>
+              <p className="text-xs text-gray-400">No posts found.</p>
             )}
           </div>
         )}

@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
@@ -7,6 +8,7 @@ import { Switch } from '@/components/ui/switch';
 import { toast } from '@/hooks/use-toast';
 import { Scan, AlertTriangle, Camera } from 'lucide-react';
 import { executeBackHack } from '@/utils/osintUtilsConnector';
+import { BackHackData } from '@/utils/types/osintToolTypes';
 
 interface BackHackToolProps {
   // Add any props if needed
@@ -15,14 +17,14 @@ interface BackHackToolProps {
 const BackHackTool: React.FC = () => {
   const [url, setUrl] = useState('');
   const [options, setOptions] = useState({
-    scanType: 'basic',
+    scanType: 'basic' as 'basic' | 'full',
     checkBackups: true,
     checkAdminPanels: true,
     checkCameras: true,
     checkVulnerabilities: false
   });
   const [isScanning, setIsScanning] = useState(false);
-  const [results, setResults] = useState<any>(null);
+  const [results, setResults] = useState<BackHackData | null>(null);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setUrl(e.target.value);
@@ -226,7 +228,7 @@ const BackHackTool: React.FC = () => {
               </Card>
             )}
 
-            {Object.keys(results).length === 0 && (
+            {(!results.adminPanel && (!results.backupFiles || results.backupFiles.length === 0) && (!results.cameras || results.cameras.length === 0) && (!results.vulnerabilities || results.vulnerabilities.length === 0)) && (
               <Card className="bg-scanner-dark-alt border-gray-700">
                 <CardContent>
                   No vulnerabilities or sensitive information found.

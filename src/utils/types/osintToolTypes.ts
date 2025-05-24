@@ -1,3 +1,4 @@
+
 import { BaseToolParams, HackingToolResult } from './osintToolTypes';
 
 export interface ProxyConfig {
@@ -36,7 +37,7 @@ export interface HackingToolErrorData {
 }
 
 export type HackingToolResult<R = any, EData = HackingToolErrorData> =
-  | { success: true; data: HackingToolSuccessData<R> }
+  | { success: true; data: HackingToolSuccessData<R>; error?: never }
   | { success: false; error: string; data?: EData };
 
 export interface EncoderDecoderParams extends BaseToolParams {
@@ -228,7 +229,6 @@ export type BotExploitsResult =
   | { success: true; data: BotExploitsData }
   | { success: false; error: string };
 
-
 export interface CCTVHackedCamera {
   id: string;
   ip: string;
@@ -244,7 +244,6 @@ export interface CCTVHackedData {
 export type CCTVHackedResult = 
   | { success: true; data: CCTVHackedData }
   | { success: false; error: string };
-
 
 export interface CCTVCamera {
   id: string;
@@ -282,13 +281,12 @@ export interface WebhackData {
   responseHeaders?: Record<string, string>;
   cookies?: Record<string, string>;
   ports?: { port: number; service: string }[];
-  // Add other relevant fields based on actual tool output
 }
 
 export interface BackHackParams extends BaseToolParams {
-  targetUrl: string; // Renamed from url to be more specific
-  target?: string; // Optional specific target entity for the hack
-  mode: 'basic' | 'full'; // scanType renamed to mode to match common tool terminology
+  targetUrl: string;
+  target?: string;
+  mode: 'basic' | 'full';
 }
 
 export interface BackHackData {
@@ -296,7 +294,6 @@ export interface BackHackData {
   backupFiles?: string[];
   adminPanel?: string;
   vulnerabilities?: { type: string; url: string; parameter: string; severity: string }[];
-  // Add other relevant fields
 }
 
 export interface CCTVHackedParams extends BaseToolParams {
@@ -310,9 +307,9 @@ export interface CCTVScanParams extends BaseToolParams {
     brand?: string;
     country?: string;
     limit?: number;
-    target?: string; // Added target as it's used by some CCTV tools
-    port?: number; // Added port
-    timeout?: number; // Added timeout
+    target?: string;
+    port?: number;
+    timeout?: number;
 }
 
 export interface PhotonParams extends BaseToolParams {
@@ -323,14 +320,14 @@ export interface PhotonParams extends BaseToolParams {
   delay?: number;
   userAgent?: string;
   saveResults?: boolean;
-  outputDir?: string; // Example of another common Photon param
+  outputDir?: string;
 }
 
 export interface PhotonData {
   urls_found: string[];
   subdomains_found: string[];
   files_found: string[];
-  intel: string[]; // For emails, social media links etc.
+  intel: string[];
 }
 
 export interface FFmpegParams extends BaseToolParams {
@@ -359,4 +356,91 @@ export interface SecurityAdminData {
   message: string;
   reportUrl?: string;
   patchedItems?: string[];
+}
+
+export interface OpenCVParams extends BaseToolParams {
+  source: string;
+  operation: 'detect' | 'track' | 'analyze';
+  model?: string;
+}
+
+export interface OpenCVData {
+  results: any[];
+  metadata: Record<string, any>;
+}
+
+export interface DeepstackParams extends BaseToolParams {
+  image: string;
+  operation: 'detect' | 'recognize';
+}
+
+export interface DeepstackData {
+  predictions: any[];
+  confidence: number;
+}
+
+export interface FaceRecognitionParams extends BaseToolParams {
+  image: string;
+  database?: string;
+}
+
+export interface FaceRecognitionData {
+  faces: any[];
+  matches: any[];
+}
+
+export interface MotionParams extends BaseToolParams {
+  source: string;
+  sensitivity: number;
+}
+
+export interface MotionData {
+  motionDetected: boolean;
+  regions: any[];
+}
+
+export interface TwintParams extends BaseToolParams {
+  username?: string;
+  query?: string;
+  limit?: number;
+}
+
+export interface TwintData {
+  posts: any[];
+  metadata: Record<string, any>;
+}
+
+export interface TorBotParams extends BaseToolParams {
+  searchTerm: string;
+  depth?: number;
+  maxResults?: number;
+}
+
+export interface TorBotData {
+  results: any[];
+  metadata: Record<string, any>;
+}
+
+export interface MasscanParams extends BaseToolParams {
+  targets: string[];
+  ports: string;
+  rate?: number;
+  timeout?: number;
+}
+
+export interface MasscanData {
+  hosts: any[];
+  openPorts: any[];
+}
+
+export interface HydraParams extends BaseToolParams {
+  target: string;
+  service: 'http' | 'tls' | 'ssh';
+  userlist?: string;
+  passlist?: string;
+}
+
+export interface HydraData {
+  results: any[];
+  successful: any[];
 }
