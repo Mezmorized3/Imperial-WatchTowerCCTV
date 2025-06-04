@@ -1,9 +1,9 @@
-
 /**
  * RTSP utility functions for streaming and media processing
  */
 
-import { FFmpegParams } from './osintToolTypes';
+import { HackingToolResult } from './types/osintToolTypes';
+import { FFmpegParams } from './types/osintToolTypes';
 import { simulateNetworkDelay } from './networkUtils';
 
 /**

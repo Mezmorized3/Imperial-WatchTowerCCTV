@@ -1,5 +1,5 @@
 
-import { ToolResult } from '@/utils/osintToolTypes';
+import { ToolResult } from '@/utils/types/osintToolTypes';
 
 export interface SecurityFinding {
   id: string;

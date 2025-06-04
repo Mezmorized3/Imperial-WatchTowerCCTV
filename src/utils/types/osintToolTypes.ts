@@ -281,6 +281,14 @@ export interface CCTVScanParams extends BaseToolParams {
 }
 
 // Web tool types
+export interface WebhackParams extends BaseToolParams {
+  url: string;
+  scanType: 'basic' | 'full' | 'xss' | 'sqli';
+  timeout?: number;
+  checkVulnerabilities?: boolean;
+  checkSubdomains?: boolean;
+}
+
 export interface WebhackData {
   vulnerabilities: Array<{
     type: string;
@@ -301,6 +309,25 @@ export interface BackHackData {
   }>;
   endpoints?: string[];
   technologies?: string[];
+}
+
+export interface PhotonParams extends BaseToolParams {
+  url: string;
+  depth?: number;
+  timeout?: number;
+  threads?: number;
+  delay?: number;
+  userAgent?: string;
+  saveResults?: boolean;
+  extract?: ('links' | 'emails' | 'files' | 'subdomains')[];
+}
+
+export interface PhotonData {
+  links?: string[];
+  emails?: string[];
+  files?: string[];
+  subdomains?: string[];
+  intel?: any;
 }
 
 // Social media types
@@ -386,7 +413,6 @@ export interface SecurityAdminParams extends BaseToolParams {
   operation?: 'scan' | 'audit' | 'monitor';
   scope?: string;
   depth?: 'basic' | 'comprehensive';
-  target: string;
   action: 'check' | 'patch' | 'report';
 }
 

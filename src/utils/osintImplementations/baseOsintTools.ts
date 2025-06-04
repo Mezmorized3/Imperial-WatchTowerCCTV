@@ -1,4 +1,3 @@
-
 // This file contains the original mock implementations from osintTools.ts and osintImplementations.ts
 
 import { 
@@ -18,9 +17,10 @@ import {
   HttpHeadersParams, HttpHeadersData,
   BotExploitsParams, BotExploitsData,
   CCTVHackedParams, CCTVHackedData, CCTVHackedCamera,
-  CCTVScanParams, CCTVScanData, CCTVCamera
+  CCTVScanParams, CCTVScanData, CCTVCamera,
+  Vulnerability
 } from '../types/osintToolTypes';
-import { CameraResult } from '../types/cameraTypes'; // For the original HackCCTV structure
+import { CameraResult } from '../types/cameraTypes';
 
 export const executeEncoderDecoder = async (options: EncoderDecoderParams): Promise<HackingToolResult<EncoderDecoderData>> => {
   console.log("Encoder/Decoder executed with options:", options);
@@ -141,32 +141,64 @@ export const executeCCTVScan = async (options: CCTVScanParams): Promise<HackingT
     port: 554,
     manufacturer: "ScanCam",
     model: `Model S${100 + i}`,
+    status: 'online' as const,
     url: `rtsp://scanuser:scanpass@192.168.5.${10 + i}:554/stream1`,
-    location: { latitude: 34.0522 + (Math.random()-0.5)*0.1, longitude: -118.2437 + (Math.random()-0.5)*0.1 },
+    location: { 
+      country: "US",
+      latitude: 34.0522 + (Math.random()-0.5)*0.1, 
+      longitude: -118.2437 + (Math.random()-0.5)*0.1 
+    },
   }));
-  return { success: true, data: { results: { cameras }, message: `Found ${numCameras} cameras via base scan` } };
+  const scanData: CCTVScanData = {
+    cameras,
+    totalFound: numCameras,
+    scanDuration: 300
+  };
+  return { success: true, data: { results: scanData, message: `Found ${numCameras} cameras via base scan` } };
 };
 
 export const executeCCTVHackedScan = async (options: CCTVHackedParams): Promise<HackingToolResult<CCTVHackedData>> => {
   console.log("Base CCTV Hacked Scan executed with options:", options);
   await new Promise(resolve => setTimeout(resolve, 300));
+  const vulnerabilities: Vulnerability[] = [
+    { id: "vuln-1", name: "Default Credentials", severity: "critical", description: "Uses default admin/admin credentials" },
+    { id: "vuln-2", name: "CVE-2023-xxxx", severity: "high", description: "Buffer overflow vulnerability" }
+  ];
   const cameras: CCTVHackedCamera[] = [{
-    id: "hacked-cam-base-1", ip: "192.168.6.200", port: 8899, manufacturer: "HackedCam Co", model: "XPwn", vulnerabilities: ["default_creds", "CVE-2023-xxxx"]
+    id: "hacked-cam-base-1", 
+    ip: "192.168.6.200", 
+    port: 8899, 
+    manufacturer: "HackedCam Co", 
+    model: "XPwn", 
+    status: 'vulnerable' as const,
+    vulnerabilities,
+    accessLevel: 'admin' as const,
+    exploits: ["default_creds", "CVE-2023-xxxx"]
   }];
-  return { success: true, data: { results: { cameras, message: "Found hacked cameras via base scan" }, message: "CCTV hacked scan (base) complete" } };
+  const hackedData: CCTVHackedData = {
+    cameras,
+    totalCompromised: 1,
+    scanDuration: 300
+  };
+  return { success: true, data: { results: hackedData, message: "CCTV hacked scan (base) complete" } };
 };
 
 
 // Original implementations from the user's osintImplementations.ts
-export const executeCCTV = async (options: any): Promise<HackingToolResult<{ cameras: CameraResult[] }>> => { // Note: CameraResult is from '@/utils/types/cameraTypes'
+export const executeCCTV = async (options: any): Promise<HackingToolResult<{ cameras: CameraResult[] }>> => {
   console.log("Original CCTV search executed with options:", options);
   await new Promise(resolve => setTimeout(resolve, 100));
   const cameras: CameraResult[] = [
     {
-      id: "cam-orig-001", ip: "192.168.1.150", port: 554, manufacturer: "Hikvision", model: "DS-2CD2032-I",
-      streamUrl: "rtsp://admin:admin@192.168.1.150:554/Streaming/Channels/101",
-      geolocation: { country_code: "US", country_name: "United States", city: "New York", latitude: 40.7128, longitude: -74.0060 },
-      status: "online", score: 0.8
+      id: "cam-orig-001", 
+      ip: "192.168.1.150", 
+      port: 554, 
+      manufacturer: "Hikvision", 
+      model: "DS-2CD2032-I",
+      rtspUrl: "rtsp://admin:admin@192.168.1.150:554/Streaming/Channels/101",
+      geolocation: { country: "United States", city: "New York", latitude: 40.7128, longitude: -74.0060 },
+      status: "online", 
+      accessLevel: 'limited'
     },
   ];
   return { success: true, data: { results: { cameras }, message: "Original CCTV search complete" } };
@@ -178,13 +210,22 @@ export const executeCCTV = async (options: any): Promise<HackingToolResult<{ cam
 export const executeOriginalHackCCTV = async (options: any): Promise<HackingToolResult<{ cameras: CameraResult[] }>> => {
   console.log("Original Hack CCTV executed with options:", options);
   await new Promise(resolve => setTimeout(resolve, 100));
+  const vulnerabilities: Vulnerability[] = [
+    { id: "vuln-default", name: "Default Credentials", severity: "critical", description: "Uses default credentials" }
+  ];
   const cameras: CameraResult[] = [
     {
-      id: "cam-hack-orig-001", ip: options.target || "192.168.1.120", port: 554, manufacturer: "Vivotek", model: "IB8369A",
+      id: "cam-hack-orig-001", 
+      ip: options.target || "192.168.1.120", 
+      port: 554, 
+      manufacturer: "Vivotek", 
+      model: "IB8369A",
       credentials: { username: "admin", password: "admin123" },
-      streamUrl: `rtsp://admin:admin123@${options.target || "192.168.1.120"}:554/live.sdp`,
-      geolocation: { country_code: "US", country_name: "United States", city: "Los Angeles", latitude: 34.0522, longitude: -118.2437 },
-      status: "vulnerable", score: 0.95, vulnerabilities: [{name: "Default Credentials", severity: "critical"}]
+      rtspUrl: `rtsp://admin:admin123@${options.target || "192.168.1.120"}:554/live.sdp`,
+      geolocation: { country: "United States", city: "Los Angeles", latitude: 34.0522, longitude: -118.2437 },
+      status: "vulnerable", 
+      accessLevel: 'full',
+      vulnerabilities
     }
   ];
   return { success: true, data: { results: { cameras }, message: "Original HackCCTV successful" } };
@@ -196,9 +237,14 @@ export const executeCamDumper = async (options: any): Promise<HackingToolResult<
   await new Promise(resolve => setTimeout(resolve, 100));
    const cameras: CameraResult[] = [
     {
-      id: "cd-orig-001", ip: options.target || "10.0.0.50", port: 80,
-      streamUrl: `http://${options.target || "10.0.0.50"}/video.mjpg`,
-      status: "online", score: 0.7, manufacturer: "Generic", model: "MJPEG Streamer"
+      id: "cd-orig-001", 
+      ip: options.target || "10.0.0.50", 
+      port: 80,
+      rtspUrl: `http://${options.target || "10.0.0.50"}/video.mjpg`,
+      status: "online", 
+      accessLevel: 'limited',
+      manufacturer: "Generic", 
+      model: "MJPEG Streamer"
     }
   ];
   return { success: true, data: { results: { cameras }, message: "Original CamDumper successful" } };
@@ -209,9 +255,13 @@ export const executeOpenCCTV = async (options: any): Promise<HackingToolResult<{
    await new Promise(resolve => setTimeout(resolve, 100));
   const cameras: CameraResult[] = [
     {
-      id: "oc-orig-001", ip: options.target || "192.168.2.100", port: 8080,
-      streamUrl: `http://${options.target || "192.168.2.100"}:8080/video`, model: "Generic IP Camera",
-      status: "online", score: 0.6, manufacturer: "OpenSourceCam"
+      id: "oc-orig-001", 
+      ip: options.target || "192.168.2.100", 
+      port: 8080,
+      rtspUrl: `http://${options.target || "192.168.2.100"}:8080/video`, model: "Generic IP Camera",
+      status: "online", 
+      accessLevel: 'limited',
+      manufacturer: "OpenSourceCam"
     }
   ];
   return { success: true, data: { results: { cameras }, message: "Original OpenCCTV successful" } };
@@ -220,11 +270,20 @@ export const executeOpenCCTV = async (options: any): Promise<HackingToolResult<{
 export const executeEyePwn = async (options: any): Promise<HackingToolResult<{ cameras: CameraResult[] }>> => {
   console.log("Original EyePwn executed with options:", options);
   await new Promise(resolve => setTimeout(resolve, 100));
+  const vulnerabilities: Vulnerability[] = [
+    { id: "vuln-firmware", name: "Firmware Exploit", severity: "high", description: "Firmware vulnerability" },
+    { id: "vuln-auth", name: "Weak Digest Auth", severity: "medium", description: "Weak digest authentication" }
+  ];
   const cameras: CameraResult[] = [
     {
-      id: "ep-orig-001", ip: options.target || "192.168.3.100", port: 801,
-      status: "vulnerable", score: 0.85, manufacturer: "PwnableCams", model: "EyeSpy2000",
-      vulnerabilities: [{name: "Firmware Exploit", severity: "high"}, {name:"Weak Digest Auth", severity: "medium"}]
+      id: "ep-orig-001", 
+      ip: options.target || "192.168.3.100", 
+      port: 801,
+      status: "vulnerable", 
+      accessLevel: 'full',
+      manufacturer: "PwnableCams", 
+      model: "EyeSpy2000",
+      vulnerabilities
     }
   ];
   return { success: true, data: { results: { cameras }, message: "Original EyePwn successful" } };
@@ -235,9 +294,13 @@ export const executeIngram = async (options: any): Promise<HackingToolResult<{ c
   await new Promise(resolve => setTimeout(resolve, 100));
    const cameras: CameraResult[] = [
     {
-      id: "ig-orig-001", ip: options.target || "192.168.4.100", port: 9000,
-      status: "online", score: 0.75, manufacturer: "Ingram Micro", model: "SecureView X",
-      notes: "Found admin panel access."
+      id: "ig-orig-001", 
+      ip: options.target || "192.168.4.100", 
+      port: 9000,
+      status: "online", 
+      accessLevel: 'admin',
+      manufacturer: "Ingram Micro", 
+      model: "SecureView X"
     }
   ];
   return { success: true, data: { results: { cameras }, message: "Original Ingram successful" } };
@@ -245,5 +308,3 @@ export const executeIngram = async (options: any): Promise<HackingToolResult<{ c
 
 // Make sure executeUsernameSearch and executeTwint are also here if they were in the original osintImplementations.ts
 // For now, assuming they are handled by socialTools.ts and correctly re-exported by osintImplementations/index.ts
-
-
