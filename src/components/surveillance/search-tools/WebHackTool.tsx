@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Globe, HardDrive, Search } from 'lucide-react';
+import { Globe, Search } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
 import { executeWebhack } from '@/utils/osintUtilsConnector';
 import { WebhackData } from '@/utils/types/osintToolTypes';
@@ -47,7 +47,7 @@ const WebHackTool = () => {
         saveResults: false
       });
       
-      if (result && result.success) {
+      if (result.success) {
         setResults(result.data.results);
         toast({
           title: "Scan Complete",
@@ -56,7 +56,7 @@ const WebHackTool = () => {
       } else {
         toast({
           title: "Scan Failed",
-          description: result?.error || "Unknown error occurred",
+          description: result.error || "Unknown error occurred",
           variant: "destructive"
         });
       }

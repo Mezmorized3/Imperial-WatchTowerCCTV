@@ -1,30 +1,13 @@
 
-import { BaseToolParams, HackingToolResult } from './osintToolTypes';
-
-export interface ProxyConfig {
-  enabled: boolean;
-  type: 'http' | 'socks4' | 'socks5' | 'tor';
-  host: string;
-  port: number;
-  username?: string;
-  password?: string;
-  country?: string;
-  rotationEnabled: boolean;
-  rotationInterval?: number;
-  credentials?: {
-    username: string;
-    password: string;
-  };
-}
-
+// Core OSINT tool types - consolidated and corrected
 export interface BaseToolParams {
   tool: string;
+  target?: string;
+  timeout?: number;
+  saveResults?: boolean;
+  verbose?: boolean;
   [key: string]: any;
 }
-
-export type ToolExecutionFunction<T extends BaseToolParams, R> = (
-  params: T
-) => Promise<R>;
 
 export interface HackingToolSuccessData<R = any> {
   results: R;
@@ -36,411 +19,107 @@ export interface HackingToolErrorData {
   results?: any[];
 }
 
-export type HackingToolResult<R = any, EData = HackingToolErrorData> =
+export type HackingToolResult<R = any> = 
   | { success: true; data: HackingToolSuccessData<R>; error?: never }
-  | { success: false; error: string; data?: EData };
+  | { success: false; error: string; data?: HackingToolErrorData };
 
-export interface EncoderDecoderParams extends BaseToolParams {
-  text: string;
-  action: "encode" | "decode";
-  type:
-    | "base64"
-    | "url"
-    | "html"
-    | "rot13"
-    | "hex"
-    | "uri"
-    | "uriComponent";
-}
-
-export interface EncoderDecoderData {
-  encodedText: string;
-}
-
-export interface ReverseShellParams extends BaseToolParams {
-  ip: string;
-  port: string;
-  type: string;
-}
-
-export interface ReverseShellData {
-  command: string;
-}
-
-export interface RapidPayloadParams extends BaseToolParams {
-  platform: 'windows' | 'linux' | 'macos' | 'android' | 'python' | 'php' | 'bash' | 'powershell';
-  payloadType: string;
-  lhost: string;
-  lport: number;
-  format: string;
-  encode?: boolean;
-  encryption?: string;
-  options?: {
-    encoder?: string;
-    iterations?: number;
-    bad_chars?: string;
-    nops?: number;
-  };
-}
-
-export interface RapidPayloadData {
-  payload: string;
-}
-
-export interface SqliPayloadParams extends BaseToolParams {
-  target_url: string;
-  payload: string;
-}
-
-export interface SqliPayloadData {
-  target_url: string;
-  payload_used: string;
-  vulnerable: boolean;
-  response_time_ms: number;
-  status_code: number;
-  details: string;
-  recommendation: string;
-  log: string;
-}
-
-export interface XssPayloadParams extends BaseToolParams {
-  searchTerm: string;
-}
-
-export interface PasswordCrackerParams extends BaseToolParams {
-  target: string;
-  method: 'dictionary' | 'bruteforce' | 'custom';
-  dictionary?: string;
-  customDictionary?: string;
-  bruteforceCharset?: string;
-  bruteforceMinLength?: number;
-  bruteforceMaxLength?: number;
-}
-
-export interface PasswordGeneratorParams extends BaseToolParams {
-  length: number;
-  charset: 'alphanumeric' | 'numeric' | 'alphabetic' | 'custom';
-  count: number;
-}
-
-export interface IpInfoParams extends BaseToolParams {
-  ip_address: string;
-}
-
-export interface IpInfoData {
-  ip: string;
-  country: string;
-  city: string;
-  ISP: string;
-}
-
-export interface DnsLookupParams extends BaseToolParams {
-  domain: string;
-  record_type:
-  | "A"
-  | "AAAA"
-  | "MX"
-  | "TXT"
-  | "NS"
-  | "CNAME"
-  | "SOA"
-  | "SRV"
-  | "ANY";
-}
-
-export interface DnsLookupData {
-  domain: string;
-  record_type: string;
-  records: string[];
-}
-
-export interface PortScanParams extends BaseToolParams {
-  target_host: string;
-  ports_to_scan: string[];
-  scan_type: 'TCP_CONNECT' | 'TCP_SYN' | 'UDP';
-  timeout?: number;
-  service_detection?: boolean;
-}
-
-export interface PortScanData {
-  target_host: string;
-  open_ports: { port: number; service_name: string; protocol: string; state: string }[];
-}
-
-export interface TracerouteParams extends BaseToolParams {
-  target_host: string;
-  max_hops?: number;
-  timeout_ms?: number;
-}
-
-export interface TracerouteData {
-  target_host: string;
-  hops: { hop: number; ip: string; rtt_ms: number }[];
-}
-
-export interface SubnetScanParams extends BaseToolParams {
-  subnet_cidr: string;
-  ports_to_scan?: number[];
-  scan_method?: string;
-  timeout_ms?: number;
-}
-
-export interface SubnetScanData {
-  subnet_cidr: string;
-  active_hosts: { ip: string; open_ports: number[] }[];
-}
-
-export interface WhoisLookupParams extends BaseToolParams {
-  query: string;
-}
-
-export interface WhoisLookupData {
-  query: string;
-  raw_data: string;
-}
-
-export interface HttpHeadersParams extends BaseToolParams {
-  url: string;
-  method?: string;
-  user_agent?: string;
-}
-
-export interface HttpHeadersData {
-  url: string;
-  status_code: number;
-  headers: { [key: string]: string };
-}
-
-export type PasswordCrackerSuccessData = { results: string[] };
-export type PasswordGeneratorSuccessData = { results: string[] };
-export type XssPayloadsSuccessData = { results: string[] };
-
-export interface BotExploitsParams extends BaseToolParams {
-    targetService: string;
-    credentials?: Record<string, string>;
-}
-
-export interface BotExploitsData {
-  tokens: { id: string; value: string; type: string; expiration: string }[];
-  apis: { id: string; endpoint: string; method: string; authentication: boolean }[];
-  message: string;
-}
-export type BotExploitsResult = 
-  | { success: true; data: BotExploitsData }
-  | { success: false; error: string };
-
-export interface CCTVHackedCamera {
-  id: string;
-  ip: string;
-  port: number;
-  manufacturer: string;
-  model: string;
-  vulnerabilities: string[];
-}
-export interface CCTVHackedData {
-  cameras: CCTVHackedCamera[];
-  message: string;
-}
-export type CCTVHackedResult = 
-  | { success: true; data: CCTVHackedData }
-  | { success: false; error: string };
-
+// Camera and CCTV types
 export interface CCTVCamera {
   id: string;
   ip: string;
   port: number;
-  manufacturer: string;
-  model: string;
-  url: string;
-  location: {
-    latitude: number;
-    longitude: number;
+  manufacturer?: string;
+  model?: string;
+  status: 'online' | 'offline' | 'vulnerable';
+  credentials?: {
+    username: string;
+    password: string;
   };
+  location?: {
+    country: string;
+    city?: string;
+    latitude?: number;
+    longitude?: number;
+  };
+  vulnerabilities?: Array<{
+    id: string;
+    name: string;
+    severity: 'low' | 'medium' | 'high' | 'critical';
+    description: string;
+  }>;
 }
+
+export interface CCTVHackedCamera extends CCTVCamera {
+  accessLevel: 'admin' | 'user' | 'view';
+  exploits?: string[];
+  compromiseDate?: string;
+}
+
 export interface CCTVScanData {
   cameras: CCTVCamera[];
-}
-export type CCTVScanResult = 
-  | { success: true; data: CCTVScanData }
-  | { success: false; error: string };
-
-export interface WebhackParams extends BaseToolParams {
-  url: string;
-  scanType: 'basic' | 'full';
-  timeout: number;
-  checkVulnerabilities: boolean;
-  checkSubdomains: boolean;
-  userAgent?: string;
-  saveResults: boolean;
+  totalFound: number;
+  scanDuration: number;
 }
 
+export interface CCTVHackedData {
+  cameras: CCTVHackedCamera[];
+  totalCompromised: number;
+  scanDuration: number;
+}
+
+// Web tool types
 export interface WebhackData {
-  vulnerabilities?: { type: string; url: string; parameter: string; severity: string }[];
-  technologies?: string[];
+  vulnerabilities: Array<{
+    type: string;
+    severity: 'low' | 'medium' | 'high' | 'critical';
+    description: string;
+    evidence?: string;
+  }>;
   subdomains?: string[];
-  responseHeaders?: Record<string, string>;
-  cookies?: Record<string, string>;
-  ports?: { port: number; service: string }[];
+  technologies?: string[];
 }
 
-export interface BackHackParams extends BaseToolParams {
-  targetUrl: string;
-  target?: string;
-  mode: 'basic' | 'full';
-}
-
-export interface BackHackData {
-  cameras?: { id: string; ip: string; port: number; model: string; url: string }[];
-  backupFiles?: string[];
-  adminPanel?: string;
-  vulnerabilities?: { type: string; url: string; parameter: string; severity: string }[];
-}
-
-export interface CCTVHackedParams extends BaseToolParams {
-    target: string;
-    country?: string;
-    exploitType?: 'default_creds' | 'known_vuln';
-}
-
-export interface CCTVScanParams extends BaseToolParams {
-    query?: string;
-    brand?: string;
-    country?: string;
-    limit?: number;
-    target?: string;
-    port?: number;
-    timeout?: number;
-}
-
-export interface PhotonParams extends BaseToolParams {
-  url: string;
-  depth?: number;
-  timeout?: number;
-  threads?: number;
-  delay?: number;
-  userAgent?: string;
-  saveResults?: boolean;
-  outputDir?: string;
-}
-
-export interface PhotonData {
-  urls_found: string[];
-  subdomains_found: string[];
-  files_found: string[];
-  intel: string[];
-}
-
-export interface FFmpegParams extends BaseToolParams {
-  inputFile: string;
-  outputFile: string;
-  options: string[];
-}
-
-export interface FFmpegData {
-  success: boolean;
-  outputFile: string;
-  duration: number;
-  size: number;
-}
-
-export interface SecurityAdminParams extends BaseToolParams {
-  target: string;
-  action: 'check' | 'patch' | 'report';
-  scope?: 'system' | 'network' | 'application';
-  level?: 'basic' | 'advanced';
-  timeout?: number;
-}
-
-export interface SecurityAdminData {
-  status: string;
-  message: string;
-  reportUrl?: string;
-  patchedItems?: string[];
-}
-
-export interface OpenCVParams extends BaseToolParams {
-  source: string;
-  operation: 'detect' | 'track' | 'analyze';
-  model?: string;
-}
-
-export interface OpenCVData {
-  results: any[];
-  metadata: Record<string, any>;
-}
-
-export interface DeepstackParams extends BaseToolParams {
-  image: string;
-  operation: 'detect' | 'recognize';
-}
-
-export interface DeepstackData {
-  predictions: any[];
-  confidence: number;
-}
-
-export interface FaceRecognitionParams extends BaseToolParams {
-  image: string;
-  database?: string;
-}
-
-export interface FaceRecognitionData {
-  faces: any[];
-  matches: any[];
-}
-
-export interface MotionParams extends BaseToolParams {
-  source: string;
-  sensitivity: number;
-}
-
-export interface MotionData {
-  motionDetected: boolean;
-  regions: any[];
-}
-
-export interface TwintParams extends BaseToolParams {
-  username?: string;
-  query?: string;
-  limit?: number;
-}
-
+// Social media types
 export interface TwintData {
-  posts: any[];
-  metadata: Record<string, any>;
+  posts: Array<{
+    id: string;
+    username: string;
+    content: string;
+    timestamp: string;
+    likes?: number;
+    retweets?: number;
+  }>;
+  totalPosts: number;
 }
 
-export interface TorBotParams extends BaseToolParams {
-  searchTerm: string;
-  depth?: number;
-  maxResults?: number;
+export interface UsernameSearchData {
+  profiles: Array<{
+    platform: string;
+    url: string;
+    exists: boolean;
+    profileData?: any;
+  }>;
+  totalFound: number;
 }
 
-export interface TorBotData {
-  results: any[];
-  metadata: Record<string, any>;
-}
-
-export interface MasscanParams extends BaseToolParams {
-  targets: string[];
-  ports: string;
-  rate?: number;
-  timeout?: number;
-}
-
+// Network scanning types
 export interface MasscanData {
-  hosts: any[];
-  openPorts: any[];
+  openPorts: Array<{
+    ip: string;
+    port: number;
+    protocol: string;
+    status: string;
+  }>;
+  totalHosts: number;
 }
 
-export interface HydraParams extends BaseToolParams {
-  target: string;
-  service: 'http' | 'tls' | 'ssh';
-  userlist?: string;
-  passlist?: string;
-}
-
-export interface HydraData {
-  results: any[];
-  successful: any[];
+export interface NmapONVIFData {
+  devices: Array<{
+    ip: string;
+    port: number;
+    services: string[];
+    manufacturer?: string;
+    model?: string;
+  }>;
+  totalDevices: number;
 }

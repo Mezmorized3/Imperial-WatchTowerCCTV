@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Search, User } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
 import { executeSocialUsernameSearch } from '@/utils/osintUtilsConnector';
+import { UsernameSearchData } from '@/utils/types/osintToolTypes';
 
 interface UsernameSearchToolProps {
   onSearchComplete?: (results: any) => void;
@@ -15,7 +16,7 @@ interface UsernameSearchToolProps {
 const UsernameSearchTool: React.FC<UsernameSearchToolProps> = ({ onSearchComplete }) => {
   const [username, setUsername] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [results, setResults] = useState<any>(null);
+  const [results, setResults] = useState<UsernameSearchData | null>(null);
   
   const handleSearch = async () => {
     if (!username) {
@@ -35,7 +36,7 @@ const UsernameSearchTool: React.FC<UsernameSearchToolProps> = ({ onSearchComplet
         username
       });
       
-      if (result && result.success) {
+      if (result.success) {
         setResults(result.data.results);
         
         if (onSearchComplete) {
@@ -49,7 +50,7 @@ const UsernameSearchTool: React.FC<UsernameSearchToolProps> = ({ onSearchComplet
       } else {
         toast({
           title: "Search Failed",
-          description: "Failed to retrieve username data",
+          description: result.error || "Failed to retrieve username data",
           variant: "destructive"
         });
       }

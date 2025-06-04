@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -6,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Search, Twitter } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
-import { executeTwint } from '@/utils/osintImplementations/socialTools';
+import { executeTwint } from '@/utils/osintUtilsConnector';
 import { TwintData } from '@/utils/types/osintToolTypes';
 
 interface TwintToolProps {
@@ -40,7 +41,7 @@ const TwintTool: React.FC<TwintToolProps> = ({ onSearchComplete }) => {
         limit: limit ? parseInt(limit) : undefined
       });
       
-      if (result && result.success) {
+      if (result.success) {
         setResults(result.data.results);
         
         if (onSearchComplete) {
@@ -54,7 +55,7 @@ const TwintTool: React.FC<TwintToolProps> = ({ onSearchComplete }) => {
       } else {
         toast({
           title: "Search Failed",
-          description: "Failed to retrieve Twitter data",
+          description: result.error || "Failed to retrieve Twitter data",
           variant: "destructive"
         });
       }
