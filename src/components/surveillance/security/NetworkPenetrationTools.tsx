@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -14,125 +13,117 @@ import { useToast } from '@/hooks/use-toast';
 import {
   Search, Lock, Network, Server, Loader2, Wifi, Shield, AlertTriangle, Terminal
 } from 'lucide-react';
-import { executeMasscan, executeZGrab, executeHydra } from '@/utils/osintTools';
+import { executeMasscan, executeZGrab, executeHydra } from '@/utils/osintUtilsConnector';
 
 const NetworkPenetrationTools: React.FC = () => {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState('masscan');
   const [isLoading, setIsLoading] = useState(false);
   const [results, setResults] = useState<any>(null);
-  
+
   // Masscan state
   const [masscanTarget, setMasscanTarget] = useState('');
-  const [masscanPorts, setMasscanPorts] = useState('80,443,554,8000,8080,37777');
-  const [masscanRate, setMasscanRate] = useState('1000');
-  const [masscanTimeout, setMasscanTimeout] = useState('60');
+  const [masscanPorts, setMasscanPorts] = useState('80,443,22,21,25');
+  const [masscanRate, setMasscanRate] = useState(1000);
+  const [masscanTimeout, setMasscanTimeout] = useState(30);
   const [masscanAggressive, setMasscanAggressive] = useState(false);
-  
+
   // ZGrab state
   const [zgrabTarget, setZgrabTarget] = useState('');
-  const [zgrabPort, setZgrabPort] = useState('80');
+  const [zgrabPort, setZgrabPort] = useState(80);
   const [zgrabProtocol, setZgrabProtocol] = useState<'http' | 'https' | 'rtsp'>('http');
-  
+
   // Hydra state
   const [hydraTarget, setHydraTarget] = useState('');
-  const [hydraService, setHydraService] = useState<'http-get' | 'rtsp' | 'ftp' | 'telnet' | 'ssh'>('http-get');
-  const [hydraUserlist, setHydraUserlist] = useState('admin,root,user');
-  const [hydraPasslist, setHydraPasslist] = useState('admin,password,123456,12345678');
-  const [hydraThreads, setHydraThreads] = useState('16');
-  const [hydraTimeout, setHydraTimeout] = useState('10');
-  
-  const handleExecute = async () => {
+  const [hydraService, setHydraService] = useState<'ssh' | 'ftp' | 'telnet' | 'http-get' | 'rtsp'>('ssh');
+  const [hydraUserList, setHydraUserList] = useState(['admin', 'root', 'user']);
+  const [hydraPassList, setHydraPassList] = useState(['admin', 'password', '123456']);
+  const [hydraThreads, setHydraThreads] = useState(4);
+  const [hydraTimeout, setHydraTimeout] = useState(30);
+
+  const handleMasscanScan = async () => {
+    if (!masscanTarget) {
+      toast({ title: "Error", description: "Please enter a target", variant: "destructive" });
+      return;
+    }
+
     setIsLoading(true);
-    setResults(null);
-    
     try {
-      let result;
-      
-      switch(activeTab) {
-        case 'masscan':
-          if (!masscanTarget) {
-            throw new Error('Please enter a target IP or network range');
-          }
-          
-          result = await executeMasscan({
-            target: masscanTarget,
-            ports: masscanPorts,
-            rate: parseInt(masscanRate),
-            timeout: parseInt(masscanTimeout),
-            aggressive: masscanAggressive,
-            saveResults: false
-          });
-          
-          if (result.success) {
-            toast({
-              title: "Masscan Complete",
-              description: `Scanned ${result.data.statistics?.hosts_total || 0} hosts, found ${result.data.results?.length || 0} open ports`
-            });
-          }
-          break;
-          
-        case 'zgrab':
-          if (!zgrabTarget) {
-            throw new Error('Please enter a target IP or hostname');
-          }
-          
-          result = await executeZGrab({
-            target: zgrabTarget,
-            port: parseInt(zgrabPort),
-            protocol: zgrabProtocol,
-            saveResults: false
-          });
-          
-          if (result.success) {
-            toast({
-              title: "ZGrab Complete",
-              description: `Banner grab completed for ${zgrabTarget}`
-            });
-          }
-          break;
-          
-        case 'hydra':
-          if (!hydraTarget) {
-            throw new Error('Please enter a target IP or hostname');
-          }
-          
-          result = await executeHydra({
-            target: hydraTarget,
-            service: hydraService,
-            userList: hydraUserlist.split(','),
-            passList: hydraPasslist.split(','),
-            threads: parseInt(hydraThreads),
-            timeout: parseInt(hydraTimeout) * 1000,
-            saveResults: false
-          });
-          
-          if (result.success) {
-            toast({
-              title: "Hydra Brute Force Complete",
-              description: `Found ${result.data.credentials?.length || 0} valid credentials`
-            });
-          }
-          break;
-      }
-      
-      if (result && result.success) {
-        setResults(result.data);
-      } else if (result) {
-        throw new Error(result.error || 'Unknown error occurred');
-      }
-    } catch (error) {
-      console.error(`Error during ${activeTab} execution:`, error);
-      toast({
-        title: `${activeTab.charAt(0).toUpperCase() + activeTab.slice(1)} Error`,
-        description: error instanceof Error ? error.message : "Unknown error occurred",
-        variant: "destructive"
+      const result = await executeMasscan({
+        tool: 'masscan',
+        target: masscanTarget,
+        ports: masscanPorts,
+        rate: masscanRate,
+        timeout: masscanTimeout,
+        aggressive: masscanAggressive,
+        saveResults: false
       });
+
+      setResults(result);
+      toast({ title: "Scan Complete", description: "Masscan completed successfully" });
+    } catch (error) {
+      console.error('Masscan error:', error);
+      toast({ title: "Error", description: "Masscan failed", variant: "destructive" });
     } finally {
       setIsLoading(false);
     }
   };
-  
+
+  const handleZGrabScan = async () => {
+    if (!zgrabTarget) {
+      toast({ title: "Error", description: "Please enter a target", variant: "destructive" });
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const result = await executeZGrab({
+        tool: 'zgrab',
+        target: zgrabTarget,
+        port: zgrabPort,
+        protocol: zgrabProtocol,
+        saveResults: false
+      });
+
+      setResults(result);
+      toast({ title: "Scan Complete", description: "ZGrab completed successfully" });
+    } catch (error) {
+      console.error('ZGrab error:', error);
+      toast({ title: "Error", description: "ZGrab failed", variant: "destructive" });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleHydraBruteforce = async () => {
+    if (!hydraTarget) {
+      toast({ title: "Error", description: "Please enter a target", variant: "destructive" });
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const result = await executeHydra({
+        tool: 'hydra',
+        target: hydraTarget,
+        service: hydraService,
+        userList: hydraUserList,
+        passList: hydraPassList,
+        threads: hydraThreads,
+        timeout: hydraTimeout,
+        saveResults: false
+      });
+
+      setResults(result);
+      toast({ title: "Bruteforce Complete", description: "Hydra completed successfully" });
+    } catch (error) {
+      console.error('Hydra error:', error);
+      toast({ title: "Error", description: "Hydra failed", variant: "destructive" });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const renderMasscanForm = () => (
     <div className="space-y-4">
       <Alert variant="default" className="border-yellow-500 bg-yellow-50 dark:bg-yellow-950 dark:border-yellow-900">
@@ -173,7 +164,7 @@ const NetworkPenetrationTools: React.FC = () => {
             type="number"
             placeholder="1000"
             value={masscanRate}
-            onChange={(e) => setMasscanRate(e.target.value)}
+            onChange={(e) => setMasscanRate(parseInt(e.target.value))}
           />
         </div>
         
@@ -184,7 +175,7 @@ const NetworkPenetrationTools: React.FC = () => {
             type="number"
             placeholder="60"
             value={masscanTimeout}
-            onChange={(e) => setMasscanTimeout(e.target.value)}
+            onChange={(e) => setMasscanTimeout(parseInt(e.target.value))}
           />
         </div>
       </div>
@@ -234,7 +225,7 @@ const NetworkPenetrationTools: React.FC = () => {
             type="number"
             placeholder="80"
             value={zgrabPort}
-            onChange={(e) => setZgrabPort(e.target.value)}
+            onChange={(e) => setZgrabPort(parseInt(e.target.value))}
           />
         </div>
       </div>
@@ -295,8 +286,8 @@ const NetworkPenetrationTools: React.FC = () => {
         <Input
           id="hydra-userlist"
           placeholder="admin,root,user"
-          value={hydraUserlist}
-          onChange={(e) => setHydraUserlist(e.target.value)}
+          value={hydraUserList.join(',')}
+          onChange={(e) => setHydraUserList(e.target.value.split(','))}
         />
         <p className="text-xs text-gray-500">Common camera usernames: admin, root, user, administrator</p>
       </div>
@@ -306,8 +297,8 @@ const NetworkPenetrationTools: React.FC = () => {
         <Input
           id="hydra-passlist"
           placeholder="admin,password,123456"
-          value={hydraPasslist}
-          onChange={(e) => setHydraPasslist(e.target.value)}
+          value={hydraPassList.join(',')}
+          onChange={(e) => setHydraPassList(e.target.value.split(','))}
         />
         <p className="text-xs text-gray-500">Common camera passwords: admin, password, 123456, 12345678, camera</p>
       </div>
@@ -320,7 +311,7 @@ const NetworkPenetrationTools: React.FC = () => {
             type="number"
             placeholder="16"
             value={hydraThreads}
-            onChange={(e) => setHydraThreads(e.target.value)}
+            onChange={(e) => setHydraThreads(parseInt(e.target.value))}
           />
         </div>
         
@@ -331,7 +322,7 @@ const NetworkPenetrationTools: React.FC = () => {
             type="number"
             placeholder="10"
             value={hydraTimeout}
-            onChange={(e) => setHydraTimeout(e.target.value)}
+            onChange={(e) => setHydraTimeout(parseInt(e.target.value))}
           />
         </div>
       </div>
@@ -532,7 +523,21 @@ const NetworkPenetrationTools: React.FC = () => {
       <CardFooter>
         <Button
           className="w-full"
-          onClick={handleExecute}
+          onClick={() => {
+            switch (activeTab) {
+              case 'masscan':
+                handleMasscanScan();
+                break;
+              case 'zgrab':
+                handleZGrabScan();
+                break;
+              case 'hydra':
+                handleHydraBruteforce();
+                break;
+              default:
+                break;
+            }
+          }}
           disabled={isLoading}
         >
           {isLoading ? (

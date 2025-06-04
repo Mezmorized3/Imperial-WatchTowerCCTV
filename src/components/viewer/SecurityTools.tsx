@@ -3,8 +3,7 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { executeSecurityAdmin } from '@/utils/osintImplementations/securityTools';
-import { executeShieldAI } from '@/utils/osintImplementations/securityTools';
+import { executeSecurityAdmin } from '@/utils/osintUtilsConnector';
 import { Shield, Scan, Lock, AlertTriangle } from 'lucide-react';
 import { CameraResult } from '@/types/scanner';
 import { toast } from 'sonner';
@@ -22,9 +21,11 @@ const SecurityTools: React.FC<SecurityToolsProps> = ({ cameras }) => {
     setIsScanning(true);
     try {
       const results = await executeSecurityAdmin({
+        tool: 'securityAdmin',
         target,
         action: 'check',
-        scope: 'system'
+        scope: 'system',
+        operation: 'scan'
       });
       setScanResults(results);
       toast.success('Security scan completed');
@@ -39,8 +40,10 @@ const SecurityTools: React.FC<SecurityToolsProps> = ({ cameras }) => {
   const handleAIScan = async (target: string) => {
     setIsScanning(true);
     try {
-      const results = await executeShieldAI({
-        target,
+      const results = await executeSecurityAdmin({
+        tool: 'shieldAI',
+        targetSystem: target,
+        scanType: 'vulnerability' as const,
         analysisDepth: 'deep'
       });
       setScanResults(results);

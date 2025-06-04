@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -7,7 +6,8 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Shield, Check, AlertTriangle } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
-import { SecurityAdminParams } from '@/utils/osintToolTypes';
+import { SecurityAdminParams } from '@/utils/types/osintToolTypes';
+import { executeSecurityAdmin } from '@/utils/osintUtilsConnector';
 
 interface SecurityAdminToolProps {
   onResult?: (result: any) => void;
@@ -33,44 +33,20 @@ const SecurityAdminTool: React.FC<SecurityAdminToolProps> = ({ onResult }) => {
     setIsExecuting(true);
     
     try {
-      // This is a mock execution, in a real implementation we would call a security admin API
       const params: SecurityAdminParams = {
+        tool: 'securityAdmin',
         target,
         action,
         scope,
+        operation: 'scan',
         timeout: 30000
       };
       
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      // Mock result
-      const mockResult = {
-        success: true,
-        timestamp: new Date().toISOString(),
-        target: params.target,
-        action: params.action,
-        scope: params.scope,
-        findings: [
-          {
-            type: 'vulnerability',
-            severity: 'high',
-            description: 'Outdated firmware with known vulnerabilities',
-            recommendation: 'Update firmware to latest version'
-          },
-          {
-            type: 'configuration',
-            severity: 'medium',
-            description: 'Default credentials still in use',
-            recommendation: 'Change default credentials'
-          }
-        ]
-      };
-      
-      setResults(mockResult);
+      const result = await executeSecurityAdmin(params);
+      setResults(result);
       
       if (onResult) {
-        onResult(mockResult);
+        onResult(result);
       }
       
       toast({

@@ -1,170 +1,70 @@
 
 import React, { useState, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
-import ViewerHeader from '@/components/viewer/ViewerHeader';
-import ViewerTabs from '@/components/viewer/ViewerTabs';
-import CameraSearchTools from '@/components/surveillance/CameraSearchTools';
-import QuickStreamPlayer from '@/components/QuickStreamPlayer';
-import { mockCameras } from '@/data/mockCameras';
-import { useIsMobile } from '@/hooks/use-mobile';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Camera, Search, Settings, Video, Play, Save } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
-import { useToast } from '@/hooks/use-toast';
+import { useParams, useLocation } from 'react-router-dom';
+import CameraViewerGrid from '@/components/viewer/CameraViewerGrid';
+import { CameraResult } from '@/types/scanner';
+import SecurityTools from '@/components/viewer/SecurityTools';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
-const Viewer = () => {
+const Viewer: React.FC = () => {
+  const { searchId } = useParams<{ searchId: string }>();
   const location = useLocation();
-  const isMobile = useIsMobile();
-  const [activeTab, setActiveTab] = useState<string>('overview');
-  const [cameras, setCameras] = useState(mockCameras);
-  const [toolsMode, setToolsMode] = useState<string>('viewer');
-  const [optimizedStreaming, setOptimizedStreaming] = useState<boolean>(true);
-  const [imperialIntegration, setImperialIntegration] = useState<boolean>(true);
-  const { toast } = useToast();
+  const [cameras, setCameras] = useState<CameraResult[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  // Parse URL params to determine if we should show quick play mode
   useEffect(() => {
-    const params = new URLSearchParams(location.search);
-    if (params.get('mode') === 'quick') {
-      setToolsMode('quick');
-    }
-  }, [location]);
-
-  // Check if Imperial Server streaming is configured
-  useEffect(() => {
-    const rtspProxyEnabled = localStorage.getItem('rtspProxyEnabled') !== 'false';
-    const rtspProxyUrl = localStorage.getItem('rtspProxyUrl');
-    const imperialEnabled = localStorage.getItem('imperialIntegration') !== 'false';
+    // Get cameras from location state or load from storage
+    const cameraData = location.state?.cameras || [];
     
-    // If not configured, show a notice
-    if (!rtspProxyUrl && toolsMode === 'viewer') {
-      toast({
-        title: "Streaming Not Configured",
-        description: "Configure Imperial Server streaming in Settings for optimal performance.",
-        duration: 6000,
-      });
+    if (cameraData.length > 0) {
+      setCameras(cameraData);
+    } else if (searchId) {
+      // Try to load from localStorage or other storage
+      const storedData = localStorage.getItem(`search_${searchId}`);
+      if (storedData) {
+        try {
+          const parsed = JSON.parse(storedData);
+          setCameras(parsed.cameras || []);
+        } catch (error) {
+          console.error('Failed to parse stored camera data:', error);
+        }
+      }
     }
     
-    setOptimizedStreaming(!!rtspProxyUrl && rtspProxyEnabled);
-    setImperialIntegration(imperialEnabled);
-  }, [toolsMode]);
+    setLoading(false);
+  }, [searchId, location.state]);
 
-  // Debug logs for monitoring component lifecycle
-  useEffect(() => {
-    console.log("Viewer component mounted");
-  }, []);
-
-  useEffect(() => {
-    console.log("Active tab changed to:", activeTab);
-  }, [activeTab]);
-  
-  const handleOptimizedStreamingToggle = (checked: boolean) => {
-    setOptimizedStreaming(checked);
-    localStorage.setItem('rtspProxyEnabled', checked.toString());
-    
-    toast({
-      title: checked ? "Optimized Streaming Enabled" : "Optimized Streaming Disabled",
-      description: checked 
-        ? "Using Imperial Server for better performance" 
-        : "Using fallback streaming method",
-      duration: 3000,
-    });
-  };
-  
-  const handleImperialIntegrationToggle = (checked: boolean) => {
-    setImperialIntegration(checked);
-    localStorage.setItem('imperialIntegration', checked.toString());
-    
-    toast({
-      title: checked ? "Imperial Integration Enabled" : "Imperial Integration Disabled",
-      description: checked 
-        ? "All streams and recordings will be saved to Imperial chest" 
-        : "Streams will be processed locally only",
-      duration: 3000,
-    });
-  };
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-scanner-dark flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-scanner-info"></div>
+          <p className="mt-4 text-gray-400">Loading camera data...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-scanner-dark text-white">
-      <ViewerHeader />
-      
-      <main className="container mx-auto py-6 px-4">
-        <Tabs value={toolsMode} onValueChange={setToolsMode} className="mb-6">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-4">
-            <TabsList>
-              <TabsTrigger value="viewer" className="flex items-center">
-                <Camera className="mr-2 h-4 w-4" /> Camera Viewer
-              </TabsTrigger>
-              <TabsTrigger value="quick" className="flex items-center">
-                <Play className="mr-2 h-4 w-4" /> Quick Stream
-              </TabsTrigger>
-              <TabsTrigger value="search" className="flex items-center">
-                <Search className="mr-2 h-4 w-4" /> Search Tools
-              </TabsTrigger>
-            </TabsList>
-            
-            {toolsMode === 'viewer' && (
-              <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-                <Card className="bg-scanner-card border-gray-700 w-full sm:w-auto">
-                  <CardContent className="p-3">
-                    <div className="flex items-center justify-between space-x-4">
-                      <div className="flex flex-col">
-                        <Label htmlFor="optimized-streaming" className="text-sm">Optimized Streaming</Label>
-                        <p className="text-xs text-gray-400">Uses Imperial Server for better performance</p>
-                      </div>
-                      <Switch 
-                        id="optimized-streaming" 
-                        checked={optimizedStreaming}
-                        onCheckedChange={handleOptimizedStreamingToggle}
-                      />
-                    </div>
-                  </CardContent>
-                </Card>
-                
-                <Card className="bg-scanner-card border-gray-700 w-full sm:w-auto">
-                  <CardContent className="p-3">
-                    <div className="flex items-center justify-between space-x-4">
-                      <div className="flex flex-col">
-                        <Label htmlFor="imperial-integration" className="text-sm">Imperial Chest</Label>
-                        <p className="text-xs text-gray-400">Save streams to Imperial storage</p>
-                      </div>
-                      <Switch 
-                        id="imperial-integration" 
-                        checked={imperialIntegration}
-                        onCheckedChange={handleImperialIntegrationToggle}
-                      />
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-            )}
-          </div>
-          
-          <TabsContent value="viewer">
-            <ViewerTabs 
-              activeTab={activeTab} 
-              setActiveTab={setActiveTab} 
-              cameras={cameras} 
-            />
-          </TabsContent>
-          
-          <TabsContent value="quick">
-            <div className="flex justify-center">
-              <Card className="border-gray-700 bg-scanner-dark-alt w-full max-w-2xl">
-                <CardContent className="p-6">
-                  <QuickStreamPlayer />
-                </CardContent>
-              </Card>
-            </div>
-          </TabsContent>
-          
-          <TabsContent value="search">
-            <CameraSearchTools />
-          </TabsContent>
-        </Tabs>
-      </main>
+    <div className="min-h-screen bg-scanner-dark p-6">
+      <div className="max-w-7xl mx-auto space-y-6">
+        <Card className="border-gray-700 bg-scanner-dark-alt">
+          <CardHeader>
+            <CardTitle className="text-2xl text-scanner-info">
+              Camera Surveillance Dashboard
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-gray-400">
+              Found {cameras.length} camera{cameras.length !== 1 ? 's' : ''} ready for monitoring
+            </p>
+          </CardContent>
+        </Card>
+
+        <SecurityTools cameras={cameras} />
+        
+        <CameraViewerGrid cameras={cameras} />
+      </div>
     </div>
   );
 };

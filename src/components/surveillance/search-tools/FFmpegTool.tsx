@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -8,8 +7,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Video, Play, Film, Camera } from 'lucide-react';
-import { FFmpegParams } from '@/utils/osintToolTypes';
-import { executeFFmpeg } from '@/utils/osintTools';
+import { FFmpegParams } from '@/utils/types/osintToolTypes';
+import { executeFFmpeg } from '@/utils/osintUtilsConnector';
 
 interface FFmpegToolProps {
   onResult?: (result: any) => void;
@@ -46,6 +45,7 @@ const FFmpegTool: React.FC<FFmpegToolProps> = ({ onResult }) => {
       if (framerate) options.framerate = framerate;
       
       const params: FFmpegParams = {
+        tool: 'ffmpeg',
         input: inputUrl,
         output: outputFileName,
         duration: duration || undefined,
@@ -82,6 +82,7 @@ const FFmpegTool: React.FC<FFmpegToolProps> = ({ onResult }) => {
       if (resolution) options.resolution = resolution;
       
       const params: FFmpegParams = {
+        tool: 'ffmpeg',
         input: inputUrl,
         output: outputFileName,
         videoCodec,
@@ -119,6 +120,7 @@ const FFmpegTool: React.FC<FFmpegToolProps> = ({ onResult }) => {
       if (applyFilters) options.denoise = 'true';
       
       const params: FFmpegParams = {
+        tool: 'ffmpeg',
         input: inputUrl,
         output: outputFileName,
         videoCodec,

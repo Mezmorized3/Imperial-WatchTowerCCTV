@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
-import { Download, FileText, Play, Pause, Stop } from 'lucide-react';
+import { Download, FileText, Play, Pause, StopCircle } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
 
 interface FileCentipedeProps {
@@ -161,7 +161,7 @@ const FileCentipede: React.FC<FileCentipedeProps> = ({ onDownloadComplete }) => 
                 variant="destructive"
                 className="flex-1"
               >
-                <Stop className="h-4 w-4 mr-2" />
+                <StopCircle className="h-4 w-4 mr-2" />
                 Stop
               </Button>
             </div>

@@ -1,6 +1,6 @@
 
 import { simulateNetworkDelay } from '../networkUtils';
-import { FFmpegParams, ToolResult } from '@/utils/osintToolTypes';
+import { FFmpegParams, ToolResult } from '@/utils/types/osintToolTypes';
 
 /**
  * Executes FFmpeg commands on RTSP streams
