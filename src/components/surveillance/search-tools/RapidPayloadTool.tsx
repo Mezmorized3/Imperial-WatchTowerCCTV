@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -48,7 +49,7 @@ const RapidPayloadTool = () => {
         setGeneratedPayload(result.data.results.payload);
         toast({
           title: "Success",
-          description: `${platform} ${payloadType} payload generated for ${result.data.results.payload}`
+          description: `${platform} ${payloadType} payload generated successfully`
         });
       } else {
         const errorMessage = result.error || (result.data as HackingToolErrorData)?.message || "Failed to generate payload";
@@ -141,7 +142,6 @@ const RapidPayloadTool = () => {
               <SelectItem value="c">C</SelectItem>
               <SelectItem value="python">Python</SelectItem>
               <SelectItem value="powershell">PowerShell</SelectItem>
-              {/* Add other formats as supported by the tool */}
             </SelectContent>
           </Select>
         </div>

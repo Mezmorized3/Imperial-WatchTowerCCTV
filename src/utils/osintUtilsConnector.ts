@@ -188,3 +188,7 @@ export const executeShieldAI = async (params: BaseToolParams) => {
 export const executeSecurityAdmin = async (params: BaseToolParams) => {
   return executeHackingTool({ ...params, tool: 'securityAdmin' });
 };
+
+export const executeRapidPayload = async (params: BaseToolParams) => {
+  return executeHackingTool({ ...params, tool: 'rapidPayload' });
+};

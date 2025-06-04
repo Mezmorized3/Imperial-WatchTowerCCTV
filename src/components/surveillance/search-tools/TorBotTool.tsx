@@ -48,18 +48,26 @@ export const TorBotTool: React.FC = () => {
     try {
       const formattedUrl = onionUrl.startsWith('http') ? onionUrl : `http://${onionUrl}`;
       const scanResults = await executeTorBot({
+        tool: 'torBot',
         url: formattedUrl,
         mode: scanMode,
         depth: parseInt(scanDepth)
       });
       
       setResults(scanResults);
-      toast({
-        title: "Scan Complete",
-        description: scanResults?.simulatedData 
-          ? "Showing simulated results (dev mode)" 
-          : "TorBot scan completed successfully",
-      });
+      
+      if (scanResults.success) {
+        toast({
+          title: "Scan Complete",
+          description: "TorBot scan completed successfully",
+        });
+      } else {
+        toast({
+          title: "Scan Failed",
+          description: scanResults.error || "TorBot scan failed",
+          variant: "destructive"
+        });
+      }
     } catch (error) {
       console.error('TorBot scan error:', error);
       toast({
@@ -134,16 +142,16 @@ export const TorBotTool: React.FC = () => {
         <Card className="bg-scanner-dark-alt border-gray-700">
           <CardContent className="pt-4">
             <h3 className="text-lg font-semibold mb-4">Scan Results</h3>
-            {results.links_found && results.links_found.length > 0 ? (
+            {results.success && results.data?.results?.links_found && results.data.results.links_found.length > 0 ? (
               <ul className="list-disc pl-5">
-                {results.links_found.map((link: string, index: number) => (
+                {results.data.results.links_found.map((link: string, index: number) => (
                   <li key={index} className="text-blue-400 hover:underline">
                     <a href={link} target="_blank" rel="noopener noreferrer">{link}</a>
                   </li>
                 ))}
               </ul>
             ) : (
-              <p className="text-gray-400">No links found.</p>
+              <p className="text-gray-400">No links found or scan failed.</p>
             )}
           </CardContent>
         </Card>

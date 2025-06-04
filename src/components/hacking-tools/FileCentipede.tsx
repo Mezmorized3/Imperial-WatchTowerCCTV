@@ -1,224 +1,191 @@
 
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Download, ExternalLink, Globe, Search, Copy, ChevronRight } from 'lucide-react';
-import { toast } from '@/components/ui/use-toast';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
-import { DETAILED_COUNTRY_IP_RANGES } from '@/utils/mockData';
-import { calculateIpsInRange, getRandomIpInRange } from '@/utils/ipRangeUtils';
+import { Label } from '@/components/ui/label';
+import { Progress } from '@/components/ui/progress';
+import { Download, FileText, Play, Pause, Stop } from 'lucide-react';
+import { toast } from '@/components/ui/use-toast';
 
-const FileCentipede: React.FC = () => {
-  const [selectedCountry, setSelectedCountry] = useState<string>("");
-  const [selectedRange, setSelectedRange] = useState<string>("");
-  const [rangeDetails, setRangeDetails] = useState<{
-    range: string;
-    description: string;
-    assignDate: string;
-    ipCount: number;
-    randomIpSample?: string;
-  } | null>(null);
-  const [copied, setCopied] = useState(false);
+interface FileCentipedeProps {
+  onDownloadComplete?: (result: any) => void;
+}
 
-  const handleCountrySelect = (country: string) => {
-    setSelectedCountry(country);
-    setSelectedRange("");
-    setRangeDetails(null);
-  };
+const FileCentipede: React.FC<FileCentipedeProps> = ({ onDownloadComplete }) => {
+  const [url, setUrl] = useState('');
+  const [downloadPath, setDownloadPath] = useState('/downloads');
+  const [isDownloading, setIsDownloading] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [downloadSpeed, setDownloadSpeed] = useState('0 KB/s');
+  const [timeRemaining, setTimeRemaining] = useState('--:--');
 
-  const handleRangeSelect = (range: string) => {
-    setSelectedRange(range);
+  const startDownload = async () => {
+    if (!url) {
+      toast({
+        title: "Error",
+        description: "Please enter a URL to download",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsDownloading(true);
+    setProgress(0);
     
-    const countryRanges = DETAILED_COUNTRY_IP_RANGES[selectedCountry as keyof typeof DETAILED_COUNTRY_IP_RANGES] || [];
-    const rangeInfo = countryRanges.find(r => r.range === range);
-    
-    if (rangeInfo) {
-      const randomIp = getRandomIpInRange(range);
+    try {
+      // Simulate download progress
+      const downloadInterval = setInterval(() => {
+        setProgress(prev => {
+          const newProgress = prev + Math.random() * 10;
+          if (newProgress >= 100) {
+            clearInterval(downloadInterval);
+            setIsDownloading(false);
+            setDownloadSpeed('0 KB/s');
+            setTimeRemaining('00:00');
+            
+            toast({
+              title: "Download Complete",
+              description: `File downloaded successfully to ${downloadPath}`,
+            });
+            
+            if (onDownloadComplete) {
+              onDownloadComplete({
+                url,
+                path: downloadPath,
+                size: Math.floor(Math.random() * 100) + 1 + ' MB',
+                duration: Math.floor(Math.random() * 300) + 30 + ' seconds'
+              });
+            }
+            
+            return 100;
+          }
+          
+          // Update simulated stats
+          setDownloadSpeed(Math.floor(Math.random() * 1000) + 100 + ' KB/s');
+          setTimeRemaining(Math.floor((100 - newProgress) / 10) + ':' + String(Math.floor(Math.random() * 60)).padStart(2, '0'));
+          
+          return newProgress;
+        });
+      }, 500);
       
-      setRangeDetails({
-        ...rangeInfo,
-        ipCount: calculateIpsInRange(range),
-        randomIpSample: randomIp
+    } catch (error) {
+      console.error("Download error:", error);
+      toast({
+        title: "Download Failed",
+        description: error instanceof Error ? error.message : "An unknown error occurred",
+        variant: "destructive"
       });
+      setIsDownloading(false);
     }
   };
 
-  const handleExploreRange = () => {
-    if (rangeDetails) {
-      toast({
-        title: "Exploring IP Range",
-        description: `Scanning range: ${rangeDetails.range} (${rangeDetails.ipCount.toLocaleString()} IPs)`,
-      });
-    } else {
-      toast({
-        title: "Error",
-        description: "Please select an IP range first",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const handleDownload = () => {
-    if (rangeDetails) {
-      toast({
-        title: "Download Manager",
-        description: `Starting download for range: ${rangeDetails.range}`,
-      });
-    } else {
-      toast({
-        title: "Error",
-        description: "Please select an IP range first",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text);
-    setCopied(true);
+  const pauseDownload = () => {
+    setIsPaused(!isPaused);
     toast({
-      title: "Copied to clipboard",
-      description: "Range information has been copied to your clipboard.",
+      title: isPaused ? "Download Resumed" : "Download Paused",
+      description: isPaused ? "Download has been resumed" : "Download has been paused",
     });
-    setTimeout(() => setCopied(false), 2000);
   };
 
-  const countryCodes = Object.keys(DETAILED_COUNTRY_IP_RANGES);
-  const countryNames: Record<string, string> = {
-    ge: "Georgia",
-    ro: "Romania",
-    ua: "Ukraine",
-    ru: "Russia"
+  const stopDownload = () => {
+    setIsDownloading(false);
+    setIsPaused(false);
+    setProgress(0);
+    setDownloadSpeed('0 KB/s');
+    setTimeRemaining('--:--');
+    
+    toast({
+      title: "Download Stopped",
+      description: "Download has been cancelled",
+      variant: "destructive"
+    });
   };
 
   return (
-    <Card className="border-gray-700 bg-scanner-dark shadow-lg hover:shadow-scanner-primary/5 transition-all">
+    <Card className="border-gray-700 bg-scanner-dark shadow-lg">
       <CardHeader>
         <CardTitle className="flex items-center">
-          <Download className="h-5 w-5 text-scanner-primary mr-2" />
-          FileCentipede
+          <Download className="h-5 w-5 text-blue-400 mr-2" />
+          File Centipede Download Manager
         </CardTitle>
-        <CardDescription className="text-gray-400">
-          Advanced Download Manager and IP Range Explorer
-        </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="space-y-3">
-          <Label className="text-gray-300">Country</Label>
-          <Select value={selectedCountry} onValueChange={handleCountrySelect}>
-            <SelectTrigger className="bg-scanner-dark-alt border-gray-700">
-              <SelectValue placeholder="Select country" />
-            </SelectTrigger>
-            <SelectContent className="bg-scanner-dark border-gray-700">
-              {countryCodes.map(code => (
-                <SelectItem key={code} value={code} className="flex items-center">
-                  {countryNames[code] || code.toUpperCase()}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
-          {selectedCountry && (
-            <>
-              <Label className="text-gray-300">IP Range</Label>
-              <Select 
-                value={selectedRange} 
-                onValueChange={handleRangeSelect}
-                disabled={!selectedCountry}
-              >
-                <SelectTrigger className="bg-scanner-dark-alt border-gray-700">
-                  <SelectValue placeholder="Select IP range" />
-                </SelectTrigger>
-                <SelectContent className="bg-scanner-dark border-gray-700">
-                  {DETAILED_COUNTRY_IP_RANGES[selectedCountry as keyof typeof DETAILED_COUNTRY_IP_RANGES]?.map(range => (
-                    <SelectItem key={range.range} value={range.range}>
-                      <div className="truncate">
-                        {range.range} - {range.description}
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </>
-          )}
-
-          {rangeDetails && (
-            <div className="mt-4 p-3 rounded bg-scanner-dark-alt border border-gray-700 animate-in fade-in-50 duration-200">
-              <h4 className="text-sm font-medium mb-2 flex items-center justify-between">
-                <div className="flex items-center">
-                  <Globe className="h-4 w-4 mr-1 text-scanner-primary" />
-                  Range Details
-                </div>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  className="h-6 p-1 text-gray-400 hover:text-white"
-                  onClick={() => copyToClipboard(`Country: ${countryNames[selectedCountry]}, Range: ${rangeDetails.range}, Description: ${rangeDetails.description}, IPs: ${rangeDetails.ipCount.toLocaleString()}`)}
-                >
-                  {copied ? 
-                    <span className="text-xs text-green-400">Copied!</span> : 
-                    <Copy className="h-3.5 w-3.5" />
-                  }
-                </Button>
-              </h4>
-              <div className="space-y-1 text-sm">
-                <p><span className="text-gray-400">CIDR:</span> {rangeDetails.range}</p>
-                <p><span className="text-gray-400">Description:</span> {rangeDetails.description}</p>
-                <p><span className="text-gray-400">Assigned:</span> {rangeDetails.assignDate}</p>
-                <p><span className="text-gray-400">IP Count:</span> {rangeDetails.ipCount.toLocaleString()}</p>
-                {rangeDetails.randomIpSample && (
-                  <p><span className="text-gray-400">Sample IP:</span> <span className="text-scanner-primary">{rangeDetails.randomIpSample}</span></p>
-                )}
-              </div>
-              <div className="mt-3 bg-scanner-dark rounded p-2 border border-gray-700 flex items-center justify-between">
-                <code className="text-xs text-scanner-primary/80">
-                  country:{countryNames[selectedCountry]} range:{rangeDetails.range}
-                </code>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  className="h-6 p-1 text-gray-400 hover:text-white"
-                  onClick={() => copyToClipboard(`country:${countryNames[selectedCountry]} range:${rangeDetails.range}`)}
-                >
-                  <Copy className="h-3.5 w-3.5" />
-                </Button>
-              </div>
-            </div>
-          )}
-        </div>
-
-        <div className="flex flex-wrap gap-2">
-          <Button 
-            variant="outline" 
-            className="border-gray-700 hover:bg-scanner-dark-alt hover:text-scanner-primary transition-colors"
-            onClick={handleExploreRange}
-          >
-            <Search className="h-4 w-4 mr-2" />
-            Explore Range
-          </Button>
-          
-          <Button 
-            variant="outline" 
-            className="border-gray-700 hover:bg-scanner-dark-alt hover:text-scanner-primary transition-colors"
-            onClick={handleDownload}
-          >
-            <Download className="h-4 w-4 mr-2" />
-            Download
-          </Button>
+        <div>
+          <Label htmlFor="url">Download URL</Label>
+          <Input
+            id="url"
+            placeholder="https://example.com/file.zip"
+            value={url}
+            onChange={(e) => setUrl(e.target.value)}
+            className="bg-scanner-dark-alt border-gray-700"
+            disabled={isDownloading}
+          />
         </div>
         
-        {selectedCountry && rangeDetails && (
-          <div className="mt-2 text-xs text-right">
-            <Link 
-              to={`/imperial-scanner?country=${selectedCountry}&range=${encodeURIComponent(rangeDetails.range)}`}
-              className="text-scanner-primary/70 hover:text-scanner-primary flex items-center justify-end"
-            >
-              Scan this range
-              <ChevronRight className="h-3 w-3 ml-1" />
-            </Link>
+        <div>
+          <Label htmlFor="path">Download Path</Label>
+          <Input
+            id="path"
+            placeholder="/downloads"
+            value={downloadPath}
+            onChange={(e) => setDownloadPath(e.target.value)}
+            className="bg-scanner-dark-alt border-gray-700"
+            disabled={isDownloading}
+          />
+        </div>
+        
+        {!isDownloading ? (
+          <Button
+            onClick={startDownload}
+            className="bg-blue-600 hover:bg-blue-700 w-full"
+          >
+            <Download className="h-4 w-4 mr-2" />
+            Start Download
+          </Button>
+        ) : (
+          <div className="space-y-3">
+            <div className="flex gap-2">
+              <Button
+                onClick={pauseDownload}
+                variant="outline"
+                className="flex-1"
+              >
+                {isPaused ? <Play className="h-4 w-4 mr-2" /> : <Pause className="h-4 w-4 mr-2" />}
+                {isPaused ? 'Resume' : 'Pause'}
+              </Button>
+              
+              <Button
+                onClick={stopDownload}
+                variant="destructive"
+                className="flex-1"
+              >
+                <Stop className="h-4 w-4 mr-2" />
+                Stop
+              </Button>
+            </div>
+            
+            <div className="space-y-2">
+              <div className="flex justify-between text-sm">
+                <span>Progress: {Math.round(progress)}%</span>
+                <span>Speed: {downloadSpeed}</span>
+              </div>
+              <Progress value={progress} className="w-full" />
+              <div className="flex justify-between text-xs text-gray-400">
+                <span>Time remaining: {timeRemaining}</span>
+                <span>{isPaused ? 'Paused' : 'Downloading...'}</span>
+              </div>
+            </div>
+          </div>
+        )}
+        
+        {progress === 100 && (
+          <div className="mt-4 p-3 bg-green-950/20 border border-green-500/30 rounded-md">
+            <div className="flex items-center">
+              <FileText className="h-4 w-4 text-green-400 mr-2" />
+              <span className="text-sm text-green-400">Download completed successfully!</span>
+            </div>
           </div>
         )}
       </CardContent>

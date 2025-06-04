@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Shield, AlertCircle, Globe, Lock } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
@@ -8,7 +9,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-import { ProxyConfig } from '@/utils/osintToolTypes';
+import { ProxyConfig } from '@/utils/types/osintToolTypes';
 import {
   Dialog,
   DialogContent,
@@ -76,34 +77,53 @@ const ProxyIndicator: React.FC<ProxyIndicatorProps> = ({
     return (
       <TooltipProvider>
         <Tooltip>
-          <DialogTrigger asChild>
-            <TooltipTrigger asChild>
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                className={`relative ${proxyConfig.enabled ? 'text-green-500' : 'text-gray-500'}`}
-                onClick={() => setDialogOpen(true)}
-              >
-                <Shield className="h-5 w-5" />
-                {proxyConfig.enabled && (
-                  <span className="absolute top-0 right-0 w-2 h-2 bg-green-500 rounded-full" />
-                )}
-              </Button>
-            </TooltipTrigger>
-          </DialogTrigger>
-          <TooltipContent>
-            <div className="space-y-1">
-              <p className="font-medium">
-                {proxyConfig.enabled ? 'Proxy Enabled' : 'Proxy Disabled'}
-              </p>
-              {proxyConfig.enabled && (
-                <p className="text-xs text-gray-400">
-                  {proxyConfig.type.toUpperCase()} {proxyConfig.host}:{proxyConfig.port}
+          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+            <DialogTrigger asChild>
+              <TooltipTrigger asChild>
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className={`relative ${proxyConfig.enabled ? 'text-green-500' : 'text-gray-500'}`}
+                  onClick={() => setDialogOpen(true)}
+                >
+                  <Shield className="h-5 w-5" />
+                  {proxyConfig.enabled && (
+                    <span className="absolute top-0 right-0 w-2 h-2 bg-green-500 rounded-full" />
+                  )}
+                </Button>
+              </TooltipTrigger>
+            </DialogTrigger>
+            <TooltipContent>
+              <div className="space-y-1">
+                <p className="font-medium">
+                  {proxyConfig.enabled ? 'Proxy Enabled' : 'Proxy Disabled'}
                 </p>
-              )}
-              <p className="text-xs">Click to configure proxy settings</p>
-            </div>
-          </TooltipContent>
+                {proxyConfig.enabled && (
+                  <p className="text-xs text-gray-400">
+                    {proxyConfig.type.toUpperCase()} {proxyConfig.host}:{proxyConfig.port}
+                  </p>
+                )}
+                <p className="text-xs">Click to configure proxy settings</p>
+              </div>
+            </TooltipContent>
+            <DialogContent className="max-w-3xl">
+              <DialogHeader>
+                <DialogTitle>Proxy Settings</DialogTitle>
+              </DialogHeader>
+              <ProxySettings 
+                onProxyChange={(config: any) => {
+                  if (onProxyChange) {
+                    onProxyChange(config);
+                  }
+                }}
+                onClearProxies={() => {}}
+                onTestProxy={async () => true}
+                onFetchProxies={async () => []}
+                proxies={[]}
+                setProxies={() => {}}
+              />
+            </DialogContent>
+          </Dialog>
         </Tooltip>
       </TooltipProvider>
     );

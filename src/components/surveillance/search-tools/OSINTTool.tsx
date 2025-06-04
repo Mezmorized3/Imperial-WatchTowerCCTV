@@ -15,21 +15,6 @@ interface OSINTToolProps {
   onScanComplete?: (results: any) => void;
 }
 
-const mockOsintData = {
-  success: true,
-  data: {
-    results: [
-      { source: "Google", title: "Sample result 1", url: "https://example.com/1" },
-      { source: "DuckDuckGo", title: "Sample result 2", url: "https://example.com/2" }
-    ],
-    metadata: {
-      queryTime: "0.75s",
-      total: 2
-    }
-  },
-  simulatedData: true
-};
-
 const OSINTTool: React.FC<OSINTToolProps> = ({ onScanComplete }) => {
   const { toast } = useToast();
   const [target, setTarget] = useState('');
@@ -37,15 +22,13 @@ const OSINTTool: React.FC<OSINTToolProps> = ({ onScanComplete }) => {
   const [isScanning, setIsScanning] = useState(false);
   const [results, setResults] = useState<any>(null);
   const [saveResults, setSaveResults] = useState(false);
-  const [outputFormat, setOutputFormat] = useState<'text' | 'json'>('text');
-  const [apiKey, setApiKey] = useState('');
-  const [customOptions, setCustomOptions] = useState('');
+  const [searchType, setSearchType] = useState('basic');
 
   const handleScan = async () => {
     if (!target) {
       toast({
         title: "Error",
-        description: "Please enter a target to search for",
+        description: "Please enter a target to search",
         variant: "destructive"
       });
       return;
@@ -55,40 +38,35 @@ const OSINTTool: React.FC<OSINTToolProps> = ({ onScanComplete }) => {
     setResults(null);
 
     try {
-      let result;
-      
-      if (typeof executeOSINT === 'function') {
-        result = await executeOSINT({ 
-          target,
-          type: 'general',
-          saveResults
-        });
-      } else {
-        result = mockOsintData;
-      }
+      const result = await executeOSINT({
+        tool: 'osint',
+        target,
+        type: searchType,
+        saveResults
+      });
 
-      if (result && result.success) {
+      if (result.success) {
         setResults(result.data);
-
+        
         if (onScanComplete) {
           onScanComplete(result.data);
         }
-
+        
         toast({
-          title: "Scan Complete",
-          description: `OSINT scan completed successfully`
+          title: "OSINT Search Complete",
+          description: `Found ${result.data.results?.length || 0} results.`
         });
       } else {
         toast({
-          title: "Scan Failed",
-          description: result?.error || "Unknown error occurred",
+          title: "Search Failed",
+          description: result.error || "Failed to complete OSINT search",
           variant: "destructive"
         });
       }
     } catch (error) {
-      console.error("Error during OSINT scan:", error);
+      console.error("OSINT search error:", error);
       toast({
-        title: "Scan Error",
+        title: "Search Error",
         description: error instanceof Error ? error.message : "An unknown error occurred",
         variant: "destructive"
       });
@@ -98,128 +76,118 @@ const OSINTTool: React.FC<OSINTToolProps> = ({ onScanComplete }) => {
   };
 
   return (
-    <Card className="w-full shadow-md">
+    <Card className="border-gray-700 bg-scanner-dark shadow-lg">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Globe className="h-5 w-5" />
-          OSINT Tool
+        <CardTitle className="flex items-center">
+          <Globe className="h-5 w-5 text-scanner-info mr-2" />
+          OSINT Intelligence Gathering
         </CardTitle>
         <CardDescription>
-          Gather intelligence from various online sources
+          Open Source Intelligence gathering and analysis
         </CardDescription>
       </CardHeader>
-      <CardContent>
-        <div className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="target">Target</Label>
-            <Input
-              id="target"
-              placeholder="Enter target to search"
-              value={target}
-              onChange={(e) => setTarget(e.target.value)}
-              disabled={isScanning}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="searchEngine">Search Engine</Label>
-            <Select
-              value={searchEngine}
-              onValueChange={setSearchEngine}
-              disabled={isScanning}
-            >
-              <SelectTrigger id="searchEngine">
+      <CardContent className="space-y-4">
+        <div>
+          <Label htmlFor="target">Target</Label>
+          <Input
+            id="target"
+            placeholder="Domain, IP, email, username, or organization"
+            value={target}
+            onChange={(e) => setTarget(e.target.value)}
+            className="bg-scanner-dark-alt border-gray-700"
+          />
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <Label htmlFor="search-engine">Search Engine</Label>
+            <Select value={searchEngine} onValueChange={setSearchEngine}>
+              <SelectTrigger id="search-engine" className="bg-scanner-dark-alt border-gray-700">
                 <SelectValue placeholder="Select search engine" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="bg-scanner-dark border-gray-700">
                 <SelectItem value="google">Google</SelectItem>
                 <SelectItem value="bing">Bing</SelectItem>
                 <SelectItem value="duckduckgo">DuckDuckGo</SelectItem>
                 <SelectItem value="yandex">Yandex</SelectItem>
+                <SelectItem value="baidu">Baidu</SelectItem>
               </SelectContent>
             </Select>
           </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="apiKey">API Key (Optional)</Label>
-            <Input
-              id="apiKey"
-              placeholder="Enter API key if required"
-              value={apiKey}
-              onChange={(e) => setApiKey(e.target.value)}
-              disabled={isScanning}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="customOptions">Custom Options (Optional)</Label>
-            <Input
-              id="customOptions"
-              placeholder="Enter custom options"
-              value={customOptions}
-              onChange={(e) => setCustomOptions(e.target.value)}
-              disabled={isScanning}
-            />
-          </div>
-
-          <div className="space-y-2 flex items-center gap-2">
-            <Checkbox
-              id="saveResults"
-              checked={saveResults}
-              onCheckedChange={(checked) => setSaveResults(checked === true)}
-              disabled={isScanning}
-            />
-            <Label htmlFor="saveResults">Save Results</Label>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="outputFormat">Output Format</Label>
-            <Select
-              value={outputFormat}
-              onValueChange={(value: 'text' | 'json') => setOutputFormat(value)}
-              disabled={isScanning}
-            >
-              <SelectTrigger id="outputFormat">
-                <SelectValue placeholder="Select output format" />
+          
+          <div>
+            <Label htmlFor="search-type">Search Type</Label>
+            <Select value={searchType} onValueChange={setSearchType}>
+              <SelectTrigger id="search-type" className="bg-scanner-dark-alt border-gray-700">
+                <SelectValue placeholder="Select search type" />
               </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="text">Text</SelectItem>
-                <SelectItem value="json">JSON</SelectItem>
+              <SelectContent className="bg-scanner-dark border-gray-700">
+                <SelectItem value="basic">Basic Search</SelectItem>
+                <SelectItem value="deep">Deep Search</SelectItem>
+                <SelectItem value="social">Social Media</SelectItem>
+                <SelectItem value="technical">Technical Intelligence</SelectItem>
               </SelectContent>
             </Select>
           </div>
-
-          {results && (
-            <div className="mt-6 space-y-3">
-              <h3 className="text-lg font-semibold mb-4">Scan Results</h3>
-              <Textarea
-                readOnly
-                value={JSON.stringify(results, null, 2)}
-                className="min-h-32 font-mono text-sm bg-scanner-dark-alt border-gray-700"
-              />
-            </div>
-          )}
         </div>
-      </CardContent>
-      <CardFooter>
+        
+        <div className="flex items-center space-x-2">
+          <Checkbox
+            id="save-results"
+            checked={saveResults}
+            onCheckedChange={(checked) => setSaveResults(!!checked)}
+          />
+          <Label htmlFor="save-results">Save Results</Label>
+        </div>
+        
         <Button
-          className="w-full"
           onClick={handleScan}
-          disabled={isScanning || !target}
+          disabled={isScanning}
+          variant="default"
+          className="bg-scanner-primary w-full"
         >
           {isScanning ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Scanning...
+              Gathering Intelligence...
             </>
           ) : (
             <>
-              <Search className="mr-2 h-4 w-4" />
-              Start OSINT Scan
+              <Search className="h-4 w-4 mr-2" />
+              Start OSINT Search
             </>
           )}
         </Button>
-      </CardFooter>
+      </CardContent>
+      
+      {results && (
+        <CardFooter className="block">
+          <div className="space-y-2">
+            <h3 className="text-sm font-semibold mb-2">OSINT Results:</h3>
+            {results.results && results.results.length > 0 ? (
+              <div className="space-y-2 max-h-60 overflow-y-auto">
+                {results.results.map((result: any, index: number) => (
+                  <div key={index} className="p-2 rounded bg-scanner-dark border border-gray-700 text-sm">
+                    <p className="font-medium text-scanner-info">{result.title || result.source}</p>
+                    <p className="text-xs text-gray-400">{result.url || result.description}</p>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-xs text-gray-400">No results found.</p>
+            )}
+            
+            {results.metadata && (
+              <div className="mt-2 pt-2 border-t border-gray-700">
+                <p className="text-xs text-gray-400">
+                  Query completed in {results.metadata.queryTime || 'N/A'} | 
+                  Total results: {results.metadata.total || 0}
+                </p>
+              </div>
+            )}
+          </div>
+        </CardFooter>
+      )}
     </Card>
   );
 };

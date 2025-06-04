@@ -23,13 +23,14 @@ const TwitterSearchTool = () => {
 
     try {
       const response = await executeTwint({
+        tool: 'twint',
         username,
         search,
         limit,
       });
 
       if (response?.success) {
-        setResults(response.data?.tweets || []);
+        setResults(response.data?.results?.tweets || response.data?.results?.posts || []);
       }
     } catch (error) {
       console.error('Twitter search error:', error);

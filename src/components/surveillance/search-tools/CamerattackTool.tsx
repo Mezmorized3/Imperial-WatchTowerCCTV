@@ -27,6 +27,7 @@ const CamerattackTool: React.FC = () => {
 
     try {
       const result = await executeCamerattack({
+        tool: 'camerattack',
         target,
         port: parseInt(port),
         method,
@@ -88,7 +89,7 @@ const CamerattackTool: React.FC = () => {
             className="w-full"
           >
             {isAttacking ? (
-              <>Attacking...</>
+              <>Attacking...</> 
             ) : (
               <>
                 Execute Camerattack

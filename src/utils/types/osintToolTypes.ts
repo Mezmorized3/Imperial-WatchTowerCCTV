@@ -79,9 +79,28 @@ export interface WebhackData {
   technologies?: string[];
 }
 
+export interface BackHackData {
+  vulnerabilities: Array<{
+    type: string;
+    severity: 'low' | 'medium' | 'high' | 'critical';
+    description: string;
+    url?: string;
+  }>;
+  endpoints?: string[];
+  technologies?: string[];
+}
+
 // Social media types
 export interface TwintData {
   posts: Array<{
+    id: string;
+    username: string;
+    content: string;
+    timestamp: string;
+    likes?: number;
+    retweets?: number;
+  }>;
+  tweets?: Array<{
     id: string;
     username: string;
     content: string;
@@ -122,4 +141,86 @@ export interface NmapONVIFData {
     model?: string;
   }>;
   totalDevices: number;
+}
+
+// Payload generation types
+export interface RapidPayloadParams extends BaseToolParams {
+  platform: 'windows' | 'linux' | 'macos' | 'android' | 'python' | 'php' | 'bash' | 'powershell';
+  payloadType: string;
+  lhost: string;
+  lport: number;
+  format: string;
+  encode?: boolean;
+  encryption?: string;
+  options?: {
+    encoder?: string;
+    iterations?: number;
+    bad_chars?: string;
+    nops?: number;
+  };
+}
+
+export interface RapidPayloadData {
+  payload: string;
+}
+
+// Computer Vision types
+export interface OpenCVParams extends BaseToolParams {
+  operation: 'detect' | 'track' | 'analyze';
+  inputType: 'image' | 'video' | 'stream';
+  source: string;
+}
+
+export interface DeepstackParams extends BaseToolParams {
+  operation: 'face_detection' | 'object_detection' | 'scene_recognition';
+  image: string;
+  confidence?: number;
+}
+
+export interface FaceRecognitionParams extends BaseToolParams {
+  operation: 'encode' | 'compare' | 'identify';
+  image: string;
+  database?: string;
+}
+
+export interface MotionParams extends BaseToolParams {
+  operation: 'detect' | 'track' | 'record';
+  source: string;
+  sensitivity?: number;
+}
+
+// Security tools
+export interface SecurityAdminParams extends BaseToolParams {
+  operation: 'scan' | 'audit' | 'monitor';
+  scope: string;
+  depth?: 'basic' | 'comprehensive';
+}
+
+// FFmpeg types
+export interface FFmpegParams extends BaseToolParams {
+  operation: 'convert' | 'stream' | 'record' | 'analyze';
+  input: string;
+  output?: string;
+  format?: string;
+  quality?: string;
+}
+
+// Proxy configuration
+export interface ProxyConfig {
+  enabled: boolean;
+  type: 'http' | 'socks4' | 'socks5';
+  host: string;
+  port: number;
+  username?: string;
+  password?: string;
+  country?: string;
+  testUrl?: string;
+  useAuthentication?: boolean;
+  autoReconnect?: boolean;
+  dnsProtection?: boolean;
+  forceTls?: boolean;
+  rotationEnabled?: boolean;
+  rotationInterval?: number;
+  proxyList?: {host: string; port: number; country?: string}[];
+  useTor?: boolean;
 }

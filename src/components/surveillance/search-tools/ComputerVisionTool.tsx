@@ -1,295 +1,453 @@
+
 import React, { useState } from 'react';
-import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Card, CardContent } from '@/components/ui/card';
-import { toast } from '@/hooks/use-toast';
-import { MonitorPlay, ImageIcon, BrainCircuit } from 'lucide-react';
-import { executeHackingTool } from '@/utils/osintUtilsConnector';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Badge } from '@/components/ui/badge';
+import { toast } from '@/components/ui/use-toast';
+import { Eye, Brain, Camera, Activity } from 'lucide-react';
 import {
   OpenCVParams,
   DeepstackParams,
   FaceRecognitionParams,
   MotionParams
 } from '@/utils/types/osintToolTypes';
-
-interface ComputerVisionToolProps {
-  // Props if needed
-}
+import {
+  executeOpenCV,
+  executeDeepstack,
+  executeFaceRecognition,
+  executeMotion
+} from '@/utils/osintUtilsConnector';
 
 const ComputerVisionTool: React.FC = () => {
-  const [streamUrl, setStreamUrl] = useState('');
+  const [activeTab, setActiveTab] = useState('opencv');
+  const [isProcessing, setIsProcessing] = useState(false);
   const [results, setResults] = useState<any>(null);
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
 
-  const [openCVOptions, setOpenCVOptions] = useState({
-    detectionType: 'detect_faces',
-  });
+  // OpenCV state
+  const [openCVOperation, setOpenCVOperation] = useState<'detect' | 'track' | 'analyze'>('detect');
+  const [openCVInput, setOpenCVInput] = useState<'image' | 'video' | 'stream'>('image');
+  const [openCVSource, setOpenCVSource] = useState('');
 
-  const [deepstackOptions, setDeepstackOptions] = useState({
-    detectionType: 'object',
-  });
+  // Deepstack state
+  const [deepstackOperation, setDeepstackOperation] = useState<'face_detection' | 'object_detection' | 'scene_recognition'>('face_detection');
+  const [deepstackImage, setDeepstackImage] = useState('');
+  const [deepstackConfidence, setDeepstackConfidence] = useState(0.7);
 
-  const [motionOptions, setMotionOptions] = useState({
-    threshold: 50,
-    detectMotion: true,
-    saveFrames: false,
-    recordOnMotion: false,
-    notifyOnMotion: false
-  });
+  // Face Recognition state
+  const [faceOperation, setFaceOperation] = useState<'encode' | 'compare' | 'identify'>('encode');
+  const [faceImage, setFaceImage] = useState('');
+  const [faceDatabase, setFaceDatabase] = useState('');
 
-  const handleOpenCVAnalysis = async () => {
-    if (!streamUrl) {
+  // Motion Detection state
+  const [motionOperation, setMotionOperation] = useState<'detect' | 'track' | 'record'>('detect');
+  const [motionSource, setMotionSource] = useState('');
+  const [motionSensitivity, setMotionSensitivity] = useState(5);
+
+  const executeOpenCVTool = async () => {
+    if (!openCVSource) {
       toast({
         title: "Error",
-        description: "Please enter a stream URL",
+        description: "Please provide a source for OpenCV processing",
         variant: "destructive"
       });
       return;
     }
 
-    setIsAnalyzing(true);
-    setResults(null);
-
+    setIsProcessing(true);
     try {
-      const detectionTypeMap = {
-        'detect_faces': 'face_detection',
-        'detect_objects': 'edge_detection', 
-        'motion_detection': 'edge_detection',
-        'text_recognition': 'edge_detection'
+      const params: OpenCVParams = {
+        tool: 'openCV',
+        operation: openCVOperation,
+        inputType: openCVInput,
+        source: openCVSource
       };
 
-      const result = await executeHackingTool({
-        tool: 'openCV',
-        imagePath: streamUrl,
-        operation: detectionTypeMap[openCVOptions.detectionType as keyof typeof detectionTypeMap] as 'edge_detection' | 'face_detection' | 'object_tracking_init'
-      });
-
+      const result = await executeOpenCV(params);
+      setResults(result);
+      
       if (result.success) {
-        setResults({ openCV: result.data.results });
         toast({
-          title: "OpenCV Analysis Complete",
-          description: "Analysis completed successfully",
+          title: "OpenCV Processing Complete",
+          description: "Computer vision analysis completed successfully"
         });
       } else {
         toast({
-          title: "OpenCV Analysis Failed",
-          description: result.error || "Analysis failed",
+          title: "Processing Failed",
+          description: result.error || "OpenCV processing failed",
           variant: "destructive"
         });
       }
     } catch (error) {
       toast({
-        title: "OpenCV Analysis Error",
-        description: error instanceof Error ? error.message : "An error occurred",
+        title: "Error",
+        description: error instanceof Error ? error.message : "An unknown error occurred",
         variant: "destructive"
       });
     } finally {
-      setIsAnalyzing(false);
+      setIsProcessing(false);
     }
   };
 
-  const handleDeepstackAnalysis = async () => {
-    if (!streamUrl) {
+  const executeDeepstackTool = async () => {
+    if (!deepstackImage) {
       toast({
-        title: "Error",
-        description: "Please enter a stream URL",
+        title: "Error", 
+        description: "Please provide an image for Deepstack analysis",
         variant: "destructive"
       });
       return;
     }
 
-    setIsAnalyzing(true);
-
+    setIsProcessing(true);
     try {
-      const result = await executeHackingTool({
+      const params: DeepstackParams = {
         tool: 'deepstack',
-        imagePath: streamUrl,
-        mode: deepstackOptions.detectionType
-      });
+        operation: deepstackOperation,
+        image: deepstackImage,
+        confidence: deepstackConfidence
+      };
 
+      const result = await executeDeepstack(params);
+      setResults(result);
+      
       if (result.success) {
-        setResults({ deepstack: result.data.results });
         toast({
           title: "Deepstack Analysis Complete",
-          description: "Analysis completed successfully",
+          description: "AI-powered image analysis completed"
         });
       } else {
         toast({
-          title: "Deepstack Analysis Failed",
-          description: result.error || "Analysis failed",
+          title: "Analysis Failed",
+          description: result.error || "Deepstack analysis failed",
           variant: "destructive"
         });
       }
     } catch (error) {
       toast({
-        title: "Deepstack Analysis Error",
-        description: error instanceof Error ? error.message : "An error occurred",
+        title: "Error",
+        description: error instanceof Error ? error.message : "An unknown error occurred",
         variant: "destructive"
       });
     } finally {
-      setIsAnalyzing(false);
+      setIsProcessing(false);
     }
   };
 
-  const handleFaceRecognition = async () => {
-    if (!streamUrl) {
+  const executeFaceRecognitionTool = async () => {
+    if (!faceImage) {
       toast({
         title: "Error",
-        description: "Please enter a stream URL",
+        description: "Please provide an image for face recognition",
         variant: "destructive"
       });
       return;
     }
 
-    setIsAnalyzing(true);
-
+    setIsProcessing(true);
     try {
-      const result = await executeHackingTool({
+      const params: FaceRecognitionParams = {
         tool: 'faceRecognition',
-        knownFacesDir: '/known_faces',
-        imageToCheck: streamUrl
-      });
+        operation: faceOperation,
+        image: faceImage,
+        database: faceDatabase || undefined
+      };
 
+      const result = await executeFaceRecognition(params);
+      setResults(result);
+      
       if (result.success) {
-        setResults({ faceRecognition: result.data.results });
         toast({
           title: "Face Recognition Complete",
-          description: "Analysis completed successfully",
+          description: "Facial analysis completed successfully"
         });
       } else {
         toast({
-          title: "Face Recognition Failed",
-          description: result.error || "Analysis failed",
+          title: "Recognition Failed",
+          description: result.error || "Face recognition failed",
           variant: "destructive"
         });
       }
     } catch (error) {
       toast({
-        title: "Face Recognition Error",
-        description: error instanceof Error ? error.message : "An error occurred",
+        title: "Error",
+        description: error instanceof Error ? error.message : "An unknown error occurred",
         variant: "destructive"
       });
     } finally {
-      setIsAnalyzing(false);
+      setIsProcessing(false);
     }
   };
 
-  const handleMotionDetection = async () => {
-    if (!streamUrl) {
+  const executeMotionTool = async () => {
+    if (!motionSource) {
       toast({
         title: "Error",
-        description: "Please enter a stream URL",
+        description: "Please provide a source for motion detection",
         variant: "destructive"
       });
       return;
     }
 
-    setIsAnalyzing(true);
-
+    setIsProcessing(true);
     try {
-      const result = await executeHackingTool({
+      const params: MotionParams = {
         tool: 'motion',
-        streamUrl: streamUrl,
-        threshold: motionOptions.threshold,
-        detectMotion: motionOptions.detectMotion,
-        saveFrames: motionOptions.saveFrames,
-        recordOnMotion: motionOptions.recordOnMotion,
-        notifyOnMotion: motionOptions.notifyOnMotion
-      });
+        operation: motionOperation,
+        source: motionSource,
+        sensitivity: motionSensitivity
+      };
 
+      const result = await executeMotion(params);
+      setResults(result);
+      
       if (result.success) {
-        setResults({ motion: result.data.results });
         toast({
           title: "Motion Detection Complete",
-          description: "Analysis completed successfully",
+          description: "Motion analysis completed successfully"
         });
       } else {
         toast({
-          title: "Motion Detection Failed",
-          description: result.error || "Analysis failed",
+          title: "Detection Failed",
+          description: result.error || "Motion detection failed",
           variant: "destructive"
         });
       }
     } catch (error) {
       toast({
-        title: "Motion Detection Error",
-        description: error instanceof Error ? error.message : "An error occurred",
+        title: "Error",
+        description: error instanceof Error ? error.message : "An unknown error occurred",
         variant: "destructive"
       });
     } finally {
-      setIsAnalyzing(false);
+      setIsProcessing(false);
     }
   };
 
   return (
-    <div className="space-y-4">
-      <Card className="bg-scanner-dark-alt border-gray-700">
-        <CardContent className="space-y-4">
-          <div>
-            <Label htmlFor="stream-url">Stream URL</Label>
-            <Input
-              id="stream-url"
-              placeholder="Enter stream URL"
-              value={streamUrl}
-              onChange={(e) => setStreamUrl(e.target.value)}
-              className="bg-scanner-dark-alt border-gray-700"
-            />
-          </div>
+    <div className="space-y-6">
+      <Card className="border-gray-700 bg-scanner-dark shadow-lg">
+        <CardHeader>
+          <CardTitle className="flex items-center">
+            <Eye className="h-5 w-5 text-scanner-info mr-2" />
+            Computer Vision & AI Analysis
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Tabs value={activeTab} onValueChange={setActiveTab}>
+            <TabsList className="bg-scanner-dark-alt grid w-full grid-cols-4">
+              <TabsTrigger value="opencv" className="data-[state=active]:bg-scanner-info/20">
+                <Camera className="h-4 w-4 mr-2" />
+                OpenCV
+              </TabsTrigger>
+              <TabsTrigger value="deepstack" className="data-[state=active]:bg-scanner-info/20">
+                <Brain className="h-4 w-4 mr-2" />
+                Deepstack
+              </TabsTrigger>
+              <TabsTrigger value="face" className="data-[state=active]:bg-scanner-info/20">
+                <Eye className="h-4 w-4 mr-2" />
+                Face Recognition
+              </TabsTrigger>
+              <TabsTrigger value="motion" className="data-[state=active]:bg-scanner-info/20">
+                <Activity className="h-4 w-4 mr-2" />
+                Motion Detection
+              </TabsTrigger>
+            </TabsList>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="opencv-detection-type">OpenCV Detection Type</Label>
-              <Select value={openCVOptions.detectionType} onValueChange={(value) => setOpenCVOptions({ ...openCVOptions, detectionType: value })}>
-                <SelectTrigger id="opencv-detection-type" className="bg-scanner-dark-alt border-gray-700">
-                  <SelectValue placeholder="Select detection type" />
-                </SelectTrigger>
-                <SelectContent className="bg-scanner-dark border-gray-700">
-                  <SelectItem value="detect_faces">Detect Faces</SelectItem>
-                  <SelectItem value="detect_objects">Detect Objects</SelectItem>
-                  <SelectItem value="motion_detection">Motion Detection</SelectItem>
-                  <SelectItem value="text_recognition">Text Recognition</SelectItem>
-                </SelectContent>
-              </Select>
-              <Button onClick={handleOpenCVAnalysis} disabled={isAnalyzing} className="mt-2 w-full bg-scanner-primary">
-                {isAnalyzing ? 'Analyzing...' : 'Analyze with OpenCV'}
+            <TabsContent value="opencv" className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label>Operation</Label>
+                  <Select value={openCVOperation} onValueChange={(value) => setOpenCVOperation(value as any)}>
+                    <SelectTrigger className="bg-scanner-dark-alt border-gray-700">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="detect">Object Detection</SelectItem>
+                      <SelectItem value="track">Object Tracking</SelectItem>
+                      <SelectItem value="analyze">Image Analysis</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label>Input Type</Label>
+                  <Select value={openCVInput} onValueChange={(value) => setOpenCVInput(value as any)}>
+                    <SelectTrigger className="bg-scanner-dark-alt border-gray-700">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="image">Image</SelectItem>
+                      <SelectItem value="video">Video</SelectItem>
+                      <SelectItem value="stream">Live Stream</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div>
+                <Label>Source</Label>
+                <Input
+                  placeholder="Image URL, video path, or stream URL"
+                  value={openCVSource}
+                  onChange={(e) => setOpenCVSource(e.target.value)}
+                  className="bg-scanner-dark-alt border-gray-700"
+                />
+              </div>
+              <Button
+                onClick={executeOpenCVTool}
+                disabled={isProcessing}
+                className="bg-scanner-primary w-full"
+              >
+                {isProcessing ? "Processing..." : "Execute OpenCV Analysis"}
               </Button>
-            </div>
+            </TabsContent>
 
-            <div>
-              <Label htmlFor="deepstack-detection-type">Deepstack Detection Type</Label>
-              <Select value={deepstackOptions.detectionType} onValueChange={(value) => setDeepstackOptions({ ...deepstackOptions, detectionType: value })}>
-                <SelectTrigger id="deepstack-detection-type" className="bg-scanner-dark-alt border-gray-700">
-                  <SelectValue placeholder="Select detection type" />
-                </SelectTrigger>
-                <SelectContent className="bg-scanner-dark border-gray-700">
-                  <SelectItem value="object">Object Detection</SelectItem>
-                  <SelectItem value="face">Face Detection</SelectItem>
-                  <SelectItem value="scene">Scene Detection</SelectItem>
-                </SelectContent>
-              </Select>
-              <Button onClick={handleDeepstackAnalysis} disabled={isAnalyzing} className="mt-2 w-full bg-scanner-primary">
-                {isAnalyzing ? 'Analyzing...' : 'Analyze with Deepstack'}
+            <TabsContent value="deepstack" className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label>Operation</Label>
+                  <Select value={deepstackOperation} onValueChange={(value) => setDeepstackOperation(value as any)}>
+                    <SelectTrigger className="bg-scanner-dark-alt border-gray-700">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="face_detection">Face Detection</SelectItem>
+                      <SelectItem value="object_detection">Object Detection</SelectItem>
+                      <SelectItem value="scene_recognition">Scene Recognition</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label>Confidence Threshold</Label>
+                  <Input
+                    type="number"
+                    min="0"
+                    max="1"
+                    step="0.1"
+                    value={deepstackConfidence}
+                    onChange={(e) => setDeepstackConfidence(parseFloat(e.target.value))}
+                    className="bg-scanner-dark-alt border-gray-700"
+                  />
+                </div>
+              </div>
+              <div>
+                <Label>Image</Label>
+                <Input
+                  placeholder="Image URL or base64 data"
+                  value={deepstackImage}
+                  onChange={(e) => setDeepstackImage(e.target.value)}
+                  className="bg-scanner-dark-alt border-gray-700"
+                />
+              </div>
+              <Button
+                onClick={executeDeepstackTool}
+                disabled={isProcessing}
+                className="bg-scanner-primary w-full"
+              >
+                {isProcessing ? "Analyzing..." : "Execute Deepstack Analysis"}
               </Button>
-            </div>
-          </div>
+            </TabsContent>
 
-          <Button onClick={handleFaceRecognition} disabled={isAnalyzing} className="w-full bg-scanner-primary">
-            {isAnalyzing ? 'Analyzing...' : 'Run Face Recognition'}
-          </Button>
+            <TabsContent value="face" className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label>Operation</Label>
+                  <Select value={faceOperation} onValueChange={(value) => setFaceOperation(value as any)}>
+                    <SelectTrigger className="bg-scanner-dark-alt border-gray-700">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="encode">Encode Face</SelectItem>
+                      <SelectItem value="compare">Compare Faces</SelectItem>
+                      <SelectItem value="identify">Identify Person</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label>Database (optional)</Label>
+                  <Input
+                    placeholder="Face database name"
+                    value={faceDatabase}
+                    onChange={(e) => setFaceDatabase(e.target.value)}
+                    className="bg-scanner-dark-alt border-gray-700"
+                  />
+                </div>
+              </div>
+              <div>
+                <Label>Image</Label>
+                <Input
+                  placeholder="Image URL or base64 data"
+                  value={faceImage}
+                  onChange={(e) => setFaceImage(e.target.value)}
+                  className="bg-scanner-dark-alt border-gray-700"
+                />
+              </div>
+              <Button
+                onClick={executeFaceRecognitionTool}
+                disabled={isProcessing}
+                className="bg-scanner-primary w-full"
+              >
+                {isProcessing ? "Processing..." : "Execute Face Recognition"}
+              </Button>
+            </TabsContent>
 
-          <Button onClick={handleMotionDetection} disabled={isAnalyzing} className="w-full bg-scanner-primary">
-            {isAnalyzing ? 'Analyzing...' : 'Run Motion Detection'}
-          </Button>
+            <TabsContent value="motion" className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label>Operation</Label>
+                  <Select value={motionOperation} onValueChange={(value) => setMotionOperation(value as any)}>
+                    <SelectTrigger className="bg-scanner-dark-alt border-gray-700">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="detect">Motion Detection</SelectItem>
+                      <SelectItem value="track">Motion Tracking</SelectItem>
+                      <SelectItem value="record">Motion Recording</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label>Sensitivity (1-10)</Label>
+                  <Input
+                    type="number"
+                    min="1"
+                    max="10"
+                    value={motionSensitivity}
+                    onChange={(e) => setMotionSensitivity(parseInt(e.target.value))}
+                    className="bg-scanner-dark-alt border-gray-700"
+                  />
+                </div>
+              </div>
+              <div>
+                <Label>Source</Label>
+                <Input
+                  placeholder="Video stream URL or camera device"
+                  value={motionSource}
+                  onChange={(e) => setMotionSource(e.target.value)}
+                  className="bg-scanner-dark-alt border-gray-700"
+                />
+              </div>
+              <Button
+                onClick={executeMotionTool}
+                disabled={isProcessing}
+                className="bg-scanner-primary w-full"
+              >
+                {isProcessing ? "Detecting..." : "Execute Motion Detection"}
+              </Button>
+            </TabsContent>
+          </Tabs>
         </CardContent>
       </Card>
 
       {results && (
-        <Card className="bg-scanner-dark-alt border-gray-700">
+        <Card className="border-gray-700 bg-scanner-dark-alt">
+          <CardHeader>
+            <CardTitle className="text-sm">Analysis Results</CardTitle>
+          </CardHeader>
           <CardContent>
-            <h3 className="text-lg font-medium mb-2">Results</h3>
-            <pre className="text-xs overflow-auto whitespace-pre-wrap">
+            <pre className="text-xs overflow-auto whitespace-pre-wrap max-h-96 p-4 bg-scanner-dark rounded-md border border-gray-700">
               {JSON.stringify(results, null, 2)}
             </pre>
           </CardContent>

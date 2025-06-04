@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -28,6 +29,7 @@ const CamDumperTool: React.FC = () => {
 
     try {
       const result = await executeCamDumper({
+        tool: 'camDumper',
         target,
         region
       });
@@ -36,7 +38,7 @@ const CamDumperTool: React.FC = () => {
         setResults(result.data);
         toast({
           title: "Scan Complete",
-          description: `Found ${result.data.cameras?.length || 0} cameras`
+          description: `Found ${result.data.results?.cameras?.length || 0} cameras`
         });
       } else {
         toast({
@@ -109,7 +111,7 @@ const CamDumperTool: React.FC = () => {
           <div className="mt-4">
             <h3 className="text-sm font-medium text-gray-400">Results</h3>
             <ul className="mt-2 space-y-2">
-              {results.cameras?.map((camera: any, index: number) => (
+              {results.results?.cameras?.map((camera: any, index: number) => (
                 <li key={index} className="p-2 rounded bg-scanner-dark border border-gray-700 text-sm">
                   <p className="font-medium text-blue-400">{camera.ip}:{camera.port}</p>
                   <p>Type: {camera.type || 'Unknown'}</p>
