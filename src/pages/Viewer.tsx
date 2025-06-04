@@ -1,7 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
 import { useParams, useLocation } from 'react-router-dom';
-import CameraViewerGrid from '@/components/viewer/CameraViewerGrid';
 import { CameraResult } from '@/types/scanner';
 import SecurityTools from '@/components/viewer/SecurityTools';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -63,7 +62,23 @@ const Viewer: React.FC = () => {
 
         <SecurityTools cameras={cameras} />
         
-        <CameraViewerGrid cameras={cameras} />
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          {cameras.map((camera, index) => (
+            <Card key={camera.id || index} className="border-gray-700 bg-scanner-dark-alt">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm">
+                  {camera.ip}:{camera.port}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-xs space-y-1">
+                  <div>Status: {camera.status || 'Unknown'}</div>
+                  <div>Location: {camera.location?.country || 'Unknown'}</div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
       </div>
     </div>
   );

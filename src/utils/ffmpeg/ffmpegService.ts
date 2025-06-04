@@ -1,4 +1,3 @@
-
 import { simulateNetworkDelay } from '../networkUtils';
 import { FFmpegParams, ToolResult } from '@/utils/types/osintToolTypes';
 
@@ -68,9 +67,10 @@ const buildFFmpegCommand = (params: FFmpegParams): string => {
     command += ' -c:a ' + params.audioCodec;
   }
   
-  // Add duration if specified
+  // Add duration if specified - convert to string if it's a number
   if (params.duration) {
-    command += ' -t ' + params.duration;
+    const durationStr = typeof params.duration === 'number' ? params.duration.toString() : params.duration;
+    command += ' -t ' + durationStr;
   }
   
   // Add resolution if specified
@@ -195,19 +195,23 @@ export const recordStreamSegment = async (params: FFmpegParams): Promise<ToolRes
       };
     }
     
+    // Convert duration to string for processing delay calculation
+    const durationStr = typeof params.duration === 'number' ? params.duration.toString() : params.duration;
+    const durationSeconds = durationStr ? parseInt(durationStr) : 30;
+    
     // Simulate processing delay
-    await simulateNetworkDelay(params.duration ? parseInt(params.duration) * 100 : 5000);
+    await simulateNetworkDelay(durationSeconds * 100);
     
     // Build FFmpeg command for recording
     const inputStream = params.inputStream || params.input;
-    const command = `ffmpeg -i "${inputStream}" -c:v copy -c:a copy -t ${params.duration || '30'} ${params.outputPath || 'recording.mp4'}`;
+    const command = `ffmpeg -i "${inputStream}" -c:v copy -c:a copy -t ${durationStr || '30'} ${params.outputPath || 'recording.mp4'}`;
     
     return {
       success: true,
       data: {
         command,
         outputPath: params.outputPath || 'recording.mp4',
-        duration: params.duration || '30s',
+        duration: durationStr || '30s',
         timestamp: new Date().toISOString()
       }
     };

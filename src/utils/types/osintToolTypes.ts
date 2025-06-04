@@ -30,6 +30,22 @@ export interface ToolResult {
   simulatedData?: boolean;
 }
 
+// Geolocation interface with consistent properties
+export interface Geolocation {
+  country: string;
+  city?: string;
+  latitude?: number;
+  longitude?: number;
+}
+
+// Vulnerability interface with required properties
+export interface Vulnerability {
+  id: string;
+  name: string;
+  severity: 'low' | 'medium' | 'high' | 'critical';
+  description: string;
+}
+
 // Encoder/Decoder types
 export interface EncoderDecoderParams extends BaseToolParams {
   text: string;
@@ -216,7 +232,7 @@ export interface BotExploitsData {
   message: string;
 }
 
-// CCTV types
+// CCTV types with all required properties
 export interface CCTVCamera {
   id: string;
   ip: string;
@@ -224,22 +240,13 @@ export interface CCTVCamera {
   manufacturer?: string;
   model?: string;
   status: 'online' | 'offline' | 'vulnerable';
+  url?: string;
   credentials?: {
     username: string;
     password: string;
   };
-  location?: {
-    country: string;
-    city?: string;
-    latitude?: number;
-    longitude?: number;
-  };
-  vulnerabilities?: Array<{
-    id: string;
-    name: string;
-    severity: 'low' | 'medium' | 'high' | 'critical';
-    description: string;
-  }>;
+  location?: Geolocation;
+  vulnerabilities?: Vulnerability[];
 }
 
 export interface CCTVHackedCamera extends CCTVCamera {
@@ -376,11 +383,18 @@ export interface MotionParams extends BaseToolParams {
 
 // Security tools
 export interface SecurityAdminParams extends BaseToolParams {
-  operation: 'scan' | 'audit' | 'monitor';
-  scope: string;
+  operation?: 'scan' | 'audit' | 'monitor';
+  scope?: string;
   depth?: 'basic' | 'comprehensive';
   target: string;
   action: 'check' | 'patch' | 'report';
+}
+
+export interface ShieldAIParams extends BaseToolParams {
+  targetSystem: string;
+  scanType: 'vulnerability' | 'compliance' | 'threat_detection';
+  analysisDepth?: string;
+  policyFile?: string;
 }
 
 // FFmpeg types

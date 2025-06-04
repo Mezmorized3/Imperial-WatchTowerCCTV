@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -36,22 +37,17 @@ const FFmpegTool: React.FC<FFmpegToolProps> = ({ onResult }) => {
     setIsExecuting(true);
     
     try {
-      // Convert options to Record<string, string>
-      const options: Record<string, string> = {};
-      
-      // Only add properties with values
-      if (resolution) options.resolution = resolution;
-      if (bitrate) options.bitrate = bitrate;
-      if (framerate) options.framerate = framerate;
-      
       const params: FFmpegParams = {
         tool: 'ffmpeg',
+        operation: 'convert',
         input: inputUrl,
         output: outputFileName,
         duration: duration || undefined,
         videoCodec,
         audioCodec,
-        options
+        resolution: resolution || undefined,
+        bitrate: bitrate || undefined,
+        framerate: framerate || undefined
       };
       
       const result = await executeFFmpeg(params);
@@ -74,20 +70,15 @@ const FFmpegTool: React.FC<FFmpegToolProps> = ({ onResult }) => {
     setIsExecuting(true);
     
     try {
-      // Convert options to Record<string, string>
-      const options: Record<string, string> = {};
-      
-      // Only add properties with values
-      if (duration) options.duration = duration;
-      if (resolution) options.resolution = resolution;
-      
       const params: FFmpegParams = {
         tool: 'ffmpeg',
+        operation: 'record',
         input: inputUrl,
         output: outputFileName,
+        duration: duration || undefined,
         videoCodec,
         audioCodec,
-        options
+        resolution: resolution || undefined
       };
       
       const result = await executeFFmpeg(params);
@@ -110,22 +101,17 @@ const FFmpegTool: React.FC<FFmpegToolProps> = ({ onResult }) => {
     setIsExecuting(true);
     
     try {
-      // Convert options to Record<string, string>
-      const options: Record<string, string> = {};
-      
-      // Only add properties with values
-      if (resolution) options.resolution = resolution;
-      if (bitrate) options.bitrate = bitrate;
-      if (framerate) options.framerate = framerate;
-      if (applyFilters) options.denoise = 'true';
-      
       const params: FFmpegParams = {
         tool: 'ffmpeg',
+        operation: 'stream',
         input: inputUrl,
         output: outputFileName,
         videoCodec,
         audioCodec,
-        options
+        resolution: resolution || undefined,
+        bitrate: bitrate || undefined,
+        framerate: framerate || undefined,
+        filters: applyFilters ? ['denoise'] : undefined
       };
       
       const result = await executeFFmpeg(params);
