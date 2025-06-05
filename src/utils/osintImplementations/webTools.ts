@@ -7,75 +7,18 @@ import {
 
 export const executeWebhack = async (params: WebhackParams): Promise<HackingToolResult<WebhackData>> => {
   console.log("Webhack executed with options:", params);
-  await new Promise(resolve => setTimeout(resolve, 2000));
   
-  const vulnerabilities = [
-    {
-      type: "XSS Vulnerability",
-      severity: "medium" as const,
-      description: "Reflected XSS vulnerability found in search parameter",
-      evidence: "Parameter: q, Payload: <script>alert(1)</script>"
-    },
-    {
-      type: "Information Disclosure",
-      severity: "low" as const,
-      description: "Server version disclosed in response headers",
-      evidence: "Server: Apache/2.4.41"
-    }
-  ];
+  // TODO: Replace with real webhack tool integration
+  throw new Error("Webhack tool not implemented. Please integrate actual tool for production use.");
   
-  return {
-    success: true,
-    data: {
-      results: {
-        vulnerabilities,
-        subdomains: ['api.example.com', 'cdn.example.com'],
-        technologies: ['Apache', 'PHP', 'MySQL']
-      },
-      message: "Web vulnerability scan complete"
-    }
-  };
+  // Mock implementation removed - replace with actual tool
 };
 
 export const executePhoton = async (params: PhotonParams): Promise<HackingToolResult<PhotonData>> => {
   console.log("Photon executed with options:", params);
-  await new Promise(resolve => setTimeout(resolve, 1500));
   
-  const links = [
-    "https://example.com/about",
-    "https://example.com/contact", 
-    "https://example.com/login"
-  ];
+  // TODO: Replace with real Photon tool integration
+  throw new Error("Photon tool not implemented. Please integrate actual tool for production use.");
   
-  const emails = [
-    "info@example.com",
-    "support@example.com"
-  ];
-  
-  const files = [
-    "https://example.com/robots.txt",
-    "https://example.com/sitemap.xml"
-  ];
-  
-  const subdomains = [
-    "api.example.com",
-    "cdn.example.com"
-  ];
-  
-  return {
-    success: true,
-    data: {
-      results: {
-        links,
-        emails,
-        files,
-        subdomains,
-        intel: {
-          "IP Address": "93.184.216.34",
-          "Server": "nginx/1.18.0"
-        }
-      },
-      message: "Photon scan complete"
-    }
-  };
+  // Mock implementation removed - replace with actual tool
 };

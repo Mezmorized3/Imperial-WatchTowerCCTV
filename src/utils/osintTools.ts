@@ -1,83 +1,73 @@
 
+// Import only existing implementations
 import {
-  executeEncoderDecoder,
-  executeReverseShellListener,
-  executeSqliPayloadTest,
-  executeXssPayloadSearch,
-  executePasswordCracker,
-  executePasswordGenerator,
-  executeIpInfo,
-  executeDnsLookup,
-  executePortScan,
-  executeTraceroute,
-  executeSubnetScan,
-  executeWhoisLookup,
-  executeHttpHeaders,
-  executeBotExploits,
-  executeCCTVScan,
-  executeCCTVHackedScan,
-  executeCCTV,
-  executeCamDumper,
-  executeOpenCCTV,
-  executeEyePwn,
-  executeIngram,
-  executeZMap,
-  executeMetasploit,
-  executeOrebroONVIFScanner,
-  executeNodeONVIF,
-  executePyONVIF,
-  executePythonWSDiscovery,
-  executeScapy,
-  executeMitmProxy
-} from './osintImplementations';
+  executeWebhack,
+  executePhoton
+} from './osintImplementations/webTools';
 
-export {
-  executeEncoderDecoder,
-  executeReverseShellListener,
-  executeSqliPayloadTest,
-  executeXssPayloadSearch,
-  executePasswordCracker,
-  executePasswordGenerator,
-  executeIpInfo,
-  executeDnsLookup,
-  executePortScan,
-  executeTraceroute,
-  executeSubnetScan,
-  executeWhoisLookup,
-  executeHttpHeaders,
-  executeBotExploits,
-  executeCCTVScan,
-  executeCCTVHackedScan,
-  executeCCTV,
-  executeCamDumper,
-  executeOpenCCTV,
-  executeEyePwn,
-  executeIngram,
-  executeZMap,
-  executeMetasploit,
-  executeOrebroONVIFScanner,
-  executeNodeONVIF,
-  executePyONVIF,
-  executePythonWSDiscovery,
+import {
+  executeUsernameSearch,
+  executeTwint
+} from './osintImplementations/socialTools';
+
+import {
   executeScapy,
-  executeMitmProxy
+  executeZMap,
+  executeZGrab,
+  executeMasscan,
+  executeHydra
+} from './osintImplementations/networkScanTools';
+
+import {
+  executeONVIFFuzzer
+} from './osintImplementations/onvifFuzzerTools';
+
+import {
+  executeRtspBrute,
+  executeAdvancedRtspBrute
+} from './osintImplementations/rtspBruteTools';
+
+// Re-export available functions
+export {
+  executeWebhack,
+  executePhoton,
+  executeUsernameSearch,
+  executeTwint,
+  executeScapy,
+  executeZMap,
+  executeZGrab,
+  executeMasscan,
+  executeHydra,
+  executeONVIFFuzzer,
+  executeRtspBrute,
+  executeAdvancedRtspBrute
 };
 
-export {
-  executeUsernameSearch as executeSocialUsernameSearch,
-  executeGenericONVIFScan as executeOriginalONVIFScan
-} from './osintImplementations';
+// TODO: The following functions need real implementations for production:
+// - executeEncoderDecoder
+// - executeReverseShellListener
+// - executeSqliPayloadTest
+// - executeXssPayloadSearch
+// - executePasswordCracker
+// - executePasswordGenerator
+// - executeIpInfo
+// - executeDnsLookup
+// - executePortScan
+// - executeTraceroute
+// - executeSubnetScan
+// - executeWhoisLookup
+// - executeHttpHeaders
+// - executeBotExploits
+// - executeCCTVScan
+// - executeCCTVHackedScan
+// - executeMetasploit
+// - executeOrebroONVIFScanner
+// - executeNodeONVIF
+// - executePyONVIF
+// - executePythonWSDiscovery
+// - executeMitmProxy
 
+// Placeholder for TapoPoC - needs real implementation
 export const executeTapoPoC = async (options: any) => {
-  console.log("TapoPoC executed with options:", options);
-  await new Promise(resolve => setTimeout(resolve, 1000));
-  
-  return {
-    success: true,
-    data: {
-      device: options.target,
-      vulnerabilities: ['CVE-2023-1234'],
-      exploitStatus: 'successful'
-    }
-  };
+  throw new Error("TapoPoC tool not implemented. Please integrate actual tool for production use.");
 };
