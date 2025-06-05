@@ -1,5 +1,3 @@
-
-
 // Core OSINT tool types - consolidated and corrected
 export interface BaseToolParams {
   tool: string;
@@ -271,10 +269,15 @@ export interface CCTVHackedData {
 }
 
 export interface CCTVHackedParams extends BaseToolParams {
-  target: string;
-  country?: string;
-  exploitType?: 'default_creds' | 'known_vuln';
+  target_query: string;
+  scan_type: 'ip_scan' | 'exploit_db' | 'default_creds';
+  exploit_name?: string;
+  check_default_credentials?: boolean;
 }
+
+export type CCTVHackedResult = 
+  | { success: true; data: CCTVHackedData }
+  | { success: false; error: string };
 
 // Web tool types
 export interface WebhackData {
@@ -401,4 +404,3 @@ export interface FFmpegParams extends BaseToolParams {
   resolution?: string;
   options?: Record<string, string>;
 }
-

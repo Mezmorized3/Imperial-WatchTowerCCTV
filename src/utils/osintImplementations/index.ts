@@ -1,8 +1,10 @@
+
 // This file re-exports all tool implementations for easier import elsewhere.
 
 export * from './baseOsintTools';
 export * from './advancedTools';
-export * from './cctvHackedTools';
+// Export CCTV hacked tools explicitly to avoid conflicts
+export { executeCCTVHackedScan } from './cctvHackedTools';
 
 export { 
     executeGSoap, 
