@@ -1,83 +1,19 @@
 
-/* Remove max-width restriction that might be hiding content */
+/* Simplified CSS to avoid conflicts */
+
+/* Ensure root takes full space */
 #root {
   width: 100%;
   min-height: 100vh;
+  margin: 0;
+  padding: 0;
 }
 
+/* Remove any restrictions on mobile */
 @media screen and (max-width: 768px) {
   #root {
     padding: 0;
   }
-}
-
-/* Add support for the scanner theme colors with proper CSS variables */
-:root {
-  --scanner-primary: #0066cc;
-  --scanner-info: #00b8d4;
-  --scanner-success: #00c853;
-  --scanner-warning: #ffc107;
-  --scanner-danger: #ff3d00;
-  --scanner-dark: #151b26;
-  --scanner-dark-alt: #1c2333;
-  --scanner-card: #1c2333;
-  --scanner-card-hover: #232b3d;
-}
-
-.bg-scanner-primary {
-  background-color: var(--scanner-primary);
-}
-
-.bg-scanner-info {
-  background-color: var(--scanner-info);
-}
-
-.bg-scanner-success {
-  background-color: var(--scanner-success);
-}
-
-.bg-scanner-warning {
-  background-color: var(--scanner-warning);
-}
-
-.bg-scanner-danger {
-  background-color: var(--scanner-danger);
-}
-
-.bg-scanner-dark {
-  background-color: var(--scanner-dark);
-}
-
-.bg-scanner-dark-alt {
-  background-color: var(--scanner-dark-alt);
-}
-
-.bg-scanner-card {
-  background-color: var(--scanner-card);
-}
-
-.bg-scanner-card-hover {
-  background-color: var(--scanner-card-hover);
-}
-
-.text-scanner-primary {
-  color: var(--scanner-primary);
-}
-
-.text-scanner-info {
-  color: var(--scanner-info);
-}
-
-.text-scanner-success {
-  color: var(--scanner-success);
-}
-
-.text-scanner-warning {
-  color: var(--scanner-warning);
-}
-
-.text-scanner-danger {
-  color: var(--scanner-danger);
 }
 
 /* Map visualization mockup */

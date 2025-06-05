@@ -3,6 +3,19 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Scanner theme CSS variables - moved to top for priority loading */
+:root {
+  --scanner-primary: #0066cc;
+  --scanner-info: #00b8d4;
+  --scanner-success: #00c853;
+  --scanner-warning: #ffc107;
+  --scanner-danger: #ff3d00;
+  --scanner-dark: #151b26;
+  --scanner-dark-alt: #1c2333;
+  --scanner-card: #1c2333;
+  --scanner-card-hover: #232b3d;
+}
+
 @layer base {
   :root {
     --background: 210 40% 98%;
@@ -91,8 +104,72 @@
 
   body {
     @apply bg-background text-foreground;
-    /* Removed forced dark class that was causing conflicts */
+    /* Ensure proper background */
+    min-height: 100vh;
   }
+
+  /* Force scanner dark theme background with fallback */
+  body.scanner-theme {
+    background-color: var(--scanner-dark, #151b26) !important;
+    color: white !important;
+  }
+}
+
+/* Scanner theme utility classes with fallbacks */
+.bg-scanner-primary {
+  background-color: var(--scanner-primary, #0066cc) !important;
+}
+
+.bg-scanner-info {
+  background-color: var(--scanner-info, #00b8d4) !important;
+}
+
+.bg-scanner-success {
+  background-color: var(--scanner-success, #00c853) !important;
+}
+
+.bg-scanner-warning {
+  background-color: var(--scanner-warning, #ffc107) !important;
+}
+
+.bg-scanner-danger {
+  background-color: var(--scanner-danger, #ff3d00) !important;
+}
+
+.bg-scanner-dark {
+  background-color: var(--scanner-dark, #151b26) !important;
+}
+
+.bg-scanner-dark-alt {
+  background-color: var(--scanner-dark-alt, #1c2333) !important;
+}
+
+.bg-scanner-card {
+  background-color: var(--scanner-card, #1c2333) !important;
+}
+
+.bg-scanner-card-hover {
+  background-color: var(--scanner-card-hover, #232b3d) !important;
+}
+
+.text-scanner-primary {
+  color: var(--scanner-primary, #0066cc) !important;
+}
+
+.text-scanner-info {
+  color: var(--scanner-info, #00b8d4) !important;
+}
+
+.text-scanner-success {
+  color: var(--scanner-success, #00c853) !important;
+}
+
+.text-scanner-warning {
+  color: var(--scanner-warning, #ffc107) !important;
+}
+
+.text-scanner-danger {
+  color: var(--scanner-danger, #ff3d00) !important;
 }
 
 /* Custom scrollbar for dark mode */
