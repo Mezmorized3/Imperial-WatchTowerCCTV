@@ -23,6 +23,27 @@ export type HackingToolResult<R = any> =
   | { success: true; data: HackingToolSuccessData<R>; error?: never }
   | { success: false; error: string; data?: HackingToolErrorData };
 
+// Base tool result interface
+export interface ToolResult<T = any> {
+  success: boolean;
+  data?: T;
+  error?: string;
+  message?: string;
+}
+
+// Proxy configuration interface
+export interface ProxyConfig {
+  enabled: boolean;
+  type: 'http' | 'socks4' | 'socks5' | 'tor';
+  host: string;
+  port: number;
+  username?: string;
+  password?: string;
+  country?: string;
+  rotationEnabled?: boolean;
+  rotationInterval?: number;
+}
+
 // Encoder/Decoder types
 export interface EncoderDecoderParams extends BaseToolParams {
   text: string;
@@ -207,6 +228,104 @@ export interface BotExploitsData {
   tokens: { id: string; value: string; type: string; expiration: string }[];
   apis: { id: string; endpoint: string; method: string; authentication: boolean }[];
   message: string;
+}
+
+// CCTV types
+export interface CCTVCamera {
+  id: string;
+  ip: string;
+  port: number;
+  manufacturer: string;
+  model: string;
+  url: string;
+  location: {
+    latitude: number;
+    longitude: number;
+  };
+}
+
+export interface CCTVScanData {
+  cameras: CCTVCamera[];
+}
+
+export interface CCTVScanParams extends BaseToolParams {
+  query?: string;
+  brand?: string;
+  country?: string;
+  limit?: number;
+}
+
+export interface CCTVHackedCamera {
+  id: string;
+  ip: string;
+  port: number;
+  manufacturer: string;
+  model: string;
+  vulnerabilities: string[];
+}
+
+export interface CCTVHackedData {
+  cameras: CCTVHackedCamera[];
+  message: string;
+}
+
+export interface CCTVHackedParams extends BaseToolParams {
+  target: string;
+  country?: string;
+  exploitType?: 'default_creds' | 'known_vuln';
+}
+
+// Web tool types
+export interface WebhackData {
+  vulnerabilities: Array<{
+    type: string;
+    severity: string;
+    description?: string;
+    location?: string;
+  }>;
+  subdomains?: string[];
+  technologies?: string[];
+  status: string;
+}
+
+export interface BackHackData {
+  vulnerabilities: Array<{
+    type: string;
+    severity: string;
+    description?: string;
+    location?: string;
+  }>;
+  backupFiles?: string[];
+  configFiles?: string[];
+  status: string;
+}
+
+// Computer Vision and ONVIF types
+export interface OpenCVParams extends BaseToolParams {
+  operation: 'detection' | 'recognition' | 'tracking';
+  imageUrl?: string;
+  videoUrl?: string;
+  threshold?: number;
+}
+
+export interface DeepstackParams extends BaseToolParams {
+  operation: 'face_detection' | 'object_detection' | 'scene_recognition';
+  imageUrl?: string;
+  confidence?: number;
+}
+
+export interface FaceRecognitionParams extends BaseToolParams {
+  operation: 'encode' | 'compare' | 'identify';
+  imageUrl?: string;
+  knownFaces?: string[];
+  threshold?: number;
+}
+
+export interface MotionParams extends BaseToolParams {
+  operation: 'detect' | 'track' | 'analyze';
+  videoUrl?: string;
+  sensitivity?: number;
+  duration?: number;
 }
 
 // Social media types

@@ -4,19 +4,19 @@
 // Base types (primary source for common interfaces)
 export type { 
   ToolParams, 
-  ToolResult, 
   UsernameResult, 
   ScanResult, 
-  ProxyConfig, 
   ThreatIntelData 
 } from './baseTypes';
 
-// Core OSINT types (primary source for tool execution)
+// Core OSINT types (primary source for tool execution) - comprehensive export
 export type { 
   BaseToolParams,
   HackingToolResult,
   HackingToolSuccessData,
   HackingToolErrorData,
+  ToolResult,
+  ProxyConfig,
   EncoderDecoderParams,
   EncoderDecoderData,
   ReverseShellParams,
@@ -47,6 +47,18 @@ export type {
   HttpHeadersData,
   BotExploitsParams,
   BotExploitsData,
+  CCTVCamera,
+  CCTVScanData,
+  CCTVScanParams,
+  CCTVHackedCamera,
+  CCTVHackedData,
+  CCTVHackedParams,
+  WebhackData,
+  BackHackData,
+  OpenCVParams,
+  DeepstackParams,
+  FaceRecognitionParams,
+  MotionParams,
   TwintData,
   UsernameSearchData,
   SecurityAdminParams,
@@ -163,10 +175,9 @@ export type {
   WebCheckData,
   WebCheckResult,
   WebhackParams,
-  WebhackData,
   WebhackResult,
   BackHackParams as WebBackHackParams,
-  BackHackData,
+  BackHackData as WebBackHackData,
   BackHackResult,
   PhotonParams,
   PhotonData,
