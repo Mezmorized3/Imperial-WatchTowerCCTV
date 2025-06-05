@@ -1,3 +1,4 @@
+
 /**
  * Camera discovery OSINT tools implementations
  * These now connect to the real GitHub repos via our API:
@@ -112,6 +113,7 @@ export const executeCameradar = async (params: { target: string, ports?: string 
     
     return {
       success: true,
+      timestamp: new Date().toISOString(),
       total: targetIps.length,
       found: results.length,
       results: results,
@@ -125,6 +127,7 @@ export const executeCameradar = async (params: { target: string, ports?: string 
     console.error('Cameradar execution error:', error);
     return {
       success: false,
+      timestamp: new Date().toISOString(),
       total: 0,
       found: 0,
       results: [],
@@ -149,6 +152,7 @@ export const executeIPCamSearch = async (params: { subnet: string, protocols?: s
     
     return {
       success: true,
+      timestamp: new Date().toISOString(),
       total: targetIps.length,
       found: results.length,
       results: results,
@@ -162,6 +166,7 @@ export const executeIPCamSearch = async (params: { subnet: string, protocols?: s
     console.error('IPCamSearch execution error:', error);
     return {
       success: false,
+      timestamp: new Date().toISOString(),
       total: 0,
       found: 0,
       results: [],
@@ -185,6 +190,7 @@ export const executeCCTV = async (params: CCTVParams): Promise<ScanResult> => {
     
     return {
       success: true,
+      timestamp: new Date().toISOString(),
       total: cameraCount * 2, // Simulate that we searched more than we found
       found: results.length,
       results: results,
@@ -198,6 +204,7 @@ export const executeCCTV = async (params: CCTVParams): Promise<ScanResult> => {
     console.error('CCTV execution error:', error);
     return {
       success: false,
+      timestamp: new Date().toISOString(),
       total: 0,
       found: 0,
       results: [],
@@ -234,6 +241,7 @@ export const executeSpeedCamera = async (params: SpeedCameraParams): Promise<Sca
     
     return {
       success: true,
+      timestamp: new Date().toISOString(),
       total: 10, // Simulated total searched
       found: results.length,
       results: results,
@@ -251,6 +259,7 @@ export const executeSpeedCamera = async (params: SpeedCameraParams): Promise<Sca
     console.error('Speed Camera execution error:', error);
     return {
       success: false,
+      timestamp: new Date().toISOString(),
       total: 0,
       found: 0,
       results: [],
@@ -306,6 +315,7 @@ export const executeCamerattack = async (params: CamerattackParams): Promise<Sca
     
     return {
       success: true,
+      timestamp: new Date().toISOString(),
       total: targetIps.length,
       found: results.length,
       results: results,
@@ -321,6 +331,7 @@ export const executeCamerattack = async (params: CamerattackParams): Promise<Sca
     console.error('Camerattack execution error:', error);
     return {
       success: false,
+      timestamp: new Date().toISOString(),
       total: 0,
       found: 0,
       results: [],
