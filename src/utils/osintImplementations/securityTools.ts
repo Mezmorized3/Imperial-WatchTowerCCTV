@@ -1,47 +1,39 @@
 
 import { HackingToolResult } from '../types/osintToolTypes';
-import { 
-    ShieldAIParams, ShieldAIData, 
-    SecurityAdminParams, SecurityAdminData 
-} from '../types/securityToolTypes'; // Corrected path
-import { mockSecurityAdminData_check, mockSecurityAdminData_patch, mockSecurityAdminData_report, mockShieldAIData_scan } from './security/mockData'; // Use more specific names if needed
 
-export const executeShieldAI = async (params: ShieldAIParams): Promise<HackingToolResult<ShieldAIData>> => {
-  console.log('Executing ShieldAI with:', params);
-  // Simulate ShieldAI scan
-  await new Promise(resolve => setTimeout(resolve, 2500));
-  // Return mock data based on scanType or other params if needed
-  return {
-    success: true,
-    data: { 
-        results: mockShieldAIData_scan, // Use the renamed mock data
-        message: `ShieldAI ${params.scanType} scan completed.`
-    }
-  };
+// TODO: All security tools need real implementations for production use
+export const executeImperialShield = async (params: any): Promise<HackingToolResult<any>> => {
+  throw new Error("ImperialShield tool not implemented. Please integrate actual tool for production use.");
 };
 
-export const executeSecurityAdmin = async (params: SecurityAdminParams): Promise<HackingToolResult<SecurityAdminData>> => {
-  console.log('Executing SecurityAdmin with:', params);
-  // Simulate SecurityAdmin action
-  await new Promise(resolve => setTimeout(resolve, 1000));
-  let actionResult: SecurityAdminData;
-  switch (params.action) {
-    case 'patch':
-      actionResult = mockSecurityAdminData_patch; // Use renamed mock data
-      break;
-    case 'report':
-      actionResult = mockSecurityAdminData_report; // Use renamed mock data
-      break;
-    case 'check':
-    default:
-      actionResult = mockSecurityAdminData_check; // Use renamed mock data
-      break;
-  }
-  return {
-    success: true,
-    data: {
-        results: actionResult,
-        message: `SecurityAdmin action '${params.action}' for target '${params.target}' completed.`
-    }
-  };
+export const executeImperialPawn = async (params: any): Promise<HackingToolResult<any>> => {
+  throw new Error("ImperialPawn tool not implemented. Please integrate actual tool for production use.");
+};
+
+export const executeImperialSiege = async (params: any): Promise<HackingToolResult<any>> => {
+  throw new Error("ImperialSiege tool not implemented. Please integrate actual tool for production use.");
+};
+
+export const executeImperialCompliance = async (params: any): Promise<HackingToolResult<any>> => {
+  throw new Error("ImperialCompliance tool not implemented. Please integrate actual tool for production use.");
+};
+
+export const executeImperialOculus = async (params: any): Promise<HackingToolResult<any>> => {
+  throw new Error("ImperialOculus tool not implemented. Please integrate actual tool for production use.");
+};
+
+export const executeImperialShinobi = async (params: any): Promise<HackingToolResult<any>> => {
+  throw new Error("ImperialShinobi tool not implemented. Please integrate actual tool for production use.");
+};
+
+export const executeImperialAuth = async (params: any): Promise<HackingToolResult<any>> => {
+  throw new Error("ImperialAuth tool not implemented. Please integrate actual tool for production use.");
+};
+
+export const executeImperialRegistry = async (params: any): Promise<HackingToolResult<any>> => {
+  throw new Error("ImperialRegistry tool not implemented. Please integrate actual tool for production use.");
+};
+
+export const executeImperialLoot = async (params: any): Promise<HackingToolResult<any>> => {
+  throw new Error("ImperialLoot tool not implemented. Please integrate actual tool for production use.");
 };

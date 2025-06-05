@@ -1,63 +1,10 @@
 
-import { ShieldAIParams, ShieldAIData } from '@/utils/types/securityToolTypes';
-import { SecurityAnalysisResult } from './types';
-import { mockSecurityFindings } from './mockData';
+import { HackingToolResult } from '../../types/osintToolTypes';
+import { ShieldAIParams, ShieldAIData } from '../../types/securityToolTypes';
 
-export const executeShieldAI = async (params: ShieldAIParams): Promise<SecurityAnalysisResult> => {
-  console.log('Executing ShieldAI with:', params);
-  await new Promise(resolve => setTimeout(resolve, 2500));
+export const executeShieldAI = async (params: ShieldAIParams): Promise<HackingToolResult<ShieldAIData>> => {
+  console.log("ShieldAI executed with options:", params);
   
-  switch (params.scanType) {
-    case 'vulnerability':
-      return {
-        success: true,
-        data: {
-          findings: mockSecurityFindings,
-          summary: {
-            total: mockSecurityFindings.length,
-            successful: mockSecurityFindings.length,
-            failed: 0
-          }
-        }
-      };
-      
-    case 'compliance':
-      return {
-        success: true,
-        data: {
-          findings: [],
-          summary: {
-            total: 0,
-            successful: 0,
-            failed: 0
-          }
-        }
-      };
-      
-    case 'threat_detection':
-      return {
-        success: true,
-        data: {
-          findings: mockSecurityFindings.filter(f => f.severity === 'high'),
-          summary: {
-            total: 1,
-            successful: 1,
-            failed: 0
-          }
-        }
-      };
-      
-    default:
-      return {
-        success: true,
-        data: {
-          findings: [],
-          summary: {
-            total: 0,
-            successful: 0,
-            failed: 0
-          }
-        }
-      };
-  }
+  // TODO: Replace with real ShieldAI tool integration
+  throw new Error("ShieldAI tool not implemented. Please integrate actual tool for production use.");
 };

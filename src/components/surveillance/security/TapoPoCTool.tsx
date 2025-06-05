@@ -54,7 +54,7 @@ const TapoPoCTool: React.FC = () => {
     setActiveTab('results');
     
     try {
-      await executeTapoPoC({
+      const result = await executeTapoPoC({
         target: targetIP,
         port: parseInt(port),
         username,
@@ -71,9 +71,10 @@ const TapoPoCTool: React.FC = () => {
         description: `${attackType === 'all' ? 'All attacks' : attackType.charAt(0).toUpperCase() + attackType.slice(1) + ' attack'} completed successfully`
       });
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
       toast({
         title: "Tool Not Available",
-        description: "TapoPoC tool needs to be implemented for production use",
+        description: errorMessage,
         variant: "destructive"
       });
     } finally {

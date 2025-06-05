@@ -38,6 +38,23 @@ export interface TwitterParams {
   saveResults?: boolean;
 }
 
+export interface TwintParams {
+  username?: string;
+  search?: string;
+  limit?: number;
+  since?: string;
+  until?: string;
+  saveResults?: boolean;
+}
+
+export interface UsernameSearchParams {
+  username: string;
+  platforms?: string[];
+  timeout?: number;
+  includeMetadata?: boolean;
+  saveResults?: boolean;
+}
+
 export interface InstagramParams {
   username: string;
   limit?: number;

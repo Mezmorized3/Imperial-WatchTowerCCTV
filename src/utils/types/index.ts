@@ -36,6 +36,29 @@ export type {
 } from './networkToolTypes';
 
 export type {
-  TwintParams,
-  UsernameSearchParams
+  TwitterParams,
+  SocialSearchParams
 } from './socialToolTypes';
+
+// Security tool types
+export * from './securityToolTypes';
+
+// Threat intel types (non-conflicting only)
+export type {
+  ThreatIntelData,
+  FirmwareData,
+  FirmwareAnalysisResult,
+  ThreatAssessment,
+  ImperialShieldResult
+} from './threatIntelTypes';
+
+// Advanced tool types (non-conflicting only)
+export type {
+  RapidPayloadParams,
+  HackingToolParams,
+  SecurityAdminParams,
+  FFmpegParams
+} from './advancedToolTypes';
+
+// Web tool types
+export * from './webToolTypes';

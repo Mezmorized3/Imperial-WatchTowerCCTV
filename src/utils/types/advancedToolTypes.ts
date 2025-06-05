@@ -15,6 +15,10 @@ export interface RapidPayloadParams {
   options?: Record<string, any>; // Add options field to match usage
 }
 
+export interface RapidPayloadData {
+  payload: string;
+}
+
 export interface HackingToolParams {
   tool: string;
   target?: string;
