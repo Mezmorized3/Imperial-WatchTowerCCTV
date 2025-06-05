@@ -1,49 +1,65 @@
 
-import { SecurityAdminParams } from '@/utils/osintToolTypes';
-import { simulateNetworkDelay } from '@/utils/networkUtils';
-import { generateMockFindings, generateMockPatches } from './mockData';
+import { HackingToolResult } from '@/utils/types/osintToolTypes';
+import { SecurityAdminParams, SecurityAdminData } from '@/utils/types/securityToolTypes';
 import { SecurityAnalysisResult } from './types';
+import { generateMockFindings, generateMockPatches } from './mockData';
 
 export const executeSecurityAdmin = async (params: SecurityAdminParams): Promise<SecurityAnalysisResult> => {
-  console.log('Executing security admin with params:', params);
+  console.log('Executing SecurityAdmin with:', params);
+  await new Promise(resolve => setTimeout(resolve, 1000));
   
-  await simulateNetworkDelay(2000);
-  
-  try {
-    if (!params.target) {
+  switch (params.action) {
+    case 'check':
       return {
-        success: false,
-        error: 'Target is required'
+        success: true,
+        data: {
+          findings: generateMockFindings(),
+          summary: {
+            total: 2,
+            successful: 2,
+            failed: 0
+          }
+        }
       };
-    }
-    
-    const result: SecurityAnalysisResult = {
-      success: true,
-      timestamp: new Date().toISOString(),
-      data: {
-        target: params.target,
-        action: params.action || 'check',
-        scope: params.scope || 'system'
-      }
-    };
-    
-    if (params.action === 'check' || params.action === 'report') {
-      result.findings = generateMockFindings(params.scope || 'system');
-    } else if (params.action === 'patch') {
-      result.patchesApplied = generateMockPatches(params.scope || 'system');
-      result.summary = {
-        total: Math.floor(Math.random() * 5) + 2,
-        successful: Math.floor(Math.random() * 3) + 1,
-        failed: Math.floor(Math.random() * 2)
+      
+    case 'patch':
+      return {
+        success: true,
+        data: {
+          findings: [],
+          patchesApplied: generateMockPatches(),
+          summary: {
+            total: 1,
+            successful: 1,
+            failed: 0
+          }
+        }
       };
-    }
-    
-    return result;
-  } catch (error) {
-    console.error('Error in security admin:', error);
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Unknown error occurred'
-    };
+      
+    case 'report':
+      return {
+        success: true,
+        data: {
+          findings: generateMockFindings(),
+          summary: {
+            total: 2,
+            successful: 2,
+            failed: 0
+          }
+        }
+      };
+      
+    default:
+      return {
+        success: true,
+        data: {
+          findings: [],
+          summary: {
+            total: 0,
+            successful: 0,
+            failed: 0
+          }
+        }
+      };
   }
 };

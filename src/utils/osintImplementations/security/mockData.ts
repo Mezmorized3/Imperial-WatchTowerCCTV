@@ -26,3 +26,40 @@ export const mockSecurityPatches = [
     description: 'Applied critical security patch'
   }
 ];
+
+export const generateMockFindings = () => mockSecurityFindings;
+
+export const generateMockPatches = () => mockSecurityPatches;
+
+export const mockSecurityAdminData_check = {
+  status: 'completed',
+  message: 'Security check completed successfully',
+  reportUrl: '/reports/security-check-001.pdf'
+};
+
+export const mockSecurityAdminData_patch = {
+  status: 'completed',
+  message: 'Security patches applied successfully',
+  patchedItems: ['CVE-2023-1234', 'CVE-2023-5678']
+};
+
+export const mockSecurityAdminData_report = {
+  status: 'completed',
+  message: 'Security report generated successfully',
+  reportUrl: '/reports/security-report-001.pdf'
+};
+
+export const mockShieldAIData_scan = {
+  scanId: 'ai-scan-001',
+  status: 'completed' as const,
+  summary: 'AI security scan completed with 2 vulnerabilities found',
+  vulnerabilities: mockSecurityFindings,
+  threatsDetected: [
+    {
+      id: 'threat-001',
+      type: 'malware',
+      severity: 'high',
+      description: 'Suspicious network activity detected'
+    }
+  ]
+};

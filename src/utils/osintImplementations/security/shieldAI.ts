@@ -1,63 +1,63 @@
 
+import { ShieldAIParams, ShieldAIData } from '@/utils/types/securityToolTypes';
 import { SecurityAnalysisResult } from './types';
-import { simulateNetworkDelay } from '@/utils/networkUtils';
+import { mockSecurityFindings } from './mockData';
 
-export const executeShieldAI = async (params: any): Promise<SecurityAnalysisResult> => {
-  console.log('Executing Shield AI with params:', params);
+export const executeShieldAI = async (params: ShieldAIParams): Promise<SecurityAnalysisResult> => {
+  console.log('Executing ShieldAI with:', params);
+  await new Promise(resolve => setTimeout(resolve, 2500));
   
-  await simulateNetworkDelay(2500);
-  
-  try {
-    if (!params.target) {
+  switch (params.scanType) {
+    case 'vulnerability':
       return {
-        success: false,
-        error: 'Target is required for AI security analysis'
+        success: true,
+        data: {
+          findings: mockSecurityFindings,
+          summary: {
+            total: mockSecurityFindings.length,
+            successful: mockSecurityFindings.length,
+            failed: 0
+          }
+        }
       };
-    }
-    
-    // Generate AI security findings
-    const findings = [
-      {
-        id: `vuln-${Date.now()}-1`,
-        type: 'authentication',
-        severity: 'critical' as const,
-        description: 'Default credentials detected on surveillance system',
-        recommendation: 'Change default passwords and implement MFA',
-        impact: 'Complete system compromise'
-      },
-      {
-        id: `vuln-${Date.now()}-2`,
-        type: 'encryption',
-        severity: 'high' as const,
-        description: 'Unencrypted RTSP streams',
-        recommendation: 'Enable encryption for all video streams',
-        impact: 'Video feed interception'
-      },
-      {
-        id: `vuln-${Date.now()}-3`,
-        type: 'firmware',
-        severity: 'medium' as const,
-        description: 'Outdated firmware with known vulnerabilities',
-        recommendation: 'Update to latest firmware version',
-        cve: 'CVE-2023-12345'
-      }
-    ];
-    
-    return {
-      success: true,
-      timestamp: new Date().toISOString(),
-      findings: findings,
-      summary: {
-        total: findings.length,
-        successful: findings.length,
-        failed: 0
-      }
-    };
-  } catch (error) {
-    console.error('Error in Shield AI:', error);
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Unknown error occurred'
-    };
+      
+    case 'compliance':
+      return {
+        success: true,
+        data: {
+          findings: [],
+          summary: {
+            total: 0,
+            successful: 0,
+            failed: 0
+          }
+        }
+      };
+      
+    case 'threat_detection':
+      return {
+        success: true,
+        data: {
+          findings: mockSecurityFindings.filter(f => f.severity === 'high'),
+          summary: {
+            total: 1,
+            successful: 1,
+            failed: 0
+          }
+        }
+      };
+      
+    default:
+      return {
+        success: true,
+        data: {
+          findings: [],
+          summary: {
+            total: 0,
+            successful: 0,
+            failed: 0
+          }
+        }
+      };
   }
 };

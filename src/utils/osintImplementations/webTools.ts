@@ -1,23 +1,26 @@
+
 import { HackingToolResult } from '../types/osintToolTypes';
 import { 
   WebhackParams, WebhackData,
   PhotonParams, PhotonData
 } from '../types/webToolTypes';
 
-export const executeWebhack = async (options: WebhackParams): Promise<HackingToolResult<WebhackData>> => {
-  console.log("Webhack executed with options:", options);
+export const executeWebhack = async (params: WebhackParams): Promise<HackingToolResult<WebhackData>> => {
+  console.log("Webhack executed with options:", params);
   await new Promise(resolve => setTimeout(resolve, 2000));
   
   const vulnerabilities = [
     {
-      type: "XSS",
-      severity: "medium" as const,
+      name: "XSS Vulnerability",
+      severity: "medium",
+      cwe: "CWE-79",
       description: "Reflected XSS vulnerability found in search parameter",
       evidence: "Parameter: q, Payload: <script>alert(1)</script>"
     },
     {
-      type: "Information Disclosure",
-      severity: "low" as const,
+      name: "Information Disclosure",
+      severity: "low", 
+      cwe: "CWE-200",
       description: "Server version disclosed in response headers",
       evidence: "Server: Apache/2.4.41"
     }
@@ -36,13 +39,13 @@ export const executeWebhack = async (options: WebhackParams): Promise<HackingToo
   };
 };
 
-export const executePhoton = async (options: PhotonParams): Promise<HackingToolResult<PhotonData>> => {
-  console.log("Photon executed with options:", options);
+export const executePhoton = async (params: PhotonParams): Promise<HackingToolResult<PhotonData>> => {
+  console.log("Photon executed with options:", params);
   await new Promise(resolve => setTimeout(resolve, 1500));
   
   const links = [
     "https://example.com/about",
-    "https://example.com/contact",
+    "https://example.com/contact", 
     "https://example.com/login"
   ];
   

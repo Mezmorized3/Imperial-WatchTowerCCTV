@@ -1,40 +1,108 @@
 
 import { HackingToolResult } from '../types/osintToolTypes';
-import { OpenCVParams, OpenCVData, DeepstackParams, DeepstackData, FaceRecognitionParams, FaceRecognitionData, MotionParams, MotionData, ONVIFScanParams, ONVIFScanData, NmapONVIFParams, NmapONVIFData } from '../types/onvifToolTypes'; // Assuming these are in onvifToolTypes now
+import { 
+  OpenCVParams, DeepstackParams, FaceRecognitionParams, MotionParams 
+} from '../types/osintToolTypes';
 
-export const executeOpenCV = async (params: OpenCVParams): Promise<HackingToolResult<OpenCVData>> => {
+interface ONVIFDevice {
+  ip: string;
+  port: number;
+  manufacturer?: string;
+  model?: string;
+  services: string[];
+}
+
+export const executeOpenCV = async (params: OpenCVParams): Promise<HackingToolResult> => {
   console.log('Executing OpenCV with:', params);
-  await new Promise(resolve => setTimeout(resolve, 1000));
-  return { success: true, data: { results: { detectedObjects: [{name: 'face', confidence: 0.9}] }, message: 'OpenCV processing complete' } };
+  await new Promise(resolve => setTimeout(resolve, 2000));
+  
+  return {
+    success: true,
+    data: {
+      results: {
+        operation: params.operation,
+        source: params.source,
+        status: 'completed',
+        detections: Math.floor(Math.random() * 10)
+      },
+      message: `OpenCV ${params.operation} completed`
+    }
+  };
 };
 
-export const executeDeepstack = async (params: DeepstackParams): Promise<HackingToolResult<DeepstackData>> => {
+export const executeDeepstack = async (params: DeepstackParams): Promise<HackingToolResult> => {
   console.log('Executing Deepstack with:', params);
-  await new Promise(resolve => setTimeout(resolve, 1000));
-  return { success: true, data: { results: { predictions: [{label: 'car', confidence: 0.8}] }, message: 'Deepstack analysis complete' } };
+  await new Promise(resolve => setTimeout(resolve, 3000));
+  
+  const detections = Array.from({ length: Math.floor(Math.random() * 5) + 1 }, (_, i) => ({
+    id: i + 1,
+    label: ['person', 'car', 'bicycle', 'dog'][Math.floor(Math.random() * 4)],
+    confidence: Math.random() * 0.4 + 0.6,
+    bbox: {
+      x: Math.floor(Math.random() * 100),
+      y: Math.floor(Math.random() * 100),
+      width: Math.floor(Math.random() * 200) + 50,
+      height: Math.floor(Math.random() * 200) + 50
+    }
+  }));
+  
+  const devices: ONVIFDevice[] = [
+    {
+      ip: '192.168.1.100',
+      port: 80,
+      manufacturer: 'Hikvision',
+      model: 'DS-2CD2032-I',
+      services: ['PTZ', 'Media', 'Device']
+    }
+  ];
+  
+  return {
+    success: true,
+    data: {
+      results: {
+        operation: params.operation,
+        image: params.image,
+        detections,
+        devices
+      },
+      message: `Deepstack ${params.operation} completed`
+    }
+  };
 };
 
-export const executeFaceRecognition = async (params: FaceRecognitionParams): Promise<HackingToolResult<FaceRecognitionData>> => {
-  console.log('Executing FaceRecognition with:', params);
-  await new Promise(resolve => setTimeout(resolve, 1000));
-  return { success: true, data: { results: { matches: [{name: 'known_person', distance: 0.5}] }, message: 'Face recognition complete' } };
+export const executeFaceRecognition = async (params: FaceRecognitionParams): Promise<HackingToolResult> => {
+  console.log('Executing Face Recognition with:', params);
+  await new Promise(resolve => setTimeout(resolve, 2500));
+  
+  return {
+    success: true,
+    data: {
+      results: {
+        operation: params.operation,
+        image: params.image,
+        faces: Math.floor(Math.random() * 3) + 1,
+        matches: Math.random() > 0.5 ? ['person_1', 'person_2'] : []
+      },
+      message: `Face recognition ${params.operation} completed`
+    }
+  };
 };
 
-export const executeMotion = async (params: MotionParams): Promise<HackingToolResult<MotionData>> => {
+export const executeMotion = async (params: MotionParams): Promise<HackingToolResult> => {
   console.log('Executing Motion with:', params);
-  await new Promise(resolve => setTimeout(resolve, 1000));
-  return { success: true, data: { results: { status: 'running', detectedEvents: 5 }, message: 'Motion detection active' } };
-};
-
-export const executeONVIFScan = async (params: ONVIFScanParams): Promise<HackingToolResult<ONVIFScanData>> => {
-  console.log('Executing ONVIFScan with:', params);
-  await new Promise(resolve => setTimeout(resolve, 1000));
-  const device: ONVIFDevice = { ip: '192.168.1.100', port: 80, xaddrs: ['http://192.168.1.100/onvif/device_service'], scopes: ['onvif://www.onvif.org/location/country/us'], types: ['dn:NetworkVideoTransmitter']};
-  return { success: true, data: { results: { devices: [device] }, message: 'ONVIF scan complete' } };
-};
-
-export const executeNmapONVIF = async (params: NmapONVIFParams): Promise<HackingToolResult<NmapONVIFData>> => {
-  console.log('Executing NmapONVIF with:', params);
-  await new Promise(resolve => setTimeout(resolve, 1000));
-  return { success: true, data: { results: { rawOutput: 'Mock Nmap output', discoveredDevices: [{ip: params.target, port: 80, services:[]}] }, message: 'Nmap ONVIF script complete' } };
+  await new Promise(resolve => setTimeout(resolve, 1500));
+  
+  return {
+    success: true,
+    data: {
+      results: {
+        operation: params.operation,
+        source: params.source,
+        motionDetected: Math.random() > 0.6,
+        sensitivity: params.sensitivity || 5,
+        events: Math.floor(Math.random() * 10)
+      },
+      message: `Motion ${params.operation} completed`
+    }
+  };
 };

@@ -1,11 +1,10 @@
-// This file contains the original mock implementations from osintTools.ts and osintImplementations.ts
 
+import { HackingToolResult } from '../types/osintToolTypes';
 import { 
-  HackingToolResult, 
-  EncoderDecoderParams, EncoderDecoderData, 
+  EncoderDecoderParams, EncoderDecoderData,
   ReverseShellParams, ReverseShellData,
   SqliPayloadParams, SqliPayloadData,
-  XssPayloadParams, 
+  XssPayloadParams,
   PasswordCrackerParams, PasswordCrackerSuccessData,
   PasswordGeneratorParams, PasswordGeneratorSuccessData,
   IpInfoParams, IpInfoData,
@@ -16,295 +15,362 @@ import {
   WhoisLookupParams, WhoisLookupData,
   HttpHeadersParams, HttpHeadersData,
   BotExploitsParams, BotExploitsData,
-  CCTVHackedParams, CCTVHackedData, CCTVHackedCamera,
-  CCTVScanParams, CCTVScanData, CCTVCamera,
-  Vulnerability
+  CCTVHackedParams, CCTVHackedData,
+  CCTVScanParams, CCTVScanData,
+  CCTVCamera
 } from '../types/osintToolTypes';
-import { CameraResult } from '../types/cameraTypes';
 
-export const executeEncoderDecoder = async (options: EncoderDecoderParams): Promise<HackingToolResult<EncoderDecoderData>> => {
-  console.log("Encoder/Decoder executed with options:", options);
-  await new Promise(resolve => setTimeout(resolve, 100));
-  let resultText = options.text;
-  if (options.action === 'encode') {
-    if (options.type === 'base64') resultText = typeof btoa !== 'undefined' ? btoa(options.text) : Buffer.from(options.text).toString('base64');
-    else if (options.type === 'url') resultText = encodeURIComponent(options.text);
-  } else {
-    if (options.type === 'base64') resultText = typeof atob !== 'undefined' ? atob(options.text) : Buffer.from(options.text, 'base64').toString('ascii');
-    else if (options.type === 'url') resultText = decodeURIComponent(options.text);
+export const executeEncoderDecoder = async (params: EncoderDecoderParams): Promise<HackingToolResult<EncoderDecoderData>> => {
+  console.log('Executing EncoderDecoder with:', params);
+  await new Promise(resolve => setTimeout(resolve, 500));
+  
+  let result = params.text;
+  
+  if (params.action === 'encode') {
+    switch (params.type) {
+      case 'base64':
+        result = btoa(params.text);
+        break;
+      case 'url':
+        result = encodeURIComponent(params.text);
+        break;
+      case 'hex':
+        result = Array.from(params.text).map(c => c.charCodeAt(0).toString(16)).join('');
+        break;
+      default:
+        result = params.text;
+    }
   }
-  return { success: true, data: { results: { encodedText: resultText }, message: "Operation successful" } };
-};
-
-export const executeReverseShellListener = async (options: ReverseShellParams): Promise<HackingToolResult<ReverseShellData>> => {
-  console.log("Reverse Shell Listener executed with options:", options);
-  await new Promise(resolve => setTimeout(resolve, 100));
-  return { success: true, data: { results: { command: `nc -lvnp ${options.port}` }, message: "Listener started" } };
-};
-
-export const executeSqliPayloadTest = async (options: SqliPayloadParams): Promise<HackingToolResult<SqliPayloadData>> => {
-  console.log("SQLi Payload Test executed with options:", options);
-  await new Promise(resolve => setTimeout(resolve, 100));
-  // Mock SqliPayloadData structure
-  const mockSqliData: SqliPayloadData = {
-    target_url: options.target_url,
-    payload_used: options.payload,
-    vulnerable: Math.random() > 0.5,
-    response_time_ms: 50 + Math.random() * 100,
-    status_code: 200,
-    details: "Mock SQLi test details.",
-    recommendation: "Use parameterized queries.",
-    log: "Test log..."
+  
+  return {
+    success: true,
+    data: {
+      results: { encodedText: result },
+      message: `Text ${params.action}d successfully`
+    }
   };
-  return { success: true, data: { results: mockSqliData, message: "SQLi test complete" } };
 };
 
-export const executeXssPayloadSearch = async (options: XssPayloadParams): Promise<HackingToolResult<{ payloads: string[] }>> => {
-  console.log("XSS Payload Search executed with options:", options);
-  await new Promise(resolve => setTimeout(resolve, 100));
-  return { success: true, data: { results: { payloads: ["<script>alert(1)</script>", `<img src=x onerror=alert('XSS')>`] }, message: "XSS search complete" } };
-};
-
-export const executePasswordCracker = async (options: PasswordCrackerParams): Promise<HackingToolResult<PasswordCrackerSuccessData>> => {
-  console.log("Password Cracker executed with options:", options);
-  await new Promise(resolve => setTimeout(resolve, 200));
-  return { success: true, data: { results: { results: ["password123", "admin"] }, message: "Password cracking complete" } };
-};
-
-export const executePasswordGenerator = async (options: PasswordGeneratorParams): Promise<HackingToolResult<PasswordGeneratorSuccessData>> => {
-  console.log("Password Generator executed with options:", options);
-  await new Promise(resolve => setTimeout(resolve, 100));
-  return { success: true, data: { results: { results: ["P@$$wOrd!", "S3curE!"] }, message: "Passwords generated" } };
-};
-
-export const executeIpInfo = async (options: IpInfoParams): Promise<HackingToolResult<IpInfoData>> => {
-  console.log("IP Info executed with options:", options);
-  await new Promise(resolve => setTimeout(resolve, 100));
-  return { success: true, data: { results: { ip: options.ip_address, country: "US", city: "Somewhere", ISP: "Mock ISP" }, message: "IP info retrieved" } };
-};
-
-export const executeDnsLookup = async (options: DnsLookupParams): Promise<HackingToolResult<DnsLookupData>> => {
-  console.log("DNS Lookup executed with options:", options);
-  await new Promise(resolve => setTimeout(resolve, 100));
-  return { success: true, data: { results: { domain: options.domain, record_type: options.record_type, records: ["192.0.2.1", "example.com"] }, message: "DNS lookup complete" } };
-};
-
-export const executePortScan = async (options: PortScanParams): Promise<HackingToolResult<PortScanData>> => {
-  console.log("Port Scan executed with options:", options);
-  await new Promise(resolve => setTimeout(resolve, 200));
-  return { success: true, data: { results: { target_host: options.target_host, open_ports: [{ port: 80, service_name: "http", protocol: "tcp", state: "open" }] }, message: "Port scan complete" } };
-};
-
-export const executeTraceroute = async (options: TracerouteParams): Promise<HackingToolResult<TracerouteData>> => {
-  console.log("Traceroute executed with options:", options);
-  await new Promise(resolve => setTimeout(resolve, 200));
-  return { success: true, data: { results: { target_host: options.target_host, hops: [{ hop: 1, ip: "10.0.0.1", rtt_ms: 10 }] }, message: "Traceroute complete" } };
-};
-
-export const executeSubnetScan = async (options: SubnetScanParams): Promise<HackingToolResult<SubnetScanData>> => {
-  console.log("Subnet Scan executed with options:", options);
-  await new Promise(resolve => setTimeout(resolve, 300));
-  return { success: true, data: { results: { subnet_cidr: options.subnet_cidr, active_hosts: [{ ip: "192.168.1.101", open_ports: [80, 443] }] }, message: "Subnet scan complete" } };
-};
-
-export const executeWhoisLookup = async (options: WhoisLookupParams): Promise<HackingToolResult<WhoisLookupData>> => {
-  console.log("WHOIS Lookup executed with options:", options);
-  await new Promise(resolve => setTimeout(resolve, 100));
-  return { success: true, data: { results: { query: options.query, raw_data: "Domain info for example.com..." }, message: "WHOIS lookup complete" } };
-};
-
-export const executeHttpHeaders = async (options: HttpHeadersParams): Promise<HackingToolResult<HttpHeadersData>> => {
-  console.log("HTTP Headers executed with options:", options);
-  await new Promise(resolve => setTimeout(resolve, 100));
-  return { success: true, data: { results: { url: options.url, status_code: 200, headers: { "server": "nginx", "content-type": "text/html" } }, message: "HTTP headers retrieved" } };
-};
-
-export const executeBotExploits = async (options: BotExploitsParams): Promise<HackingToolResult<BotExploitsData>> => {
-  console.log("Bot Exploits executed with options:", options);
-  await new Promise(resolve => setTimeout(resolve, 200));
-  const mockData: BotExploitsData = {
-      tokens: [{id: 'mock-token', value: 'xyz', type: 'discord', expiration: 'never'}],
-      apis: [{id: 'mock-api', endpoint: '/test', method: 'GET', authentication: false}],
-      message: "Mock bot exploit data."
+export const executeReverseShellListener = async (params: ReverseShellParams): Promise<HackingToolResult<ReverseShellData>> => {
+  console.log('Executing Reverse Shell with:', params);
+  await new Promise(resolve => setTimeout(resolve, 1000));
+  
+  const command = `nc -lvp ${params.port}`;
+  
+  return {
+    success: true,
+    data: {
+      results: { command },
+      message: 'Reverse shell listener started'
+    }
   };
-  return { success: true, data: { results: mockData, message: "Bot exploit scan complete" } };
 };
 
-// This is the base executeCCTVScan
-export const executeCCTVScan = async (options: CCTVScanParams): Promise<HackingToolResult<CCTVScanData>> => {
-  console.log("Base CCTV Scan executed with options:", options);
-  await new Promise(resolve => setTimeout(resolve, 300));
-  const numCameras = Math.floor(Math.random() * 3) + 1;
-  const cameras: CCTVCamera[] = Array.from({ length: numCameras }, (_, i) => ({
-    id: `cam-scan-${i}`,
-    ip: `192.168.5.${10 + i}`,
-    port: 554,
-    manufacturer: "ScanCam",
-    model: `Model S${100 + i}`,
-    status: 'online' as const,
-    url: `rtsp://scanuser:scanpass@192.168.5.${10 + i}:554/stream1`,
-    location: { 
-      country: "US",
-      latitude: 34.0522 + (Math.random()-0.5)*0.1, 
-      longitude: -118.2437 + (Math.random()-0.5)*0.1 
-    },
-  }));
-  const scanData: CCTVScanData = {
-    cameras,
-    totalFound: numCameras,
-    scanDuration: 300
+export const executeSqliPayloadTest = async (params: SqliPayloadParams): Promise<HackingToolResult<SqliPayloadData>> => {
+  console.log('Executing SQLi Payload Test with:', params);
+  await new Promise(resolve => setTimeout(resolve, 2000));
+  
+  const vulnerable = Math.random() > 0.7;
+  
+  return {
+    success: true,
+    data: {
+      results: {
+        target_url: params.target_url,
+        payload_used: params.payload,
+        vulnerable,
+        response_time_ms: Math.floor(Math.random() * 5000),
+        status_code: vulnerable ? 200 : 403,
+        details: vulnerable ? 'SQL injection vulnerability detected' : 'No vulnerability found',
+        recommendation: vulnerable ? 'Sanitize user inputs' : 'Continue monitoring',
+        log: `Testing ${params.payload} on ${params.target_url}`
+      },
+      message: `SQL injection test completed - ${vulnerable ? 'Vulnerable' : 'Safe'}`
+    }
   };
-  return { success: true, data: { results: scanData, message: `Found ${numCameras} cameras via base scan` } };
 };
 
-export const executeCCTVHackedScan = async (options: CCTVHackedParams): Promise<HackingToolResult<CCTVHackedData>> => {
-  console.log("Base CCTV Hacked Scan executed with options:", options);
-  await new Promise(resolve => setTimeout(resolve, 300));
-  const vulnerabilities: Vulnerability[] = [
-    { id: "vuln-1", name: "Default Credentials", severity: "critical", description: "Uses default admin/admin credentials" },
-    { id: "vuln-2", name: "CVE-2023-xxxx", severity: "high", description: "Buffer overflow vulnerability" }
-  ];
-  const cameras: CCTVHackedCamera[] = [{
-    id: "hacked-cam-base-1", 
-    ip: "192.168.6.200", 
-    port: 8899, 
-    manufacturer: "HackedCam Co", 
-    model: "XPwn", 
-    status: 'vulnerable' as const,
-    vulnerabilities,
-    accessLevel: 'admin' as const,
-    exploits: ["default_creds", "CVE-2023-xxxx"]
-  }];
-  const hackedData: CCTVHackedData = {
-    cameras,
-    totalCompromised: 1,
-    scanDuration: 300
+export const executeXssPayloadSearch = async (params: XssPayloadParams): Promise<HackingToolResult<{ results: string[] }>> => {
+  console.log('Executing XSS Payload Search with:', params);
+  await new Promise(resolve => setTimeout(resolve, 1500));
+  
+  const payloads = [
+    '<script>alert("XSS")</script>',
+    '<img src=x onerror=alert("XSS")>',
+    '<svg onload=alert("XSS")>',
+    'javascript:alert("XSS")',
+    '<iframe src="javascript:alert(`XSS`)"></iframe>'
+  ].filter(payload => payload.toLowerCase().includes(params.searchTerm.toLowerCase()));
+  
+  return {
+    success: true,
+    data: {
+      results: payloads,
+      message: `Found ${payloads.length} XSS payloads`
+    }
   };
-  return { success: true, data: { results: hackedData, message: "CCTV hacked scan (base) complete" } };
 };
 
-
-// Original implementations from the user's osintImplementations.ts
-export const executeCCTV = async (options: any): Promise<HackingToolResult<{ cameras: CameraResult[] }>> => {
-  console.log("Original CCTV search executed with options:", options);
-  await new Promise(resolve => setTimeout(resolve, 100));
-  const cameras: CameraResult[] = [
-    {
-      id: "cam-orig-001", 
-      ip: "192.168.1.150", 
-      port: 554, 
-      manufacturer: "Hikvision", 
-      model: "DS-2CD2032-I",
-      rtspUrl: "rtsp://admin:admin@192.168.1.150:554/Streaming/Channels/101",
-      geolocation: { country: "United States", city: "New York", latitude: 40.7128, longitude: -74.0060 },
-      status: "online", 
-      accessLevel: 'limited'
-    },
+export const executePasswordCracker = async (params: PasswordCrackerParams): Promise<HackingToolResult<PasswordCrackerSuccessData>> => {
+  console.log('Executing Password Cracker with:', params);
+  await new Promise(resolve => setTimeout(resolve, 3000));
+  
+  const results = [
+    'admin:admin123',
+    'user:password',
+    'guest:guest123'
   ];
-  return { success: true, data: { results: { cameras }, message: "Original CCTV search complete" } };
+  
+  return {
+    success: true,
+    data: {
+      results,
+      message: `Password cracking completed - ${results.length} credentials found`
+    }
+  };
 };
 
-// The original executeHackCCTV from osintImplementations.ts used by HackCCTVTool.tsx
-// This needs to be distinct from the one in hackCCTVTools.ts if they have different signatures or behaviors.
-// For now, assume it's this one.
-export const executeOriginalHackCCTV = async (options: any): Promise<HackingToolResult<{ cameras: CameraResult[] }>> => {
-  console.log("Original Hack CCTV executed with options:", options);
-  await new Promise(resolve => setTimeout(resolve, 100));
-  const vulnerabilities: Vulnerability[] = [
-    { id: "vuln-default", name: "Default Credentials", severity: "critical", description: "Uses default credentials" }
-  ];
-  const cameras: CameraResult[] = [
+export const executePasswordGenerator = async (params: PasswordGeneratorParams): Promise<HackingToolResult<PasswordGeneratorSuccessData>> => {
+  console.log('Executing Password Generator with:', params);
+  await new Promise(resolve => setTimeout(resolve, 500));
+  
+  const generatePassword = (length: number) => {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*';
+    return Array.from({ length }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
+  };
+  
+  const results = Array.from({ length: params.count }, () => generatePassword(params.length));
+  
+  return {
+    success: true,
+    data: {
+      results,
+      message: `Generated ${params.count} passwords`
+    }
+  };
+};
+
+export const executeIpInfo = async (params: IpInfoParams): Promise<HackingToolResult<IpInfoData>> => {
+  console.log('Executing IP Info with:', params);
+  await new Promise(resolve => setTimeout(resolve, 1000));
+  
+  return {
+    success: true,
+    data: {
+      results: {
+        ip: params.ip_address,
+        country: 'United States',
+        city: 'New York',
+        ISP: 'Example ISP'
+      },
+      message: 'IP information retrieved'
+    }
+  };
+};
+
+export const executeDnsLookup = async (params: DnsLookupParams): Promise<HackingToolResult<DnsLookupData>> => {
+  console.log('Executing DNS Lookup with:', params);
+  await new Promise(resolve => setTimeout(resolve, 1000));
+  
+  return {
+    success: true,
+    data: {
+      results: {
+        domain: params.domain,
+        record_type: params.record_type,
+        records: ['192.168.1.1', '192.168.1.2']
+      },
+      message: 'DNS lookup completed'
+    }
+  };
+};
+
+export const executePortScan = async (params: PortScanParams): Promise<HackingToolResult<PortScanData>> => {
+  console.log('Executing Port Scan with:', params);
+  await new Promise(resolve => setTimeout(resolve, 2000));
+  
+  return {
+    success: true,
+    data: {
+      results: {
+        target_host: params.target_host,
+        open_ports: [
+          { port: 80, service_name: 'http', protocol: 'tcp', state: 'open' },
+          { port: 443, service_name: 'https', protocol: 'tcp', state: 'open' }
+        ]
+      },
+      message: 'Port scan completed'
+    }
+  };
+};
+
+export const executeTraceroute = async (params: TracerouteParams): Promise<HackingToolResult<TracerouteData>> => {
+  console.log('Executing Traceroute with:', params);
+  await new Promise(resolve => setTimeout(resolve, 1500));
+  
+  return {
+    success: true,
+    data: {
+      results: {
+        target_host: params.target_host,
+        hops: [
+          { hop: 1, ip: '192.168.1.1', rtt_ms: 1 },
+          { hop: 2, ip: '10.0.0.1', rtt_ms: 15 }
+        ]
+      },
+      message: 'Traceroute completed'
+    }
+  };
+};
+
+export const executeSubnetScan = async (params: SubnetScanParams): Promise<HackingToolResult<SubnetScanData>> => {
+  console.log('Executing Subnet Scan with:', params);
+  await new Promise(resolve => setTimeout(resolve, 3000));
+  
+  return {
+    success: true,
+    data: {
+      results: {
+        subnet_cidr: params.subnet_cidr,
+        active_hosts: [
+          { ip: '192.168.1.100', open_ports: [80, 443] },
+          { ip: '192.168.1.101', open_ports: [22, 80] }
+        ]
+      },
+      message: 'Subnet scan completed'
+    }
+  };
+};
+
+export const executeWhoisLookup = async (params: WhoisLookupParams): Promise<HackingToolResult<WhoisLookupData>> => {
+  console.log('Executing Whois Lookup with:', params);
+  await new Promise(resolve => setTimeout(resolve, 1000));
+  
+  return {
+    success: true,
+    data: {
+      results: {
+        query: params.query,
+        raw_data: `Domain: ${params.query}\nRegistrar: Example Registrar\nCreated: 2020-01-01`
+      },
+      message: 'Whois lookup completed'
+    }
+  };
+};
+
+export const executeHttpHeaders = async (params: HttpHeadersParams): Promise<HackingToolResult<HttpHeadersData>> => {
+  console.log('Executing HTTP Headers with:', params);
+  await new Promise(resolve => setTimeout(resolve, 1000));
+  
+  return {
+    success: true,
+    data: {
+      results: {
+        url: params.url,
+        status_code: 200,
+        headers: {
+          'server': 'nginx/1.18.0',
+          'content-type': 'text/html',
+          'x-powered-by': 'PHP/7.4.0'
+        }
+      },
+      message: 'HTTP headers retrieved'
+    }
+  };
+};
+
+export const executeBotExploits = async (params: BotExploitsParams): Promise<HackingToolResult<BotExploitsData>> => {
+  console.log('Executing Bot Exploits with:', params);
+  await new Promise(resolve => setTimeout(resolve, 2000));
+  
+  return {
+    success: true,
+    data: {
+      results: {
+        tokens: [
+          { id: 'token1', value: 'abc123...', type: 'bot_token', expiration: '2025-12-31' }
+        ],
+        apis: [
+          { id: 'api1', endpoint: '/api/bot', method: 'POST', authentication: true }
+        ],
+        message: 'Bot exploit scan completed'
+      },
+      message: 'Bot exploits analysis completed'
+    }
+  };
+};
+
+export const executeCCTVScan = async (params: CCTVScanParams): Promise<HackingToolResult<CCTVScanData>> => {
+  console.log('Executing CCTV Scan with:', params);
+  await new Promise(resolve => setTimeout(resolve, 3000));
+  
+  const cameras: CCTVCamera[] = [
     {
-      id: "cam-hack-orig-001", 
-      ip: options.target || "192.168.1.120", 
-      port: 554, 
-      manufacturer: "Vivotek", 
-      model: "IB8369A",
-      credentials: { username: "admin", password: "admin123" },
-      rtspUrl: `rtsp://admin:admin123@${options.target || "192.168.1.120"}:554/live.sdp`,
-      geolocation: { country: "United States", city: "Los Angeles", latitude: 34.0522, longitude: -118.2437 },
-      status: "vulnerable", 
-      accessLevel: 'full',
-      vulnerabilities
+      id: 'cam-001',
+      ip: '192.168.1.100',
+      port: 554,
+      manufacturer: 'Hikvision',
+      model: 'DS-2CD2032-I',
+      status: 'online',
+      url: 'rtsp://admin:admin@192.168.1.100:554/Streaming/Channels/101',
+      location: {
+        country: 'US',
+        city: 'New York',
+        latitude: 40.7128,
+        longitude: -74.0060
+      },
+      vulnerabilities: []
     }
   ];
-  return { success: true, data: { results: { cameras }, message: "Original HackCCTV successful" } };
+  
+  return {
+    success: true,
+    data: {
+      results: {
+        cameras,
+        totalFound: cameras.length,
+        scanDuration: 3000
+      },
+      message: 'CCTV scan completed'
+    }
+  };
 };
 
-
-export const executeCamDumper = async (options: any): Promise<HackingToolResult<{ cameras: CameraResult[] }>> => {
-  console.log("Original CamDumper executed with options:", options);
-  await new Promise(resolve => setTimeout(resolve, 100));
-   const cameras: CameraResult[] = [
+export const executeCCTVHackedScan = async (params: CCTVHackedParams): Promise<HackingToolResult<CCTVHackedData>> => {
+  console.log('Executing CCTV Hacked Scan with:', params);
+  await new Promise(resolve => setTimeout(resolve, 2500));
+  
+  const cameras = [
     {
-      id: "cd-orig-001", 
-      ip: options.target || "10.0.0.50", 
-      port: 80,
-      rtspUrl: `http://${options.target || "10.0.0.50"}/video.mjpg`,
-      status: "online", 
-      accessLevel: 'limited',
-      manufacturer: "Generic", 
-      model: "MJPEG Streamer"
+      id: 'hack-001',
+      ip: params.target || '192.168.1.120',
+      port: 554,
+      manufacturer: 'Vivotek',
+      model: 'IB8369A',
+      status: 'online' as const,
+      accessLevel: 'admin' as const,
+      exploits: ['default-credentials'],
+      compromiseDate: new Date().toISOString(),
+      vulnerabilities: [
+        {
+          id: 'vuln-001',
+          name: 'Default Credentials',
+          severity: 'critical' as const,
+          description: 'Default admin credentials detected'
+        }
+      ]
     }
   ];
-  return { success: true, data: { results: { cameras }, message: "Original CamDumper successful" } };
-};
-
-export const executeOpenCCTV = async (options: any): Promise<HackingToolResult<{ cameras: CameraResult[] }>> => {
-  console.log("Original OpenCCTV executed with options:", options);
-   await new Promise(resolve => setTimeout(resolve, 100));
-  const cameras: CameraResult[] = [
-    {
-      id: "oc-orig-001", 
-      ip: options.target || "192.168.2.100", 
-      port: 8080,
-      rtspUrl: `http://${options.target || "192.168.2.100"}:8080/video`, model: "Generic IP Camera",
-      status: "online", 
-      accessLevel: 'limited',
-      manufacturer: "OpenSourceCam"
+  
+  return {
+    success: true,
+    data: {
+      results: {
+        cameras,
+        totalCompromised: cameras.length,
+        scanDuration: 2500
+      },
+      message: 'CCTV hack scan completed'
     }
-  ];
-  return { success: true, data: { results: { cameras }, message: "Original OpenCCTV successful" } };
+  };
 };
-
-export const executeEyePwn = async (options: any): Promise<HackingToolResult<{ cameras: CameraResult[] }>> => {
-  console.log("Original EyePwn executed with options:", options);
-  await new Promise(resolve => setTimeout(resolve, 100));
-  const vulnerabilities: Vulnerability[] = [
-    { id: "vuln-firmware", name: "Firmware Exploit", severity: "high", description: "Firmware vulnerability" },
-    { id: "vuln-auth", name: "Weak Digest Auth", severity: "medium", description: "Weak digest authentication" }
-  ];
-  const cameras: CameraResult[] = [
-    {
-      id: "ep-orig-001", 
-      ip: options.target || "192.168.3.100", 
-      port: 801,
-      status: "vulnerable", 
-      accessLevel: 'full',
-      manufacturer: "PwnableCams", 
-      model: "EyeSpy2000",
-      vulnerabilities
-    }
-  ];
-  return { success: true, data: { results: { cameras }, message: "Original EyePwn successful" } };
-};
-
-export const executeIngram = async (options: any): Promise<HackingToolResult<{ cameras: CameraResult[] }>> => {
-  console.log("Original Ingram executed with options:", options);
-  await new Promise(resolve => setTimeout(resolve, 100));
-   const cameras: CameraResult[] = [
-    {
-      id: "ig-orig-001", 
-      ip: options.target || "192.168.4.100", 
-      port: 9000,
-      status: "online", 
-      accessLevel: 'admin',
-      manufacturer: "Ingram Micro", 
-      model: "SecureView X"
-    }
-  ];
-  return { success: true, data: { results: { cameras }, message: "Original Ingram successful" } };
-};
-
-// Make sure executeUsernameSearch and executeTwint are also here if they were in the original osintImplementations.ts
-// For now, assuming they are handled by socialTools.ts and correctly re-exported by osintImplementations/index.ts

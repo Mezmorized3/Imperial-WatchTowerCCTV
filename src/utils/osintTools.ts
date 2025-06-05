@@ -1,3 +1,4 @@
+
 import {
   executeEncoderDecoder,
   executeReverseShellListener,
@@ -16,7 +17,6 @@ import {
   executeCCTVScan,
   executeCCTVHackedScan,
   executeCCTV,
-  executeOriginalHackCCTV,
   executeCamDumper,
   executeOpenCCTV,
   executeEyePwn,
@@ -49,7 +49,6 @@ export {
   executeCCTVScan,
   executeCCTVHackedScan,
   executeCCTV,
-  executeOriginalHackCCTV,
   executeCamDumper,
   executeOpenCCTV,
   executeEyePwn,
@@ -65,8 +64,8 @@ export {
 };
 
 export {
-  executeSocialUsernameSearch as executeUsernameSearch,
-  executeOriginalONVIFScan as executeONVIFScan
+  executeUsernameSearch as executeSocialUsernameSearch,
+  executeGenericONVIFScan as executeOriginalONVIFScan
 } from './osintImplementations';
 
 export const executeTapoPoC = async (options: any) => {

@@ -67,9 +67,10 @@ const TapoPoCTool: React.FC = () => {
           description: `${attackType === 'all' ? 'All attacks' : attackType.charAt(0).toUpperCase() + attackType.slice(1) + ' attack'} completed successfully`
         });
       } else {
+        const errorMessage = 'error' in result ? result.error : 'Unknown error occurred';
         toast({
           title: "Operation Failed",
-          description: result.error || "Unknown error occurred",
+          description: errorMessage,
           variant: "destructive"
         });
       }

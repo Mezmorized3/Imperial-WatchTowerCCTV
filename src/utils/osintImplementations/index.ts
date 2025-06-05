@@ -17,23 +17,26 @@ export {
     executeMotionEye, 
     executeZoneMinder,
     executeBasicRtspServer,
-    executeOriginalONVIFScan,
     executeGenericONVIFScan
 } from './onvifTools';
 
 export { 
-    executeUsernameSearch as executeSocialUsernameSearch,
+    executeUsernameSearch,
     executeTwint, 
     executeOSINT as executeSocialOSINT
 } from './socialTools';
 
 export * from './onvifFuzzerTools';
-export * from './securityTools';
-export * from './webTools';
-export * from './networkScanTools';
 export * from './visionTools';
 export * from './utilityTools';
+export * from './webTools';
+export * from './networkScanTools';
 
+// Remove duplicate exports and only export what's not already exported
+export { executeShieldAI } from './security/shieldAI';
+export { executeSecurityAdmin } from './security/securityAdmin';
+
+// These are implemented in the main index.ts file
 export const executeZMap = async (options: any) => {
   console.log("Simulating ZMap execution with options:", options);
   await new Promise(resolve => setTimeout(resolve, 1500));
