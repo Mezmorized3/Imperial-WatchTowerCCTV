@@ -1,4 +1,5 @@
 
+
 // Core OSINT tool types - consolidated and corrected
 export interface BaseToolParams {
   tool: string;
@@ -300,9 +301,11 @@ export interface BackHackData {
   status: string;
 }
 
-// Computer Vision and ONVIF types
+// Computer Vision and ONVIF types - Fixed to match component usage
 export interface OpenCVParams extends BaseToolParams {
-  operation: 'detection' | 'recognition' | 'tracking';
+  operation: 'detect' | 'track' | 'analyze';
+  inputType?: 'image' | 'video' | 'stream';
+  source?: string;
   imageUrl?: string;
   videoUrl?: string;
   threshold?: number;
@@ -310,19 +313,23 @@ export interface OpenCVParams extends BaseToolParams {
 
 export interface DeepstackParams extends BaseToolParams {
   operation: 'face_detection' | 'object_detection' | 'scene_recognition';
+  image?: string;
   imageUrl?: string;
   confidence?: number;
 }
 
 export interface FaceRecognitionParams extends BaseToolParams {
   operation: 'encode' | 'compare' | 'identify';
+  image?: string;
   imageUrl?: string;
+  database?: string;
   knownFaces?: string[];
   threshold?: number;
 }
 
 export interface MotionParams extends BaseToolParams {
-  operation: 'detect' | 'track' | 'analyze';
+  operation: 'detect' | 'track' | 'record';
+  source?: string;
   videoUrl?: string;
   sensitivity?: number;
   duration?: number;
@@ -394,3 +401,4 @@ export interface FFmpegParams extends BaseToolParams {
   resolution?: string;
   options?: Record<string, string>;
 }
+
