@@ -220,20 +220,22 @@ export interface CCTVHackedCamera {
   model: string;
   vulnerabilities: string[];
 }
+
 export interface CCTVHackedData {
   cameras: CCTVHackedCamera[];
   message: string;
 }
-export interface CCTVHackedParams extends BaseToolParams { // Added CCTVHackedParams
-    target: string; // IP, range, or specific query
-    country?: string;
-    exploitType?: 'default_creds' | 'known_vuln';
+
+export interface CCTVHackedParams extends BaseToolParams {
+  target_query: string; // Changed from 'target' to match component usage
+  scan_type: 'ip_scan' | 'exploit_db' | 'default_creds';
+  exploit_name?: string;
+  check_default_credentials?: boolean;
 }
 
 export type CCTVHackedResult = 
   | { success: true; data: CCTVHackedData }
   | { success: false; error: string };
-
 
 export interface CCTVCamera {
   id: string;
@@ -247,14 +249,16 @@ export interface CCTVCamera {
     longitude: number;
   };
 }
+
 export interface CCTVScanData {
   cameras: CCTVCamera[];
 }
-export interface CCTVScanParams extends BaseToolParams { // Added CCTVScanParams
-    query?: string; // Search query (e.g., city, country, specific camera model)
-    brand?: string;
-    country?: string;
-    limit?: number;
+
+export interface CCTVScanParams extends BaseToolParams {
+  query?: string; // Search query (e.g., city, country, specific camera model)
+  brand?: string;
+  country?: string;
+  limit?: number;
 }
 
 export type CCTVScanResult = 

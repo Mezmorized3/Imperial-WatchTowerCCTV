@@ -4,25 +4,9 @@
  */
 
 import { toast } from 'sonner';
+import { CCTVHackedParams, CCTVHackedResult, CCTVHackedCamera, CCTVHackedData } from '@/utils/types/osintToolTypes';
 
-interface CCTVHackedParams {
-  target: string;
-  bruteforce?: boolean;
-  advanced?: boolean;
-}
-
-interface CCTVHackedResult {
-  ip: string;
-  port: number;
-  manufacturer?: string;
-  model?: string;
-  vulnerable: boolean;
-  exploits?: string[];
-  credentials?: string;
-  firmware?: string;
-}
-
-export const executeCCTVHacked = async (params: CCTVHackedParams): Promise<any> => {
+export const executeCCTVHackedScan = async (params: CCTVHackedParams): Promise<CCTVHackedResult> => {
   console.log('Executing CCTV Hacked tool with params:', params);
   
   try {
@@ -31,11 +15,17 @@ export const executeCCTVHacked = async (params: CCTVHackedParams): Promise<any> 
     
     // Generate mock results
     const count = Math.floor(Math.random() * 5) + 1;
-    const results: CCTVHackedResult[] = [];
+    const cameras: CCTVHackedCamera[] = [];
     
-    // Parse IP range
-    const baseIp = params.target.split('/')[0].split('.');
-    const targetBase = `${baseIp[0]}.${baseIp[1]}.${baseIp[2]}`;
+    // Parse IP range from target_query if it's an IP
+    let targetBase = '';
+    if (params.target_query && params.target_query.includes('.')) {
+      const baseIp = params.target_query.split('/')[0].split('.');
+      targetBase = `${baseIp[0]}.${baseIp[1]}.${baseIp[2]}`;
+    } else {
+      // Default for non-IP queries
+      targetBase = '192.168.1';
+    }
     
     for (let i = 0; i < count; i++) {
       const lastOctet = Math.floor(Math.random() * 20) + 1;
@@ -47,60 +37,63 @@ export const executeCCTVHacked = async (params: CCTVHackedParams): Promise<any> 
       const ports = [80, 443, 554, 8000, 8080, 37777];
       const port = ports[Math.floor(Math.random() * ports.length)];
       
-      const vulnerable = Math.random() > 0.5;
+      const vulnerabilities: string[] = [];
       
-      const exploitList = [
-        'Default Credentials',
-        'Buffer Overflow',
-        'Command Injection',
-        'Authentication Bypass',
-        'RTSP Bypass'
-      ];
-      
-      const randomExploits = [];
-      if (vulnerable) {
-        const exploitCount = Math.floor(Math.random() * 3) + 1;
-        for (let j = 0; j < exploitCount; j++) {
-          randomExploits.push(exploitList[Math.floor(Math.random() * exploitList.length)]);
-        }
+      // Add vulnerabilities based on scan type
+      if (params.scan_type === 'default_creds' || params.check_default_credentials) {
+        vulnerabilities.push('Default Credentials Detected');
       }
       
-      const credentials = vulnerable ? 
-        ['admin:admin', 'root:vizxv', 'admin:123456', 'admin:1234'][Math.floor(Math.random() * 4)] : 
-        undefined;
+      if (params.scan_type === 'exploit_db') {
+        const exploits = [
+          'CVE-2018-10660 - RTSP Buffer Overflow',
+          'CVE-2017-9765 - Command Injection',
+          'Authentication Bypass Vulnerability',
+          'Weak Password Policy'
+        ];
+        vulnerabilities.push(...exploits.slice(0, Math.floor(Math.random() * 3) + 1));
+      }
       
-      const firmware = `${manufacturer.split(' ')[0].toLowerCase()}_v${Math.floor(Math.random() * 5) + 1}.${Math.floor(Math.random() * 10)}`;
+      if (params.scan_type === 'ip_scan') {
+        const networkVulns = [
+          'Open RTSP Port',
+          'Unsecured HTTP Interface',
+          'Weak Network Configuration',
+          'Missing Firmware Updates'
+        ];
+        vulnerabilities.push(...networkVulns.slice(0, Math.floor(Math.random() * 2) + 1));
+      }
       
-      results.push({
+      cameras.push({
+        id: `cam-hacked-${Date.now()}-${i}`,
         ip,
         port,
         manufacturer,
         model: `${manufacturer}-${Math.floor(Math.random() * 1000)}`,
-        vulnerable,
-        exploits: randomExploits.length > 0 ? randomExploits : undefined,
-        credentials,
-        firmware
+        vulnerabilities
       });
     }
     
-    if (params.advanced) {
-      toast.success(`Advanced scanning found ${results.filter(r => r.vulnerable).length} vulnerable cameras`);
+    const message = `Scan completed. Found ${cameras.length} cameras with potential vulnerabilities.`;
+    
+    if (cameras.length > 0) {
+      toast.success(`Found ${cameras.filter(c => c.vulnerabilities.length > 0).length} vulnerable cameras`);
     } else {
-      toast.success(`Found ${results.length} cameras, ${results.filter(r => r.vulnerable).length} vulnerable`);
+      toast.success('Scan completed - no vulnerable cameras found');
     }
+    
+    const data: CCTVHackedData = {
+      cameras,
+      message
+    };
     
     return {
       success: true,
-      data: {
-        results,
-        target: params.target,
-        totalFound: results.length,
-        vulnerableCount: results.filter(r => r.vulnerable).length
-      }
+      data
     };
   } catch (error) {
-    console.error('CCTV Hacked error:', error);
-    toast.error('Error executing CCTV Hacked tool');
+    console.error('CCTV Hacked Scan error:', error);
+    toast.error('Error executing CCTV Hacked scan');
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Unknown error'

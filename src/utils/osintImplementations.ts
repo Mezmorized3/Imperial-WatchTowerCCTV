@@ -8,6 +8,7 @@ export * from './osintImplementations/socialTools';
 export * from './osintImplementations/networkScanTools';
 export * from './osintImplementations/onvifFuzzerTools';
 export * from './osintImplementations/rtspBruteTools';
+export * from './osintImplementations/cctvHackedTools';
 
 // TODO: All functions below need real implementations for production use
 // Currently these throw errors to indicate missing implementations
