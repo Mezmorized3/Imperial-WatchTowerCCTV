@@ -1,4 +1,3 @@
-
 /**
  * Camera discovery OSINT tools implementations
  * These now connect to the real GitHub repos via our API:
@@ -15,8 +14,11 @@ import {
   CCTVParams, 
   SpeedCameraParams,
   CamerattackParams,
-  Vulnerability
-} from '@/utils/types/cameraTypes';
+  Vulnerability,
+  CCTVScanParams,
+  CCTVScanData,
+  HackingToolResult
+} from '@/utils/types';
 import { simulateNetworkDelay } from '../networkUtils';
 import { getRandomGeoLocation } from '../osintUtils';
 
@@ -325,6 +327,47 @@ export const executeCamerattack = async (params: CamerattackParams): Promise<Sca
       data: { cameras: [], vulnerabilities: [], total: 0 },
       error: error instanceof Error ? error.message : 'Unknown error',
       simulatedData: true
+    };
+  }
+};
+
+// Execute CCTV Scan tool - NEW FUNCTION
+export const executeCCTVScan = async (params: CCTVScanParams): Promise<HackingToolResult<CCTVScanData>> => {
+  console.log('Executing CCTV Scan:', params);
+  
+  try {
+    await simulateNetworkDelay(2500);
+    
+    // Generate simulated results based on query and filters
+    const cameraCount = params.limit || Math.floor(Math.random() * 10) + 3;
+    const results = generateRandomCameras(cameraCount, params.country);
+    
+    // Convert to proper format for CCTVScanData
+    const cameras = results.map(camera => ({
+      id: camera.id,
+      ip: camera.ip,
+      port: camera.port,
+      manufacturer: camera.manufacturer || 'Unknown',
+      model: camera.model || 'Unknown',
+      url: camera.httpUrl || `http://${camera.ip}:${camera.port}/`,
+      location: {
+        latitude: camera.geolocation?.latitude || 0,
+        longitude: camera.geolocation?.longitude || 0
+      }
+    }));
+    
+    return {
+      success: true,
+      data: {
+        results: { cameras },
+        message: `Found ${cameras.length} cameras`
+      }
+    };
+  } catch (error) {
+    console.error('CCTV Scan execution error:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error'
     };
   }
 };
