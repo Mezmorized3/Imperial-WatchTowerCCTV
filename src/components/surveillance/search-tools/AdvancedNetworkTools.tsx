@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -35,12 +34,11 @@ const AdvancedNetworkTools: React.FC<AdvancedNetworkToolsProps> = ({
     setError(null);
     
     try {
-      // Update parameters to match ZMapParams type
       const result = await executeZMap({
-        tool: 'zmap', // Add required tool parameter
-        targetSubnet: target, // Change target to targetSubnet
+        tool: 'zmap',
+        targetSubnet: target,
         port: parseInt(port),
-        rate: 1000 // Add a default rate
+        rate: 1000
       });
       
       if (result.success) {
@@ -49,9 +47,7 @@ const AdvancedNetworkTools: React.FC<AdvancedNetworkToolsProps> = ({
           onScanComplete(result);
         }
       } else {
-        // Fix error access
-        const errorMessage = result.success === false ? result.error : "Scan failed";
-        setError(errorMessage);
+        setError("Scan failed");
       }
     } catch (error) {
       console.error('Scan error:', error);
@@ -72,11 +68,10 @@ const AdvancedNetworkTools: React.FC<AdvancedNetworkToolsProps> = ({
     setError(null);
     
     try {
-      // Update parameters to match ScapyParams type
       const result = await executeScapy({
-        tool: 'scapy', // Add required tool parameter
+        tool: 'scapy',
         target: target,
-        packetType: 'TCP', // Add required packetType
+        packetType: 'TCP',
         count: 10
       });
       
@@ -86,9 +81,7 @@ const AdvancedNetworkTools: React.FC<AdvancedNetworkToolsProps> = ({
           onScanComplete(result);
         }
       } else {
-        // Fix error access
-        const errorMessage = result.success === false ? result.error : "Packet capture failed";
-        setError(errorMessage);
+        setError("Packet capture failed");
       }
     } catch (error) {
       console.error('Capture error:', error);

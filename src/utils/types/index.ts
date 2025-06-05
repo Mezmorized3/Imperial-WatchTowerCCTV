@@ -1,5 +1,5 @@
 
-// Consolidated type exports - removing all duplicates
+// Consolidated type exports - removing all duplicates and conflicts
 
 // Base types (primary source)
 export * from './baseTypes';
@@ -19,7 +19,13 @@ export * from './rtspBruteTypes';
 // ONVIF tool types
 export * from './onvifToolTypes';
 
-// Only unique exports from other type files
+// Security tool types (non-conflicting only)
+export type { 
+  ShieldAIData,
+  SecurityAdminData
+} from './securityToolTypes';
+
+// Network tool types (only unique exports)
 export type { 
   GSoapParams, GSoapData,
   GstRTSPServerParams, GstRTSPServerData,
@@ -27,38 +33,33 @@ export type {
   RtspSimpleServerParams, RtspSimpleServerData,
   SenseCamDiscoParams, SenseCamDiscoData,
   ONVIFScanParams, ONVIFScanData, ONVIFDevice,
-  ScapyParams, ScapyData,
-  ZMapParams, ZMapData,
-  ZGrabParams, ZGrabData,
-  MasscanParams,
-  HydraParams, HydraData,
   ONVIFFuzzerParams, ONVIFFuzzerData
 } from './networkToolTypes';
 
+// Social tool types (non-conflicting only)
 export type {
   TwitterParams,
-  SocialSearchParams
+  SocialSearchParams,
+  TwintParams,
+  UsernameSearchParams,
+  InstagramParams,
+  OsintParams
 } from './socialToolTypes';
-
-// Security tool types
-export * from './securityToolTypes';
 
 // Threat intel types (non-conflicting only)
 export type {
   ThreatIntelData,
   FirmwareData,
   FirmwareAnalysisResult,
-  ThreatAssessment,
-  ImperialShieldResult
+  ThreatAssessment
 } from './threatIntelTypes';
 
 // Advanced tool types (non-conflicting only)
 export type {
   RapidPayloadParams,
   HackingToolParams,
-  SecurityAdminParams,
   FFmpegParams
 } from './advancedToolTypes';
 
-// Web tool types
+// Web tool types (primary source)
 export * from './webToolTypes';

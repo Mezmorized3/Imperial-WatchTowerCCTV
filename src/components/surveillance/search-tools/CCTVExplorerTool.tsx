@@ -1,59 +1,44 @@
 
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Camera, Search } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
-import { executeCCTV } from '@/utils/osintImplementations';
 
-const CCTVExplorerTool = () => {
-  const [ipRange, setIpRange] = useState('');
-  const [country, setCountry] = useState('US'); // Default country to ensure it's not empty
-  const [isLoading, setIsLoading] = useState(false);
-  const [saveResults, setSaveResults] = useState(false);
+const CCTVExplorerTool: React.FC = () => {
+  const [query, setQuery] = useState('');
+  const [country, setCountry] = useState('');
+  const [brand, setBrand] = useState('');
+  const [isSearching, setIsSearching] = useState(false);
   const [results, setResults] = useState<any>(null);
-  
+
   const handleSearch = async () => {
-    if (!ipRange && !country) {
+    if (!query) {
       toast({
-        title: "Validation Error",
-        description: "Please enter an IP range or select a country",
+        title: "Error",
+        description: "Please enter a search query",
         variant: "destructive"
       });
       return;
     }
-    
-    setIsLoading(true);
+
+    setIsSearching(true);
     
     try {
-      const params = {
-        target: ipRange,
-        country: country, // Always provide country
-        region: country ? 'global' : undefined,
-        timeout: 30000,
-        saveResults
-      };
-      
-      const result = await executeCCTV(params);
-      
-      setResults(result);
-      toast({
-        title: "Search Complete",
-        description: `Found ${result?.data?.cameras?.length || 0} cameras.`
-      });
+      // TODO: Replace with real CCTV search implementation
+      throw new Error("CCTV Explorer tool not implemented. Please integrate actual tool for production use.");
     } catch (error) {
-      console.error("Error during search:", error);
+      console.error('CCTV search error:', error);
       toast({
         title: "Search Error",
         description: error instanceof Error ? error.message : "An unknown error occurred",
         variant: "destructive"
       });
     } finally {
-      setIsLoading(false);
+      setIsSearching(false);
     }
   };
 
@@ -61,87 +46,64 @@ const CCTVExplorerTool = () => {
     <Card className="border-gray-700 bg-scanner-dark shadow-lg">
       <CardHeader>
         <CardTitle className="flex items-center">
-          <Camera className="h-5 w-5 text-blue-400 mr-2" />
+          <Camera className="h-5 w-5 text-scanner-success mr-2" />
           CCTV Explorer
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="space-y-2">
-          <Label htmlFor="ip-range">IP Range</Label>
+        <div>
+          <Label htmlFor="query">Search Query</Label>
           <Input
-            id="ip-range"
-            placeholder="192.168.1.0/24 or leave empty for country search"
-            value={ipRange}
-            onChange={(e) => setIpRange(e.target.value)}
+            id="query"
+            placeholder="Enter camera search terms"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
             className="bg-scanner-dark-alt border-gray-700"
           />
         </div>
         
-        <div className="space-y-2">
-          <Label htmlFor="country">Country (for global search)</Label>
-          <Select value={country} onValueChange={setCountry}>
-            <SelectTrigger className="bg-scanner-dark-alt border-gray-700">
-              <SelectValue placeholder="Select country" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="US">United States</SelectItem>
-              <SelectItem value="GB">United Kingdom</SelectItem>
-              <SelectItem value="DE">Germany</SelectItem>
-              <SelectItem value="FR">France</SelectItem>
-              <SelectItem value="JP">Japan</SelectItem>
-              <SelectItem value="IN">India</SelectItem>
-              <SelectItem value="BR">Brazil</SelectItem>
-              <SelectItem value="RU">Russia</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        
-        <div className="flex items-center space-x-2">
-          <Checkbox
-            id="save-results"
-            checked={saveResults}
-            onCheckedChange={(checked) => setSaveResults(checked === true)}
-          />
-          <Label htmlFor="save-results">Save results to file</Label>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <Label htmlFor="country">Country (Optional)</Label>
+            <Input
+              id="country"
+              placeholder="e.g., US, UK, JP"
+              value={country}
+              onChange={(e) => setCountry(e.target.value)}
+              className="bg-scanner-dark-alt border-gray-700"
+            />
+          </div>
+          
+          <div>
+            <Label htmlFor="brand">Brand (Optional)</Label>
+            <Select value={brand} onValueChange={setBrand}>
+              <SelectTrigger className="bg-scanner-dark-alt border-gray-700">
+                <SelectValue placeholder="Select brand" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">All Brands</SelectItem>
+                <SelectItem value="hikvision">Hikvision</SelectItem>
+                <SelectItem value="dahua">Dahua</SelectItem>
+                <SelectItem value="axis">Axis</SelectItem>
+                <SelectItem value="samsung">Samsung</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
         
         <Button
           onClick={handleSearch}
-          disabled={isLoading}
-          className="w-full"
+          disabled={isSearching}
+          className="w-full bg-scanner-primary"
         >
-          {isLoading ? (
-            <>
-              <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-              </svg>
-              Searching...
-            </>
-          ) : (
-            <>
-              <Search className="h-4 w-4 mr-2" />
-              Search for Cameras
-            </>
-          )}
+          <Search className="h-4 w-4 mr-2" />
+          {isSearching ? "Searching..." : "Search CCTV Cameras"}
         </Button>
         
         {results && (
           <div className="mt-4">
-            <h3 className="text-sm font-semibold mb-2">Results:</h3>
-            <p className="text-sm">Found {results.data?.cameras?.length || 0} cameras.</p>
-            
-            {results.data?.cameras && results.data.cameras.length > 0 && (
-              <div className="mt-2 max-h-60 overflow-y-auto p-2 bg-scanner-dark-alt rounded border border-gray-700">
-                {results.data.cameras.map((camera: any, index: number) => (
-                  <div key={index} className="p-2 border-b border-gray-700 last:border-b-0">
-                    <p className="font-mono text-sm">{camera.ip}:{camera.port}</p>
-                    {camera.model && <p className="text-xs text-gray-400">Model: {camera.model}</p>}
-                    {camera.location && <p className="text-xs text-gray-400">Location: {camera.location.country}</p>}
-                  </div>
-                ))}
-              </div>
-            )}
+            <h3 className="text-sm font-semibold mb-2">Search Results:</h3>
+            <p className="text-xs text-gray-400">Results will appear here when search is implemented.</p>
           </div>
         )}
       </CardContent>
