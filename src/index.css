@@ -90,7 +90,8 @@
   }
 
   body {
-    @apply bg-background text-foreground dark;
+    @apply bg-background text-foreground;
+    /* Removed forced dark class that was causing conflicts */
   }
 }
 

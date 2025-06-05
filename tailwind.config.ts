@@ -63,17 +63,17 @@ export default {
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
 				},
-				// Cybersecurity theme colors
+				// Enhanced scanner theme colors with proper CSS variable integration
 				scanner: {
-					primary: '#0ea5e9',
-					success: '#22c55e',
-					warning: '#f59e0b',
-					danger: '#ef4444',
-					info: '#3b82f6',
-					dark: '#1e293b',
-					light: '#f8fafc',
-					card: '#0f172a',
-					'card-hover': '#1e293b'
+					primary: 'var(--scanner-primary)',
+					success: 'var(--scanner-success)',
+					warning: 'var(--scanner-warning)', 
+					danger: 'var(--scanner-danger)',
+					info: 'var(--scanner-info)',
+					dark: 'var(--scanner-dark)',
+					'dark-alt': 'var(--scanner-dark-alt)',
+					card: 'var(--scanner-card)',
+					'card-hover': 'var(--scanner-card-hover)'
 				}
 			},
 			borderRadius: {

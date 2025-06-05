@@ -1,23 +1,17 @@
 
-body {
-  min-height: 100vh;
-  background-color: hsl(var(--background));
-  color: hsl(var(--foreground));
-}
-
+/* Remove max-width restriction that might be hiding content */
 #root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 1rem;
+  width: 100%;
+  min-height: 100vh;
 }
 
 @media screen and (max-width: 768px) {
   #root {
-    padding: 0.5rem;
+    padding: 0;
   }
 }
 
-/* Add support for the scanner theme colors */
+/* Add support for the scanner theme colors with proper CSS variables */
 :root {
   --scanner-primary: #0066cc;
   --scanner-info: #00b8d4;
