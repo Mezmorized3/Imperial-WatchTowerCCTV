@@ -23,29 +23,6 @@ export type HackingToolResult<R = any> =
   | { success: true; data: HackingToolSuccessData<R>; error?: never }
   | { success: false; error: string; data?: HackingToolErrorData };
 
-export interface ToolResult {
-  success: boolean;
-  data?: any;
-  error?: string;
-  simulatedData?: boolean;
-}
-
-// Geolocation interface with consistent properties
-export interface Geolocation {
-  country: string;
-  city?: string;
-  latitude?: number;
-  longitude?: number;
-}
-
-// Vulnerability interface with required properties
-export interface Vulnerability {
-  id: string;
-  name: string;
-  severity: 'low' | 'medium' | 'high' | 'critical';
-  description: string;
-}
-
 // Encoder/Decoder types
 export interface EncoderDecoderParams extends BaseToolParams {
   text: string;
@@ -232,104 +209,6 @@ export interface BotExploitsData {
   message: string;
 }
 
-// CCTV types with all required properties
-export interface CCTVCamera {
-  id: string;
-  ip: string;
-  port: number;
-  manufacturer?: string;
-  model?: string;
-  status: 'online' | 'offline' | 'vulnerable';
-  url?: string;
-  credentials?: {
-    username: string;
-    password: string;
-  };
-  location?: Geolocation;
-  vulnerabilities?: Vulnerability[];
-}
-
-export interface CCTVHackedCamera extends CCTVCamera {
-  accessLevel: 'admin' | 'user' | 'view';
-  exploits?: string[];
-  compromiseDate?: string;
-}
-
-export interface CCTVScanData {
-  cameras: CCTVCamera[];
-  totalFound: number;
-  scanDuration: number;
-}
-
-export interface CCTVHackedData {
-  cameras: CCTVHackedCamera[];
-  totalCompromised: number;
-  scanDuration: number;
-}
-
-export interface CCTVHackedParams extends BaseToolParams {
-  target: string;
-  country?: string;
-  exploitType?: 'default_creds' | 'known_vuln';
-}
-
-export interface CCTVScanParams extends BaseToolParams {
-  query?: string;
-  brand?: string;
-  country?: string;
-  limit?: number;
-}
-
-// Web tool types
-export interface WebhackParams extends BaseToolParams {
-  url: string;
-  scanType: 'basic' | 'full' | 'xss' | 'sqli';
-  timeout?: number;
-  checkVulnerabilities?: boolean;
-  checkSubdomains?: boolean;
-}
-
-export interface WebhackData {
-  vulnerabilities: Array<{
-    type: string;
-    severity: 'low' | 'medium' | 'high' | 'critical';
-    description: string;
-    evidence?: string;
-  }>;
-  subdomains?: string[];
-  technologies?: string[];
-}
-
-export interface BackHackData {
-  vulnerabilities: Array<{
-    type: string;
-    severity: 'low' | 'medium' | 'high' | 'critical';
-    description: string;
-    url?: string;
-  }>;
-  endpoints?: string[];
-  technologies?: string[];
-}
-
-export interface PhotonParams extends BaseToolParams {
-  url: string;
-  depth?: number;
-  timeout?: number;
-  threads?: number;
-  delay?: number;
-  userAgent?: string;
-  saveResults?: boolean;
-  extract?: ('links' | 'emails' | 'files' | 'subdomains')[];
-}
-
-export interface PhotonData {
-  links?: string[];
-  emails?: string[];
-  files?: string[];
-  subdomains?: string[];
-  intel?: any;
-}
-
 // Social media types
 export interface TwintData {
   posts: Array<{
@@ -361,59 +240,13 @@ export interface UsernameSearchData {
   totalFound: number;
 }
 
-// Network scanning types
-export interface MasscanData {
-  openPorts: Array<{
-    ip: string;
-    port: number;
-    protocol: string;
-    status: string;
-  }>;
-  totalHosts: number;
-}
-
-export interface NmapONVIFData {
-  devices: Array<{
-    ip: string;
-    port: number;
-    services: string[];
-    manufacturer?: string;
-    model?: string;
-  }>;
-  totalDevices: number;
-}
-
-// Computer Vision types
-export interface OpenCVParams extends BaseToolParams {
-  operation: 'detect' | 'track' | 'analyze';
-  inputType: 'image' | 'video' | 'stream';
-  source: string;
-}
-
-export interface DeepstackParams extends BaseToolParams {
-  operation: 'face_detection' | 'object_detection' | 'scene_recognition';
-  image: string;
-  confidence?: number;
-}
-
-export interface FaceRecognitionParams extends BaseToolParams {
-  operation: 'encode' | 'compare' | 'identify';
-  image: string;
-  database?: string;
-}
-
-export interface MotionParams extends BaseToolParams {
-  operation: 'detect' | 'track' | 'record';
-  source: string;
-  sensitivity?: number;
-}
-
 // Security tools
 export interface SecurityAdminParams extends BaseToolParams {
-  operation?: 'scan' | 'audit' | 'monitor';
-  scope?: string;
-  depth?: 'basic' | 'comprehensive';
+  target: string;
   action: 'check' | 'patch' | 'report';
+  scope?: 'system' | 'network' | 'application';
+  level?: 'basic' | 'advanced';
+  timeout?: number;
 }
 
 export interface ShieldAIParams extends BaseToolParams {
@@ -441,24 +274,4 @@ export interface FFmpegParams extends BaseToolParams {
   audioCodec?: string;
   resolution?: string;
   options?: Record<string, string>;
-}
-
-// Proxy configuration
-export interface ProxyConfig {
-  enabled: boolean;
-  type: 'http' | 'socks4' | 'socks5';
-  host: string;
-  port: number;
-  username?: string;
-  password?: string;
-  country?: string;
-  testUrl?: string;
-  useAuthentication?: boolean;
-  autoReconnect?: boolean;
-  dnsProtection?: boolean;
-  forceTls?: boolean;
-  rotationEnabled?: boolean;
-  rotationInterval?: number;
-  proxyList?: {host: string; port: number; country?: string}[];
-  useTor?: boolean;
 }
