@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -12,10 +11,20 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { 
-  Bug, Terminal, Shield, Loader2, AlertTriangle, 
+  Bug, Terminal, Shield, AlertTriangle, 
   Download, FileCode, Server, Settings
 } from 'lucide-react';
 import { executeTapoPoC } from '@/utils/osintTools';
+
+interface Vulnerability {
+  id?: string;
+  name: string;
+  severity: 'critical' | 'high' | 'medium' | 'low';
+  description: string;
+  cve?: string;
+  impact?: string;
+  exploit?: string;
+}
 
 const TapoPoCTool: React.FC = () => {
   const { toast } = useToast();
@@ -85,7 +94,7 @@ const TapoPoCTool: React.FC = () => {
     }
   };
   
-  const renderVulnerability = (vuln: any) => {
+  const renderVulnerability = (vuln: Vulnerability) => {
     const severityClass = 
       vuln.severity === 'critical' ? 'bg-red-500 text-white' :
       vuln.severity === 'high' ? 'bg-orange-500 text-white' : 
@@ -138,6 +147,7 @@ const TapoPoCTool: React.FC = () => {
         
         <TabsContent value="config">
           <CardContent className="space-y-4">
+            
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="target-ip">Target IP/Hostname</Label>
@@ -267,6 +277,7 @@ const TapoPoCTool: React.FC = () => {
               </div>
             ) : results ? (
               <div className="space-y-4">
+                
                 <div className="flex items-center justify-between">
                   <div className="flex items-center">
                     <Shield className="h-5 w-5 mr-2" />
@@ -280,7 +291,7 @@ const TapoPoCTool: React.FC = () => {
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div className="space-y-1">
                     <p className="text-gray-500">Target</p>
-                    <p>{results.target}:{results.port}</p>
+                    <p>{results.device}:{results.port}</p>
                   </div>
                   <div className="space-y-1">
                     <p className="text-gray-500">Device Model</p>
@@ -300,7 +311,7 @@ const TapoPoCTool: React.FC = () => {
                   <div className="mt-4 space-y-2">
                     <h4 className="font-medium">Vulnerabilities</h4>
                     <div className="space-y-2">
-                      {results.vulnerabilities.map((vuln: any) => renderVulnerability(vuln))}
+                      {results.vulnerabilities.map((vuln: Vulnerability) => renderVulnerability(vuln))}
                     </div>
                   </div>
                 )}

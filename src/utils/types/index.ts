@@ -12,5 +12,5 @@ export * from './streamingToolTypes';
 export * from './rtspBruteTypes';
 export * from './onvifToolTypes';
 
-// Only export from securityToolTypes what's not already in osintToolTypes
-export { SecurityAdminData } from './securityToolTypes';
+// Only export unique types from securityToolTypes
+export type { SecurityAdminData } from './securityToolTypes';

@@ -1,4 +1,3 @@
-
 import { HackingToolResult } from '../types/osintToolTypes';
 import { 
   EncoderDecoderParams, EncoderDecoderData,
@@ -105,7 +104,7 @@ export const executeXssPayloadSearch = async (params: XssPayloadParams): Promise
   return {
     success: true,
     data: {
-      results: payloads,
+      results: { results: payloads },
       message: `Found ${payloads.length} XSS payloads`
     }
   };
@@ -124,7 +123,7 @@ export const executePasswordCracker = async (params: PasswordCrackerParams): Pro
   return {
     success: true,
     data: {
-      results,
+      results: { results },
       message: `Password cracking completed - ${results.length} credentials found`
     }
   };
@@ -144,7 +143,7 @@ export const executePasswordGenerator = async (params: PasswordGeneratorParams):
   return {
     success: true,
     data: {
-      results,
+      results: { results },
       message: `Generated ${params.count} passwords`
     }
   };

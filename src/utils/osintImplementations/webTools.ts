@@ -11,16 +11,14 @@ export const executeWebhack = async (params: WebhackParams): Promise<HackingTool
   
   const vulnerabilities = [
     {
-      name: "XSS Vulnerability",
-      severity: "medium",
-      cwe: "CWE-79",
+      type: "XSS Vulnerability",
+      severity: "medium" as const,
       description: "Reflected XSS vulnerability found in search parameter",
       evidence: "Parameter: q, Payload: <script>alert(1)</script>"
     },
     {
-      name: "Information Disclosure",
-      severity: "low", 
-      cwe: "CWE-200",
+      type: "Information Disclosure",
+      severity: "low" as const,
       description: "Server version disclosed in response headers",
       evidence: "Server: Apache/2.4.41"
     }
