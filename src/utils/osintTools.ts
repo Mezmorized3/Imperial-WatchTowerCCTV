@@ -43,30 +43,6 @@ export {
   executeAdvancedRtspBrute
 };
 
-// TODO: The following functions need real implementations for production:
-// - executeEncoderDecoder
-// - executeReverseShellListener
-// - executeSqliPayloadTest
-// - executeXssPayloadSearch
-// - executePasswordCracker
-// - executePasswordGenerator
-// - executeIpInfo
-// - executeDnsLookup
-// - executePortScan
-// - executeTraceroute
-// - executeSubnetScan
-// - executeWhoisLookup
-// - executeHttpHeaders
-// - executeBotExploits
-// - executeCCTVScan
-// - executeCCTVHackedScan
-// - executeMetasploit
-// - executeOrebroONVIFScanner
-// - executeNodeONVIF
-// - executePyONVIF
-// - executePythonWSDiscovery
-// - executeMitmProxy
-
 // Placeholder for TapoPoC - needs real implementation
 export const executeTapoPoC = async (options: any) => {
   throw new Error("TapoPoC tool not implemented. Please integrate actual tool for production use.");
