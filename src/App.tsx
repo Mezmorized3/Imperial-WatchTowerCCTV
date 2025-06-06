@@ -72,17 +72,33 @@ class ErrorBoundary extends React.Component<
 }
 
 function App() {
-  console.log('App component rendering...');
+  console.log('=== APP COMPONENT RENDERING ===');
+  console.log('Current URL:', window.location.href);
   
   // Apply theme classes to ensure proper styling
   React.useEffect(() => {
+    console.log('App useEffect running...');
     document.body.classList.add('scanner-theme');
+    document.body.style.backgroundColor = '#151b26';
+    document.body.style.color = 'white';
     console.log('App mounted, theme applied');
+    
+    // Debug the current state
+    console.log('Body classes:', document.body.className);
+    console.log('Body computed background:', window.getComputedStyle(document.body).backgroundColor);
   }, []);
 
   return (
     <ErrorBoundary>
-      <div className="app bg-scanner-dark min-h-screen" style={{ backgroundColor: '#151b26' }}>
+      <div 
+        className="app bg-scanner-dark min-h-screen" 
+        style={{ 
+          backgroundColor: '#151b26',
+          color: 'white',
+          minHeight: '100vh',
+          width: '100%'
+        }}
+      >
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/viewer" element={<Viewer />} />

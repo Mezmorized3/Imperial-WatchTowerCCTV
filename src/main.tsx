@@ -27,14 +27,34 @@ const startImperialServer = () => {
   }
 };
 
-// Add debugging console logs
-console.log('Starting Imperial Watchtower application...');
-console.log('Environment:', process.env.NODE_ENV);
+// DEBUGGING: Check if styles are loading
+console.log('=== DEBUGGING STYLES ===');
+console.log('Document ready state:', document.readyState);
+console.log('Body class list:', document.body.classList.toString());
+console.log('Body computed styles:', window.getComputedStyle(document.body).backgroundColor);
 
-// Apply scanner theme to body immediately
-document.body.classList.add('scanner-theme');
-document.body.style.backgroundColor = '#151b26';
-document.body.style.color = 'white';
+// Apply scanner theme to body immediately and aggressively
+const applyTheme = () => {
+  console.log('Applying theme...');
+  document.body.classList.add('scanner-theme');
+  document.body.style.backgroundColor = '#151b26 !important';
+  document.body.style.color = 'white !important';
+  document.body.style.minHeight = '100vh';
+  
+  // Also apply to root element
+  const rootElement = document.getElementById('root');
+  if (rootElement) {
+    rootElement.style.backgroundColor = '#151b26';
+    rootElement.style.color = 'white';
+    rootElement.style.minHeight = '100vh';
+    rootElement.style.width = '100%';
+  }
+  
+  console.log('Theme applied. Body background:', document.body.style.backgroundColor);
+};
+
+// Apply theme immediately
+applyTheme();
 
 // Add keyboard shortcut listener for command palette
 document.addEventListener('keydown', (e) => {
@@ -48,6 +68,7 @@ document.addEventListener('keydown', (e) => {
 document.addEventListener('DOMContentLoaded', () => {
   console.log('DOM Content loaded, attempting to start server...');
   startImperialServer();
+  applyTheme(); // Apply theme again on DOM load
 });
 
 console.log('Rendering React application...');
@@ -56,10 +77,11 @@ const rootElement = document.getElementById("root");
 if (rootElement) {
   console.log('Root element found, creating React root');
   
-  // Add fallback styling to root element
+  // Add more aggressive fallback styling
   rootElement.style.width = '100%';
   rootElement.style.minHeight = '100vh';
   rootElement.style.backgroundColor = '#151b26';
+  rootElement.style.color = 'white';
   
   const root = createRoot(rootElement);
   
@@ -72,28 +94,44 @@ if (rootElement) {
       </BrowserRouter>
     );
     console.log('React application rendered successfully');
+    
+    // Apply theme one more time after render
+    setTimeout(() => {
+      applyTheme();
+      console.log('Final theme check - Body background:', window.getComputedStyle(document.body).backgroundColor);
+    }, 100);
+    
   } catch (error) {
     console.error('Error rendering React application:', error);
     
-    // Fallback content
+    // Fallback content with inline styles
     rootElement.innerHTML = `
-      <div style="padding: 20px; background: #151b26; color: white; min-height: 100vh;">
-        <h1>Imperial Watchtower</h1>
+      <div style="padding: 20px; background: #151b26 !important; color: white !important; min-height: 100vh; font-family: monospace;">
+        <h1 style="color: #ff6b6b;">🛡️ Imperial Watchtower - Error Recovery</h1>
         <p>Loading error occurred. Check console for details.</p>
         <p>Error: ${error.message}</p>
+        <button onclick="window.location.reload()" style="margin-top: 10px; padding: 10px 20px; background: #0066cc; color: white; border: none; border-radius: 5px; cursor: pointer;">
+          Reload Application
+        </button>
       </div>
     `;
   }
 } else {
-  console.error('Root element not found! Make sure there is a div with id="root" in index.html');
+  console.error('Root element not found! Creating fallback...');
   
-  // Create fallback root element
+  // Create fallback root element with aggressive styling
   const fallbackRoot = document.createElement('div');
   fallbackRoot.id = 'root';
   fallbackRoot.style.backgroundColor = '#151b26';
   fallbackRoot.style.color = 'white';
   fallbackRoot.style.padding = '20px';
-  fallbackRoot.innerHTML = '<h1>Imperial Watchtower - Fallback Mode</h1><p>Root element was missing and has been created.</p>';
+  fallbackRoot.style.minHeight = '100vh';
+  fallbackRoot.style.width = '100%';
+  fallbackRoot.innerHTML = `
+    <h1 style="color: #ff6b6b;">🛡️ Imperial Watchtower - Fallback Mode</h1>
+    <p>Root element was missing and has been created.</p>
+    <p>If you see this, the React app failed to load properly.</p>
+  `;
   document.body.appendChild(fallbackRoot);
 }
 
