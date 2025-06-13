@@ -13,107 +13,26 @@ import ImperialShield from './pages/ImperialShield';
 import OsintTools from './pages/OsintTools';
 import HackingToolPage from './pages/HackingTool';
 
-// Simple Error Boundary Component
-class ErrorBoundary extends React.Component<
-  { children: React.ReactNode },
-  { hasError: boolean; error?: Error }
-> {
-  constructor(props: { children: React.ReactNode }) {
-    super(props);
-    this.state = { hasError: false };
-  }
-
-  static getDerivedStateFromError(error: Error) {
-    return { hasError: true, error };
-  }
-
-  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    console.error('App Error Boundary caught an error:', error, errorInfo);
-  }
-
-  render() {
-    if (this.state.hasError) {
-      return (
-        <div style={{ 
-          backgroundColor: '#151b26', 
-          color: 'white', 
-          padding: '20px', 
-          minHeight: '100vh',
-          fontFamily: 'monospace'
-        }}>
-          <h1>🛡️ Imperial Watchtower - Error Recovery</h1>
-          <p>An error occurred in the application.</p>
-          <details style={{ marginTop: '10px' }}>
-            <summary>Error Details</summary>
-            <pre style={{ background: '#1c2333', padding: '10px', marginTop: '10px' }}>
-              {this.state.error?.toString()}
-            </pre>
-          </details>
-          <button 
-            onClick={() => window.location.reload()} 
-            style={{ 
-              marginTop: '10px', 
-              padding: '10px 20px', 
-              background: '#0066cc', 
-              color: 'white', 
-              border: 'none', 
-              borderRadius: '5px',
-              cursor: 'pointer'
-            }}
-          >
-            Reload Application
-          </button>
-        </div>
-      );
-    }
-
-    return this.props.children;
-  }
-}
-
 function App() {
   console.log('=== APP COMPONENT RENDERING ===');
   console.log('Current URL:', window.location.href);
   
-  // Apply theme classes to ensure proper styling
-  React.useEffect(() => {
-    console.log('App useEffect running...');
-    document.body.classList.add('scanner-theme');
-    document.body.style.backgroundColor = '#151b26';
-    document.body.style.color = 'white';
-    console.log('App mounted, theme applied');
-    
-    // Debug the current state
-    console.log('Body classes:', document.body.className);
-    console.log('Body computed background:', window.getComputedStyle(document.body).backgroundColor);
-  }, []);
-
   return (
-    <ErrorBoundary>
-      <div 
-        className="app bg-scanner-dark min-h-screen" 
-        style={{ 
-          backgroundColor: '#151b26',
-          color: 'white',
-          minHeight: '100vh',
-          width: '100%'
-        }}
-      >
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/viewer" element={<Viewer />} />
-          <Route path="/settings" element={<Settings />} />
-          <Route path="/help" element={<Help />} />
-          <Route path="/imperial" element={<ImperialScanner />} />
-          <Route path="/imperial-control" element={<ImperialControl />} />
-          <Route path="/imperial-shinobi" element={<ImperialShinobi />} />
-          <Route path="/imperial-shield" element={<ImperialShield />} />
-          <Route path="/osint-tools" element={<OsintTools />} />
-          <Route path="/hacking-tool" element={<HackingToolPage />} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </div>
-    </ErrorBoundary>
+    <div className="app bg-gray-900 min-h-screen text-white">
+      <Routes>
+        <Route path="/" element={<Index />} />
+        <Route path="/viewer" element={<Viewer />} />
+        <Route path="/settings" element={<Settings />} />
+        <Route path="/help" element={<Help />} />
+        <Route path="/imperial" element={<ImperialScanner />} />
+        <Route path="/imperial-control" element={<ImperialControl />} />
+        <Route path="/imperial-shinobi" element={<ImperialShinobi />} />
+        <Route path="/imperial-shield" element={<ImperialShield />} />
+        <Route path="/osint-tools" element={<OsintTools />} />
+        <Route path="/hacking-tool" element={<HackingToolPage />} />
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </div>
   );
 }
 
