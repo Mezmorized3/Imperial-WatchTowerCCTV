@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Command as CommandPrimitive } from 'cmdk';
 import {
@@ -24,9 +25,13 @@ const CommandPalette = ({ open, setOpen }: CommandPaletteProps) => {
     setIsMounted(true);
   }, []);
 
+  // Safe getter for optional startImperialServer function
+  const hasImperialServer = (): boolean =>
+    typeof (window as any).startImperialServer === 'function';
+
   const startServer = () => {
-    if (window.startImperialServer) {
-      const success = window.startImperialServer();
+    if (hasImperialServer()) {
+      const success = (window as any).startImperialServer();
       if (success) {
         toast({
           title: "Server Starting",
@@ -138,3 +143,4 @@ const CommandPalette = ({ open, setOpen }: CommandPaletteProps) => {
 };
 
 export default CommandPalette;
+

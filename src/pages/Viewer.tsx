@@ -12,34 +12,42 @@ const Viewer: React.FC = () => {
   const location = useLocation();
   const [cameras, setCameras] = useState<CameraResult[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    console.log('Viewer component mounting...');
-    console.log('Location state:', location.state);
-    console.log('Search ID:', searchId);
-    
-    // Get cameras from location state or load from storage
-    const cameraData = location.state?.cameras || [];
-    
-    if (cameraData.length > 0) {
-      console.log('Found cameras in location state:', cameraData.length);
-      setCameras(cameraData);
-    } else if (searchId) {
-      // Try to load from localStorage
-      const storedData = localStorage.getItem(`search_${searchId}`);
-      if (storedData) {
-        try {
-          const parsed = JSON.parse(storedData);
-          console.log('Loaded cameras from storage:', parsed.cameras?.length || 0);
-          setCameras(parsed.cameras || []);
-        } catch (error) {
-          console.error('Failed to parse stored camera data:', error);
+    try {
+      console.log('Viewer component mounting...');
+      console.log('Location state:', location.state);
+      console.log('Search ID:', searchId);
+
+      // Get cameras from location state or load from storage
+      const cameraData = location.state?.cameras || [];
+
+      if (cameraData.length > 0) {
+        console.log('Found cameras in location state:', cameraData.length);
+        setCameras(cameraData);
+      } else if (searchId) {
+        // Try to load from localStorage
+        const storedData = localStorage.getItem(`search_${searchId}`);
+        if (storedData) {
+          try {
+            const parsed = JSON.parse(storedData);
+            console.log('Loaded cameras from storage:', parsed.cameras?.length || 0);
+            setCameras(parsed.cameras || []);
+          } catch (err: any) {
+            console.error('Failed to parse stored camera data:', err);
+            setError('Failed to load or parse stored camera data.');
+          }
         }
       }
+
+    } catch (err: any) {
+      console.error('Error loading camera data:', err);
+      setError('A fatal error occurred loading camera data.');
+    } finally {
+      setLoading(false);
+      console.log('Viewer component loaded successfully');
     }
-    
-    setLoading(false);
-    console.log('Viewer component loaded successfully');
   }, [searchId, location.state]);
 
   if (loading) {
@@ -49,6 +57,20 @@ const Viewer: React.FC = () => {
           <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-400 mx-auto"></div>
           <p className="mt-4 text-gray-400">Loading camera data...</p>
         </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-900 flex flex-col items-center justify-center">
+        <div className="text-red-400 text-lg font-bold mb-4">Error: {error}</div>
+        <Button asChild variant="outline">
+          <Link to="/" className="flex items-center">
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back to Home
+          </Link>
+        </Button>
       </div>
     );
   }
@@ -144,3 +166,4 @@ const Viewer: React.FC = () => {
 };
 
 export default Viewer;
+
