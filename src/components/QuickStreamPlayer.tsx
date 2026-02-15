@@ -16,6 +16,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { getProperStreamUrl, testRtspConnection } from '@/utils/rtspUtils';
+import { safeJsonParse, sanitizeUrl, isValidStreamUrl } from '@/utils/safeStorage';
 import {
   Popover,
   PopoverContent,
@@ -35,7 +36,7 @@ const QuickStreamPlayer: React.FC<QuickStreamPlayerProps> = ({ className }) => {
   const [saveToImperial, setSaveToImperial] = useState<boolean>(true);
   const [recentStreams, setRecentStreams] = useState<string[]>(() => {
     const saved = localStorage.getItem('recentStreams');
-    return saved ? JSON.parse(saved) : [];
+    return safeJsonParse<string[]>(saved, []);
   });
   const [go2rtcUrl, setGo2rtcUrl] = useState<string>(() => localStorage.getItem('go2rtcUrl') || '');
   const [preferredEngine, setPreferredEngine] = useState<'native' | 'hlsjs' | 'videojs' | 'go2rtc'>(() => 
