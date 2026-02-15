@@ -7,6 +7,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Save, RefreshCw } from 'lucide-react';
+import { secureGetItem, secureSetItem, isValidStreamUrl } from '@/utils/safeStorage';
 
 export const ServerConfig: React.FC = () => {
   const [imperialToken, setImperialToken] = useState('');
@@ -17,51 +18,32 @@ export const ServerConfig: React.FC = () => {
   const { toast } = useToast();
   
   useEffect(() => {
-    const savedToken = localStorage.getItem('imperialToken');
+    const savedToken = secureGetItem('imperialToken');
     const savedServerUrl = localStorage.getItem('imperialServerUrl');
     const savedRtspProxyUrl = localStorage.getItem('rtspProxyUrl');
     const savedRtspProxyEnabled = localStorage.getItem('rtspProxyEnabled');
     
-    if (savedToken) {
-      setImperialToken(savedToken);
-    }
-    
-    if (savedServerUrl) {
-      setServerUrl(savedServerUrl);
-    }
-    
-    if (savedRtspProxyUrl) {
-      setRtspProxyUrl(savedRtspProxyUrl);
-    }
-    
-    if (savedRtspProxyEnabled !== null) {
-      setRtspProxyEnabled(savedRtspProxyEnabled === 'true');
-    }
+    if (savedToken) setImperialToken(savedToken);
+    if (savedServerUrl) setServerUrl(savedServerUrl);
+    if (savedRtspProxyUrl) setRtspProxyUrl(savedRtspProxyUrl);
+    if (savedRtspProxyEnabled !== null) setRtspProxyEnabled(savedRtspProxyEnabled === 'true');
   }, []);
 
-  const handleTokenChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newToken = e.target.value;
-    setImperialToken(newToken);
-  };
-  
-  const handleServerUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newUrl = e.target.value;
-    setServerUrl(newUrl);
-  };
-  
-  const handleRtspProxyUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newUrl = e.target.value;
-    setRtspProxyUrl(newUrl);
-  };
-  
-  const handleRtspProxyToggle = (enabled: boolean) => {
-    setRtspProxyEnabled(enabled);
-  };
-  
   const handleSaveConfig = () => {
+    // Validate URLs before saving
+    if (!isValidStreamUrl(serverUrl)) {
+      toast({ title: "Invalid server URL", description: "Please enter a valid HTTP(S) URL.", variant: "destructive" });
+      return;
+    }
+    if (rtspProxyEnabled && !isValidStreamUrl(rtspProxyUrl)) {
+      toast({ title: "Invalid proxy URL", description: "Please enter a valid HTTP(S) URL.", variant: "destructive" });
+      return;
+    }
+
     setIsSaving(true);
     
-    localStorage.setItem('imperialToken', imperialToken);
+    // Token goes to sessionStorage (sensitive), URLs to localStorage (non-sensitive)
+    secureSetItem('imperialToken', imperialToken);
     localStorage.setItem('imperialServerUrl', serverUrl);
     localStorage.setItem('rtspProxyUrl', rtspProxyUrl);
     localStorage.setItem('rtspProxyEnabled', rtspProxyEnabled.toString());
@@ -76,6 +58,11 @@ export const ServerConfig: React.FC = () => {
   };
   
   const handleTestConnection = () => {
+    if (!isValidStreamUrl(serverUrl)) {
+      toast({ title: "Invalid URL", description: "Cannot test connection with invalid URL.", variant: "destructive" });
+      return;
+    }
+
     toast({
       title: "Testing connection...",
       description: "Attempting to connect to Imperial Server"
@@ -114,7 +101,7 @@ export const ServerConfig: React.FC = () => {
                 id="imperial-server-url"
                 className="bg-gray-800"
                 value={serverUrl}
-                onChange={handleServerUrlChange}
+                onChange={(e) => setServerUrl(e.target.value)}
                 placeholder="http://localhost:7443"
               />
               <p className="text-xs text-gray-400">The URL of your Imperial Server instance. Default port is 7443.</p>
@@ -130,10 +117,11 @@ export const ServerConfig: React.FC = () => {
                 className="bg-gray-800"
                 placeholder="Enter your Imperial admin token"
                 type="password"
+                autoComplete="off"
                 value={imperialToken}
-                onChange={handleTokenChange}
+                onChange={(e) => setImperialToken(e.target.value)}
               />
-              <p className="text-xs text-gray-400">Admin token from your server's config.json file.</p>
+              <p className="text-xs text-gray-400">Admin token stored in session only (cleared on tab close).</p>
             </div>
             
             <div className="flex justify-end space-x-2 pt-2">
@@ -157,7 +145,7 @@ export const ServerConfig: React.FC = () => {
               <Switch 
                 id="rtsp-proxy-enabled" 
                 checked={rtspProxyEnabled}
-                onCheckedChange={handleRtspProxyToggle}
+                onCheckedChange={setRtspProxyEnabled}
               />
             </div>
             
@@ -168,7 +156,7 @@ export const ServerConfig: React.FC = () => {
                 className="bg-gray-800"
                 placeholder="http://localhost:3005"
                 value={rtspProxyUrl}
-                onChange={handleRtspProxyUrlChange}
+                onChange={(e) => setRtspProxyUrl(e.target.value)}
                 disabled={!rtspProxyEnabled}
               />
               <p className="text-xs text-gray-400">

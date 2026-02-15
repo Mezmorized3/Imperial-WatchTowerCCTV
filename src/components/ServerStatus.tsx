@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { AlertCircle, Server, Activity } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { secureGetItem, secureSetItem } from '@/utils/safeStorage';
 
 interface ServerStatus {
   [port: string]: {
@@ -24,7 +25,7 @@ const ServerStatus: React.FC = () => {
 
   useEffect(() => {
     // On component mount, try to load token from localStorage
-    const savedToken = localStorage.getItem('imperialToken');
+    const savedToken = secureGetItem('imperialToken');
     if (savedToken) {
       setAdminToken(savedToken);
       fetchServerStatus(savedToken);
@@ -59,7 +60,7 @@ const ServerStatus: React.FC = () => {
 
   const handleAuthenticate = () => {
     if (adminToken) {
-      localStorage.setItem('imperialToken', adminToken);
+      secureSetItem('imperialToken', adminToken);
       fetchServerStatus(adminToken);
     }
   };

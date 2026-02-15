@@ -4,9 +4,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Key, CheckCircle, Info } from 'lucide-react';
+import { Key, CheckCircle, Info, ShieldAlert } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { secureGetItem, secureSetItem, secureRemoveItem } from '@/utils/safeStorage';
 
 interface ExternalApiKeysProps {
   onSave: () => void;
@@ -15,35 +16,35 @@ interface ExternalApiKeysProps {
 
 export const ExternalApiKeys: React.FC<ExternalApiKeysProps> = ({ onSave, isApiKeySaved }) => {
   const { toast } = useToast();
-  const [virusTotalApiKey, setVirusTotalApiKey] = useState(localStorage.getItem('VIRUSTOTAL_API_KEY') || '');
-  const [abuseIPDBApiKey, setAbuseIPDBApiKey] = useState(localStorage.getItem('ABUSEIPDB_API_KEY') || '');
-  const [nvdApiKey, setNvdApiKey] = useState(localStorage.getItem('NVD_API_KEY') || '');
+  const [virusTotalApiKey, setVirusTotalApiKey] = useState(secureGetItem('VIRUSTOTAL_API_KEY') || '');
+  const [abuseIPDBApiKey, setAbuseIPDBApiKey] = useState(secureGetItem('ABUSEIPDB_API_KEY') || '');
+  const [nvdApiKey, setNvdApiKey] = useState(secureGetItem('NVD_API_KEY') || '');
   const [useServerConfig, setUseServerConfig] = useState(true);
 
   const handleSave = () => {
     if (!useServerConfig) {
-      // Save API keys to localStorage (fallback option)
+      // Save API keys to sessionStorage (cleared on tab close)
       if (virusTotalApiKey) {
-        localStorage.setItem('VIRUSTOTAL_API_KEY', virusTotalApiKey);
+        secureSetItem('VIRUSTOTAL_API_KEY', virusTotalApiKey);
       }
       if (abuseIPDBApiKey) {
-        localStorage.setItem('ABUSEIPDB_API_KEY', abuseIPDBApiKey);
+        secureSetItem('ABUSEIPDB_API_KEY', abuseIPDBApiKey);
       }
       if (nvdApiKey) {
-        localStorage.setItem('NVD_API_KEY', nvdApiKey);
+        secureSetItem('NVD_API_KEY', nvdApiKey);
       }
     } else {
-      // Remove any keys from localStorage since we're using server config
-      localStorage.removeItem('VIRUSTOTAL_API_KEY');
-      localStorage.removeItem('ABUSEIPDB_API_KEY');
-      localStorage.removeItem('NVD_API_KEY');
+      // Remove any keys since we're using server config
+      secureRemoveItem('VIRUSTOTAL_API_KEY');
+      secureRemoveItem('ABUSEIPDB_API_KEY');
+      secureRemoveItem('NVD_API_KEY');
     }
     
     toast({
       title: "API keys configuration saved",
       description: useServerConfig 
         ? "Using secure server-side API keys from configuration." 
-        : "Your local API keys have been saved successfully.",
+        : "Your API keys have been saved to session storage (cleared on tab close).",
     });
     
     onSave();
@@ -65,6 +66,16 @@ export const ExternalApiKeys: React.FC<ExternalApiKeysProps> = ({ onSave, isApiK
             You don't need to enter them here unless you want to override server settings.
           </AlertDescription>
         </Alert>
+
+        {!useServerConfig && (
+          <Alert className="bg-yellow-900/20 border-yellow-800">
+            <ShieldAlert className="h-4 w-4 text-yellow-500" />
+            <AlertDescription className="text-sm ml-2">
+              API keys stored in the browser are only kept in session storage and will be cleared when you close the tab.
+              For persistent, secure storage, use server-side configuration.
+            </AlertDescription>
+          </Alert>
+        )}
         
         <div className="flex items-center space-x-2">
           <div className="flex-1">
@@ -183,6 +194,8 @@ const ApiKeyInput: React.FC<ApiKeyInputProps> = ({
       <Input
         id={id}
         className="bg-gray-800 font-mono"
+        type="password"
+        autoComplete="off"
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={`Enter your ${label}`}
